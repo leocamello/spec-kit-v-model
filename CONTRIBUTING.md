@@ -42,17 +42,30 @@ Thank you for your interest in contributing to the V-Model Extension Pack for Sp
 
 ```
 spec-kit-v-model/
-├── commands/           # Slash command definitions (AI prompts)
+├── commands/               # Slash command definitions (AI prompts)
 │   ├── requirements.md
 │   ├── acceptance.md
 │   └── trace.md
-├── templates/          # Output file templates
+├── templates/              # Output file templates
 ├── scripts/
-│   ├── bash/           # Helper scripts (Linux/macOS)
-│   └── powershell/     # Helper scripts (Windows)
-├── docs/               # Additional documentation
-├── extension.yml       # Extension manifest
-└── config-template.yml # Configuration template
+│   ├── bash/               # Helper scripts (Linux/macOS)
+│   └── powershell/         # Helper scripts (Windows)
+├── tests/
+│   ├── bats/               # BATS-core bash unit tests (27 tests)
+│   ├── pester/             # Pester PowerShell unit tests (27 tests)
+│   ├── fixtures/           # Shared test data (5 sets + 2 golden examples)
+│   ├── validators/         # Deterministic structural validators (Python)
+│   └── evals/              # DeepEval prompt evaluations
+│       ├── metrics/        # Custom eval metrics (structural + GEval)
+│       ├── test_*_eval.py  # Eval test cases (15 structural + 6 LLM)
+│       └── conftest.py     # Shared pytest fixtures
+├── docs/                   # Additional documentation
+├── extension.yml           # Extension manifest
+├── config-template.yml     # Configuration template
+├── pyproject.toml          # Python project config (pytest, deepeval)
+└── .github/workflows/
+    ├── ci.yml              # CI: BATS + Pester + structural validators
+    └── evals.yml           # Evals: structural (weekly) + LLM (manual)
 ```
 
 ## How to Contribute
@@ -126,37 +139,57 @@ Templates define the structure of generated output files. Keep them:
 
 ## Testing
 
-### Manual Testing
+The project has a comprehensive test suite across three layers.
 
-1. Install the extension in a test project (see [Development Setup](#development-setup)).
-2. Test helper scripts directly:
+### Running Tests
 
-   ```bash
-   # Setup
-   bash scripts/bash/setup-v-model.sh --json
+```bash
+# 1. BATS tests (Bash scripts — requires Linux/macOS)
+tests/bats/lib/bats-core/bin/bats tests/bats/*.bats
 
-   # Validate coverage (requires requirements.md + acceptance-plan.md)
-   bash scripts/bash/validate-coverage.sh --json specs/{feature}/v-model/
+# 2. Pester tests (PowerShell scripts — requires Windows/pwsh)
+Invoke-Pester tests/pester/ -CI
 
-   # Build matrix
-   bash scripts/bash/build-matrix.sh specs/{feature}/v-model/
+# 3. Structural eval tests (Python — deterministic, no LLM)
+pip install -e ".[dev]"
+pytest tests/evals/ -m structural -v
 
-   # Diff requirements
-   bash scripts/bash/diff-requirements.sh specs/{feature}/v-model/
-   ```
+# 4. LLM-as-judge eval tests (requires OPENAI_API_KEY)
+OPENAI_API_KEY=sk-... pytest tests/evals/ -m eval -v
+```
 
-3. Verify category-aware matching:
-   - Create test data with mixed categories (`REQ-001`, `REQ-NF-001`, `REQ-IF-001`).
-   - Ensure scripts correctly distinguish between them.
+### Test Architecture
 
-### What to Verify
+| Layer | Framework | Tests | What it validates |
+|-------|-----------|-------|-------------------|
+| **BATS** | bats-core | 27 | Bash script logic: setup, coverage validation, matrix building, diff detection |
+| **Pester** | Pester 5 | 27 | PowerShell script parity with Bash |
+| **Structural evals** | pytest + DeepEval | 15 | ID format/hierarchy, template conformance, BDD scenario completeness |
+| **LLM-as-judge evals** | pytest + DeepEval GEval | 6 | Requirements quality (IEEE 29148), BDD quality, traceability completeness |
 
-- [ ] All 4 Bash scripts run without errors
-- [ ] All 4 PowerShell scripts produce identical output to Bash equivalents
-- [ ] `setup-v-model.sh` resolves the correct repo root and feature directory
-- [ ] `validate-coverage.sh` correctly identifies gaps for category-prefixed IDs
-- [ ] `build-matrix.sh` generates a valid markdown table with no mismatched rows
-- [ ] Extension installs and registers commands with `specify extension add --dev`
+### Test Fixtures
+
+Test fixtures live in `tests/fixtures/` with 5 scenario sets plus 2 golden examples:
+
+- **`minimal/`** — 3 REQs, full coverage (baseline happy path)
+- **`gaps/`** — Intentional coverage gap (REQ-NF-001 has no ATP)
+- **`complex/`** — 16 REQs across 4 categories + orphaned ATP-999-A
+- **`empty/`** — Empty files for edge case testing
+- **`malformed/`** — Broken ID formats
+- **`golden/medical-device/`** — IEC 62304 blood glucose monitor (reference quality)
+- **`golden/automotive-adas/`** — ISO 26262 emergency braking system (reference quality)
+
+### Adding Tests
+
+- **New BATS test**: Add to `tests/bats/` following existing patterns. Use `test_helper.bash` for fixtures.
+- **New Pester test**: Mirror the BATS test in `tests/pester/` for PowerShell parity.
+- **New eval test**: Add to `tests/evals/test_*_eval.py`. Mark with `@pytest.mark.structural` (deterministic) or `@pytest.mark.eval` (LLM).
+- **New fixture**: Add directory under `tests/fixtures/` with `requirements.md` and `acceptance-plan.md`.
+
+### CI Pipelines
+
+- **`ci.yml`** — Runs on every push/PR: BATS tests + structural validators (Ubuntu), Pester tests (Windows)
+- **`evals.yml`** — Structural evals run weekly; LLM evals run on manual dispatch with `OPENAI_API_KEY` secret
 
 ## Code of Conduct
 

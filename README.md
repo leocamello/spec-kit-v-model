@@ -99,6 +99,29 @@ coverage_threshold: 100
 batch_size: 5
 ```
 
+## Testing
+
+```bash
+# BATS tests (Bash scripts)
+tests/bats/lib/bats-core/bin/bats tests/bats/*.bats
+
+# Structural eval tests (Python, deterministic)
+pip install -e ".[dev]"
+pytest tests/evals/ -m structural -v
+
+# LLM-as-judge evals (requires OPENAI_API_KEY)
+OPENAI_API_KEY=sk-... pytest tests/evals/ -m eval -v
+```
+
+| Layer | Tests | What it validates |
+|-------|-------|-------------------|
+| BATS | 27 | Bash script logic (setup, coverage, matrix, diff) |
+| Pester | 27 | PowerShell script parity |
+| Structural evals | 15 | ID format, template conformance, BDD completeness |
+| LLM-as-judge evals | 6 | Requirements quality (IEEE 29148), BDD quality, traceability |
+
+See [CONTRIBUTING.md](CONTRIBUTING.md#testing) for full details.
+
 ## Target Audience
 
 - **Any engineering team** wanting rigorous spec + test pairing
