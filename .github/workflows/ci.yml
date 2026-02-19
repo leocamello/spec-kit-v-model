@@ -65,6 +65,7 @@ jobs:
             * **Then** result
           EOF
 
+          git config user.email "ci@test" && git config user.name "CI"
           git init && git add -A && git commit -m "test data" --quiet
 
           echo "=== validate-coverage ==="
