@@ -1,0 +1,136 @@
+"""Deterministic structural validators for V-Model ID formats and hierarchy."""
+
+import re
+from collections import Counter
+
+ID_PATTERNS = {
+    "REQ": re.compile(r"REQ-(?:[A-Z]+-)?[0-9]{3}"),
+    "ATP": re.compile(r"ATP-(?:[A-Z]+-)?[0-9]{3}-[A-Z]"),
+    "SCN": re.compile(r"SCN-(?:[A-Z]+-)?[0-9]{3}-[A-Z][0-9]+"),
+}
+
+ID_STRICT_PATTERNS = {
+    "REQ": re.compile(r"^REQ-(?:[A-Z]+-)?[0-9]{3}$"),
+    "ATP": re.compile(r"^ATP-(?:[A-Z]+-)?[0-9]{3}-[A-Z]$"),
+    "SCN": re.compile(r"^SCN-(?:[A-Z]+-)?[0-9]{3}-[A-Z][0-9]+$"),
+}
+
+
+def extract_ids(text: str, prefix: str) -> list[str]:
+    """Extract all IDs matching the given prefix (REQ, ATP, SCN) from text."""
+    pattern = ID_PATTERNS.get(prefix)
+    if pattern is None:
+        raise ValueError(f"Unknown prefix: {prefix}. Must be one of: REQ, ATP, SCN")
+    return pattern.findall(text)
+
+
+def validate_id_format(ids: list[str], prefix: str) -> list[str]:
+    """Return list of IDs that DON'T match the expected format. Empty = all valid."""
+    pattern = ID_STRICT_PATTERNS.get(prefix)
+    if pattern is None:
+        raise ValueError(f"Unknown prefix: {prefix}. Must be one of: REQ, ATP, SCN")
+    return [id_ for id_ in ids if not pattern.match(id_)]
+
+
+def find_duplicates(ids: list[str]) -> list[str]:
+    """Return list of IDs that appear more than once."""
+    counts = Counter(ids)
+    return [id_ for id_, count in counts.items() if count > 1]
+
+
+def _req_base_key(req_id: str) -> str:
+    """Strip 'REQ-' prefix. E.g. 'REQ-001' -> '001', 'REQ-NF-001' -> 'NF-001'."""
+    return req_id[4:]
+
+
+def _atp_base_key(atp_id: str) -> str:
+    """Strip 'ATP-' and trailing '-[A-Z]'. E.g. 'ATP-001-A' -> '001', 'ATP-NF-001-B' -> 'NF-001'."""
+    without_prefix = atp_id[4:]
+    return re.sub(r"-[A-Z]$", "", without_prefix)
+
+
+def _atp_full_key(atp_id: str) -> str:
+    """Strip 'ATP-' prefix. E.g. 'ATP-001-A' -> '001-A', 'ATP-NF-001-A' -> 'NF-001-A'."""
+    return atp_id[4:]
+
+
+def _scn_full_key(scn_id: str) -> str:
+    """Strip 'SCN-' prefix. E.g. 'SCN-001-A1' -> '001-A1'."""
+    return scn_id[4:]
+
+
+def validate_hierarchy(req_ids: list[str], atp_ids: list[str], scn_ids: list[str]) -> dict:
+    """Validate hierarchical consistency between REQ, ATP, and SCN IDs."""
+    req_bases = {_req_base_key(r) for r in req_ids}
+    atp_bases = {_atp_base_key(a) for a in atp_ids}
+    atp_fulls = {_atp_full_key(a) for a in atp_ids}
+    scn_fulls = {_scn_full_key(s) for s in scn_ids}
+
+    orphaned_atps = [a for a in atp_ids if _atp_base_key(a) not in req_bases]
+    orphaned_scns = [
+        s for s in scn_ids
+        if not any(_scn_full_key(s).startswith(af) for af in atp_fulls)
+    ]
+    uncovered_reqs = [r for r in req_ids if _req_base_key(r) not in atp_bases]
+    atps_without_scn = [
+        a for a in atp_ids
+        if not any(sf.startswith(_atp_full_key(a)) for sf in scn_fulls)
+    ]
+
+    return {
+        "orphaned_atps": orphaned_atps,
+        "orphaned_scns": orphaned_scns,
+        "uncovered_reqs": uncovered_reqs,
+        "atps_without_scn": atps_without_scn,
+    }
+
+
+def validate_all(text: str) -> dict:
+    """Run all validations on a combined text (requirements + acceptance plan)."""
+    req_ids = extract_ids(text, "REQ")
+    atp_ids = extract_ids(text, "ATP")
+    scn_ids = extract_ids(text, "SCN")
+
+    issues = []
+    unique_reqs = list(dict.fromkeys(req_ids))
+    unique_atps = list(dict.fromkeys(atp_ids))
+    unique_scns = list(dict.fromkeys(scn_ids))
+
+    # Format validation (scored)
+    scored_issue_count = 0
+    for prefix, ids in [("REQ", unique_reqs), ("ATP", unique_atps), ("SCN", unique_scns)]:
+        bad = validate_id_format(ids, prefix)
+        for b in bad:
+            issues.append(f"Malformed {prefix} ID: {b}")
+            scored_issue_count += 1
+
+    # Hierarchy checks (scored)
+    hierarchy = validate_hierarchy(unique_reqs, unique_atps, unique_scns)
+    for a in hierarchy["orphaned_atps"]:
+        issues.append(f"Orphaned ATP (no matching REQ): {a}")
+        scored_issue_count += 1
+    for s in hierarchy["orphaned_scns"]:
+        issues.append(f"Orphaned SCN (no matching ATP): {s}")
+        scored_issue_count += 1
+    for r in hierarchy["uncovered_reqs"]:
+        issues.append(f"Uncovered REQ (no ATP): {r}")
+        scored_issue_count += 1
+    for a in hierarchy["atps_without_scn"]:
+        issues.append(f"ATP without SCN: {a}")
+        scored_issue_count += 1
+
+    # Scoring based on format + hierarchy issues only
+    total_items = len(unique_reqs) + len(unique_atps) + len(unique_scns)
+    if total_items == 0:
+        score = 0.0
+    else:
+        score = max(0.0, 1.0 - scored_issue_count / total_items)
+
+    return {
+        "score": round(score, 2),
+        "issues": issues,
+        "req_ids": unique_reqs,
+        "atp_ids": unique_atps,
+        "scn_ids": unique_scns,
+        "hierarchy": hierarchy,
+    }
