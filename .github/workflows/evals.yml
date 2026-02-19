@@ -31,7 +31,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install -e ".[dev]"
+          pip install -r requirements-dev.txt
 
       - name: Run structural eval tests
         run: |
@@ -57,7 +57,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install -e ".[dev]"
+          pip install -r requirements-dev.txt
 
       - name: Run LLM eval tests
         env:

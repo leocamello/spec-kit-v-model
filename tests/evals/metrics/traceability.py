@@ -9,9 +9,14 @@ Requires GOOGLE_API_KEY environment variable.
 import os
 
 from deepeval.metrics import GEval
+from deepeval.models import GeminiModel
 from deepeval.test_case import LLMTestCaseParams
 
-EVAL_MODEL = os.getenv("DEEPEVAL_MODEL", "gemini-2.0-flash")
+EVAL_MODEL_NAME = os.getenv("DEEPEVAL_MODEL", "gemini-2.5-flash")
+
+
+def _get_model():
+    return GeminiModel(model=EVAL_MODEL_NAME)
 
 TRACEABILITY_CRITERIA = """\
 You are evaluating a requirements traceability matrix (RTM) for a \
@@ -49,6 +54,6 @@ def create_traceability_metric(threshold: float = 0.8) -> GEval:
             LLMTestCaseParams.ACTUAL_OUTPUT,
             LLMTestCaseParams.EXPECTED_OUTPUT,
         ],
-        model=EVAL_MODEL,
+        model=_get_model(),
         threshold=threshold,
     )

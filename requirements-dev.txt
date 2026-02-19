@@ -7,3 +7,4 @@ pytest-cov>=4.0
 
 # LLM Evaluation
 deepeval>=2.0
+google-genai>=1.0

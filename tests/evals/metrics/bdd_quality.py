@@ -10,9 +10,14 @@ Requires GOOGLE_API_KEY environment variable.
 import os
 
 from deepeval.metrics import GEval
+from deepeval.models import GeminiModel
 from deepeval.test_case import LLMTestCaseParams
 
-EVAL_MODEL = os.getenv("DEEPEVAL_MODEL", "gemini-2.0-flash")
+EVAL_MODEL_NAME = os.getenv("DEEPEVAL_MODEL", "gemini-2.5-flash")
+
+
+def _get_model():
+    return GeminiModel(model=EVAL_MODEL_NAME)
 
 BDD_QUALITY_CRITERIA = """\
 You are evaluating a BDD (Behavior-Driven Development) acceptance test plan. \
@@ -49,6 +54,6 @@ def create_bdd_quality_metric(threshold: float = 0.7) -> GEval:
             LLMTestCaseParams.ACTUAL_OUTPUT,
             LLMTestCaseParams.EXPECTED_OUTPUT,
         ],
-        model=EVAL_MODEL,
+        model=_get_model(),
         threshold=threshold,
     )
