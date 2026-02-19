@@ -1,0 +1,60 @@
+schema_version: "1.0"
+
+extension:
+  id: "v-model"
+  name: "V-Model Extension Pack"
+  version: "0.1.0"
+  description: "Enforces V-Model paired generation of development specs and test specs with full traceability."
+  author: "leocamello"
+  repository: "https://github.com/leocamello/spec-kit-v-model"
+  license: "MIT"
+  homepage: "https://github.com/leocamello/spec-kit-v-model"
+
+requires:
+  speckit_version: ">=0.1.0"
+
+  commands:
+    - "speckit.specify"
+
+provides:
+  commands:
+    - name: "speckit.v-model.requirements"
+      file: "commands/requirements.md"
+      description: "Generate a V-Model Requirements Specification with traceable REQ-NNN IDs"
+
+    - name: "speckit.v-model.acceptance"
+      file: "commands/acceptance.md"
+      description: "Generate a three-tier Acceptance Test Plan (Test Cases + BDD Scenarios) with 100% coverage validation"
+
+    - name: "speckit.v-model.trace"
+      file: "commands/trace.md"
+      description: "Build a regulatory-grade 3D Traceability Matrix (REQ → ATP → SCN)"
+
+  config:
+    - name: "v-model-config.yml"
+      template: "config-template.yml"
+      description: "V-Model extension configuration"
+      required: false
+
+hooks:
+  after_tasks:
+    command: "speckit.v-model.trace"
+    optional: true
+    prompt: "Run traceability matrix to validate requirement coverage?"
+    description: "Builds the traceability matrix after tasks are generated"
+
+tags:
+  - "v-model"
+  - "traceability"
+  - "testing"
+  - "compliance"
+  - "safety-critical"
+
+defaults:
+  output_dir: "v-model"
+  id_prefixes:
+    requirements: "REQ"
+    test_cases: "ATP"
+    scenarios: "SCN"
+  coverage_threshold: 100
+  batch_size: 5

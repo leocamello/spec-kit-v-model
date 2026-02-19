@@ -1,0 +1,19 @@
+{
+  "schema_version": "1.0",
+  "extensions": {
+    "v-model": {
+      "version": "0.1.0",
+      "source": "local",
+      "manifest_hash": "sha256:f9225d088603ebf3c00d699243656ee068c929104319ec50b89753627736eda8",
+      "enabled": true,
+      "registered_commands": {
+        "copilot": [
+          "speckit.v-model.requirements",
+          "speckit.v-model.acceptance",
+          "speckit.v-model.trace"
+        ]
+      },
+      "installed_at": "2026-02-19T23:34:13.902148+00:00"
+    }
+  }
+}

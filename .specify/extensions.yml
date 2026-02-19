@@ -1,0 +1,12 @@
+installed: []
+settings:
+  auto_execute_hooks: true
+hooks:
+  after_tasks:
+  - extension: v-model
+    command: speckit.v-model.trace
+    enabled: true
+    optional: true
+    prompt: Run traceability matrix to validate requirement coverage?
+    description: Builds the traceability matrix after tasks are generated
+    condition: null

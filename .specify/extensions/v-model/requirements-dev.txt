@@ -1,0 +1,10 @@
+# Development dependencies for spec-kit-v-model
+# Install with: pip install -r requirements-dev.txt
+
+# Testing
+pytest>=7.0
+pytest-cov>=4.0
+
+# LLM Evaluation
+deepeval>=2.0
+google-genai>=1.0
