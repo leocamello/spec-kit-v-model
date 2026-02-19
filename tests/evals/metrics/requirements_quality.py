@@ -1,11 +1,18 @@
 """DeepEval GEval metric for IEEE 29148 / INCOSE requirements quality scoring.
 
-This metric uses an LLM judge to evaluate requirements documents against
-the 8 quality criteria from IEEE 29148 and INCOSE Guide for Writing Requirements.
+This metric uses an LLM judge (Google Gemini) to evaluate requirements
+documents against the 8 quality criteria from IEEE 29148 and INCOSE
+Guide for Writing Requirements.
+
+Requires GOOGLE_API_KEY environment variable.
 """
+
+import os
 
 from deepeval.metrics import GEval
 from deepeval.test_case import LLMTestCaseParams
+
+EVAL_MODEL = os.getenv("DEEPEVAL_MODEL", "gemini-2.0-flash")
 
 REQUIREMENTS_QUALITY_CRITERIA = """\
 You are evaluating a software requirements specification document. \
@@ -52,5 +59,6 @@ def create_requirements_quality_metric(threshold: float = 0.7) -> GEval:
             LLMTestCaseParams.ACTUAL_OUTPUT,
             LLMTestCaseParams.EXPECTED_OUTPUT,
         ],
+        model=EVAL_MODEL,
         threshold=threshold,
     )

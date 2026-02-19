@@ -1,11 +1,18 @@
 """DeepEval GEval metric for BDD scenario quality scoring.
 
-This metric uses an LLM judge to evaluate acceptance test plans
-with BDD (Given/When/Then) scenarios for quality and completeness.
+This metric uses an LLM judge (Google Gemini) to evaluate acceptance
+test plans with BDD (Given/When/Then) scenarios for quality and
+completeness.
+
+Requires GOOGLE_API_KEY environment variable.
 """
+
+import os
 
 from deepeval.metrics import GEval
 from deepeval.test_case import LLMTestCaseParams
+
+EVAL_MODEL = os.getenv("DEEPEVAL_MODEL", "gemini-2.0-flash")
 
 BDD_QUALITY_CRITERIA = """\
 You are evaluating a BDD (Behavior-Driven Development) acceptance test plan. \
@@ -42,5 +49,6 @@ def create_bdd_quality_metric(threshold: float = 0.7) -> GEval:
             LLMTestCaseParams.ACTUAL_OUTPUT,
             LLMTestCaseParams.EXPECTED_OUTPUT,
         ],
+        model=EVAL_MODEL,
         threshold=threshold,
     )

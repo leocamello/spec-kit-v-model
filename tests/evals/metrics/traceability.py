@@ -1,11 +1,17 @@
 """DeepEval GEval metric for traceability completeness scoring.
 
-This metric uses an LLM judge to evaluate traceability matrices
-for bidirectional completeness, granularity, and auditability.
+This metric uses an LLM judge (Google Gemini) to evaluate traceability
+matrices for bidirectional completeness, granularity, and auditability.
+
+Requires GOOGLE_API_KEY environment variable.
 """
+
+import os
 
 from deepeval.metrics import GEval
 from deepeval.test_case import LLMTestCaseParams
+
+EVAL_MODEL = os.getenv("DEEPEVAL_MODEL", "gemini-2.0-flash")
 
 TRACEABILITY_CRITERIA = """\
 You are evaluating a requirements traceability matrix (RTM) for a \
@@ -43,5 +49,6 @@ def create_traceability_metric(threshold: float = 0.8) -> GEval:
             LLMTestCaseParams.ACTUAL_OUTPUT,
             LLMTestCaseParams.EXPECTED_OUTPUT,
         ],
+        model=EVAL_MODEL,
         threshold=threshold,
     )

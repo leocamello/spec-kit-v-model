@@ -154,8 +154,8 @@ Invoke-Pester tests/pester/ -CI
 pip install -e ".[dev]"
 pytest tests/evals/ -m structural -v
 
-# 4. LLM-as-judge eval tests (requires OPENAI_API_KEY)
-OPENAI_API_KEY=sk-... pytest tests/evals/ -m eval -v
+# 4. LLM-as-judge eval tests (requires GOOGLE_API_KEY)
+GOOGLE_API_KEY=... pytest tests/evals/ -m eval -v
 ```
 
 ### Test Architecture
@@ -189,7 +189,7 @@ Test fixtures live in `tests/fixtures/` with 5 scenario sets plus 2 golden examp
 ### CI Pipelines
 
 - **`ci.yml`** — Runs on every push/PR: BATS tests + structural validators (Ubuntu), Pester tests (Windows)
-- **`evals.yml`** — Structural evals run weekly; LLM evals run on manual dispatch with `OPENAI_API_KEY` secret
+- **`evals.yml`** — Structural evals run weekly; LLM evals run on manual dispatch with `GOOGLE_API_KEY` secret
 
 ## Code of Conduct
 

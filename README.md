@@ -109,8 +109,8 @@ tests/bats/lib/bats-core/bin/bats tests/bats/*.bats
 pip install -e ".[dev]"
 pytest tests/evals/ -m structural -v
 
-# LLM-as-judge evals (requires OPENAI_API_KEY)
-OPENAI_API_KEY=sk-... pytest tests/evals/ -m eval -v
+# LLM-as-judge evals (requires GOOGLE_API_KEY)
+GOOGLE_API_KEY=... pytest tests/evals/ -m eval -v
 ```
 
 | Layer | Tests | What it validates |
