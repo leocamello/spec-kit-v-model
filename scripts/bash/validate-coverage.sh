@@ -53,25 +53,32 @@ fi
 # REQ IDs: REQ-NNN, REQ-NF-NNN, REQ-IF-NNN, REQ-CN-NNN
 req_ids=($(grep -oE 'REQ-([A-Z]+-)?[0-9]{3}' "$REQUIREMENTS" | sort -u))
 
-# ATP IDs: ATP-NNN-X (letter suffix)
-atp_ids=($(grep -oE 'ATP-[0-9]{3}-[A-Z]' "$ACCEPTANCE" | sort -u))
+# ATP IDs: ATP-NNN-X or ATP-{CAT}-NNN-X (with optional category prefix)
+atp_ids=($(grep -oE 'ATP-([A-Z]+-)?[0-9]{3}-[A-Z]' "$ACCEPTANCE" | sort -u))
 
-# SCN IDs: SCN-NNN-X# (letter + number suffix)
-scn_ids=($(grep -oE 'SCN-[0-9]{3}-[A-Z][0-9]+' "$ACCEPTANCE" | sort -u))
+# SCN IDs: SCN-NNN-X# or SCN-{CAT}-NNN-X# (with optional category prefix)
+scn_ids=($(grep -oE 'SCN-([A-Z]+-)?[0-9]{3}-[A-Z][0-9]+' "$ACCEPTANCE" | sort -u))
 
 total_reqs=${#req_ids[@]}
 total_atps=${#atp_ids[@]}
 total_scns=${#scn_ids[@]}
 
+# Helper: extract the base key from an ID (the part between the prefix and the trailing suffix)
+# REQ-001 -> 001, REQ-NF-001 -> NF-001
+# ATP-001-A -> 001, ATP-NF-001-A -> NF-001
+req_base_key() { echo "$1" | sed 's/^REQ-//'; }
+atp_base_key() { echo "$1" | sed 's/^ATP-//' | sed 's/-[A-Z]$//'; }
+atp_full_key() { echo "$1" | sed 's/^ATP-//'; }
+scn_full_key() { echo "$1" | sed 's/^SCN-//'; }
+
 # Check Tier 1: Every REQ has at least one ATP
 reqs_without_atp=()
 for req in "${req_ids[@]}"; do
-    # Extract the numeric part (handles REQ-001, REQ-NF-001, etc.)
-    req_num=$(echo "$req" | grep -oE '[0-9]{3}$')
+    req_key=$(req_base_key "$req")
     has_atp=false
     for atp in "${atp_ids[@]}"; do
-        atp_num=$(echo "$atp" | grep -oE '[0-9]{3}')
-        if [[ "$req_num" == "$atp_num" ]]; then
+        atp_key=$(atp_base_key "$atp")
+        if [[ "$req_key" == "$atp_key" ]]; then
             has_atp=true
             break
         fi
@@ -84,12 +91,11 @@ done
 # Check Tier 2: Every ATP has at least one SCN
 atps_without_scn=()
 for atp in "${atp_ids[@]}"; do
-    # ATP-001-A -> look for SCN-001-A*
-    atp_suffix=$(echo "$atp" | sed 's/ATP-//')  # 001-A
+    atp_key=$(atp_full_key "$atp")
     has_scn=false
     for scn in "${scn_ids[@]}"; do
-        scn_suffix=$(echo "$scn" | sed 's/SCN-//')  # 001-A1
-        if [[ "$scn_suffix" == "$atp_suffix"* ]]; then
+        scn_key=$(scn_full_key "$scn")
+        if [[ "$scn_key" == "$atp_key"* ]]; then
             has_scn=true
             break
         fi
@@ -102,11 +108,11 @@ done
 # Check for orphaned ATPs (ATP referencing non-existent REQ)
 orphaned_atps=()
 for atp in "${atp_ids[@]}"; do
-    atp_num=$(echo "$atp" | grep -oE '[0-9]{3}')
+    atp_key=$(atp_base_key "$atp")
     has_req=false
     for req in "${req_ids[@]}"; do
-        req_num=$(echo "$req" | grep -oE '[0-9]{3}$')
-        if [[ "$atp_num" == "$req_num" ]]; then
+        req_key=$(req_base_key "$req")
+        if [[ "$atp_key" == "$req_key" ]]; then
             has_req=true
             break
         fi

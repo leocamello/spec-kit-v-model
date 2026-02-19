@@ -61,18 +61,19 @@ while IFS= read -r line; do
     fi
 done < "$REQUIREMENTS"
 
-# Extract ATP sections: "#### Test Case: ATP-NNN-X (Description)"
+# Extract ATP sections: "#### Test Case: ATP-{CAT?-}NNN-X (Description)"
 declare -A atp_descriptions
+atp_regex='Test Case: (ATP-([A-Z]+-)?[0-9]{3}-[A-Z])[[:space:]]*\(([^)]+)\)'
 while IFS= read -r line; do
-    if [[ "$line" =~ "Test Case: "(ATP-[0-9]{3}-[A-Z])[[:space:]]*\(([^)]+)\) ]]; then
+    if [[ "$line" =~ $atp_regex ]]; then
         atp_id="${BASH_REMATCH[1]}"
-        atp_desc="${BASH_REMATCH[2]}"
+        atp_desc="${BASH_REMATCH[3]}"
         atp_descriptions["$atp_id"]="$atp_desc"
     fi
 done < "$ACCEPTANCE"
 
-# Extract SCN IDs
-scn_ids=($(grep -oE 'SCN-[0-9]{3}-[A-Z][0-9]+' "$ACCEPTANCE" | sort -u))
+# Extract SCN IDs (with optional category prefix)
+scn_ids=($(grep -oE 'SCN-([A-Z]+-)?[0-9]{3}-[A-Z][0-9]+' "$ACCEPTANCE" | sort -u))
 
 # Get sorted unique REQ IDs
 req_ids=($(echo "${!req_descriptions[@]}" | tr ' ' '\n' | sort))
@@ -81,6 +82,16 @@ atp_ids=($(echo "${!atp_descriptions[@]}" | tr ' ' '\n' | sort))
 total_reqs=${#req_ids[@]}
 total_atps=${#atp_ids[@]}
 total_scns=${#scn_ids[@]}
+
+# Helper: extract base key for matching
+# REQ-001 -> 001, REQ-NF-001 -> NF-001
+req_base_key() { echo "$1" | sed 's/^REQ-//'; }
+# ATP-001-A -> 001, ATP-NF-001-A -> NF-001
+atp_base_key() { echo "$1" | sed 's/^ATP-//' | sed 's/-[A-Z]$//'; }
+# ATP-001-A -> 001-A, ATP-NF-001-A -> NF-001-A
+atp_full_key() { echo "$1" | sed 's/^ATP-//'; }
+# SCN-001-A1 -> 001-A1, SCN-NF-001-A1 -> NF-001-A1
+scn_full_key() { echo "$1" | sed 's/^SCN-//'; }
 
 # Count coverage
 reqs_with_atp=0
@@ -92,22 +103,22 @@ atps_with_scn=0
     echo "|----------------|------------------------|--------------------|----------------------|--------------------|--------|"
 
     for req in "${req_ids[@]}"; do
-        req_num=$(echo "$req" | grep -oE '[0-9]{3}$')
+        req_key=$(req_base_key "$req")
         req_desc="${req_descriptions[$req]}"
         first_row=true
         has_atp=false
 
         for atp in "${atp_ids[@]}"; do
-            atp_num=$(echo "$atp" | grep -oE '[0-9]{3}')
-            if [[ "$atp_num" == "$req_num" ]]; then
+            atp_key=$(atp_base_key "$atp")
+            if [[ "$atp_key" == "$req_key" ]]; then
                 has_atp=true
                 atp_desc="${atp_descriptions[$atp]}"
-                atp_suffix=$(echo "$atp" | sed 's/ATP-//')
+                atp_fkey=$(atp_full_key "$atp")
                 atp_has_scn=false
 
                 for scn in "${scn_ids[@]}"; do
-                    scn_suffix=$(echo "$scn" | sed 's/SCN-//')
-                    if [[ "$scn_suffix" == "$atp_suffix"* ]]; then
+                    scn_fkey=$(scn_full_key "$scn")
+                    if [[ "$scn_fkey" == "$atp_fkey"* ]]; then
                         atp_has_scn=true
                         if $first_row; then
                             echo "| **$req** | $req_desc | $atp | $atp_desc | $scn | ⬜ Untested |"
@@ -156,22 +167,22 @@ fi
 # Find gaps
 reqs_without_atp=()
 for req in "${req_ids[@]}"; do
-    req_num=$(echo "$req" | grep -oE '[0-9]{3}$')
+    req_key=$(req_base_key "$req")
     has_atp=false
     for atp in "${atp_ids[@]}"; do
-        atp_num=$(echo "$atp" | grep -oE '[0-9]{3}')
-        [[ "$atp_num" == "$req_num" ]] && has_atp=true && break
+        atp_key=$(atp_base_key "$atp")
+        [[ "$atp_key" == "$req_key" ]] && has_atp=true && break
     done
     $has_atp || reqs_without_atp+=("$req")
 done
 
 orphaned_atps=()
 for atp in "${atp_ids[@]}"; do
-    atp_num=$(echo "$atp" | grep -oE '[0-9]{3}')
+    atp_key=$(atp_base_key "$atp")
     has_req=false
     for req in "${req_ids[@]}"; do
-        req_num=$(echo "$req" | grep -oE '[0-9]{3}$')
-        [[ "$atp_num" == "$req_num" ]] && has_req=true && break
+        req_key=$(req_base_key "$req")
+        [[ "$atp_key" == "$req_key" ]] && has_req=true && break
     done
     $has_req || orphaned_atps+=("$atp")
 done

@@ -37,7 +37,7 @@ function Get-RepoRoot {
     } catch {}
 
     $scriptDir = Split-Path -Parent $PSCommandPath
-    return (Resolve-Path (Join-Path $scriptDir '../../../..')).Path
+    return (Resolve-Path (Join-Path $scriptDir '../../../../..')).Path
 }
 
 function Get-CurrentBranch {

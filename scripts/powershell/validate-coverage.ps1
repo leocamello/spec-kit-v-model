@@ -51,12 +51,12 @@ $accContent = Get-Content -Raw $Acceptance
 $reqIds = [regex]::Matches($reqContent, 'REQ-([A-Z]+-)?[0-9]{3}') |
     ForEach-Object { $_.Value } | Sort-Object -Unique
 
-# ATP IDs: ATP-NNN-X (letter suffix)
-$atpIds = [regex]::Matches($accContent, 'ATP-[0-9]{3}-[A-Z]') |
+# ATP IDs: ATP-{CAT?-}NNN-X (with optional category prefix)
+$atpIds = [regex]::Matches($accContent, 'ATP-([A-Z]+-)?[0-9]{3}-[A-Z]') |
     ForEach-Object { $_.Value } | Sort-Object -Unique
 
-# SCN IDs: SCN-NNN-X# (letter + number suffix)
-$scnIds = [regex]::Matches($accContent, 'SCN-[0-9]{3}-[A-Z][0-9]+') |
+# SCN IDs: SCN-{CAT?-}NNN-X# (with optional category prefix)
+$scnIds = [regex]::Matches($accContent, 'SCN-([A-Z]+-)?[0-9]{3}-[A-Z][0-9]+') |
     ForEach-Object { $_.Value } | Sort-Object -Unique
 
 # Ensure arrays
@@ -68,14 +68,20 @@ $totalReqs = $reqIds.Count
 $totalAtps = $atpIds.Count
 $totalScns = $scnIds.Count
 
+# Helper: extract base key for matching
+# REQ-001 -> 001, REQ-NF-001 -> NF-001
+function Get-ReqBaseKey($id) { $id -replace '^REQ-', '' }
+# ATP-001-A -> 001, ATP-NF-001-A -> NF-001
+function Get-AtpBaseKey($id) { ($id -replace '^ATP-', '') -replace '-[A-Z]$', '' }
+
 # Check Tier 1: Every REQ has at least one ATP
 $reqsWithoutAtp = @()
 foreach ($req in $reqIds) {
-    $reqNum = [regex]::Match($req, '[0-9]{3}$').Value
+    $reqKey = Get-ReqBaseKey $req
     $hasAtp = $false
     foreach ($atp in $atpIds) {
-        $atpNum = [regex]::Match($atp, '[0-9]{3}').Value
-        if ($reqNum -eq $atpNum) {
+        $atpKey = Get-AtpBaseKey $atp
+        if ($reqKey -eq $atpKey) {
             $hasAtp = $true
             break
         }
@@ -105,11 +111,11 @@ foreach ($atp in $atpIds) {
 # Check for orphaned ATPs (ATP referencing non-existent REQ)
 $orphanedAtps = @()
 foreach ($atp in $atpIds) {
-    $atpNum = [regex]::Match($atp, '[0-9]{3}').Value
+    $atpKey = Get-AtpBaseKey $atp
     $hasReq = $false
     foreach ($req in $reqIds) {
-        $reqNum = [regex]::Match($req, '[0-9]{3}$').Value
-        if ($atpNum -eq $reqNum) {
+        $reqKey = Get-ReqBaseKey $req
+        if ($atpKey -eq $reqKey) {
             $hasReq = $true
             break
         }

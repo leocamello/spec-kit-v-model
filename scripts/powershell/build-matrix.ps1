@@ -53,18 +53,18 @@ foreach ($line in $reqContent) {
     }
 }
 
-# Extract ATP sections: "#### Test Case: ATP-NNN-X (Description)"
+# Extract ATP sections: "#### Test Case: ATP-{CAT?-}NNN-X (Description)"
 $atpDescriptions = [ordered]@{}
 foreach ($line in $accContent) {
-    if ($line -match 'Test Case:\s*(ATP-[0-9]{3}-[A-Z])\s*\(([^)]+)\)') {
+    if ($line -match 'Test Case:\s*(ATP-([A-Z]+-)?[0-9]{3}-[A-Z])\s*\(([^)]+)\)') {
         $atpId = $Matches[1]
-        $atpDesc = $Matches[2]
+        $atpDesc = $Matches[3]
         $atpDescriptions[$atpId] = $atpDesc
     }
 }
 
-# Extract SCN IDs
-$scnIds = @([regex]::Matches($accRaw, 'SCN-[0-9]{3}-[A-Z][0-9]+') |
+# Extract SCN IDs (with optional category prefix)
+$scnIds = @([regex]::Matches($accRaw, 'SCN-([A-Z]+-)?[0-9]{3}-[A-Z][0-9]+') |
     ForEach-Object { $_.Value } | Sort-Object -Unique)
 
 # Get sorted unique IDs
@@ -75,6 +75,12 @@ $totalReqs = $reqIds.Count
 $totalAtps = $atpIds.Count
 $totalScns = $scnIds.Count
 
+# Helper: extract base key for matching
+function Get-ReqBaseKey($id) { $id -replace '^REQ-', '' }
+function Get-AtpBaseKey($id) { ($id -replace '^ATP-', '') -replace '-[A-Z]$', '' }
+function Get-AtpFullKey($id) { $id -replace '^ATP-', '' }
+function Get-ScnFullKey($id) { $id -replace '^SCN-', '' }
+
 # Build the matrix
 $reqsWithAtp = 0
 $atpsWithScn = 0
@@ -84,22 +90,22 @@ $matrixLines += '| Requirement ID | Requirement Description | Test Case ID (ATP)
 $matrixLines += '|----------------|------------------------|--------------------|----------------------|--------------------|--------|'
 
 foreach ($req in $reqIds) {
-    $reqNum = [regex]::Match($req, '[0-9]{3}$').Value
+    $reqKey = Get-ReqBaseKey $req
     $reqDesc = $reqDescriptions[$req]
     $firstRow = $true
     $hasAtp = $false
 
     foreach ($atp in $atpIds) {
-        $atpNum = [regex]::Match($atp, '[0-9]{3}').Value
-        if ($atpNum -eq $reqNum) {
+        $atpKey = Get-AtpBaseKey $atp
+        if ($atpKey -eq $reqKey) {
             $hasAtp = $true
             $atpDesc = $atpDescriptions[$atp]
-            $atpSuffix = $atp -replace '^ATP-', ''
+            $atpFKey = Get-AtpFullKey $atp
             $atpHasScn = $false
 
             foreach ($scn in $scnIds) {
-                $scnSuffix = $scn -replace '^SCN-', ''
-                if ($scnSuffix.StartsWith($atpSuffix)) {
+                $scnFKey = Get-ScnFullKey $scn
+                if ($scnFKey.StartsWith($atpFKey)) {
                     $atpHasScn = $true
                     if ($firstRow) {
                         $matrixLines += "| **$req** | $reqDesc | $atp | $atpDesc | $scn | ⬜ Untested |"
@@ -147,22 +153,22 @@ if ($totalAtps -gt 0) {
 # Find gaps
 $reqsWithoutAtp = @()
 foreach ($req in $reqIds) {
-    $reqNum = [regex]::Match($req, '[0-9]{3}$').Value
+    $reqKey = Get-ReqBaseKey $req
     $hasAtp = $false
     foreach ($atp in $atpIds) {
-        $atpNum = [regex]::Match($atp, '[0-9]{3}').Value
-        if ($atpNum -eq $reqNum) { $hasAtp = $true; break }
+        $atpKey = Get-AtpBaseKey $atp
+        if ($atpKey -eq $reqKey) { $hasAtp = $true; break }
     }
     if (-not $hasAtp) { $reqsWithoutAtp += $req }
 }
 
 $orphanedAtps = @()
 foreach ($atp in $atpIds) {
-    $atpNum = [regex]::Match($atp, '[0-9]{3}').Value
+    $atpKey = Get-AtpBaseKey $atp
     $hasReq = $false
     foreach ($req in $reqIds) {
-        $reqNum = [regex]::Match($req, '[0-9]{3}$').Value
-        if ($atpNum -eq $reqNum) { $hasReq = $true; break }
+        $reqKey = Get-ReqBaseKey $req
+        if ($atpKey -eq $reqKey) { $hasReq = $true; break }
     }
     if (-not $hasReq) { $orphanedAtps += $atp }
 }

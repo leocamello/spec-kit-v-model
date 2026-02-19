@@ -48,7 +48,7 @@ get_repo_root() {
         git rev-parse --show-toplevel
     else
         local script_dir="$(CDPATH="" cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-        (cd "$script_dir/../../../.." && pwd)
+        (cd "$script_dir/../../../../.." && pwd)
     fi
 }
 
@@ -83,7 +83,9 @@ get_current_branch() {
 }
 
 find_feature_dir() {
-    local repo_root="$1" branch="$2" specs_dir="$repo_root/specs"
+    local repo_root="$1"
+    local branch="$2"
+    local specs_dir="$repo_root/specs"
     if [[ "$branch" =~ ^([0-9]{3})- ]]; then
         local prefix="${BASH_REMATCH[1]}"
         for dir in "$specs_dir"/"$prefix"-*; do
