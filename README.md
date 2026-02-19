@@ -74,9 +74,14 @@ The ID scheme encodes traceability directly in the identifier:
 
 | Tier | Format | Example | Meaning |
 |------|--------|---------|---------|
-| Requirement | `REQ-{NNN}` | `REQ-001` | Requirement #1 |
+| Requirement | `REQ-{NNN}` | `REQ-001` | Functional requirement #1 |
+| Requirement | `REQ-{CAT}-{NNN}` | `REQ-NF-001` | Non-Functional requirement #1 |
 | Test Case | `ATP-{NNN}-{X}` | `ATP-001-A` | Test Case A for REQ-001 |
+| Test Case | `ATP-{CAT}-{NNN}-{X}` | `ATP-NF-001-A` | Test Case A for REQ-NF-001 |
 | Scenario | `SCN-{NNN}-{X}{#}` | `SCN-001-A1` | Scenario 1 of ATP-001-A |
+| Scenario | `SCN-{CAT}-{NNN}-{X}{#}` | `SCN-NF-001-A1` | Scenario 1 of ATP-NF-001-A |
+
+Category prefixes: `NF` (Non-Functional), `IF` (Interface), `CN` (Constraint). Functional requirements have no prefix.
 
 Reading `SCN-001-A1` tells you: Scenario 1 → of Test Case A → validating Requirement 001.
 

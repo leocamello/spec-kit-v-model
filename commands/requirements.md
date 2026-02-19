@@ -31,12 +31,13 @@ Transform a feature description or existing `spec.md` into a structured V-Model 
 
 Run `{SCRIPT}` from the repository root and parse the JSON output.
 
-The script returns:
-- `v_model_dir`: Path to `specs/{feature}/v-model/` directory
-- `feature_dir`: Path to `specs/{feature}/` directory
-- `branch`: Current branch name
-- `has_spec`: Whether `spec.md` exists in the feature directory
-- `has_requirements`: Whether `requirements.md` already exists
+The script returns JSON with these keys:
+- `VMODEL_DIR`: Path to `specs/{feature}/v-model/` directory
+- `FEATURE_DIR`: Path to `specs/{feature}/` directory
+- `BRANCH`: Current branch name
+- `SPEC`: Path to `spec.md` (file may not exist yet)
+- `REQUIREMENTS`: Path to `requirements.md` (file may not exist yet)
+- `AVAILABLE_DOCS`: Array of documents that currently exist (e.g., `["spec.md"]`)
 
 For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\''m Groot' (or double-quote if possible: "I'm Groot").
 
@@ -45,13 +46,13 @@ For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\''m Groot
 1. **Load the template**: Read `templates/requirements-template.md` from the extension directory to understand the required output structure.
 
 2. **Load the source** (in priority order):
-   - If `has_spec` is true: Read `spec.md` from the feature directory. This is the primary source of truth.
+   - If `AVAILABLE_DOCS` contains `"spec.md"`: Read `spec.md` from the feature directory (`SPEC` path). This is the primary source of truth.
    - If `$ARGUMENTS` is not empty: Use the user's feature description as the source.
    - If both exist: Use `spec.md` as the primary source, with `$ARGUMENTS` as supplementary context or instructions.
    - If neither exists: ERROR — "No feature description or spec.md found. Run `/speckit.specify` first or provide a feature description."
 
-3. **Load existing requirements** (if `has_requirements` is true):
-   - Read the existing `requirements.md` to preserve existing IDs and content.
+3. **Load existing requirements** (if `AVAILABLE_DOCS` contains `"requirements.md"`):
+   - Read the existing `requirements.md` (`REQUIREMENTS` path) to preserve existing IDs and content.
    - Identify the highest existing REQ number to continue the sequence.
    - New requirements append after existing ones — **never renumber**.
 
@@ -151,7 +152,7 @@ The requirement traces back to a **real business, user, or safety need**. If you
 
 ### 5. Write Output
 
-Write the complete requirements document to `{v_model_dir}/requirements.md` using the template structure. Include:
+Write the complete requirements document to `{VMODEL_DIR}/requirements.md` using the template structure. Include:
 
 1. **Header section**: Feature name, branch, date, source reference
 2. **Overview**: Brief description of the feature's business context

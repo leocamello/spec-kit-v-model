@@ -79,9 +79,11 @@ For the MVP, all items default to `⬜ Pending Execution`. Future phases will pu
 Run `{SCRIPT}` from the repository root. The `--require-reqs --require-acceptance` flags ensure both prerequisite files exist.
 
 Parse the JSON output for:
-- `v_model_dir`: Path to `specs/{feature}/v-model/` directory
-- `requirements_file`: Path to `requirements.md`
-- `acceptance_file`: Path to `acceptance-plan.md`
+- `VMODEL_DIR`: Path to `specs/{feature}/v-model/` directory
+- `REQUIREMENTS`: Path to `requirements.md`
+- `ACCEPTANCE`: Path to `acceptance-plan.md`
+
+**Note on script paths**: The helper scripts (`build-matrix`) are in the same directory as the setup script. Derive the scripts directory from the `{SCRIPT}` path (i.e., its parent directory).
 
 For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\''m Groot' (or double-quote if possible: "I'm Groot").
 
@@ -90,11 +92,13 @@ For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\''m Groot
 Run the matrix builder script — this is a **deterministic operation**, NOT an AI task:
 
 ```bash
-scripts/bash/build-matrix.sh {v_model_dir}
+{SCRIPTS_DIR}/build-matrix.sh {VMODEL_DIR} --output {VMODEL_DIR}/traceability-matrix.md
 ```
 ```powershell
-scripts/powershell/build-matrix.ps1 {v_model_dir}
+{SCRIPTS_DIR}/build-matrix.ps1 {VMODEL_DIR} -Output {VMODEL_DIR}/traceability-matrix.md
 ```
+
+Where `{SCRIPTS_DIR}` is the parent directory of the `{SCRIPT}` path.
 
 The script:
 1. Parses `requirements.md` for all REQ IDs and their descriptions
@@ -102,7 +106,7 @@ The script:
 3. Cross-references forward (REQ → ATP → SCN) and backward (SCN → ATP → REQ)
 4. Identifies gaps (uncovered REQs) and orphans (unlinked ATPs/SCNs)
 5. Generates the complete traceability matrix with coverage metrics
-6. Writes output to `{v_model_dir}/traceability-matrix.md`
+6. Writes output to `{VMODEL_DIR}/traceability-matrix.md`
 
 ### 3. Present Results (3 Sections)
 
@@ -173,7 +177,7 @@ The full bidirectional matrix table:
 | **REQ-NF-001** | System shall respond within 2s | — | — | — | ❌ **NO TEST CASE** |
 
 If the matrix is very large (>50 rows), display the first 20 rows in the response and reference the full file:
-"Full matrix available at: `{v_model_dir}/traceability-matrix.md`"
+"Full matrix available at: `{VMODEL_DIR}/traceability-matrix.md`"
 
 ### 4. Baseline Information (Pillar 3: Versioning)
 

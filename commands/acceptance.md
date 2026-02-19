@@ -36,17 +36,19 @@ This command enforces the V-Model's core principle: **every development requirem
 Run `{SCRIPT}` from the repository root. The `--require-reqs` flag ensures `requirements.md` exists.
 
 Parse the JSON output for:
-- `v_model_dir`: Path to `specs/{feature}/v-model/` directory
-- `requirements_file`: Path to `requirements.md`
-- `has_acceptance`: Whether `acceptance-plan.md` already exists
+- `VMODEL_DIR`: Path to `specs/{feature}/v-model/` directory
+- `REQUIREMENTS`: Path to `requirements.md`
+- `AVAILABLE_DOCS`: Array of existing documents — check for `"acceptance-plan.md"` to detect existing plan
+
+**Note on script paths**: The helper scripts (`diff-requirements`, `validate-coverage`) are in the same directory as the setup script. Derive the scripts directory from the `{SCRIPT}` path (i.e., its parent directory).
 
 For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\''m Groot' (or double-quote if possible: "I'm Groot").
 
 ### 2. Load Context
 
 1. **Load the template**: Read `templates/acceptance-plan-template.md` from the extension directory.
-2. **Read requirements**: Parse `requirements.md` to extract all `REQ-NNN` items (all categories: REQ-, REQ-NF-, REQ-IF-, REQ-CN-).
-3. **Load existing acceptance plan** (if `has_acceptance` is true):
+2. **Read requirements**: Parse `requirements.md` (`REQUIREMENTS` path) to extract all `REQ-NNN` items (all categories: REQ-, REQ-NF-, REQ-IF-, REQ-CN-).
+3. **Load existing acceptance plan** (if `AVAILABLE_DOCS` contains `"acceptance-plan.md"`):
    - Read the existing `acceptance-plan.md` to preserve existing ATPs and SCNs.
    - Identify which REQs already have test cases.
    - Identify the existing ATP/SCN IDs to avoid duplicates.
@@ -56,11 +58,13 @@ For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\''m Groot
 If an existing `acceptance-plan.md` is found, run the diff script to detect what changed:
 
 ```bash
-scripts/bash/diff-requirements.sh {v_model_dir}
+{SCRIPTS_DIR}/diff-requirements.sh {VMODEL_DIR}
 ```
 ```powershell
-scripts/powershell/diff-requirements.ps1 {v_model_dir}
+{SCRIPTS_DIR}/diff-requirements.ps1 {VMODEL_DIR}
 ```
+
+Where `{SCRIPTS_DIR}` is the parent directory of the `{SCRIPT}` path (or the equivalent PowerShell directory).
 
 Parse the JSON output for:
 - `added`: New REQ IDs that need ATPs/SCNs
@@ -213,10 +217,10 @@ The outcome MUST be something the system can actually verify — a database stat
 After generating all batches, run the coverage validation script:
 
 ```bash
-scripts/bash/validate-coverage.sh --json {v_model_dir}
+{SCRIPTS_DIR}/validate-coverage.sh --json {VMODEL_DIR}
 ```
 ```powershell
-scripts/powershell/validate-coverage.ps1 -Json {v_model_dir}
+{SCRIPTS_DIR}/validate-coverage.ps1 -Json {VMODEL_DIR}
 ```
 
 Parse the JSON output for:
