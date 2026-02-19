@@ -10,13 +10,15 @@ permissions:
   contents: read
 
 jobs:
-  validate-scripts:
-    name: Validate Helper Scripts
+  validate-bash:
+    name: Validate & Test Bash Scripts
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
       - name: Check Bash scripts syntax
         run: |
@@ -38,49 +40,50 @@ jobs:
         run: |
           for cmd in commands/*.md; do
             echo "Checking $cmd..."
-            # Verify YAML frontmatter exists
             head -1 "$cmd" | grep -q '^---$'
             echo "  ✓ Has frontmatter"
           done
 
-      - name: Run scripts against test data
+      - name: Run BATS tests
         run: |
-          # Create minimal test data
-          mkdir -p specs/001-test/v-model
-          cat > specs/001-test/v-model/requirements.md << 'EOF'
-          # Requirements
-          | ID | Description | Priority | Rationale | Verification Method |
-          |----|-------------|----------|-----------|---------------------|
-          | REQ-001 | The system SHALL do X | P1 | Needed | Test |
-          | REQ-NF-001 | The system SHALL perform Y in 2s | P1 | Performance | Test |
-          EOF
+          echo "Running 27 BATS tests..."
+          tests/bats/lib/bats-core/bin/bats tests/bats/*.bats
 
-          cat > specs/001-test/v-model/acceptance-plan.md << 'EOF'
-          ### Requirement Validation: REQ-001 (Test Feature)
-          #### Test Case: ATP-001-A (Happy Path)
-          **Description:** Verify X works
-          * **User Scenario: SCN-001-A1**
-            * **Given** precondition
-            * **When** action
-            * **Then** result
-          EOF
+      - name: Run structural validators
+        run: |
+          python3 -c "
+          from tests.validators.id_validator import validate_all
+          from tests.validators.template_validator import validate_requirements, validate_acceptance_plan
+          from tests.validators.bdd_validator import validate_all_scenarios
 
-          git config user.email "ci@test" && git config user.name "CI"
-          git init && git add -A && git commit -m "test data" --quiet
+          for fixture in ['minimal', 'complex']:
+              with open(f'tests/fixtures/{fixture}/requirements.md') as f: reqs = f.read()
+              with open(f'tests/fixtures/{fixture}/acceptance-plan.md') as f: acc = f.read()
+              r = validate_requirements(reqs)
+              a = validate_acceptance_plan(acc)
+              b = validate_all_scenarios(acc)
+              v = validate_all(reqs + '\n' + acc)
+              print(f'{fixture}: req={r[\"score\"]} acc={a[\"score\"]} bdd={b[\"score\"]} ids={v[\"score\"]}')
+              assert r['score'] >= 0.95, f'{fixture} requirements failed: {r[\"issues\"]}'
+              assert a['score'] >= 0.95, f'{fixture} acceptance failed: {a[\"issues\"]}'
+              assert b['score'] >= 0.95, f'{fixture} bdd failed: {b[\"issues\"]}'
 
-          echo "=== validate-coverage ==="
-          bash scripts/bash/validate-coverage.sh --json specs/001-test/v-model/ || echo "(exit $? expected — test data has intentional gap)"
+          for domain in ['medical-device', 'automotive-adas']:
+              with open(f'tests/fixtures/golden/{domain}/expected-requirements.md') as f: reqs = f.read()
+              with open(f'tests/fixtures/golden/{domain}/expected-acceptance.md') as f: acc = f.read()
+              r = validate_requirements(reqs)
+              a = validate_acceptance_plan(acc)
+              b = validate_all_scenarios(acc)
+              print(f'{domain}: req={r[\"score\"]} acc={a[\"score\"]} bdd={b[\"score\"]}')
+              assert r['score'] == 1.0, f'{domain} requirements failed: {r[\"issues\"]}'
+              assert a['score'] == 1.0, f'{domain} acceptance failed: {a[\"issues\"]}'
+              assert b['score'] == 1.0, f'{domain} bdd failed: {b[\"issues\"]}'
 
-          echo ""
-          echo "=== build-matrix ==="
-          bash scripts/bash/build-matrix.sh specs/001-test/v-model/ | head -20
-
-          echo ""
-          echo "=== diff-requirements ==="
-          bash scripts/bash/diff-requirements.sh --json specs/001-test/v-model/ || echo "(exit $? expected — all reqs are new)"
+          print('✓ All structural validators pass')
+          "
 
   validate-powershell:
-    name: Validate PowerShell Scripts
+    name: Validate & Test PowerShell Scripts
     runs-on: windows-latest
 
     steps:
@@ -97,3 +100,12 @@ jobs:
             )
             Write-Host "  OK"
           }
+
+      - name: Run Pester tests
+        shell: pwsh
+        run: |
+          $config = New-PesterConfiguration
+          $config.Run.Path = "tests/pester"
+          $config.Output.Verbosity = "Detailed"
+          $config.Run.Exit = $true
+          Invoke-Pester -Configuration $config
