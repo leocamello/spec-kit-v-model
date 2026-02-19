@@ -1,0 +1,98 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  validate-scripts:
+    name: Validate Helper Scripts
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check Bash scripts syntax
+        run: |
+          for script in scripts/bash/*.sh; do
+            echo "Checking $script..."
+            bash -n "$script"
+          done
+
+      - name: Validate extension manifest
+        run: |
+          echo "Checking extension.yml exists and has required fields..."
+          test -f extension.yml
+          grep -q 'schema_version:' extension.yml
+          grep -q 'extension:' extension.yml
+          grep -q 'provides:' extension.yml
+          echo "✓ extension.yml is valid"
+
+      - name: Validate command files
+        run: |
+          for cmd in commands/*.md; do
+            echo "Checking $cmd..."
+            # Verify YAML frontmatter exists
+            head -1 "$cmd" | grep -q '^---$'
+            echo "  ✓ Has frontmatter"
+          done
+
+      - name: Run scripts against test data
+        run: |
+          # Create minimal test data
+          mkdir -p specs/001-test/v-model
+          cat > specs/001-test/v-model/requirements.md << 'EOF'
+          # Requirements
+          | ID | Description | Priority | Rationale | Verification Method |
+          |----|-------------|----------|-----------|---------------------|
+          | REQ-001 | The system SHALL do X | P1 | Needed | Test |
+          | REQ-NF-001 | The system SHALL perform Y in 2s | P1 | Performance | Test |
+          EOF
+
+          cat > specs/001-test/v-model/acceptance-plan.md << 'EOF'
+          ### Requirement Validation: REQ-001 (Test Feature)
+          #### Test Case: ATP-001-A (Happy Path)
+          **Description:** Verify X works
+          * **User Scenario: SCN-001-A1**
+            * **Given** precondition
+            * **When** action
+            * **Then** result
+          EOF
+
+          git init && git add -A && git commit -m "test data" --quiet
+
+          echo "=== validate-coverage ==="
+          bash scripts/bash/validate-coverage.sh --json specs/001-test/v-model/
+
+          echo ""
+          echo "=== build-matrix ==="
+          bash scripts/bash/build-matrix.sh specs/001-test/v-model/ | head -20
+
+          echo ""
+          echo "=== diff-requirements ==="
+          bash scripts/bash/diff-requirements.sh --json specs/001-test/v-model/
+
+  validate-powershell:
+    name: Validate PowerShell Scripts
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check PowerShell scripts syntax
+        shell: pwsh
+        run: |
+          foreach ($script in Get-ChildItem scripts/powershell/*.ps1) {
+            Write-Host "Checking $($script.Name)..."
+            $null = [System.Management.Automation.PSParser]::Tokenize(
+              (Get-Content $script.FullName -Raw), [ref]$null
+            )
+            Write-Host "  OK"
+          }
