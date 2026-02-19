@@ -1,0 +1,35 @@
+# V-Model Extension Configuration
+# Copy this to v-model-config.yml and customize
+
+# Directory where V-Model artifacts are stored (relative to specs/{feature}/)
+output_dir: "v-model"
+
+# ID prefixes for traceable artifacts
+id_prefixes:
+  requirements: "REQ"
+  test_cases: "ATP"
+  scenarios: "SCN"
+
+# Minimum coverage percentage required for validation gate to pass
+# Set to 100 for regulated industries, lower for exploratory projects
+coverage_threshold: 100
+
+# Number of requirements to process per batch in acceptance generation
+# Lower values = better quality per batch, higher values = fewer interactions
+batch_size: 5
+
+# Requirement categories to include
+# Comment out categories not needed for your project
+categories:
+  functional: true
+  non_functional: true
+  interface: true
+  constraint: true
+
+# Verification methods available
+# Used in requirements template for the Verification Method column
+verification_methods:
+  - "Test"
+  - "Inspection"
+  - "Analysis"
+  - "Demonstration"
