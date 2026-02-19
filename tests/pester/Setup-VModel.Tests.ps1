@@ -1,0 +1,110 @@
+#Requires -Modules Pester
+
+BeforeAll {
+    $ScriptsDir = Resolve-Path (Join-Path $PSScriptRoot '../../scripts/powershell')
+    $FixturesDir = Resolve-Path (Join-Path $PSScriptRoot '../fixtures')
+
+    function Initialize-GitRepo {
+        param([string]$Path)
+        Push-Location $Path
+        git init --quiet
+        git config user.email 'test@example.com'
+        git config user.name 'Test'
+        New-Item -ItemType File -Path (Join-Path $Path '.gitkeep') -Force | Out-Null
+        git add .
+        git commit --quiet -m 'Initial commit'
+        Pop-Location
+    }
+}
+
+Describe 'Setup-VModel' {
+    Context 'Directory creation' {
+        It 'creates v-model directory' {
+            $tempDir = Join-Path $TestDrive 'creates-vmodel'
+            New-Item -ItemType Directory -Path $tempDir -Force | Out-Null
+            Initialize-GitRepo -Path $tempDir
+            Push-Location $tempDir
+            git checkout -b 001-test --quiet
+            $output = & pwsh -NoProfile -File "$ScriptsDir/setup-v-model.ps1" 2>&1
+            $LASTEXITCODE | Should -Be 0
+            Join-Path $tempDir 'specs/001-test/v-model' | Should -Exist
+            Pop-Location
+        }
+    }
+
+    Context 'Document detection' {
+        It 'detects existing requirements.md' {
+            $tempDir = Join-Path $TestDrive 'detects-reqs'
+            New-Item -ItemType Directory -Path $tempDir -Force | Out-Null
+            Initialize-GitRepo -Path $tempDir
+            Push-Location $tempDir
+            git checkout -b 001-test --quiet
+            $vmodelDir = Join-Path $tempDir 'specs/001-test/v-model'
+            New-Item -ItemType Directory -Path $vmodelDir -Force | Out-Null
+            New-Item -ItemType File -Path (Join-Path $vmodelDir 'requirements.md') -Force | Out-Null
+            $output = & pwsh -NoProfile -File "$ScriptsDir/setup-v-model.ps1" -Json 2>&1
+            $LASTEXITCODE | Should -Be 0
+            $output | Should -Match 'requirements\.md'
+            Pop-Location
+        }
+    }
+
+    Context 'Prerequisite checks' {
+        It '--require-reqs fails when requirements.md is missing' {
+            $tempDir = Join-Path $TestDrive 'require-reqs'
+            New-Item -ItemType Directory -Path $tempDir -Force | Out-Null
+            Initialize-GitRepo -Path $tempDir
+            Push-Location $tempDir
+            git checkout -b 001-test --quiet
+            $vmodelDir = Join-Path $tempDir 'specs/001-test/v-model'
+            New-Item -ItemType Directory -Path $vmodelDir -Force | Out-Null
+            & pwsh -NoProfile -File "$ScriptsDir/setup-v-model.ps1" -RequireReqs 2>&1 | Out-Null
+            $LASTEXITCODE | Should -Not -Be 0
+            Pop-Location
+        }
+
+        It '--require-acceptance fails when acceptance-plan.md is missing' {
+            $tempDir = Join-Path $TestDrive 'require-acceptance'
+            New-Item -ItemType Directory -Path $tempDir -Force | Out-Null
+            Initialize-GitRepo -Path $tempDir
+            Push-Location $tempDir
+            git checkout -b 001-test --quiet
+            $vmodelDir = Join-Path $tempDir 'specs/001-test/v-model'
+            New-Item -ItemType Directory -Path $vmodelDir -Force | Out-Null
+            New-Item -ItemType File -Path (Join-Path $vmodelDir 'requirements.md') -Force | Out-Null
+            & pwsh -NoProfile -File "$ScriptsDir/setup-v-model.ps1" -RequireAcceptance 2>&1 | Out-Null
+            $LASTEXITCODE | Should -Not -Be 0
+            Pop-Location
+        }
+    }
+
+    Context 'JSON output' {
+        It '--json outputs valid JSON' {
+            $tempDir = Join-Path $TestDrive 'json-output'
+            New-Item -ItemType Directory -Path $tempDir -Force | Out-Null
+            Initialize-GitRepo -Path $tempDir
+            Push-Location $tempDir
+            git checkout -b 001-test --quiet
+            $output = & pwsh -NoProfile -File "$ScriptsDir/setup-v-model.ps1" -Json 2>&1
+            $LASTEXITCODE | Should -Be 0
+            { $output | ConvertFrom-Json } | Should -Not -Throw
+            Pop-Location
+        }
+    }
+
+    Context 'Edge cases' {
+        It 'works outside git repo' {
+            $tempDir = Join-Path $TestDrive 'no-git'
+            New-Item -ItemType Directory -Path $tempDir -Force | Out-Null
+            Push-Location $tempDir
+            $output = & pwsh -NoProfile -File "$ScriptsDir/setup-v-model.ps1" 2>&1
+            $LASTEXITCODE | Should -Be 0
+            Pop-Location
+        }
+
+        It '--help shows usage' {
+            $output = & pwsh -NoProfile -Command "Get-Help '$ScriptsDir/setup-v-model.ps1'" 2>&1
+            $output | Out-String | Should -Match '(?i)synopsis|description|setup'
+        }
+    }
+}
