@@ -109,3 +109,24 @@ jobs:
           $config.Output.Verbosity = "Detailed"
           $config.Run.Exit = $true
           Invoke-Pester -Configuration $config
+
+  structural-evals:
+    name: Structural Evaluations
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements-dev.txt
+
+      - name: Run structural eval tests
+        run: pytest tests/evals/ -m structural -v --tb=short
