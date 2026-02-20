@@ -70,6 +70,24 @@ class TestSystemDesignStructural:
             for _ in [None]
         ), f"SYS ID format issues: {metric.reason}"
 
+    @pytest.mark.structural
+    def test_golden_medical_device_structural(self, medical_device_system_design):
+        """Golden medical-device system design passes all structural checks."""
+        tc = LLMTestCase(
+            input="Golden medical-device system design",
+            actual_output=medical_device_system_design,
+        )
+        assert_test(tc, [StructuralSystemDesignMetric(threshold=1.0)])
+
+    @pytest.mark.structural
+    def test_golden_automotive_adas_structural(self, automotive_adas_system_design):
+        """Golden automotive-adas system design passes all structural checks."""
+        tc = LLMTestCase(
+            input="Golden automotive-adas system design",
+            actual_output=automotive_adas_system_design,
+        )
+        assert_test(tc, [StructuralSystemDesignMetric(threshold=1.0)])
+
 
 # ---------------------------------------------------------------------------
 # LLM-as-judge quality tests (require GOOGLE_API_KEY)
@@ -130,3 +148,43 @@ class TestSystemDesignQuality:
         )
         metric = create_derived_requirement_metric(threshold=0.7)
         assert_test(tc, [metric])
+
+    @pytest.mark.eval
+    def test_golden_medical_device_design_completeness(
+        self, medical_device_requirements, medical_device_system_design
+    ):
+        """Golden medical-device system design meets decomposition completeness bar."""
+        tc = LLMTestCase(
+            input=medical_device_requirements,
+            actual_output=medical_device_system_design,
+            expected_output=(
+                "An IEEE 1016 system design decomposing all 5 requirements "
+                "(glucose sampling, alarms, accuracy, BLE connectivity, data retention) "
+                "into distinct SYS-NNN components with clear parent REQ traceability, "
+                "four architectural views, and derived requirements."
+            ),
+        )
+        assert_test(tc, [
+            create_design_completeness_metric(threshold=0.7),
+            create_view_quality_metric(threshold=0.7),
+        ])
+
+    @pytest.mark.eval
+    def test_golden_automotive_adas_design_completeness(
+        self, automotive_adas_requirements, automotive_adas_system_design
+    ):
+        """Golden automotive-adas system design meets decomposition completeness bar."""
+        tc = LLMTestCase(
+            input=automotive_adas_requirements,
+            actual_output=automotive_adas_system_design,
+            expected_output=(
+                "An IEEE 1016 system design decomposing all 5 requirements "
+                "(collision detection, braking, false positive rate, sensor interfaces, "
+                "fail-safe degradation) into distinct SYS-NNN components with ASIL-D "
+                "safety constraints, four architectural views, and derived requirements."
+            ),
+        )
+        assert_test(tc, [
+            create_design_completeness_metric(threshold=0.7),
+            create_view_quality_metric(threshold=0.7),
+        ])

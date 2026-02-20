@@ -82,6 +82,24 @@ class TestSystemTestStructural:
         )
         assert_test(tc, [StructuralSystemTestMetric(threshold=0.95)])
 
+    @pytest.mark.structural
+    def test_golden_medical_device_structural(self, medical_device_system_test):
+        """Golden medical-device system test passes all structural checks."""
+        tc = LLMTestCase(
+            input="Golden medical-device system test",
+            actual_output=medical_device_system_test,
+        )
+        assert_test(tc, [StructuralSystemTestMetric(threshold=1.0)])
+
+    @pytest.mark.structural
+    def test_golden_automotive_adas_structural(self, automotive_adas_system_test):
+        """Golden automotive-adas system test passes all structural checks."""
+        tc = LLMTestCase(
+            input="Golden automotive-adas system test",
+            actual_output=automotive_adas_system_test,
+        )
+        assert_test(tc, [StructuralSystemTestMetric(threshold=1.0)])
+
 
 # ---------------------------------------------------------------------------
 # LLM-as-judge quality tests (require GOOGLE_API_KEY)
@@ -150,3 +168,47 @@ class TestSystemTestQuality:
         )
         metric = create_scenario_independence_metric(threshold=0.7)
         assert_test(tc, [metric])
+
+    @pytest.mark.eval
+    def test_golden_medical_device_coverage_quality(
+        self, medical_device_system_design, medical_device_system_test
+    ):
+        """Golden medical-device system test meets coverage and technique quality bar."""
+        tc = LLMTestCase(
+            input=medical_device_system_design,
+            actual_output=medical_device_system_test,
+            expected_output=(
+                "An ISO 29119 system test plan covering all 5 SYS components "
+                "(Glucose Sensor Interface, Signal Processing Engine, Alert Manager, "
+                "BLE Communication Module, Data Storage Manager) with STP/STS test "
+                "cases using domain-appropriate techniques (Boundary Value Analysis "
+                "for accuracy, Fault Injection for failure modes, Interface Contract "
+                "Testing for protocols)."
+            ),
+        )
+        assert_test(tc, [
+            create_test_coverage_quality_metric(threshold=0.7),
+            create_technique_appropriateness_metric(threshold=0.7),
+        ])
+
+    @pytest.mark.eval
+    def test_golden_automotive_adas_coverage_quality(
+        self, automotive_adas_system_design, automotive_adas_system_test
+    ):
+        """Golden automotive-adas system test meets coverage and technique quality bar."""
+        tc = LLMTestCase(
+            input=automotive_adas_system_design,
+            actual_output=automotive_adas_system_test,
+            expected_output=(
+                "An ISO 29119 system test plan covering all 5 SYS components "
+                "(Radar Processing Unit, Camera Processing Unit, Sensor Fusion Engine, "
+                "Braking Controller, Fault Manager) with ASIL-D rigor, STP/STS test "
+                "cases using Boundary Value Analysis for detection ranges, Fault "
+                "Injection for degradation modes, and Equivalence Partitioning "
+                "for classification."
+            ),
+        )
+        assert_test(tc, [
+            create_test_coverage_quality_metric(threshold=0.7),
+            create_technique_appropriateness_metric(threshold=0.7),
+        ])
