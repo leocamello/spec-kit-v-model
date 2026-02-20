@@ -48,3 +48,45 @@ teardown() {
     assert_success
     assert_output --partial "ATP-999-A"
 }
+
+# ---- Matrix B: System-level tests ----
+
+@test "includes Matrix B when system artifacts exist" {
+    run bash "$SCRIPTS_DIR/build-matrix.sh" "$FIXTURES_DIR/system-design-minimal"
+    assert_success
+    assert_output --partial "Matrix B — Verification"
+}
+
+@test "Matrix B contains SYS components" {
+    run bash "$SCRIPTS_DIR/build-matrix.sh" "$FIXTURES_DIR/system-design-minimal"
+    assert_success
+    assert_output --partial "SYS-001"
+    assert_output --partial "STP-001-A"
+    assert_output --partial "STS-001-A1"
+}
+
+@test "Matrix B shows coverage metrics" {
+    run bash "$SCRIPTS_DIR/build-matrix.sh" "$FIXTURES_DIR/system-design-minimal"
+    assert_success
+    assert_output --partial "REQ → SYS Coverage"
+    assert_output --partial "SYS → STP Coverage"
+}
+
+@test "no Matrix B when system artifacts absent" {
+    run bash "$SCRIPTS_DIR/build-matrix.sh" "$FIXTURES_DIR/minimal"
+    assert_success
+    refute_output --partial "Matrix B"
+}
+
+@test "Matrix A present regardless of system artifacts" {
+    run bash "$SCRIPTS_DIR/build-matrix.sh" "$FIXTURES_DIR/system-design-minimal"
+    assert_success
+    assert_output --partial "Matrix A — Validation"
+}
+
+@test "system gap analysis present when system artifacts exist" {
+    run bash "$SCRIPTS_DIR/build-matrix.sh" "$FIXTURES_DIR/system-design-minimal"
+    assert_success
+    assert_output --partial "Uncovered Requirements — System Level"
+    assert_output --partial "Orphaned System Test Cases"
+}
