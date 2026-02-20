@@ -25,4 +25,5 @@ addopts = "-v --strict-markers --tb=short"
 markers = [
     "eval: marks tests as LLM evaluation tests (may require API key)",
     "structural: marks tests as structural validation tests (deterministic)",
+    "e2e: marks tests as end-to-end command invocation tests (requires GOOGLE_API_KEY)",
 ]
