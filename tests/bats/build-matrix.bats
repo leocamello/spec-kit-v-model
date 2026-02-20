@@ -40,7 +40,7 @@ teardown() {
 @test "coverage metrics in output" {
     run bash "$SCRIPTS_DIR/build-matrix.sh" "$FIXTURES_DIR/minimal"
     assert_success
-    assert_output --partial "Coverage Metrics"
+    assert_output --partial "Matrix A Coverage"
 }
 
 @test "orphaned ATPs section populated" {
