@@ -4,7 +4,11 @@ on:
   workflow_dispatch:
     inputs:
       run_llm_evals:
-        description: "Run LLM-as-judge evaluations (requires OPENAI_API_KEY)"
+        description: "Run LLM-as-judge evaluations (requires GOOGLE_API_KEY)"
+        type: boolean
+        default: false
+      run_e2e_evals:
+        description: "Run E2E command invocation evaluations (requires GOOGLE_API_KEY)"
         type: boolean
         default: false
   schedule:
@@ -64,3 +68,31 @@ jobs:
           GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
         run: |
           pytest tests/evals/ -m eval -v --tb=long
+
+  e2e-evals:
+    name: E2E Command Invocation Evaluations
+    runs-on: ubuntu-latest
+    if: >
+      github.event_name == 'workflow_dispatch' &&
+      github.event.inputs.run_e2e_evals == 'true'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements-dev.txt
+
+      - name: Run E2E eval tests
+        env:
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+        run: |
+          pytest tests/evals/ -m e2e -v --tb=long
