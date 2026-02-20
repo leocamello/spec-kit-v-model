@@ -38,6 +38,12 @@
 - [x] STS scenarios use technical BDD language (component-oriented) vs SCN scenarios (user-oriented)
 - [x] Traceability matrix split into Matrix A (Validation) + Matrix B (Verification) to prevent visual bloat
 
+## Red-Team Review Fixes (Human-in-the-Loop)
+- [x] Added REQ-035: Safety-critical system design outputs (FFI, Restricted Complexity) when regulated domain enabled — AI had merged FR-005 into constraint REQ-CN-001 without a corresponding functional requirement
+- [x] Added REQ-036: Safety-critical system test outputs (MC/DC, WCET) when regulated domain enabled — AI had merged FR-008 into constraint REQ-CN-001 without a corresponding functional requirement
+- [x] Added REQ-NF-005: LLM-as-judge quality gate for new commands — AI had dropped SC-007 entirely
+- [x] Fixed REQ-002 verification method from "Test" to "Inspection" — "never renumbered" is an architectural invariant not testable at runtime
+
 ## Metrics
 - User stories: 5 (3× P1, 1× P2, 1× P3)
 - Functional requirements: 19 (FR-001 through FR-019)
