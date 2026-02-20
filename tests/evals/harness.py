@@ -1,22 +1,30 @@
-"""E2E eval harness — renders spec-kit command templates into LLM prompts and invokes them.
+"""E2E eval harness — faithfully simulates spec-kit command invocation.
 
-This module provides the infrastructure for end-to-end evaluation tests:
-1. Parse command markdown files (YAML frontmatter + prompt body)
-2. Render prompts by replacing placeholders with test inputs
-3. Provide context documents (requirements.md, templates, etc.)
-4. Call the LLM and return raw output for evaluation
+Spec-kit commands are LLM agent prompts. At runtime the LLM:
+  1. Receives the full command markdown as its prompt
+  2. Executes the setup script (setup-v-model.sh) → gets JSON with paths
+  3. Reads files from those paths (requirements.md, templates, etc.)
+  4. Follows the command's execution steps to generate the output document
+
+This harness replicates that pipeline:
+  - The command prompt body is used UNMODIFIED (no placeholder neutralisation)
+  - The setup-script JSON output is simulated with realistic paths
+  - File contents are pre-loaded as tool-call results (as Copilot would provide)
+  - The LLM is given a system instruction matching spec-kit's agent role
 
 Requires GOOGLE_API_KEY environment variable.
 """
 
+import json
 import os
 import pathlib
 import re
 
 import yaml
 
-COMMANDS_DIR = pathlib.Path(__file__).parent.parent.parent / "commands"
-TEMPLATES_DIR = pathlib.Path(__file__).parent.parent.parent / "templates"
+REPO_ROOT = pathlib.Path(__file__).parent.parent.parent
+COMMANDS_DIR = REPO_ROOT / "commands"
+TEMPLATES_DIR = REPO_ROOT / "templates"
 
 # Map command names to the template files they reference
 COMMAND_TEMPLATES = {
@@ -26,7 +34,29 @@ COMMAND_TEMPLATES = {
     "system-test": "system-test-template.md",
 }
 
+# Map command names to which docs they need available
+COMMAND_AVAILABLE_DOCS = {
+    "requirements": lambda ctx: (
+        ["spec.md"] if "spec.md" in ctx else []
+    ),
+    "acceptance": lambda ctx: (
+        ["requirements.md"] + (["spec.md"] if "spec.md" in ctx else [])
+    ),
+    "system-design": lambda ctx: (
+        ["requirements.md"] + (["spec.md"] if "spec.md" in ctx else [])
+    ),
+    "system-test": lambda ctx: (
+        ["requirements.md", "system-design.md"]
+        + (["spec.md"] if "spec.md" in ctx else [])
+    ),
+}
+
 E2E_MODEL_NAME = os.getenv("E2E_MODEL", "gemini-2.5-flash")
+
+# Simulated project paths (matching real setup-v-model.sh output format)
+_SIM_REPO = "/workspace/project"
+_SIM_FEATURE = f"{_SIM_REPO}/specs/eval-feature"
+_SIM_VMODEL = f"{_SIM_FEATURE}/v-model"
 
 
 def parse_command(command_name: str) -> tuple[dict, str]:
@@ -50,17 +80,79 @@ def parse_command(command_name: str) -> tuple[dict, str]:
     return frontmatter, body
 
 
+def _build_script_json(command_name: str, context_files: dict[str, str]) -> str:
+    """Build the simulated JSON output from setup-v-model.sh.
+
+    Mirrors the real script's output format exactly.
+    """
+    available_docs_fn = COMMAND_AVAILABLE_DOCS.get(command_name, lambda _: [])
+    available_docs = available_docs_fn(context_files)
+
+    return json.dumps({
+        "REPO_ROOT": _SIM_REPO,
+        "BRANCH": "eval-feature",
+        "FEATURE_DIR": _SIM_FEATURE,
+        "VMODEL_DIR": _SIM_VMODEL,
+        "SPEC": f"{_SIM_FEATURE}/spec.md",
+        "REQUIREMENTS": f"{_SIM_VMODEL}/requirements.md",
+        "ACCEPTANCE": f"{_SIM_VMODEL}/acceptance-plan.md",
+        "TRACE_MATRIX": f"{_SIM_VMODEL}/traceability-matrix.md",
+        "AVAILABLE_DOCS": available_docs,
+    })
+
+
+def _build_file_contents(
+    command_name: str, context_files: dict[str, str]
+) -> str:
+    """Build the file-read results as the LLM would see them after loading.
+
+    In spec-kit, the LLM uses tool calls to read files from the paths
+    returned by the setup script. This simulates those tool-call results.
+    """
+    # Load the matching template (the command instructs the LLM to read it)
+    template_name = COMMAND_TEMPLATES.get(command_name)
+    all_files: dict[str, str] = {}
+    if template_name:
+        template_path = TEMPLATES_DIR / template_name
+        if template_path.exists():
+            all_files[f"templates/{template_name}"] = template_path.read_text()
+
+    # Map context file names to their simulated paths
+    path_map = {
+        "spec.md": f"{_SIM_FEATURE}/spec.md",
+        "requirements.md": f"{_SIM_VMODEL}/requirements.md",
+        "acceptance-plan.md": f"{_SIM_VMODEL}/acceptance-plan.md",
+        "system-design.md": f"{_SIM_VMODEL}/system-design.md",
+        "system-test.md": f"{_SIM_VMODEL}/system-test.md",
+    }
+    for filename, content in context_files.items():
+        path = path_map.get(filename, f"{_SIM_VMODEL}/{filename}")
+        all_files[path] = content
+
+    sections = []
+    for path, content in all_files.items():
+        sections.append(f"File: {path}\n```markdown\n{content}\n```")
+
+    return "\n\n".join(sections)
+
+
 def render_prompt(
     command_name: str,
     context_files: dict[str, str],
     arguments: str = "",
 ) -> str:
-    """Render a command template into a complete LLM prompt.
+    """Render a spec-kit command into a faithful LLM prompt.
+
+    Simulates the spec-kit runtime:
+    1. The command body is used as-is (with $ARGUMENTS substituted)
+    2. A pre-execution context block provides the setup-script JSON output
+       and all file contents the command would load
+    3. A minimal output instruction ensures only the document is returned
 
     Args:
         command_name: Name of the command (e.g., "requirements", "acceptance").
         context_files: Dict mapping filename to content
-            (e.g., {"requirements.md": "..."}).
+            (e.g., {"requirements.md": "...", "spec.md": "..."}).
         arguments: User input to substitute for $ARGUMENTS.
 
     Returns:
@@ -68,49 +160,41 @@ def render_prompt(
     """
     _, body = parse_command(command_name)
 
-    # Substitute user input
+    # Substitute user input (spec-kit does this before sending to the LLM)
     body = body.replace("$ARGUMENTS", arguments or "(no user input)")
 
-    # Neutralize script/path placeholders — context is provided directly
-    body = re.sub(r"\{SCRIPT\}", "[setup script — skip, context provided below]", body)
-    body = re.sub(r"\{SCRIPTS_DIR\}", "[scripts directory — skip]", body)
-    body = re.sub(r"\{VMODEL_DIR\}", "[output directory]", body)
-    body = re.sub(r"\{FEATURE_DIR\}", "[feature directory]", body)
+    # Build the simulated tool-call results that would precede the command
+    script_json = _build_script_json(command_name, context_files)
+    file_contents = _build_file_contents(command_name, context_files)
 
-    # Load the matching template if available
-    template_name = COMMAND_TEMPLATES.get(command_name)
-    if template_name:
-        template_path = TEMPLATES_DIR / template_name
-        if template_path.exists():
-            context_files = {
-                template_name: template_path.read_text(),
-                **context_files,
-            }
-
-    # Append context files as a block the LLM can reference
-    context_section = (
-        "\n\n---\n\n"
-        "## Context Files (provided for this evaluation)\n\n"
-        "The files below replace the setup-script and file-loading steps above. "
-        "Use them as if you had loaded them from disk.\n\n"
-    )
-    for filename, content in context_files.items():
-        context_section += f"### {filename}\n\n```markdown\n{content}\n```\n\n"
-
-    # Evaluation-specific instructions
-    eval_instructions = (
+    pre_context = (
+        "## Pre-loaded execution context\n\n"
+        "The setup script and file reads have already been executed. "
+        "Use these results directly — do not attempt to run scripts or "
+        "read files yourself.\n\n"
+        f"### Setup script output\n\n```json\n{script_json}\n```\n\n"
+        f"### Loaded files\n\n{file_contents}\n\n"
         "---\n\n"
-        "## E2E Evaluation Instructions\n\n"
-        "You are being evaluated on the quality of your output. Follow these rules:\n"
-        "1. **Skip** the setup script execution — all required context is above.\n"
-        "2. **Skip** helper-script validation steps (validate-coverage, diff-requirements) "
-        "— the evaluator will run structural checks on your output.\n"
-        "3. **Generate ONLY the output document** (the markdown that would be written "
-        "to the output file). No status messages, summaries, or next-step prompts.\n"
-        "4. **Do NOT wrap** the output in a code fence. Output raw markdown directly.\n"
     )
 
-    return body + context_section + eval_instructions
+    # Minimal output instruction — matches how spec-kit expects the LLM
+    # to write the output file (step "Write Output" in every command)
+    output_instruction = (
+        "\n\n---\n\n"
+        "Respond with ONLY the output document content (the markdown that "
+        "would be written to the output file). Do not include status "
+        "messages, completion reports, or code fences around the document."
+    )
+
+    return pre_context + body + output_instruction
+
+
+SYSTEM_INSTRUCTION = (
+    "You are a spec-kit extension agent executing a V-Model command. "
+    "You have already run the setup script and loaded all required files. "
+    "Follow the command's execution steps precisely, using the pre-loaded "
+    "context provided. Generate only the output document."
+)
 
 
 def invoke(
@@ -120,6 +204,11 @@ def invoke(
     model: str | None = None,
 ) -> str:
     """Invoke a spec-kit command via LLM and return the generated document.
+
+    Simulates spec-kit's runtime by:
+    1. Loading the actual command prompt from commands/{name}.md
+    2. Providing simulated setup-script JSON and pre-loaded file contents
+    3. Sending to the LLM with the spec-kit agent system instruction
 
     Args:
         command_name: Name of the command (e.g., "requirements").
@@ -140,6 +229,7 @@ def invoke(
 
     # Lazy import to avoid requiring google-genai for structural-only runs
     from google import genai
+    from google.genai import types
 
     prompt = render_prompt(command_name, context_files, arguments)
 
@@ -147,5 +237,8 @@ def invoke(
     response = client.models.generate_content(
         model=model or E2E_MODEL_NAME,
         contents=prompt,
+        config=types.GenerateContentConfig(
+            system_instruction=SYSTEM_INSTRUCTION,
+        ),
     )
     return response.text
