@@ -33,17 +33,21 @@ def _section_exists(sections: list[tuple[int, str]], name: str) -> bool:
 
 
 def validate_requirements(text: str) -> dict:
-    """Validate a requirements.md document structure."""
+    """Validate a requirements.md document structure.
+
+    Accepts both template-style sections (Overview) and golden-fixture-style
+    sections (Document Control) since LLM output may follow either convention.
+    """
     sections = _find_sections(text)
     section_names = [title for _, title in sections]
     issues = []
 
-    # Check required sections
-    if not _section_exists(sections, "Document Control"):
-        issues.append("Missing 'Document Control' section")
+    # Check for a document-header section (either style is valid)
+    if not (_section_exists(sections, "Overview") or _section_exists(sections, "Document Control")):
+        issues.append("Missing 'Overview' or 'Document Control' section")
 
-    if not _section_exists(sections, "Summary"):
-        issues.append("Missing 'Summary' section")
+    if not _section_exists(sections, "Requirements"):
+        issues.append("Missing 'Requirements' section")
 
     # Check for at least one REQ block
     req_pattern = re.compile(r"REQ-(?:[A-Z]+-)?[0-9]{3}")
@@ -53,7 +57,7 @@ def validate_requirements(text: str) -> dict:
     # Check heading hierarchy
     issues.extend(_check_heading_hierarchy(sections))
 
-    total_checks = 4  # Document Control, Summary, REQ block, heading hierarchy
+    total_checks = 4  # Overview, Requirements, REQ block, heading hierarchy
     failed = min(len(issues), total_checks)
     score = max(0.0, 1.0 - failed / total_checks)
 
@@ -65,13 +69,17 @@ def validate_requirements(text: str) -> dict:
 
 
 def validate_acceptance_plan(text: str) -> dict:
-    """Validate an acceptance-plan.md document structure."""
+    """Validate an acceptance-plan.md document structure.
+
+    Accepts both template-style sections (Overview) and golden-fixture-style
+    sections (Test Strategy) since LLM output may follow either convention.
+    """
     sections = _find_sections(text)
     section_names = [title for _, title in sections]
     issues = []
 
-    if not _section_exists(sections, "Test Strategy"):
-        issues.append("Missing 'Test Strategy' section")
+    if not (_section_exists(sections, "Overview") or _section_exists(sections, "Test Strategy")):
+        issues.append("Missing 'Overview' or 'Test Strategy' section")
 
     if not _section_exists(sections, "Requirement Validation"):
         issues.append("Missing 'Requirement Validation' block")

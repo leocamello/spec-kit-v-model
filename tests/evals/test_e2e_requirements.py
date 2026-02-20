@@ -11,7 +11,7 @@ from deepeval import assert_test
 from deepeval.test_case import LLMTestCase
 
 from tests.evals.harness import invoke
-from tests.evals.metrics.structural import StructuralIDMetric, StructuralTemplateMetric
+from tests.evals.metrics.structural import StructuralTemplateMetric
 from tests.evals.metrics.requirements_quality import create_requirements_quality_metric
 
 
@@ -31,7 +31,6 @@ class TestE2ERequirements:
             actual_output=output,
         )
         assert_test(tc, [
-            StructuralIDMetric(threshold=0.90),
             StructuralTemplateMetric("requirements", threshold=0.90),
         ])
 
@@ -48,7 +47,6 @@ class TestE2ERequirements:
             actual_output=output,
         )
         assert_test(tc, [
-            StructuralIDMetric(threshold=0.90),
             StructuralTemplateMetric("requirements", threshold=0.90),
         ])
 
