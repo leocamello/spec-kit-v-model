@@ -70,6 +70,29 @@ spec-kit-v-model/
 
 ## How to Contribute
 
+### Development Workflow (Spec-Driven)
+
+This project uses its own V-Model extension for development. When adding
+a new feature, follow the proactive workflow:
+
+1. **Specify** — `/speckit.specify <description>` creates a feature
+   branch and `spec.md` with user stories and requirements.
+2. **Requirements** — `/speckit.v-model.requirements` atomizes the spec
+   into traceable REQ-NNN identifiers.
+3. **Acceptance** — `/speckit.v-model.acceptance` generates paired test
+   cases (ATP) and BDD scenarios (SCN) with 100% coverage validation.
+4. **Plan** — `/speckit.plan` produces the technical plan, research
+   decisions, and project structure.
+5. **Tasks** — `/speckit.tasks` breaks the plan into dependency-ordered,
+   independently testable tasks.
+6. **Implement** — `/speckit.implement` executes tasks phase by phase.
+7. **Trace** — `/speckit.v-model.trace` generates the audit-ready
+   traceability matrix after implementation.
+
+All artifacts live in `specs/{feature}/`. See
+[README.md](README.md#proactive-workflow-recommended) for a detailed
+walkthrough with examples.
+
 ### Reporting Bugs
 
 - Use the [Bug Report](https://github.com/leocamello/spec-kit-v-model/issues/new?template=bug_report.md) issue template.

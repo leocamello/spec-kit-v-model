@@ -30,17 +30,79 @@ specify extension list
 
 ## Usage
 
-### Recommended Workflow
+### Proactive Workflow (Recommended)
+
+The V-Model extension integrates with Spec Kit's specification-driven
+development flow. Use this workflow when starting a **new feature**:
 
 ```
-/speckit.specify          →  Generate initial feature specification (core Spec Kit)
-/speckit.v-model.requirements  →  Atomize spec into traceable REQ-NNN requirements
-/speckit.v-model.acceptance    →  Generate test cases (ATP) and BDD scenarios (SCN)
-/speckit.v-model.trace         →  Build traceability matrix (audit artifact)
-/speckit.plan             →  Continue with standard Spec Kit flow
+Step 1: /speckit.specify          →  Feature specification (user stories, requirements)
+Step 2: /speckit.v-model.requirements  →  Traceable REQ-NNN requirements from spec.md
+Step 3: /speckit.v-model.acceptance    →  Paired test plan (ATP + SCN) with 100% coverage
+Step 4: /speckit.plan             →  Implementation plan (tech context, research, design)
+Step 5: /speckit.tasks            →  Dependency-ordered task list from plan + spec
+Step 6: /speckit.implement        →  Build the feature (tasks guide implementation)
+Step 7: /speckit.v-model.trace         →  Traceability matrix (audit artifact, post-implementation)
 ```
 
-### 1. Generate Requirements
+**Example — Feature 002: Custom ID Prefix Support**
+
+```bash
+# 1. Define the feature
+/speckit.specify Allow users to configure custom ID prefixes (e.g., SRS instead of REQ)
+
+# 2. Generate traceable requirements from the spec
+/speckit.v-model.requirements
+
+# 3. Generate acceptance tests — validates 100% coverage automatically
+/speckit.v-model.acceptance
+
+# 4. Plan the implementation
+/speckit.plan
+
+# 5. Break into tasks
+/speckit.tasks
+
+# 6. Implement (tasks guide you phase by phase)
+/speckit.implement
+
+# 7. After implementation, generate the audit-ready traceability matrix
+/speckit.v-model.trace
+```
+
+Each step produces artifacts in `specs/{feature}/`:
+
+```
+specs/002-custom-id-prefix/
+├── spec.md                          # Step 1: Feature specification
+├── v-model/
+│   ├── requirements.md              # Step 2: REQ-001, REQ-002, ...
+│   ├── acceptance-plan.md           # Step 3: ATP-001-A → SCN-001-A1, ...
+│   └── traceability-matrix.md       # Step 7: Bidirectional RTM
+├── plan.md                          # Step 4: Technical plan + research
+├── research.md                      # Step 4: Technology decisions
+├── tasks.md                         # Step 5: Ordered task list
+└── checklists/
+    └── requirements.md              # Auto-generated quality checklist
+```
+
+### Key Principle: Scripts Verify, AI Generates
+
+The V-Model commands use AI (GitHub Copilot) for creative translation —
+turning specs into requirements and test plans. But all compliance-critical
+calculations are performed by **deterministic scripts**:
+
+| Concern | Handled by | Why |
+|---------|-----------|-----|
+| Generate requirements | AI (Copilot) | Creative translation from natural language |
+| Generate test cases | AI (Copilot) | Creative translation from requirements |
+| Validate coverage | `validate-coverage.sh` | Deterministic — regex-based, mathematically correct |
+| Build traceability matrix | `build-matrix.sh` | Deterministic — regex-based, audit-grade accuracy |
+| Detect requirement changes | `diff-requirements.sh` | Deterministic — git-based diff |
+
+### Command Reference
+
+#### 1. Generate Requirements (Step 2)
 
 ```bash
 /speckit.v-model.requirements Build a user authentication system with OAuth2 support
@@ -48,7 +110,7 @@ specify extension list
 
 Outputs `specs/{feature}/v-model/requirements.md` with traceable `REQ-NNN` IDs.
 
-### 2. Generate Acceptance Test Plan
+#### 2. Generate Acceptance Test Plan (Step 3)
 
 ```bash
 /speckit.v-model.acceptance
@@ -60,7 +122,7 @@ Reads `requirements.md` and generates:
 
 Validates 100% coverage via deterministic script (not AI self-assessment).
 
-### 3. Build Traceability Matrix
+#### 3. Build Traceability Matrix (Step 7)
 
 ```bash
 /speckit.v-model.trace
