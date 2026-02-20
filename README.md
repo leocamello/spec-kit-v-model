@@ -15,7 +15,19 @@ An extension for [GitHub Spec Kit](https://github.com/github/spec-kit) that enfo
 - [Spec Kit](https://github.com/github/spec-kit) v0.1.0 or higher
 - A spec-kit project (directory with `.specify/` folder)
 
-### Install from local directory
+### Method 1: Install from catalog (when available)
+
+```bash
+specify extension add v-model
+```
+
+### Method 2: Install from GitHub release
+
+```bash
+specify extension add v-model --from https://github.com/leocamello/spec-kit-v-model/archive/refs/tags/v0.1.0.zip
+```
+
+### Method 3: Install from local directory (development)
 
 ```bash
 git clone https://github.com/leocamello/spec-kit-v-model.git
