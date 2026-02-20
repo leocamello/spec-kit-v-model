@@ -3,7 +3,7 @@ schema_version: "1.0"
 extension:
   id: "v-model"
   name: "V-Model Extension Pack"
-  version: "0.1.0"
+  version: "0.2.0"
   description: "Enforces V-Model paired generation of development specs and test specs with full traceability."
   author: "leocamello"
   repository: "https://github.com/leocamello/spec-kit-v-model"
@@ -26,9 +26,17 @@ provides:
       file: "commands/acceptance.md"
       description: "Generate a three-tier Acceptance Test Plan (Test Cases + BDD Scenarios) with 100% coverage validation"
 
+    - name: "speckit.v-model.system-design"
+      file: "commands/system-design.md"
+      description: "Decompose requirements into IEEE 1016-compliant system components with four mandatory design views"
+
+    - name: "speckit.v-model.system-test"
+      file: "commands/system-test.md"
+      description: "Generate ISO 29119-compliant system test plan with named techniques for every system component"
+
     - name: "speckit.v-model.trace"
       file: "commands/trace.md"
-      description: "Build a regulatory-grade 3D Traceability Matrix (REQ → ATP → SCN)"
+      description: "Build a regulatory-grade Traceability Matrix (Matrix A: REQ → ATP → SCN, Matrix B: REQ → SYS → STP → STS)"
 
   config:
     - name: "v-model-config.yml"
@@ -56,5 +64,8 @@ defaults:
     requirements: "REQ"
     test_cases: "ATP"
     scenarios: "SCN"
+    system_components: "SYS"
+    system_test_cases: "STP"
+    system_test_scenarios: "STS"
   coverage_threshold: 100
   batch_size: 5
