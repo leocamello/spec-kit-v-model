@@ -64,6 +64,34 @@ This extension uses a hierarchical ID scheme that encodes traceability directly:
 
 Reading `SCN-001-A1` tells you: this scenario validates test case `ATP-001-A`, which tests requirement `REQ-001`. No lookup table needed.
 
+## System Design ↔ System Testing Level
+
+The second V-Model layer pairs **System Design** (left side) with **System Testing** (right side). While the Requirements ↔ Acceptance Testing level validates *what* the system must do, this level validates *how* the system is structured to do it.
+
+### Standards Alignment
+
+- **IEEE 1016:2009** (Software Design Description) defines 4 design viewpoints used to describe the system design:
+  - **Decomposition View** — System broken into components/modules
+  - **Dependency View** — Relationships and coupling between components
+  - **Interface View** — External and internal interface contracts
+  - **Data Design View** — Data models, schemas, and data flow
+
+- **ISO 29119-4** (Test Techniques) specifies systematic techniques for system-level testing:
+  - **Interface Contract Testing** — Validates interface specifications from the Interface View
+  - **Boundary Value Analysis** — Tests edge cases for data ranges and limits
+  - **Fault Injection** — Verifies error handling and resilience paths
+  - **Equivalence Partitioning** — Groups inputs into classes to reduce test cases while maintaining coverage
+
+### System-Level ID Schema
+
+| Tier | ID Format | Example | Meaning |
+|------|-----------|---------|---------|
+| Design Element | `SYS-NNN` | SYS-001 | A discrete system design element |
+| Test Procedure | `STP-NNN-X` | STP-001-A | A test procedure for SYS-001 |
+| Test Step | `STS-NNN-X#` | STS-001-A1 | An executable test step for STP-001-A |
+
+Reading `STS-001-A1` tells you: this step validates test procedure `STP-001-A`, which tests design element `SYS-001`. The same self-documenting lineage as the requirements level.
+
 ## When to Use the V-Model
 
 The V-Model is ideal when:

@@ -49,6 +49,23 @@ Auditors require proof that:
 - Full 3D matrix table
 - Baseline Information (timestamps, file hashes, git commit)
 
+### 4. System Design Traceability (IEEE 1016:2009 + ISO 29119-4)
+
+Auditors in safety-critical domains verify that system design decisions are:
+- Documented via **IEEE 1016:2009** design views (Decomposition, Dependency, Interface, Data Design)
+- Tested via **ISO 29119-4** techniques (Interface Contract Testing, Boundary Value Analysis, Fault Injection, Equivalence Partitioning)
+- Traceable using the `SYS-NNN` → `STP-NNN-X` → `STS-NNN-X#` ID schema
+
+**How we satisfy this**: The `/speckit.v-model.system-design` command generates design elements aligned with IEEE 1016 views. The `/speckit.v-model.system-test` command generates test procedures mapped to ISO 29119-4 techniques.
+
+### 5. Dual-Matrix Traceability
+
+Auditors require end-to-end traceability across *all* V-Model levels, not just one. The dual-matrix approach provides:
+- **Matrix A** (Requirements → Acceptance): `REQ-NNN` → `ATP-NNN-X` → `SCN-NNN-X#` — validates *what* was requested
+- **Matrix B** (System Design → System Testing): `SYS-NNN` → `STP-NNN-X` → `STS-NNN-X#` — validates *how* it was designed
+
+**How we satisfy this**: The `/speckit.v-model.trace` command generates both matrices in a single report with independent coverage audits. An auditor sees one consolidated artifact proving traceability at both levels.
+
 ## Artifact Mapping to Standards
 
 ### IEC 62304 (Medical Device Software)
@@ -75,6 +92,24 @@ Auditors require proof that:
 | 6.4.2 | Test cases and procedures | `acceptance-plan.md` |
 | 6.3.4 | Traceability analysis | `traceability-matrix.md` |
 
+### IEEE 1016:2009 (Software Design Description)
+
+| IEEE 1016 Viewpoint | Required Artifact | V-Model Extension Artifact |
+|---|---|---|
+| Decomposition View | Component breakdown | `system-design.md` — SYS-NNN elements with component allocation |
+| Dependency View | Component relationships | `system-design.md` — dependency mapping between SYS elements |
+| Interface View | Interface contracts | `system-design.md` — interface specifications per component |
+| Data Design View | Data models and schemas | `system-design.md` — data structures and flow definitions |
+
+### ISO 29119-4 (Test Techniques)
+
+| ISO 29119-4 Technique | Purpose | V-Model Extension Artifact |
+|---|---|---|
+| Interface Contract Testing | Validate interface specs | `system-test-plan.md` — STP-NNN-X procedures per interface |
+| Boundary Value Analysis | Test edge cases and limits | `system-test-plan.md` — boundary conditions for data ranges |
+| Fault Injection | Verify error handling | `system-test-plan.md` — failure mode test procedures |
+| Equivalence Partitioning | Reduce test cases systematically | `system-test-plan.md` — input class partitions |
+
 ## ID Schema for Audit Trails
 
 The three-tier ID schema (`REQ-NNN` → `ATP-NNN-X` → `SCN-NNN-X#`) is designed for auditability:
@@ -84,6 +119,8 @@ The three-tier ID schema (`REQ-NNN` → `ATP-NNN-X` → `SCN-NNN-X#`) is designe
 2. **Permanent IDs**: IDs are never renumbered. If REQ-003 is removed, REQ-004 stays REQ-004. Gaps are acceptable — renumbering would break audit trails.
 
 3. **Category prefixes**: `REQ-NF-001` (Non-Functional), `REQ-IF-001` (Interface), `REQ-CN-001` (Constraint) allow auditors to filter by requirement type.
+
+4. **System-level lineage**: The same scheme extends to the System Design ↔ System Testing level: `SYS-NNN` → `STP-NNN-X` → `STS-NNN-X#`. Reading `STS-002-B3` immediately tells the auditor it validates `STP-002-B` which tests `SYS-002`.
 
 ## Deterministic Validation
 

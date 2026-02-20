@@ -14,6 +14,12 @@ from tests.validators.template_validator import (
     validate_traceability_matrix,
 )
 from tests.validators.bdd_validator import validate_all_scenarios
+from tests.validators.system_validators import (
+    extract_ids as sys_extract_ids,
+    validate_id_format as sys_validate_id_format,
+    extract_parent_requirements,
+    validate_all as sys_validate_all,
+)
 
 
 class StructuralIDMetric(BaseMetric):
@@ -120,6 +126,164 @@ class StructuralBDDMetric(BaseMetric):
             self.reason = f"{valid}/{total} valid; " + "; ".join(result["issues"][:5])
         else:
             self.reason = f"All {total} scenarios have valid Given/When/Then structure"
+        return self.score
+
+    def is_successful(self) -> bool:
+        return self.success if self.success is not None else False
+
+
+class StructuralSystemDesignMetric(BaseMetric):
+    """Deterministic metric for system design structural validation.
+
+    Checks SYS-NNN ID format, IEEE 1016 views presence, and parent REQ references.
+    """
+
+    _IEEE_1016_VIEWS = [
+        "Decomposition",
+        "Dependency",
+        "Interface",
+        "Data Design",
+    ]
+
+    def __init__(self, threshold: float = 0.95):
+        self.threshold = threshold
+        self.score = None
+        self.reason = None
+        self.success = None
+
+    @property
+    def __name__(self):
+        return "System Design Structural Compliance"
+
+    async def a_measure(self, test_case: LLMTestCase, *args, **kwargs) -> float:
+        return self.measure(test_case)
+
+    def measure(self, test_case: LLMTestCase, *args, **kwargs) -> float:
+        text = test_case.actual_output or ""
+        issues: list[str] = []
+        total_checks = 0
+
+        # 1. SYS-NNN ID format compliance
+        sys_ids = sys_extract_ids(text, "SYS")
+        unique_sys = list(dict.fromkeys(sys_ids))
+        total_checks += max(len(unique_sys), 1)
+        bad = sys_validate_id_format(unique_sys, "SYS")
+        for b in bad:
+            issues.append(f"Malformed SYS ID: {b}")
+
+        # 2. IEEE 1016 views presence
+        for view in self._IEEE_1016_VIEWS:
+            total_checks += 1
+            if view.lower() not in text.lower():
+                issues.append(f"Missing IEEE 1016 view: {view}")
+
+        # 3. Parent REQ references in every SYS row
+        for sys_id in unique_sys:
+            total_checks += 1
+            parents = extract_parent_requirements(text, sys_id)
+            if not parents:
+                issues.append(f"{sys_id} has no parent REQ reference")
+
+        if total_checks == 0:
+            self.score = 0.0
+        else:
+            self.score = round(max(0.0, 1.0 - len(issues) / total_checks), 2)
+        self.success = self.score >= self.threshold
+        if issues:
+            self.reason = "; ".join(issues[:5])
+        else:
+            self.reason = "All system design structural checks pass"
+        return self.score
+
+    def is_successful(self) -> bool:
+        return self.success if self.success is not None else False
+
+
+class StructuralSystemTestMetric(BaseMetric):
+    """Deterministic metric for system test structural validation.
+
+    Checks STP-NNN-X / STS-NNN-X# ID format, ISO 29119 technique naming,
+    and technical BDD language (no user-journey phrases).
+    """
+
+    _ISO_29119_TECHNIQUES = {
+        "Interface Contract Testing",
+        "Boundary Value Analysis",
+        "Fault Injection",
+        "Equivalence Partitioning",
+        "State Transition Testing",
+    }
+
+    _USER_JOURNEY_PATTERNS = [
+        "the user clicks",
+        "the user sees",
+        "the user navigates",
+        "the user selects",
+        "the user enters",
+        "the user logs in",
+    ]
+
+    def __init__(self, threshold: float = 0.95):
+        self.threshold = threshold
+        self.score = None
+        self.reason = None
+        self.success = None
+
+    @property
+    def __name__(self):
+        return "System Test Structural Compliance"
+
+    async def a_measure(self, test_case: LLMTestCase, *args, **kwargs) -> float:
+        return self.measure(test_case)
+
+    def measure(self, test_case: LLMTestCase, *args, **kwargs) -> float:
+        import re
+
+        text = test_case.actual_output or ""
+        issues: list[str] = []
+        total_checks = 0
+
+        # 1. STP-NNN-X ID format compliance
+        stp_ids = sys_extract_ids(text, "STP")
+        unique_stp = list(dict.fromkeys(stp_ids))
+        total_checks += max(len(unique_stp), 1)
+        bad_stp = sys_validate_id_format(unique_stp, "STP")
+        for b in bad_stp:
+            issues.append(f"Malformed STP ID: {b}")
+
+        # 2. STS-NNN-X# ID format compliance
+        sts_ids = sys_extract_ids(text, "STS")
+        unique_sts = list(dict.fromkeys(sts_ids))
+        total_checks += max(len(unique_sts), 1)
+        bad_sts = sys_validate_id_format(unique_sts, "STS")
+        for b in bad_sts:
+            issues.append(f"Malformed STS ID: {b}")
+
+        # 3. ISO 29119 technique naming
+        technique_pattern = re.compile(r"\*\*Technique\*\*:\s*(.+)")
+        found_techniques = technique_pattern.findall(text)
+        for tech in found_techniques:
+            total_checks += 1
+            tech_stripped = tech.strip()
+            if tech_stripped not in self._ISO_29119_TECHNIQUES:
+                issues.append(f"Non-ISO 29119 technique: {tech_stripped}")
+
+        # 4. Technical BDD language (no user-journey phrases)
+        text_lower = text.lower()
+        for phrase in self._USER_JOURNEY_PATTERNS:
+            total_checks += 1
+            if phrase in text_lower:
+                issues.append(f"User-journey phrase detected: '{phrase}'")
+
+        if total_checks == 0:
+            self.score = 0.0
+        else:
+            self.score = round(max(0.0, 1.0 - len(issues) / total_checks), 2)
+        self.success = self.score >= self.threshold
+        if issues:
+            self.reason = "; ".join(issues[:5])
+        else:
+            self.reason = "All system test structural checks pass"
         return self.score
 
     def is_successful(self) -> bool:
