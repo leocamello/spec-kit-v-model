@@ -150,6 +150,34 @@ The requirement traces back to a **real business, user, or safety need**. If you
 
 **Check**: The strict translator constraint inherently enforces this — you are forbidden from inventing requirements not in the source. If a requirement feels extraneous, verify it appears in the source material. If it doesn't, remove it.
 
+### 4.5. Anti-Pattern Guards (Mandatory Self-Audit)
+
+After generating all requirements and before writing the output, run these three checks. These guard against known LLM failure patterns observed during human-in-the-loop review.
+
+#### Guard 1: Constraint Absorption Check
+
+For every `REQ-CN-NNN` requirement:
+1. If the description contains suppression language ("omitted", "disabled", "excluded", "not included", "only when", "unless"), identify the **capability being suppressed**.
+2. Search the Functional Requirements table for a `REQ-NNN` that describes **generating, producing, or enabling** that same capability.
+3. If NO matching functional requirement exists, this is a **Constraint Absorption** error — the constraint describes when to *hide* a feature, but no requirement describes when to *build* it.
+4. **Action**: Add the missing `REQ-NNN` before proceeding. Flag it in the output with `[ADDED BY GUARD 1: Constraint Absorption — REQ-CN-NNN suppresses this capability but no functional requirement generates it]`.
+
+#### Guard 2: Success Criteria Coverage Check
+
+If the source `spec.md` contains numbered Success Criteria (`SC-NNN`):
+1. List all `SC-NNN` entries from the spec.
+2. For each `SC-NNN`, verify at least one requirement (any category) references it in its Rationale column.
+3. If ANY `SC-NNN` has zero corresponding requirements, this is a **Success Criteria Dropout**.
+4. **Action**: Add a requirement (typically `REQ-NF-NNN`) that formalizes the success criterion. Flag it with `[ADDED BY GUARD 2: SC Coverage — SC-NNN had no corresponding requirement]`.
+
+#### Guard 3: Untestable Universal Check
+
+For every requirement with Verification Method "Test":
+1. Scan the description for universal quantifiers: "never", "always", "forever", "all cases", "under no circumstances", "at all times".
+2. If found, evaluate whether a finite test can definitively prove the universal claim.
+3. If NOT testable at runtime, this is an **Untestable Universal**.
+4. **Action**: Either (a) change Verification Method to "Inspection" (architectural review or CI linting rule), or (b) rephrase the requirement with testable bounds (e.g., "never renumbered" → "verified by CI linting that no ID reassignment occurs across consecutive commits").
+
 ### 5. Write Output
 
 Write the complete requirements document to `{VMODEL_DIR}/requirements.md` using the template structure. Include:
@@ -169,6 +197,8 @@ Display a summary:
 - Source used (spec.md, user input, or both)
 - Any assumptions made
 - Any `[NEEDS CLARIFICATION]` or `[CONFLICT]` flags that need user attention
+- Any `[ADDED BY GUARD]` flags documenting where anti-pattern self-audit added or corrected requirements
+- Anti-Pattern Guard results: how many constraints checked, SC coverage gaps found, universals flagged
 - Path to the generated file
 - Next step: Recommend running `/speckit.v-model.acceptance` to generate the paired test plan
 
