@@ -5,6 +5,37 @@ All notable changes to the V-Model Extension Pack are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] — 2026-02-20
+
+### Added
+
+- `/speckit.v-model.system-design` command — Decomposes requirements into IEEE 1016-compliant system components
+  - Four mandatory design views: Decomposition, Dependency, Interface, Data Design
+  - Many-to-many REQ↔SYS traceability with derived requirements support
+  - SYS-NNN ID schema with parent requirement references
+- `/speckit.v-model.system-test` command — Generates ISO 29119-compliant system test plans
+  - Named testing techniques: Interface Contract Testing, Boundary Value Analysis, Fault Injection, Equivalence Partitioning, State Transition Testing
+  - Technical BDD scenarios (no user-journey language) with STP-NNN-X / STS-NNN-X# IDs
+  - Anti-pattern guard: rejects user-journey phrasing in system-level tests
+- Extended `/speckit.v-model.trace` command — Dual-matrix traceability output
+  - Matrix A: REQ → ATP → SCN (acceptance-level, existing)
+  - Matrix B: REQ → SYS → STP → STS (system-level, new)
+  - Combined coverage metrics across both matrices
+- System-level golden examples for evaluation:
+  - Medical device (CBGMS): IEC 62304 Class C, 5 SYS components, 10 STP test cases
+  - Automotive ADAS (AEB): ISO 26262 ASIL-D, 5 SYS components, 11 STP test cases
+- E2E evaluation harness (`tests/evals/harness.py`) — faithfully simulates spec-kit command invocation via LLM
+- 16 E2E evaluation tests (4 per command: structural + quality for each domain)
+- Structural evaluations in PR CI (26 deterministic tests, no API keys required)
+- Templates for system design and system test output documents
+- Helper scripts for system-level coverage validation (Bash + PowerShell)
+
+### Changed
+
+- Template validators now accept both template-style ("Overview") and golden-fixture-style ("Document Control", "Test Strategy") sections
+- `validate-coverage` and `build-matrix` scripts extended for dual-matrix support
+- Evals workflow updated with E2E job for command invocation testing
+
 ## [0.1.0] — 2026-02-19
 
 ### Added
