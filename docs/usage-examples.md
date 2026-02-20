@@ -176,7 +176,69 @@ Notice the quality criteria in action:
 - **Declarative**: Scenarios describe behavior ("the system activates an alarm"), not UI mechanics ("click the alarm button")
 - **Observable**: Every `Then` is a concrete, verifiable outcome
 
-### Step 4: Build the Traceability Matrix
+### Step 4: Generate System Design
+
+```
+/speckit.v-model.system-design
+```
+
+The command reads `requirements.md` and generates `specs/{feature}/v-model/system-design.md` with design elements aligned to IEEE 1016:2009 views:
+
+```markdown
+### Decomposition View
+
+| ID | Component | Description | IEEE 1016 View |
+|----|-----------|-------------|----------------|
+| SYS-001 | SensorAcquisitionService | Reads HR, BP, SpO2 values from bedside sensors at 1 Hz sampling rate | Decomposition |
+| SYS-002 | AlarmEngine | Evaluates vital signs against configurable thresholds and triggers audible/visual alarms within 2.0s | Decomposition |
+| SYS-003 | ClinicalDashboard | Displays real-time vital signs, alarm states, and sensor status indicators | Decomposition |
+
+### Interface View
+
+| ID | Interface | Contract | IEEE 1016 View |
+|----|-----------|----------|----------------|
+| SYS-004 | SensorAcquisitionService → AlarmEngine | Publishes VitalSignReading(type, value, timestamp) at 1 Hz per sensor | Interface |
+| SYS-005 | AlarmEngine → ClinicalDashboard | Emits AlarmEvent(severity, vitalSignType, triggeringValue, timestamp) | Interface |
+```
+
+### Step 5: Generate System Test Plan
+
+```
+/speckit.v-model.system-test
+```
+
+The command reads `system-design.md` and generates `specs/{feature}/v-model/system-test-plan.md` with test procedures mapped to ISO 29119-4 techniques:
+
+```markdown
+### Design Element Validation: SYS-002 (AlarmEngine)
+
+#### Test Procedure: STP-002-A (Boundary Value Analysis — Threshold Crossing)
+**Linked Design Element:** SYS-002
+**ISO 29119-4 Technique:** Boundary Value Analysis
+**Description:** Verify alarm engine behavior at exact threshold boundaries.
+
+* **Test Step: STS-002-A1**
+  * **Given** the AlarmEngine is initialized with HR upper threshold = 120 BPM
+  * **When** a VitalSignReading(HR, 119, T) is received
+  * **Then** no AlarmEvent is emitted
+
+* **Test Step: STS-002-A2**
+  * **Given** the AlarmEngine is initialized with HR upper threshold = 120 BPM
+  * **When** a VitalSignReading(HR, 121, T) is received
+  * **Then** an AlarmEvent(HIGH, HR, 121, T) is emitted within 2.0 seconds
+
+#### Test Procedure: STP-002-B (Fault Injection — Sensor Failure)
+**Linked Design Element:** SYS-002
+**ISO 29119-4 Technique:** Fault Injection
+**Description:** Verify alarm engine handles sensor communication failure gracefully.
+
+* **Test Step: STS-002-B1**
+  * **Given** the AlarmEngine is receiving normal VitalSignReadings
+  * **When** the SensorAcquisitionService stops publishing for 3.0 seconds
+  * **Then** the AlarmEngine emits a SensorDisconnected event (not a clinical alarm)
+```
+
+### Step 6: Build the Traceability Matrix
 
 ```
 /speckit.v-model.trace
@@ -187,6 +249,9 @@ Notice the quality criteria in action:
 ══════════════════════════════════════════════
   TRACEABILITY MATRIX — COVERAGE AUDIT
 ══════════════════════════════════════════════
+
+  MATRIX A: Requirements → Acceptance Testing
+  ────────────────────────────────────────────
   Total Requirements:                  11
   Requirements with Test Coverage:     11 (100%)
   Total Test Cases (ATP):              22
@@ -201,7 +266,27 @@ Notice the quality criteria in action:
   Orphaned Test Cases:                 0  ✅ Pass
   Orphaned Scenarios:                  0  ✅ Pass
 
-  OVERALL STATUS: ✅ COMPLIANT
+  MATRIX A STATUS: ✅ COMPLIANT
+
+  MATRIX B: System Design → System Testing
+  ────────────────────────────────────────────
+  Total Design Elements:               8
+  Design Elements with Test Coverage:  8  (100%)
+  Total Test Procedures (STP):         14
+  Test Procedures with Steps:          14 (100%)
+  Total Executable Steps (STS):        28
+
+  FORWARD TRACEABILITY (SYS → STP → STS)
+  Untested Design Elements:            0  ✅ Pass
+  STPs Without Steps:                  0  ✅ Pass
+
+  BACKWARD TRACEABILITY (STS → STP → SYS)
+  Orphaned Test Procedures:            0  ✅ Pass
+  Orphaned Steps:                      0  ✅ Pass
+
+  MATRIX B STATUS: ✅ COMPLIANT
+
+  OVERALL STATUS: ✅ COMPLIANT (both matrices)
 ══════════════════════════════════════════════
 ```
 
@@ -217,7 +302,7 @@ Notice the quality criteria in action:
 
 This matrix is the audit artifact that IEC 62304 auditors will review to verify software verification completeness.
 
-### Step 5: Continue with Spec Kit Core
+### Step 7: Continue with Spec Kit Core
 
 ```
 /speckit.plan
@@ -308,7 +393,9 @@ This generates the missing ATPs/SCNs for REQ-008, then re-run trace to verify co
 /speckit.specify              → Feature specification (narrative)
 /speckit.v-model.requirements → Formal requirements (REQ-NNN, IEEE 29148 quality)
 /speckit.v-model.acceptance   → Test cases + scenarios (ATP/SCN, BDD format)
-/speckit.v-model.trace        → Traceability matrix (regulatory audit artifact)
+/speckit.v-model.system-design→ System design elements (SYS-NNN, IEEE 1016 views)
+/speckit.v-model.system-test  → Test procedures + steps (STP/STS, ISO 29119-4 techniques)
+/speckit.v-model.trace        → Dual traceability matrix (Matrix A + Matrix B audit artifact)
 /speckit.plan                 → Technical implementation plan
 /speckit.tasks                → Task breakdown
 /speckit.implement            → Code generation

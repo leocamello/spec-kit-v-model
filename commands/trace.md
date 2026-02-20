@@ -1,5 +1,5 @@
 ---
-description: Build a regulatory-grade Bidirectional Traceability Matrix (RTM) with coverage audit, exception report, and verification status.
+description: Build a regulatory-grade Bidirectional Traceability Matrix with dual-matrix output (Matrix A Validation + Matrix B Verification) and coverage audit.
 handoffs:
   - label: Fix Coverage Gaps
     agent: speckit.v-model.acceptance
@@ -105,8 +105,14 @@ The script:
 2. Parses `acceptance-plan.md` for all ATP IDs, descriptions, and linked SCN IDs
 3. Cross-references forward (REQ → ATP → SCN) and backward (SCN → ATP → REQ)
 4. Identifies gaps (uncovered REQs) and orphans (unlinked ATPs/SCNs)
-5. Generates the complete traceability matrix with coverage metrics
-6. Writes output to `{VMODEL_DIR}/traceability-matrix.md`
+5. **If `system-design.md` and `system-test.md` exist**, generates Matrix B (Verification) alongside Matrix A (Validation) — parsing SYS components from the Decomposition View and STP/STS test cases
+6. Generates the complete traceability matrix with coverage metrics
+7. Writes output to `{VMODEL_DIR}/traceability-matrix.md`
+
+**Dual-matrix output (v0.2.0+):**
+- **Matrix A — Validation (User View):** REQ → ATP → SCN. Always present.
+- **Matrix B — Verification (Architectural View):** REQ → SYS → STP → STS. Only present when system-level artifacts exist.
+- Backward compatible: v0.1.0 feature directories (no system artifacts) produce Matrix A only.
 
 ### 3. Present Results (3 Sections)
 
@@ -165,9 +171,9 @@ DEPRECATION CANDIDATES:
   • [DEPRECATED] ATP-005-A: Parent REQ-005 was removed — awaiting user confirmation
 ```
 
-#### Section 3: The 3D Traceability Matrix
+#### Section 3: The Traceability Matrices
 
-The full bidirectional matrix table:
+**Matrix A — Validation (User View):** The full bidirectional matrix table:
 
 | REQ ID | Requirement Intent | Test Case ID (ATP) | Validation Condition | Scenario ID (SCN) | Verification Status |
 |---|---|---|---|---|---|
@@ -176,7 +182,14 @@ The full bidirectional matrix table:
 | **REQ-002** | System shall enforce password policy | ATP-002-A | Minimum Length | SCN-002-A1, SCN-002-A2 | ⬜ Pending Execution |
 | **REQ-NF-001** | System shall respond within 2s | — | — | — | ❌ **NO TEST CASE** |
 
-If the matrix is very large (>50 rows), display the first 20 rows in the response and reference the full file:
+**Matrix B — Verification (Architectural View)** *(only when system-level artifacts exist)*:
+
+| Requirement ID | System Component (SYS) | Component Name | Test Case ID (STP) | Technique | Scenario ID (STS) | Status |
+|---|---|---|---|---|---|---|
+| **REQ-001** | SYS-001 | Data Processor | STP-001-A | Interface Contract Testing | STS-001-A1 | ⬜ Pending Execution |
+| **REQ-002** | SYS-002 | Alert Engine | STP-002-A | Boundary Value Analysis | STS-002-A1 | ⬜ Pending Execution |
+
+If either matrix is very large (>50 rows), display the first 20 rows in the response and reference the full file:
 "Full matrix available at: `{VMODEL_DIR}/traceability-matrix.md`"
 
 ### 4. Baseline Information (Pillar 3: Versioning)
@@ -195,6 +208,8 @@ Include baseline metadata at the bottom of the matrix:
 | Requirements Last Modified | {file modification date} |
 | Acceptance Plan Source | {path to acceptance-plan.md} |
 | Acceptance Plan Last Modified | {file modification date} |
+| System Design Source | {path to system-design.md, or "N/A — not present"} |
+| System Test Source | {path to system-test.md, or "N/A — not present"} |
 | Validation Tool | `build-matrix.sh` (deterministic — not AI-generated) |
 | Git Commit (if available) | {short SHA or "uncommitted changes"} |
 ```

@@ -46,7 +46,7 @@ jobs:
 
       - name: Run BATS tests
         run: |
-          echo "Running 27 BATS tests..."
+          echo "Running BATS tests (acceptance + system-level)..."
           tests/bats/lib/bats-core/bin/bats tests/bats/*.bats
 
       - name: Run structural validators

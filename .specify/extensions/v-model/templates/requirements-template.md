@@ -43,6 +43,10 @@
 
 ### Constraint Requirements
 
+<!-- GUARD 1 REMINDER: For every constraint that suppresses a capability ("omitted", "disabled",
+     "only when"), verify a corresponding functional requirement (REQ-NNN) exists that generates
+     that capability. See Anti-Pattern Guards §4.5 in commands/requirements.md. -->
+
 | ID | Description | Priority | Rationale | Verification Method |
 |----|-------------|----------|-----------|---------------------|
 | REQ-CN-001 | The system MUST [constraint] | P1 | [Why needed] | Inspection |

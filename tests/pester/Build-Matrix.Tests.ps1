@@ -25,7 +25,7 @@ Describe 'Build-Matrix' {
         It 'coverage metrics in output' {
             $output = & pwsh -NoProfile -File "$ScriptsDir/build-matrix.ps1" "$FixturesDir/minimal" 2>&1
             $LASTEXITCODE | Should -Be 0
-            $output | Out-String | Should -Match 'Coverage Metrics'
+            $output | Out-String | Should -Match 'Matrix A Coverage'
         }
     }
 
