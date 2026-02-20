@@ -186,7 +186,7 @@ A Windows-based automotive ADAS team runs `validate-system-coverage.ps1` to get 
 - **SC-004**: The extended traceability output includes two matrices (Validation: REQ→ATP→SCN, Verification: REQ→SYS→STP→STS) with independent coverage percentages that match the deterministic script outputs.
 - **SC-005**: All BATS tests for `validate-system-coverage.sh` pass with 100% fixture coverage (valid, gap, orphan, empty, large-input scenarios).
 - **SC-006**: All Pester tests for `validate-system-coverage.ps1` pass with identical results as the BATS tests on the same fixture data.
-- **SC-007**: The LLM-as-judge evaluation scores for system design quality (including IEEE 1016 view completeness) and system test quality (including ISO 29119 technique usage) meet or exceed the thresholds set for acceptance-level artifacts in the existing eval suite.
+- **SC-007**: (Internal QA gate) The extension's CI evaluation suite — which uses LLM-as-judge scoring via DeepEval/GEval — confirms that the new system design and system test commands produce outputs matching or exceeding the quality thresholds established for v0.1.0 artifacts (IEEE 1016 view completeness, ISO 29119 technique usage). This criterion is verified by extension developers in CI; end users do not interact with the evaluation framework.
 - **SC-008**: The extension's `extension.yml` registers 5 commands (3 existing + 2 new) and 1 hook, and the version is bumped to `0.2.0`.
 - **SC-009**: Backward compatibility verified — running any v0.1.0 command on existing artifacts produces identical output before and after the v0.2.0 update.
 
