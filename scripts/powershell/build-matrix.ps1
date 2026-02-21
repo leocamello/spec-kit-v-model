@@ -5,7 +5,8 @@
 .DESCRIPTION
     Parses requirements.md and acceptance-plan.md using regex to build
     Matrix A (Validation). If system-design.md and system-test.md exist,
-    also builds Matrix B (Verification).
+    also builds Matrix B (Verification). If architecture-design.md and
+    integration-test.md exist, also builds Matrix C (Integration Verification).
 
 .PARAMETER VModelDir
     Path to the v-model directory containing requirements.md and acceptance-plan.md.
@@ -31,6 +32,8 @@ $Requirements = Join-Path $VModelDir 'requirements.md'
 $Acceptance = Join-Path $VModelDir 'acceptance-plan.md'
 $SystemDesign = Join-Path $VModelDir 'system-design.md'
 $SystemTest = Join-Path $VModelDir 'system-test.md'
+$ArchDesign = Join-Path $VModelDir 'architecture-design.md'
+$IntegrationTest = Join-Path $VModelDir 'integration-test.md'
 
 if (-not (Test-Path $Requirements)) {
     Write-Error "ERROR: requirements.md not found in $VModelDir"
@@ -208,12 +211,21 @@ if ($hasSystemLevel) {
     $testContentLines = Get-Content $SystemTest
     $testRaw = Get-Content -Raw $SystemTest
 
-    # Extract SYS from Decomposition View table rows
+    # Extract SYS from Decomposition View table rows only
+    # (other views also have SYS-NNN in tables — must not overwrite parent reqs)
     $sysDescriptions = [ordered]@{}
     $sysNames = [ordered]@{}
     $sysParentReqs = [ordered]@{}
+    $inDecomposition = $false
     foreach ($line in $designContent) {
-        if ($line -match '\|\s*(SYS-[0-9]{3})\s*\|\s*([^|]+)\|\s*([^|]+)\|\s*([^|]+)') {
+        if ($line -match '^##\s+Decomposition') {
+            $inDecomposition = $true
+            continue
+        }
+        if ($inDecomposition -and $line -match '^##\s') {
+            break
+        }
+        if ($inDecomposition -and $line -match '\|\s*(SYS-[0-9]{3})\s*\|\s*([^|]+)\|\s*([^|]+)\|\s*([^|]+)') {
             $sid = $Matches[1]
             $sname = $Matches[2].Trim()
             $sdesc = $Matches[3].Trim()
@@ -281,7 +293,7 @@ if ($hasSystemLevel) {
                     $stpKey = Get-StpBaseKeyB $stp
                     if ($stpKey -eq $sysKey) {
                         $hasStp = $true
-                        $technique = if ($stpTechniques.ContainsKey($stp)) { $stpTechniques[$stp] } else { '—' }
+                        $technique = if ($stpTechniques.Contains($stp)) { $stpTechniques[$stp] } else { '—' }
                         $stpFKey = Get-StpFullKeyB $stp
                         $firstStpSts = $true
 
@@ -352,6 +364,209 @@ if ($hasSystemLevel) {
     $fullOutput += ''
 }
 
+# ---- Matrix C: Integration Verification (if architecture-level artifacts exist) ----
+$hasArchLevel = (Test-Path $ArchDesign) -and (Test-Path $IntegrationTest)
+
+if ($hasArchLevel) {
+    $archDesignContent = Get-Content $ArchDesign
+    $itContentLines = Get-Content $IntegrationTest
+    $itRaw = Get-Content -Raw $IntegrationTest
+
+    # Extract ARCH IDs from Logical View only (section-scoped)
+    $archNames = [ordered]@{}
+    $archParentSys = [ordered]@{}
+    $archCrossCutting = @{}
+    $inLogical = $false
+    foreach ($line in $archDesignContent) {
+        if ($line -match '(?i)^##\s+Logical') {
+            $inLogical = $true
+            continue
+        }
+        if ($inLogical -and $line -match '^##\s') {
+            break
+        }
+        if ($inLogical -and $line -match '\|\s*(ARCH-[0-9]{3})\s*\|\s*([^|]+)\|\s*([^|]+)\|\s*([^|]+)') {
+            $archId = $Matches[1]
+            $aname = $Matches[2].Trim()
+            $aparents = $Matches[4].Trim()
+            $archNames[$archId] = $aname
+            $archParentSys[$archId] = $aparents
+            if ($aparents -match '\[CROSS-CUTTING\]') {
+                $archCrossCutting[$archId] = $true
+            }
+        }
+    }
+
+    # Extract ITP sections
+    $itpDescriptions = [ordered]@{}
+    foreach ($line in $itContentLines) {
+        if ($line -match 'Test Case:\s*(ITP-[0-9]{3}-[A-Z])\s*\(([^)]+)\)') {
+            $itpDescriptions[$Matches[1]] = $Matches[2]
+        }
+    }
+
+    # Extract ITP techniques
+    $itpTechniques = @{}
+    $currentItp = ''
+    foreach ($line in $itContentLines) {
+        if ($line -match 'Test Case:\s*(ITP-[0-9]{3}-[A-Z])') {
+            $currentItp = $Matches[1]
+        } elseif ($currentItp -and $line -match '^\*\*Technique\*\*:\s*(.+)') {
+            $itpTechniques[$currentItp] = $Matches[1].Trim()
+            $currentItp = ''
+        }
+    }
+
+    # Extract ITS IDs
+    $itsIds = @([regex]::Matches($itRaw, 'ITS-[0-9]{3}-[A-Z][0-9]+') |
+        ForEach-Object { $_.Value } | Sort-Object -Unique)
+
+    $sortedArch = @($archNames.Keys | Sort-Object)
+    $sortedItp = @($itpDescriptions.Keys | Sort-Object)
+    $totalArchCount = $sortedArch.Count
+    $totalItpCount = $sortedItp.Count
+    $totalItsCount = $itsIds.Count
+
+    function Get-ArchBaseKeyC($id) { $id -replace '^ARCH-', '' }
+    function Get-ItpBaseKeyC($id) { ($id -replace '^ITP-', '') -replace '-[A-Z]$', '' }
+    function Get-ItpFullKeyC($id) { $id -replace '^ITP-', '' }
+    function Get-ItsFullKeyC($id) { $id -replace '^ITS-', '' }
+
+    $crossCuttingCount = 0
+    foreach ($arch in $sortedArch) {
+        if ($archCrossCutting.Contains($arch)) { $crossCuttingCount++ }
+    }
+
+    $matrixCLines = @()
+    $matrixCLines += '| System Component (SYS) | Parent REQs | Architecture Module (ARCH) | Module Name | Test Case ID (ITP) | Technique | Scenario ID (ITS) | Status |'
+    $matrixCLines += '|------------------------|-------------|---------------------------|-------------|--------------------|-----------|--------------------|--------|'
+
+    $sysWithArch = 0
+
+    # Rows for ARCH modules with SYS parents
+    if ($hasSystemLevel) {
+        foreach ($sys in $sortedSys) {
+            $sysKey = Get-SysBaseKeyB $sys
+            $hasArch = $false
+            $parentReqs = if ($sysParentReqs.Contains($sys)) { $sysParentReqs[$sys] } else { '—' }
+
+            foreach ($arch in $sortedArch) {
+                if ($archCrossCutting.Contains($arch)) { continue }
+                $parents = $archParentSys[$arch]
+                if ($parents -match "(^|,)\s*$([regex]::Escape($sys))\s*(,|$)") {
+                    $hasArch = $true
+                    $aname = $archNames[$arch]
+                    $archKey = Get-ArchBaseKeyC $arch
+                    $firstArchItp = $true
+
+                    foreach ($itp in $sortedItp) {
+                        $itpKey = Get-ItpBaseKeyC $itp
+                        if ($itpKey -eq $archKey) {
+                            $technique = if ($itpTechniques.Contains($itp)) { $itpTechniques[$itp] } else { '—' }
+                            $itpFKey = Get-ItpFullKeyC $itp
+
+                            foreach ($its in $itsIds) {
+                                $itsFKey = Get-ItsFullKeyC $its
+                                if ($itsFKey.StartsWith($itpFKey)) {
+                                    $matrixCLines += "| $sys ($parentReqs) | $parentReqs | $arch | $aname | $itp | $technique | $its | ⬜ Untested |"
+                                    $firstArchItp = $false
+                                }
+                            }
+
+                            if ($firstArchItp) {
+                                $matrixCLines += "| $sys ($parentReqs) | $parentReqs | $arch | $aname | $itp | $technique | ❌ MISSING | ⬜ Untested |"
+                                $firstArchItp = $false
+                            }
+                        }
+                    }
+
+                    if ($firstArchItp) {
+                        $matrixCLines += "| $sys ($parentReqs) | $parentReqs | $arch | $aname | ❌ MISSING | — | — | ⬜ Untested |"
+                    }
+                }
+            }
+
+            if ($hasArch) {
+                $sysWithArch++
+            } else {
+                $matrixCLines += "| $sys ($parentReqs) | $parentReqs | ❌ MISSING | — | — | — | — | ⬜ Untested |"
+            }
+        }
+    }
+
+    # Cross-cutting modules (pseudo-rows)
+    foreach ($arch in $sortedArch) {
+        if (-not $archCrossCutting.Contains($arch)) { continue }
+        $aname = $archNames[$arch]
+        $archKey = Get-ArchBaseKeyC $arch
+        $firstCcItp = $true
+
+        foreach ($itp in $sortedItp) {
+            $itpKey = Get-ItpBaseKeyC $itp
+            if ($itpKey -eq $archKey) {
+                $technique = if ($itpTechniques.Contains($itp)) { $itpTechniques[$itp] } else { '—' }
+                $itpFKey = Get-ItpFullKeyC $itp
+
+                foreach ($its in $itsIds) {
+                    $itsFKey = Get-ItsFullKeyC $its
+                    if ($itsFKey.StartsWith($itpFKey)) {
+                        $matrixCLines += "| N/A (Cross-Cutting) | — | $arch | $aname | $itp | $technique | $its | ⬜ Untested |"
+                        $firstCcItp = $false
+                    }
+                }
+
+                if ($firstCcItp) {
+                    $matrixCLines += "| N/A (Cross-Cutting) | — | $arch | $aname | $itp | $technique | ❌ MISSING | ⬜ Untested |"
+                    $firstCcItp = $false
+                }
+            }
+        }
+
+        if ($firstCcItp) {
+            $matrixCLines += "| N/A (Cross-Cutting) | — | $arch | $aname | ❌ MISSING | — | — | ⬜ Untested |"
+        }
+    }
+
+    # Matrix C coverage metrics
+    if ($hasSystemLevel) {
+        if ($totalSysCount -gt 0) { $sysArchPct = [math]::Floor($sysWithArch * 100 / $totalSysCount) }
+        else { $sysArchPct = 0 }
+    } else {
+        $sysWithArch = 0
+        $sysArchPct = 0
+    }
+
+    $archCovered = 0
+    foreach ($arch in $sortedArch) {
+        $archKey = Get-ArchBaseKeyC $arch
+        foreach ($itp in $sortedItp) {
+            $itpKey = Get-ItpBaseKeyC $itp
+            if ($itpKey -eq $archKey) { $archCovered++; break }
+        }
+    }
+
+    if ($totalArchCount -gt 0) { $archItpPct = [math]::Floor($archCovered * 100 / $totalArchCount) }
+    else { $archItpPct = 0 }
+
+    $fullOutput += '## Matrix C — Integration Verification (Module Boundary View)'
+    $fullOutput += ''
+    $fullOutput += $matrixCLines
+    $fullOutput += ''
+    $fullOutput += '### Matrix C Coverage'
+    $fullOutput += ''
+    $fullOutput += '| Metric | Value |'
+    $fullOutput += '|--------|-------|'
+    $fullOutput += "| **Total Architecture Modules (ARCH)** | $totalArchCount |"
+    $fullOutput += "| **Total Cross-Cutting Modules** | $crossCuttingCount |"
+    $fullOutput += "| **Total Integration Test Cases (ITP)** | $totalItpCount |"
+    $fullOutput += "| **Total Integration Scenarios (ITS)** | $totalItsCount |"
+    if ($hasSystemLevel) {
+        $fullOutput += "| **SYS → ARCH Coverage** | $sysWithArch/$totalSysCount ($sysArchPct%) |"
+    }
+    $fullOutput += "| **ARCH → ITP Coverage** | $archCovered/$totalArchCount ($archItpPct%) |"
+    $fullOutput += ''
+}
+
 $fullOutput += '## Gap Analysis'
 $fullOutput += ''
 $fullOutput += '### Uncovered Requirements (REQ without ATP)'
@@ -414,12 +629,60 @@ if ($hasSystemLevel) {
     }
 }
 
+if ($hasArchLevel) {
+    # Architecture-level gaps
+    $archSysWithoutArch = @()
+    if ($hasSystemLevel) {
+        foreach ($sys in $sortedSys) {
+            $found = $false
+            foreach ($arch in $sortedArch) {
+                if ($archCrossCutting.Contains($arch)) { continue }
+                $parents = $archParentSys[$arch]
+                if ($parents -match "(^|,)\s*$([regex]::Escape($sys))\s*(,|$)") {
+                    $found = $true
+                    break
+                }
+            }
+            if (-not $found) { $archSysWithoutArch += $sys }
+        }
+    }
+
+    $orphanedItps = @()
+    foreach ($itp in $sortedItp) {
+        $itpKey = Get-ItpBaseKeyC $itp
+        $hasArchG = $false
+        foreach ($arch in $sortedArch) {
+            $archKey = Get-ArchBaseKeyC $arch
+            if ($itpKey -eq $archKey) { $hasArchG = $true; break }
+        }
+        if (-not $hasArchG) { $orphanedItps += $itp }
+    }
+
+    $fullOutput += ''
+    $fullOutput += '### Uncovered System Components — Architecture Level (SYS without ARCH)'
+    $fullOutput += ''
+    if ($archSysWithoutArch.Count -eq 0) {
+        $fullOutput += 'None — full coverage.'
+    } else {
+        foreach ($sys in $archSysWithoutArch) { $fullOutput += "- $sys" }
+    }
+    $fullOutput += ''
+    $fullOutput += '### Orphaned Integration Test Cases (ITP without valid ARCH)'
+    $fullOutput += ''
+    if ($orphanedItps.Count -eq 0) {
+        $fullOutput += 'None — all integration tests trace to modules.'
+    } else {
+        foreach ($itp in $orphanedItps) { $fullOutput += "- $itp" }
+    }
+}
+
 $fullOutput += ''
 $fullOutput += '## Audit Notes'
 $fullOutput += ''
 $fullOutput += '- **Matrix generated by**: `build-matrix.ps1` (deterministic regex parser)'
 $sourceDocs = '`requirements.md`, `acceptance-plan.md`'
 if ($hasSystemLevel) { $sourceDocs += ', `system-design.md`, `system-test.md`' }
+if ($hasArchLevel) { $sourceDocs += ', `architecture-design.md`, `integration-test.md`' }
 $fullOutput += "- **Source documents**: $sourceDocs"
 $fullOutput += "- **Last validated**: $date"
 

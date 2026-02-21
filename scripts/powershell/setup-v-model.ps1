@@ -15,6 +15,18 @@
 .PARAMETER RequireAcceptance
     Require acceptance-plan.md to exist.
 
+.PARAMETER RequireSystemDesign
+    Require system-design.md to exist.
+
+.PARAMETER RequireSystemTest
+    Require system-test.md to exist.
+
+.PARAMETER RequireArchitectureDesign
+    Require architecture-design.md to exist.
+
+.PARAMETER RequireIntegrationTest
+    Require integration-test.md to exist.
+
 .EXAMPLE
     ./setup-v-model.ps1 -Json
 #>
@@ -23,7 +35,11 @@
 param(
     [switch]$Json,
     [switch]$RequireReqs,
-    [switch]$RequireAcceptance
+    [switch]$RequireAcceptance,
+    [switch]$RequireSystemDesign,
+    [switch]$RequireSystemTest,
+    [switch]$RequireArchitectureDesign,
+    [switch]$RequireIntegrationTest
 )
 
 $ErrorActionPreference = 'Stop'
@@ -101,6 +117,10 @@ if (-not (Test-Path $VModelDir)) {
 $Requirements = Join-Path $VModelDir 'requirements.md'
 $Acceptance = Join-Path $VModelDir 'acceptance-plan.md'
 $TraceMatrix = Join-Path $VModelDir 'traceability-matrix.md'
+$SystemDesign = Join-Path $VModelDir 'system-design.md'
+$SystemTest = Join-Path $VModelDir 'system-test.md'
+$ArchDesign = Join-Path $VModelDir 'architecture-design.md'
+$IntegrationTest = Join-Path $VModelDir 'integration-test.md'
 $Spec = Join-Path $FeatureDir 'spec.md'
 
 # Prerequisite checks
@@ -114,24 +134,52 @@ if ($RequireAcceptance -and -not (Test-Path $Acceptance)) {
     exit 1
 }
 
+if ($RequireSystemDesign -and -not (Test-Path $SystemDesign)) {
+    Write-Error "ERROR: system-design.md not found in $VModelDir`nRun /speckit.v-model.system-design first."
+    exit 1
+}
+
+if ($RequireSystemTest -and -not (Test-Path $SystemTest)) {
+    Write-Error "ERROR: system-test.md not found in $VModelDir`nRun /speckit.v-model.system-test first."
+    exit 1
+}
+
+if ($RequireArchitectureDesign -and -not (Test-Path $ArchDesign)) {
+    Write-Error "ERROR: architecture-design.md not found in $VModelDir`nRun /speckit.v-model.architecture-design first."
+    exit 1
+}
+
+if ($RequireIntegrationTest -and -not (Test-Path $IntegrationTest)) {
+    Write-Error "ERROR: integration-test.md not found in $VModelDir`nRun /speckit.v-model.integration-test first."
+    exit 1
+}
+
 # Build available docs list
 $docs = @()
 if (Test-Path $Spec)        { $docs += 'spec.md' }
 if (Test-Path $Requirements) { $docs += 'requirements.md' }
 if (Test-Path $Acceptance)   { $docs += 'acceptance-plan.md' }
 if (Test-Path $TraceMatrix)  { $docs += 'traceability-matrix.md' }
+if (Test-Path $SystemDesign) { $docs += 'system-design.md' }
+if (Test-Path $SystemTest)   { $docs += 'system-test.md' }
+if (Test-Path $ArchDesign)   { $docs += 'architecture-design.md' }
+if (Test-Path $IntegrationTest) { $docs += 'integration-test.md' }
 
 if ($Json) {
     $output = [ordered]@{
-        REPO_ROOT      = $RepoRoot
-        BRANCH         = $Branch
-        FEATURE_DIR    = $FeatureDir
-        VMODEL_DIR     = $VModelDir
-        SPEC           = $Spec
-        REQUIREMENTS   = $Requirements
-        ACCEPTANCE     = $Acceptance
-        TRACE_MATRIX   = $TraceMatrix
-        AVAILABLE_DOCS = $docs
+        REPO_ROOT        = $RepoRoot
+        BRANCH           = $Branch
+        FEATURE_DIR      = $FeatureDir
+        VMODEL_DIR       = $VModelDir
+        SPEC             = $Spec
+        REQUIREMENTS     = $Requirements
+        ACCEPTANCE       = $Acceptance
+        TRACE_MATRIX     = $TraceMatrix
+        SYSTEM_DESIGN    = $SystemDesign
+        SYSTEM_TEST      = $SystemTest
+        ARCH_DESIGN      = $ArchDesign
+        INTEGRATION_TEST = $IntegrationTest
+        AVAILABLE_DOCS   = $docs
     }
     $output | ConvertTo-Json -Compress
 } else {
@@ -144,4 +192,8 @@ if ($Json) {
     $checkMark = if (Test-Path $Requirements) { '✓' } else { '✗' }; Write-Output "  $checkMark requirements.md"
     $checkMark = if (Test-Path $Acceptance)   { '✓' } else { '✗' }; Write-Output "  $checkMark acceptance-plan.md"
     $checkMark = if (Test-Path $TraceMatrix)  { '✓' } else { '✗' }; Write-Output "  $checkMark traceability-matrix.md"
+    $checkMark = if (Test-Path $SystemDesign) { '✓' } else { '✗' }; Write-Output "  $checkMark system-design.md"
+    $checkMark = if (Test-Path $SystemTest)   { '✓' } else { '✗' }; Write-Output "  $checkMark system-test.md"
+    $checkMark = if (Test-Path $ArchDesign)   { '✓' } else { '✗' }; Write-Output "  $checkMark architecture-design.md"
+    $checkMark = if (Test-Path $IntegrationTest) { '✓' } else { '✗' }; Write-Output "  $checkMark integration-test.md"
 }
