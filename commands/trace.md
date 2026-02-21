@@ -1,5 +1,5 @@
 ---
-description: Build a regulatory-grade Bidirectional Traceability Matrix with dual-matrix output (Matrix A Validation + Matrix B Verification) and coverage audit.
+description: Build a regulatory-grade Bidirectional Traceability Matrix with triple-matrix output (Matrix A Validation + Matrix B Verification + Matrix C Integration Verification) and coverage audit.
 handoffs:
   - label: Fix Coverage Gaps
     agent: speckit.v-model.acceptance
@@ -106,13 +106,15 @@ The script:
 3. Cross-references forward (REQ → ATP → SCN) and backward (SCN → ATP → REQ)
 4. Identifies gaps (uncovered REQs) and orphans (unlinked ATPs/SCNs)
 5. **If `system-design.md` and `system-test.md` exist**, generates Matrix B (Verification) alongside Matrix A (Validation) — parsing SYS components from the Decomposition View and STP/STS test cases
-6. Generates the complete traceability matrix with coverage metrics
-7. Writes output to `{VMODEL_DIR}/traceability-matrix.md`
+6. **If `architecture-design.md` and `integration-test.md` exist**, generates Matrix C (Integration Verification) — parsing ARCH modules from the Logical View and ITP/ITS test cases
+7. Generates the complete traceability matrix with coverage metrics
+8. Writes output to `{VMODEL_DIR}/traceability-matrix.md`
 
-**Dual-matrix output (v0.2.0+):**
+**Triple-matrix output (v0.3.0+):**
 - **Matrix A — Validation (User View):** REQ → ATP → SCN. Always present.
 - **Matrix B — Verification (Architectural View):** REQ → SYS → STP → STS. Only present when system-level artifacts exist.
-- Backward compatible: v0.1.0 feature directories (no system artifacts) produce Matrix A only.
+- **Matrix C — Integration Verification (Module Boundary View):** SYS → ARCH → ITP → ITS. Only present when architecture-level artifacts exist. Includes parent REQ annotations in SYS column and CROSS-CUTTING pseudo-rows.
+- Backward compatible: v0.1.0 feature directories (no system artifacts) produce Matrix A only; v0.2.0 directories produce Matrix A + B.
 
 ### 3. Present Results (3 Sections)
 
@@ -188,6 +190,13 @@ DEPRECATION CANDIDATES:
 |---|---|---|---|---|---|---|
 | **REQ-001** | SYS-001 | Data Processor | STP-001-A | Interface Contract Testing | STS-001-A1 | ⬜ Pending Execution |
 | **REQ-002** | SYS-002 | Alert Engine | STP-002-A | Boundary Value Analysis | STS-002-A1 | ⬜ Pending Execution |
+
+**Matrix C — Integration Verification (Module Boundary View)** *(only when architecture-level artifacts exist)*:
+
+| System Component (SYS) | Parent REQs | Architecture Module (ARCH) | Module Name | Test Case ID (ITP) | Technique | Scenario ID (ITS) | Status |
+|---|---|---|---|---|---|---|---|
+| **SYS-001** (REQ-001) | REQ-001 | ARCH-001 | HTTP Router | ITP-001-A | Interface Contract Testing | ITS-001-A1 | ⬜ Pending Execution |
+| **N/A (Cross-Cutting)** | — | ARCH-005 | Logger | ITP-005-A | Interface Contract Testing | ITS-005-A1 | ⬜ Pending Execution |
 
 If either matrix is very large (>50 rows), display the first 20 rows in the response and reference the full file:
 "Full matrix available at: `{VMODEL_DIR}/traceability-matrix.md`"

@@ -3,7 +3,7 @@ schema_version: "1.0"
 extension:
   id: "v-model"
   name: "V-Model Extension Pack"
-  version: "0.2.0"
+  version: "0.3.0"
   description: "Enforces V-Model paired generation of development specs and test specs with full traceability."
   author: "leocamello"
   repository: "https://github.com/leocamello/spec-kit-v-model"
@@ -34,9 +34,17 @@ provides:
       file: "commands/system-test.md"
       description: "Generate ISO 29119-compliant system test plan with named techniques for every system component"
 
+    - name: "speckit.v-model.architecture-design"
+      file: "commands/architecture-design.md"
+      description: "Decompose system components into IEEE 42010/Kruchten 4+1 architecture modules with four mandatory views"
+
+    - name: "speckit.v-model.integration-test"
+      file: "commands/integration-test.md"
+      description: "Generate ISO 29119-4 integration test plan with four named techniques for every architecture module"
+
     - name: "speckit.v-model.trace"
       file: "commands/trace.md"
-      description: "Build a regulatory-grade Traceability Matrix (Matrix A: REQ → ATP → SCN, Matrix B: REQ → SYS → STP → STS)"
+      description: "Build a regulatory-grade Traceability Matrix (Matrix A + B + C: REQ → ATP → SYS → STP → ARCH → ITP)"
 
   config:
     - name: "v-model-config.yml"
@@ -67,5 +75,8 @@ defaults:
     system_components: "SYS"
     system_test_cases: "STP"
     system_test_scenarios: "STS"
+    architecture_modules: "ARCH"
+    integration_test_cases: "ITP"
+    integration_test_scenarios: "ITS"
   coverage_threshold: 100
   batch_size: 5
