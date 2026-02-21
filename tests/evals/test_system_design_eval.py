@@ -28,7 +28,7 @@ class TestSystemDesignStructural:
     @pytest.mark.structural
     def test_minimal_sys_id_compliance(self, fixture_dir):
         """All SYS IDs in system-design-minimal follow SYS-NNN format."""
-        design = (fixture_dir / "system-design-minimal" / "system-design.md").read_text()
+        design = (fixture_dir / "minimal" / "system-design.md").read_text()
         tc = LLMTestCase(
             input="Minimal system design fixture",
             actual_output=design,
@@ -44,7 +44,7 @@ class TestSystemDesignStructural:
     @pytest.mark.structural
     def test_minimal_parent_req_references(self, fixture_dir):
         """Every SYS row in system-design-minimal references at least one parent REQ."""
-        design = (fixture_dir / "system-design-minimal" / "system-design.md").read_text()
+        design = (fixture_dir / "minimal" / "system-design.md").read_text()
         tc = LLMTestCase(
             input="Minimal system design fixture",
             actual_output=design,
@@ -58,7 +58,7 @@ class TestSystemDesignStructural:
     @pytest.mark.structural
     def test_complex_structural_compliance(self, fixture_dir):
         """Complex fixture (6 SYS, multi-category REQs) passes structural checks."""
-        design = (fixture_dir / "system-design-complex" / "system-design.md").read_text()
+        design = (fixture_dir / "complex" / "system-design.md").read_text()
         tc = LLMTestCase(
             input="Complex system design fixture",
             actual_output=design,
@@ -100,8 +100,8 @@ class TestSystemDesignQuality:
     @pytest.mark.eval
     def test_minimal_design_completeness(self, fixture_dir):
         """Minimal fixture system design meets decomposition completeness bar."""
-        design = (fixture_dir / "system-design-minimal" / "system-design.md").read_text()
-        reqs = (fixture_dir / "system-design-minimal" / "requirements.md").read_text()
+        design = (fixture_dir / "minimal" / "system-design.md").read_text()
+        reqs = (fixture_dir / "minimal" / "requirements.md").read_text()
         tc = LLMTestCase(
             input=reqs,
             actual_output=design,
@@ -117,7 +117,7 @@ class TestSystemDesignQuality:
     @pytest.mark.eval
     def test_minimal_view_quality(self, fixture_dir):
         """Minimal fixture system design views are meaningful, not boilerplate."""
-        design = (fixture_dir / "system-design-minimal" / "system-design.md").read_text()
+        design = (fixture_dir / "minimal" / "system-design.md").read_text()
         tc = LLMTestCase(
             input="System design for a minimal sensor monitoring system",
             actual_output=design,
@@ -134,8 +134,8 @@ class TestSystemDesignQuality:
     @pytest.mark.eval
     def test_minimal_derived_requirement_flagging(self, fixture_dir):
         """Minimal fixture correctly identifies derived requirements."""
-        design = (fixture_dir / "system-design-minimal" / "system-design.md").read_text()
-        reqs = (fixture_dir / "system-design-minimal" / "requirements.md").read_text()
+        design = (fixture_dir / "minimal" / "system-design.md").read_text()
+        reqs = (fixture_dir / "minimal" / "requirements.md").read_text()
         tc = LLMTestCase(
             input=reqs,
             actual_output=design,

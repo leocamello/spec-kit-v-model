@@ -32,6 +32,8 @@ COMMAND_TEMPLATES = {
     "acceptance": "acceptance-plan-template.md",
     "system-design": "system-design-template.md",
     "system-test": "system-test-template.md",
+    "architecture-design": "architecture-design-template.md",
+    "integration-test": "integration-test-template.md",
 }
 
 # Map command names to which docs they need available
@@ -47,6 +49,15 @@ COMMAND_AVAILABLE_DOCS = {
     ),
     "system-test": lambda ctx: (
         ["requirements.md", "system-design.md"]
+        + (["spec.md"] if "spec.md" in ctx else [])
+    ),
+    "architecture-design": lambda ctx: (
+        ["requirements.md", "system-design.md"]
+        + (["spec.md"] if "spec.md" in ctx else [])
+    ),
+    "integration-test": lambda ctx: (
+        ["requirements.md", "architecture-design.md"]
+        + (["system-design.md"] if "system-design.md" in ctx else [])
         + (["spec.md"] if "spec.md" in ctx else [])
     ),
 }
@@ -97,6 +108,10 @@ def _build_script_json(command_name: str, context_files: dict[str, str]) -> str:
         "REQUIREMENTS": f"{_SIM_VMODEL}/requirements.md",
         "ACCEPTANCE": f"{_SIM_VMODEL}/acceptance-plan.md",
         "TRACE_MATRIX": f"{_SIM_VMODEL}/traceability-matrix.md",
+        "SYSTEM_DESIGN": f"{_SIM_VMODEL}/system-design.md",
+        "SYSTEM_TEST": f"{_SIM_VMODEL}/system-test.md",
+        "ARCH_DESIGN": f"{_SIM_VMODEL}/architecture-design.md",
+        "INTEGRATION_TEST": f"{_SIM_VMODEL}/integration-test.md",
         "AVAILABLE_DOCS": available_docs,
     })
 
@@ -124,6 +139,8 @@ def _build_file_contents(
         "acceptance-plan.md": f"{_SIM_VMODEL}/acceptance-plan.md",
         "system-design.md": f"{_SIM_VMODEL}/system-design.md",
         "system-test.md": f"{_SIM_VMODEL}/system-test.md",
+        "architecture-design.md": f"{_SIM_VMODEL}/architecture-design.md",
+        "integration-test.md": f"{_SIM_VMODEL}/integration-test.md",
     }
     for filename, content in context_files.items():
         path = path_map.get(filename, f"{_SIM_VMODEL}/{filename}")

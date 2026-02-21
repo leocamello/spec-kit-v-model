@@ -47,6 +47,33 @@ teardown() {
     assert_failure
 }
 
+@test "--require-system-test fails when missing" {
+    init_git_repo "$TEST_TEMP_DIR"
+    cd "$TEST_TEMP_DIR"
+    git checkout -b 001-test --quiet
+    mkdir -p "$TEST_TEMP_DIR/specs/001-test/v-model"
+    run bash "$SCRIPTS_DIR/setup-v-model.sh" --require-system-test
+    assert_failure
+}
+
+@test "--require-architecture-design fails when missing" {
+    init_git_repo "$TEST_TEMP_DIR"
+    cd "$TEST_TEMP_DIR"
+    git checkout -b 001-test --quiet
+    mkdir -p "$TEST_TEMP_DIR/specs/001-test/v-model"
+    run bash "$SCRIPTS_DIR/setup-v-model.sh" --require-architecture-design
+    assert_failure
+}
+
+@test "--require-integration-test fails when missing" {
+    init_git_repo "$TEST_TEMP_DIR"
+    cd "$TEST_TEMP_DIR"
+    git checkout -b 001-test --quiet
+    mkdir -p "$TEST_TEMP_DIR/specs/001-test/v-model"
+    run bash "$SCRIPTS_DIR/setup-v-model.sh" --require-integration-test
+    assert_failure
+}
+
 @test "--json outputs valid JSON" {
     init_git_repo "$TEST_TEMP_DIR"
     cd "$TEST_TEMP_DIR"

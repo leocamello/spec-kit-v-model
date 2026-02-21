@@ -6,110 +6,134 @@ BeforeAll {
 }
 
 Describe 'Validate-System-Coverage' {
-    Context 'Full coverage (system-design-minimal fixture)' {
+    Context 'Full coverage (minimal fixture)' {
         It 'exits 0 for full coverage' {
-            & pwsh -NoProfile -File "$ScriptsDir/validate-system-coverage.ps1" "$FixturesDir/system-design-minimal" 2>&1 | Out-Null
+            & pwsh -NoProfile -File "$ScriptsDir/validate-system-coverage.ps1" "$FixturesDir/minimal" 2>&1 | Out-Null
             $LASTEXITCODE | Should -Be 0
         }
 
+        It 'shows success message' {
+            $output = & pwsh -NoProfile -File "$ScriptsDir/validate-system-coverage.ps1" "$FixturesDir/minimal" 2>&1
+            $LASTEXITCODE | Should -Be 0
+            ($output -join "`n") | Should -Match 'Full system-level coverage'
+        }
+
         It 'JSON shows has_gaps false' {
-            $output = & pwsh -NoProfile -File "$ScriptsDir/validate-system-coverage.ps1" -Json "$FixturesDir/system-design-minimal" 2>&1
+            $output = & pwsh -NoProfile -File "$ScriptsDir/validate-system-coverage.ps1" -Json "$FixturesDir/minimal" 2>&1
             $LASTEXITCODE | Should -Be 0
             $json = $output | ConvertFrom-Json
             $json.has_gaps | Should -Be $false
         }
 
-        It '--json outputs valid JSON' {
-            $output = & pwsh -NoProfile -File "$ScriptsDir/validate-system-coverage.ps1" -Json "$FixturesDir/system-design-minimal" 2>&1
-            $LASTEXITCODE | Should -Be 0
-            { $output | ConvertFrom-Json } | Should -Not -Throw
-        }
-
         It 'reports correct totals' {
-            $output = & pwsh -NoProfile -File "$ScriptsDir/validate-system-coverage.ps1" -Json "$FixturesDir/system-design-minimal" 2>&1
+            $output = & pwsh -NoProfile -File "$ScriptsDir/validate-system-coverage.ps1" -Json "$FixturesDir/minimal" 2>&1
             $json = $output | ConvertFrom-Json
             $json.total_reqs | Should -Be 3
             $json.total_sys | Should -Be 3
-            $json.total_stps | Should -Be 3
-            $json.total_stss | Should -Be 3
+            $json.total_stps | Should -Be 5
+            $json.total_stss | Should -Be 5
         }
     }
 
     Context 'Complex fixture (many-to-many)' {
         It 'exits 0 for full coverage' {
-            & pwsh -NoProfile -File "$ScriptsDir/validate-system-coverage.ps1" "$FixturesDir/system-design-complex" 2>&1 | Out-Null
+            & pwsh -NoProfile -File "$ScriptsDir/validate-system-coverage.ps1" "$FixturesDir/complex" 2>&1 | Out-Null
             $LASTEXITCODE | Should -Be 0
         }
 
-        It 'handles many-to-many REQ-SYS mapping' {
-            $output = & pwsh -NoProfile -File "$ScriptsDir/validate-system-coverage.ps1" -Json "$FixturesDir/system-design-complex" 2>&1
+        It 'REQ to SYS coverage is 100%' {
+            $output = & pwsh -NoProfile -File "$ScriptsDir/validate-system-coverage.ps1" -Json "$FixturesDir/complex" 2>&1
             $json = $output | ConvertFrom-Json
             $json.req_to_sys_coverage_pct | Should -Be 100
+        }
+
+        It 'has 10 REQs and 6 SYS' {
+            $output = & pwsh -NoProfile -File "$ScriptsDir/validate-system-coverage.ps1" -Json "$FixturesDir/complex" 2>&1
+            $json = $output | ConvertFrom-Json
+            $json.total_reqs | Should -Be 10
+            $json.total_sys | Should -Be 6
         }
     }
 
     Context 'Gaps fixture' {
         It 'exits 1 when gaps exist' {
-            & pwsh -NoProfile -File "$ScriptsDir/validate-system-coverage.ps1" "$FixturesDir/system-design-gaps" 2>&1 | Out-Null
+            & pwsh -NoProfile -File "$ScriptsDir/validate-system-coverage.ps1" "$FixturesDir/gaps" 2>&1 | Out-Null
             $LASTEXITCODE | Should -Not -Be 0
         }
 
-        It 'identifies REQ-003 as uncovered' {
-            $output = & pwsh -NoProfile -File "$ScriptsDir/validate-system-coverage.ps1" -Json "$FixturesDir/system-design-gaps" 2>&1
-            $json = $output | ConvertFrom-Json
-            $json.reqs_without_sys | Should -Contain 'REQ-003'
+        It 'detects uncovered REQ' {
+            $output = & pwsh -NoProfile -File "$ScriptsDir/validate-system-coverage.ps1" "$FixturesDir/gaps" 2>&1
+            ($output -join "`n") | Should -Match 'REQ-003'
         }
 
-        It 'identifies orphaned STP' {
-            $output = & pwsh -NoProfile -File "$ScriptsDir/validate-system-coverage.ps1" -Json "$FixturesDir/system-design-gaps" 2>&1
+        It 'detects SYS without STP' {
+            $output = & pwsh -NoProfile -File "$ScriptsDir/validate-system-coverage.ps1" "$FixturesDir/gaps" 2>&1
+            ($output -join "`n") | Should -Match 'SYS-002'
+        }
+
+        It 'detects orphaned STP' {
+            $output = & pwsh -NoProfile -File "$ScriptsDir/validate-system-coverage.ps1" "$FixturesDir/gaps" 2>&1
+            ($output -join "`n") | Should -Match 'STP-099-A'
+        }
+
+        It 'JSON shows has_gaps true' {
+            $output = & pwsh -NoProfile -File "$ScriptsDir/validate-system-coverage.ps1" -Json "$FixturesDir/gaps" 2>&1
             $json = $output | ConvertFrom-Json
-            $json.orphaned_stps | Should -Contain 'STP-099-A'
+            $json.has_gaps | Should -Be $true
         }
     }
 
     Context 'Empty fixture' {
         It 'exits 0 for empty but valid files' {
-            & pwsh -NoProfile -File "$ScriptsDir/validate-system-coverage.ps1" "$FixturesDir/system-design-empty" 2>&1 | Out-Null
+            & pwsh -NoProfile -File "$ScriptsDir/validate-system-coverage.ps1" "$FixturesDir/empty" 2>&1 | Out-Null
             $LASTEXITCODE | Should -Be 0
+        }
+
+        It 'has zero counts' {
+            $output = & pwsh -NoProfile -File "$ScriptsDir/validate-system-coverage.ps1" -Json "$FixturesDir/empty" 2>&1
+            $json = $output | ConvertFrom-Json
+            $json.total_reqs | Should -Be 0
+            $json.total_sys | Should -Be 0
         }
     }
 
     Context 'Error handling' {
-        It 'exits 1 when directory is missing' {
-            & pwsh -NoProfile -File "$ScriptsDir/validate-system-coverage.ps1" '/nonexistent' 2>&1 | Out-Null
+        It 'exits 1 when vmodel-dir argument is missing' {
+            & pwsh -NoProfile -Command "& '$ScriptsDir/validate-system-coverage.ps1'" 2>&1 | Out-Null
             $LASTEXITCODE | Should -Not -Be 0
         }
-    }
-}
 
-Describe 'Build-Matrix - Matrix B' {
-    Context 'Dual-matrix output' {
-        It 'includes Matrix B when system artifacts exist' {
-            $output = & pwsh -NoProfile -File "$ScriptsDir/build-matrix.ps1" "$FixturesDir/system-design-minimal" 2>&1
-            $output | Should -Contain '## Matrix B — Verification (Architectural View)'
+        It 'exits 1 when requirements.md is missing' {
+            $tempDir = Join-Path $TestDrive 'missing-requirements'
+            New-Item -ItemType Directory -Path $tempDir -Force | Out-Null
+            New-Item -ItemType File -Path (Join-Path $tempDir 'system-design.md') -Force | Out-Null
+            New-Item -ItemType File -Path (Join-Path $tempDir 'system-test.md') -Force | Out-Null
+            & pwsh -NoProfile -File "$ScriptsDir/validate-system-coverage.ps1" $tempDir 2>&1 | Out-Null
+            $LASTEXITCODE | Should -Not -Be 0
         }
 
-        It 'Matrix B contains SYS components' {
-            $output = & pwsh -NoProfile -File "$ScriptsDir/build-matrix.ps1" "$FixturesDir/system-design-minimal" 2>&1
-            ($output -join "`n") | Should -Match 'SYS-001'
-            ($output -join "`n") | Should -Match 'STP-001-A'
+        It 'exits 1 when system-design.md is missing' {
+            $tempDir = Join-Path $TestDrive 'missing-sysdesign'
+            New-Item -ItemType Directory -Path $tempDir -Force | Out-Null
+            New-Item -ItemType File -Path (Join-Path $tempDir 'requirements.md') -Force | Out-Null
+            New-Item -ItemType File -Path (Join-Path $tempDir 'system-test.md') -Force | Out-Null
+            & pwsh -NoProfile -File "$ScriptsDir/validate-system-coverage.ps1" $tempDir 2>&1 | Out-Null
+            $LASTEXITCODE | Should -Not -Be 0
         }
 
-        It 'shows Matrix B coverage metrics' {
-            $output = & pwsh -NoProfile -File "$ScriptsDir/build-matrix.ps1" "$FixturesDir/system-design-minimal" 2>&1
-            ($output -join "`n") | Should -Match 'REQ -> SYS Coverage'
-        }
-    }
-
-    Context 'Backward compatibility' {
-        It 'no Matrix B when system artifacts absent' {
-            $output = & pwsh -NoProfile -File "$ScriptsDir/build-matrix.ps1" "$FixturesDir/minimal" 2>&1
-            ($output -join "`n") | Should -Not -Match 'Matrix B'
+        It 'exits 1 when system-test.md is missing' {
+            $tempDir = Join-Path $TestDrive 'missing-systest'
+            New-Item -ItemType Directory -Path $tempDir -Force | Out-Null
+            New-Item -ItemType File -Path (Join-Path $tempDir 'requirements.md') -Force | Out-Null
+            New-Item -ItemType File -Path (Join-Path $tempDir 'system-design.md') -Force | Out-Null
+            & pwsh -NoProfile -File "$ScriptsDir/validate-system-coverage.ps1" $tempDir 2>&1 | Out-Null
+            $LASTEXITCODE | Should -Not -Be 0
         }
 
-        It 'Matrix A present regardless' {
-            $output = & pwsh -NoProfile -File "$ScriptsDir/build-matrix.ps1" "$FixturesDir/system-design-minimal" 2>&1
-            $output | Should -Contain '## Matrix A — Validation (User View)'
+        It '--help exits 0' {
+            $output = & pwsh -NoProfile -Command "Get-Help '$ScriptsDir/validate-system-coverage.ps1'" 2>&1
+            $LASTEXITCODE | Should -Be 0
+            $output | Out-String | Should -Match '(?i)synopsis|description|usage'
         }
     }
 }

@@ -3,18 +3,18 @@ load "test_helper"
 # --- Minimal fixture: 100% coverage ---
 
 @test "system coverage: full coverage exits 0" {
-    run bash "$SCRIPTS_DIR/validate-system-coverage.sh" "$FIXTURES_DIR/system-design-minimal"
+    run bash "$SCRIPTS_DIR/validate-system-coverage.sh" "$FIXTURES_DIR/minimal"
     assert_success
 }
 
 @test "system coverage: full coverage shows success message" {
-    run bash "$SCRIPTS_DIR/validate-system-coverage.sh" "$FIXTURES_DIR/system-design-minimal"
+    run bash "$SCRIPTS_DIR/validate-system-coverage.sh" "$FIXTURES_DIR/minimal"
     assert_success
     assert_output --partial "Full system-level coverage"
 }
 
 @test "system coverage: full coverage JSON has_gaps=false" {
-    run bash "$SCRIPTS_DIR/validate-system-coverage.sh" --json "$FIXTURES_DIR/system-design-minimal"
+    run bash "$SCRIPTS_DIR/validate-system-coverage.sh" --json "$FIXTURES_DIR/minimal"
     assert_success
     local gaps
     gaps=$(json_field "$output" "has_gaps")
@@ -22,7 +22,7 @@ load "test_helper"
 }
 
 @test "system coverage: minimal fixture counts are correct" {
-    run bash "$SCRIPTS_DIR/validate-system-coverage.sh" --json "$FIXTURES_DIR/system-design-minimal"
+    run bash "$SCRIPTS_DIR/validate-system-coverage.sh" --json "$FIXTURES_DIR/minimal"
     assert_success
     local reqs sys stps stss
     reqs=$(json_field "$output" "total_reqs")
@@ -31,19 +31,19 @@ load "test_helper"
     stss=$(json_field "$output" "total_stss")
     [ "$reqs" = "3" ]
     [ "$sys" = "3" ]
-    [ "$stps" = "3" ]
-    [ "$stss" = "3" ]
+    [ "$stps" = "5" ]
+    [ "$stss" = "5" ]
 }
 
 # --- Complex fixture: many-to-many, 100% coverage ---
 
 @test "system coverage: complex fixture exits 0" {
-    run bash "$SCRIPTS_DIR/validate-system-coverage.sh" "$FIXTURES_DIR/system-design-complex"
+    run bash "$SCRIPTS_DIR/validate-system-coverage.sh" "$FIXTURES_DIR/complex"
     assert_success
 }
 
 @test "system coverage: complex fixture REQ→SYS coverage is 100%" {
-    run bash "$SCRIPTS_DIR/validate-system-coverage.sh" --json "$FIXTURES_DIR/system-design-complex"
+    run bash "$SCRIPTS_DIR/validate-system-coverage.sh" --json "$FIXTURES_DIR/complex"
     assert_success
     local pct
     pct=$(json_field "$output" "req_to_sys_coverage_pct")
@@ -51,7 +51,7 @@ load "test_helper"
 }
 
 @test "system coverage: complex fixture has 10 REQs and 6 SYS" {
-    run bash "$SCRIPTS_DIR/validate-system-coverage.sh" --json "$FIXTURES_DIR/system-design-complex"
+    run bash "$SCRIPTS_DIR/validate-system-coverage.sh" --json "$FIXTURES_DIR/complex"
     assert_success
     local reqs sys
     reqs=$(json_field "$output" "total_reqs")
@@ -63,30 +63,30 @@ load "test_helper"
 # --- Gaps fixture: coverage failures ---
 
 @test "system coverage: gaps fixture exits 1" {
-    run bash "$SCRIPTS_DIR/validate-system-coverage.sh" "$FIXTURES_DIR/system-design-gaps"
+    run bash "$SCRIPTS_DIR/validate-system-coverage.sh" "$FIXTURES_DIR/gaps"
     assert_failure
 }
 
 @test "system coverage: gaps fixture detects uncovered REQ" {
-    run bash "$SCRIPTS_DIR/validate-system-coverage.sh" "$FIXTURES_DIR/system-design-gaps"
+    run bash "$SCRIPTS_DIR/validate-system-coverage.sh" "$FIXTURES_DIR/gaps"
     assert_failure
     assert_output --partial "REQ-003"
 }
 
 @test "system coverage: gaps fixture detects SYS without STP" {
-    run bash "$SCRIPTS_DIR/validate-system-coverage.sh" "$FIXTURES_DIR/system-design-gaps"
+    run bash "$SCRIPTS_DIR/validate-system-coverage.sh" "$FIXTURES_DIR/gaps"
     assert_failure
     assert_output --partial "SYS-002"
 }
 
 @test "system coverage: gaps fixture detects orphaned STP" {
-    run bash "$SCRIPTS_DIR/validate-system-coverage.sh" "$FIXTURES_DIR/system-design-gaps"
+    run bash "$SCRIPTS_DIR/validate-system-coverage.sh" "$FIXTURES_DIR/gaps"
     assert_failure
     assert_output --partial "STP-099-A"
 }
 
 @test "system coverage: gaps fixture JSON has_gaps=true" {
-    run bash "$SCRIPTS_DIR/validate-system-coverage.sh" --json "$FIXTURES_DIR/system-design-gaps"
+    run bash "$SCRIPTS_DIR/validate-system-coverage.sh" --json "$FIXTURES_DIR/gaps"
     assert_failure
     local gaps
     gaps=$(json_field "$output" "has_gaps")
@@ -96,12 +96,12 @@ load "test_helper"
 # --- Empty fixture: no items ---
 
 @test "system coverage: empty fixture exits 0" {
-    run bash "$SCRIPTS_DIR/validate-system-coverage.sh" "$FIXTURES_DIR/system-design-empty"
+    run bash "$SCRIPTS_DIR/validate-system-coverage.sh" "$FIXTURES_DIR/empty"
     assert_success
 }
 
 @test "system coverage: empty fixture has zero counts" {
-    run bash "$SCRIPTS_DIR/validate-system-coverage.sh" --json "$FIXTURES_DIR/system-design-empty"
+    run bash "$SCRIPTS_DIR/validate-system-coverage.sh" --json "$FIXTURES_DIR/empty"
     assert_success
     local reqs sys
     reqs=$(json_field "$output" "total_reqs")

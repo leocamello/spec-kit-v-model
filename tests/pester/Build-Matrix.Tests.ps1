@@ -19,7 +19,7 @@ Describe 'Build-Matrix' {
             $text = $output | Out-String
             $text | Should -Match 'REQ-001'
             $text | Should -Match 'REQ-002'
-            $text | Should -Match 'REQ-NF-001'
+            $text | Should -Match 'REQ-003'
         }
 
         It 'coverage metrics in output' {
@@ -54,6 +54,52 @@ Describe 'Build-Matrix' {
             $output = & pwsh -NoProfile -File "$ScriptsDir/build-matrix.ps1" "$FixturesDir/complex" 2>&1
             $LASTEXITCODE | Should -Be 0
             $output | Out-String | Should -Match 'ATP-999-A'
+        }
+    }
+
+    Context 'Matrix B - system-level tests' {
+        It 'includes Matrix B when system artifacts exist' {
+            $output = & pwsh -NoProfile -File "$ScriptsDir/build-matrix.ps1" "$FixturesDir/minimal" 2>&1
+            $LASTEXITCODE | Should -Be 0
+            ($output -join "`n") | Should -Match 'Matrix B'
+        }
+
+        It 'Matrix B contains SYS components' {
+            $output = & pwsh -NoProfile -File "$ScriptsDir/build-matrix.ps1" "$FixturesDir/minimal" 2>&1
+            $LASTEXITCODE | Should -Be 0
+            ($output -join "`n") | Should -Match 'SYS-001'
+            ($output -join "`n") | Should -Match 'STP-001-A'
+            ($output -join "`n") | Should -Match 'STS-001-A1'
+        }
+
+        It 'Matrix B shows coverage metrics' {
+            $output = & pwsh -NoProfile -File "$ScriptsDir/build-matrix.ps1" "$FixturesDir/minimal" 2>&1
+            $LASTEXITCODE | Should -Be 0
+            ($output -join "`n") | Should -Match 'REQ .* SYS Coverage'
+            ($output -join "`n") | Should -Match 'SYS .* STP Coverage'
+        }
+
+        It 'no Matrix B when system artifacts absent' {
+            $tempDir = Join-Path $TestDrive 'no-system-vmodel'
+            New-Item -ItemType Directory -Path $tempDir -Force | Out-Null
+            Copy-Item (Join-Path $FixturesDir 'minimal/requirements.md') $tempDir
+            Copy-Item (Join-Path $FixturesDir 'minimal/acceptance-plan.md') $tempDir
+            $output = & pwsh -NoProfile -File "$ScriptsDir/build-matrix.ps1" $tempDir 2>&1
+            $LASTEXITCODE | Should -Be 0
+            ($output -join "`n") | Should -Not -Match 'Matrix B'
+        }
+
+        It 'Matrix A present regardless of system artifacts' {
+            $output = & pwsh -NoProfile -File "$ScriptsDir/build-matrix.ps1" "$FixturesDir/minimal" 2>&1
+            $LASTEXITCODE | Should -Be 0
+            ($output -join "`n") | Should -Match 'Matrix A'
+        }
+
+        It 'system gap analysis present when system artifacts exist' {
+            $output = & pwsh -NoProfile -File "$ScriptsDir/build-matrix.ps1" "$FixturesDir/minimal" 2>&1
+            $LASTEXITCODE | Should -Be 0
+            ($output -join "`n") | Should -Match 'Uncovered Requirements'
+            ($output -join "`n") | Should -Match 'Orphaned System Test Cases'
         }
     }
 }

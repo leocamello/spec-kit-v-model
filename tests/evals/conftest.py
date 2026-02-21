@@ -59,6 +59,26 @@ def automotive_adas_system_test():
 
 
 @pytest.fixture
+def medical_device_architecture_design():
+    return (GOLDEN_DIR / "medical-device" / "expected-architecture-design.md").read_text()
+
+
+@pytest.fixture
+def medical_device_integration_test():
+    return (GOLDEN_DIR / "medical-device" / "expected-integration-test.md").read_text()
+
+
+@pytest.fixture
+def automotive_adas_architecture_design():
+    return (GOLDEN_DIR / "automotive-adas" / "expected-architecture-design.md").read_text()
+
+
+@pytest.fixture
+def automotive_adas_integration_test():
+    return (GOLDEN_DIR / "automotive-adas" / "expected-integration-test.md").read_text()
+
+
+@pytest.fixture
 def fixture_dir():
     """Return the base fixtures directory path."""
     return FIXTURES_DIR

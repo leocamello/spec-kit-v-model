@@ -43,7 +43,7 @@ Describe 'Validate-Coverage' {
         It 'category-prefixed IDs matched correctly' {
             $output = & pwsh -NoProfile -File "$ScriptsDir/validate-coverage.ps1" -Json "$FixturesDir/complex" 2>&1
             $json = $output | ConvertFrom-Json
-            $json.total_reqs | Should -Be 16
+            $json.total_reqs | Should -Be 10
         }
 
         It 'orphaned ATPs detected' {

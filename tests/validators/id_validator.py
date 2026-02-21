@@ -7,20 +7,26 @@ ID_PATTERNS = {
     "REQ": re.compile(r"REQ-(?:[A-Z]+-)?[0-9]{3}"),
     "ATP": re.compile(r"ATP-(?:[A-Z]+-)?[0-9]{3}-[A-Z]"),
     "SCN": re.compile(r"SCN-(?:[A-Z]+-)?[0-9]{3}-[A-Z][0-9]+"),
+    "ARCH": re.compile(r"ARCH-[0-9]{3}"),
+    "ITP": re.compile(r"ITP-[0-9]{3}-[A-Z]"),
+    "ITS": re.compile(r"ITS-[0-9]{3}-[A-Z][0-9]+"),
 }
 
 ID_STRICT_PATTERNS = {
     "REQ": re.compile(r"^REQ-(?:[A-Z]+-)?[0-9]{3}$"),
     "ATP": re.compile(r"^ATP-(?:[A-Z]+-)?[0-9]{3}-[A-Z]$"),
     "SCN": re.compile(r"^SCN-(?:[A-Z]+-)?[0-9]{3}-[A-Z][0-9]+$"),
+    "ARCH": re.compile(r"^ARCH-[0-9]{3}$"),
+    "ITP": re.compile(r"^ITP-[0-9]{3}-[A-Z]$"),
+    "ITS": re.compile(r"^ITS-[0-9]{3}-[A-Z][0-9]+$"),
 }
 
 
 def extract_ids(text: str, prefix: str) -> list[str]:
-    """Extract all IDs matching the given prefix (REQ, ATP, SCN) from text."""
+    """Extract all IDs matching the given prefix (REQ, ATP, SCN, ARCH, ITP, ITS) from text."""
     pattern = ID_PATTERNS.get(prefix)
     if pattern is None:
-        raise ValueError(f"Unknown prefix: {prefix}. Must be one of: REQ, ATP, SCN")
+        raise ValueError(f"Unknown prefix: {prefix}. Must be one of: {', '.join(ID_PATTERNS)}")
     return pattern.findall(text)
 
 
@@ -28,7 +34,7 @@ def validate_id_format(ids: list[str], prefix: str) -> list[str]:
     """Return list of IDs that DON'T match the expected format. Empty = all valid."""
     pattern = ID_STRICT_PATTERNS.get(prefix)
     if pattern is None:
-        raise ValueError(f"Unknown prefix: {prefix}. Must be one of: REQ, ATP, SCN")
+        raise ValueError(f"Unknown prefix: {prefix}. Must be one of: {', '.join(ID_STRICT_PATTERNS)}")
     return [id_ for id_ in ids if not pattern.match(id_)]
 
 
@@ -133,4 +139,53 @@ def validate_all(text: str) -> dict:
         "atp_ids": unique_atps,
         "scn_ids": unique_scns,
         "hierarchy": hierarchy,
+    }
+
+
+# ---- Architecture-level helpers (v0.3.0) ----
+
+def _arch_base_key(arch_id: str) -> str:
+    """Strip 'ARCH-' prefix. E.g. 'ARCH-001' -> '001'."""
+    return arch_id[5:]
+
+
+def _itp_base_key(itp_id: str) -> str:
+    """Strip 'ITP-' and trailing '-[A-Z]'. E.g. 'ITP-001-A' -> '001'."""
+    without_prefix = itp_id[4:]
+    return re.sub(r"-[A-Z]$", "", without_prefix)
+
+
+def _itp_full_key(itp_id: str) -> str:
+    """Strip 'ITP-' prefix. E.g. 'ITP-001-A' -> '001-A'."""
+    return itp_id[4:]
+
+
+def _its_full_key(its_id: str) -> str:
+    """Strip 'ITS-' prefix. E.g. 'ITS-001-A1' -> '001-A1'."""
+    return its_id[4:]
+
+
+def validate_arch_hierarchy(arch_ids: list[str], itp_ids: list[str], its_ids: list[str]) -> dict:
+    """Validate hierarchical consistency between ARCH, ITP, and ITS IDs."""
+    arch_bases = {_arch_base_key(a) for a in arch_ids}
+    itp_bases = {_itp_base_key(i) for i in itp_ids}
+    itp_fulls = {_itp_full_key(i) for i in itp_ids}
+    its_fulls = {_its_full_key(s) for s in its_ids}
+
+    orphaned_itps = [i for i in itp_ids if _itp_base_key(i) not in arch_bases]
+    orphaned_its = [
+        s for s in its_ids
+        if not any(_its_full_key(s).startswith(tf) for tf in itp_fulls)
+    ]
+    uncovered_archs = [a for a in arch_ids if _arch_base_key(a) not in itp_bases]
+    itps_without_its = [
+        i for i in itp_ids
+        if not any(sf.startswith(_itp_full_key(i)) for sf in its_fulls)
+    ]
+
+    return {
+        "orphaned_itps": orphaned_itps,
+        "orphaned_its": orphaned_its,
+        "uncovered_archs": uncovered_archs,
+        "itps_without_its": itps_without_its,
     }

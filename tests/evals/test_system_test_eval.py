@@ -30,7 +30,7 @@ class TestSystemTestStructural:
     def test_minimal_stp_sts_id_compliance(self, fixture_dir):
         """All STP and STS IDs in system-design-minimal follow correct format."""
         test_plan = (
-            fixture_dir / "system-design-minimal" / "system-test.md"
+            fixture_dir / "minimal" / "system-test.md"
         ).read_text()
         tc = LLMTestCase(
             input="Minimal system test fixture",
@@ -42,7 +42,7 @@ class TestSystemTestStructural:
     def test_minimal_iso_29119_techniques(self, fixture_dir):
         """All techniques in system-design-minimal are valid ISO 29119 names."""
         test_plan = (
-            fixture_dir / "system-design-minimal" / "system-test.md"
+            fixture_dir / "minimal" / "system-test.md"
         ).read_text()
         tc = LLMTestCase(
             input="Minimal system test fixture",
@@ -58,7 +58,7 @@ class TestSystemTestStructural:
     def test_minimal_no_user_journey_language(self, fixture_dir):
         """System-design-minimal system test uses technical, not user-journey language."""
         test_plan = (
-            fixture_dir / "system-design-minimal" / "system-test.md"
+            fixture_dir / "minimal" / "system-test.md"
         ).read_text()
         tc = LLMTestCase(
             input="Minimal system test fixture",
@@ -74,7 +74,7 @@ class TestSystemTestStructural:
     def test_complex_structural_compliance(self, fixture_dir):
         """Complex fixture (6 STP, 6 STS) passes all structural checks."""
         test_plan = (
-            fixture_dir / "system-design-complex" / "system-test.md"
+            fixture_dir / "complex" / "system-test.md"
         ).read_text()
         tc = LLMTestCase(
             input="Complex system test fixture",
@@ -113,10 +113,10 @@ class TestSystemTestQuality:
     def test_minimal_coverage_quality(self, fixture_dir):
         """Minimal fixture system test meets coverage quality bar."""
         test_plan = (
-            fixture_dir / "system-design-minimal" / "system-test.md"
+            fixture_dir / "minimal" / "system-test.md"
         ).read_text()
         design = (
-            fixture_dir / "system-design-minimal" / "system-design.md"
+            fixture_dir / "minimal" / "system-design.md"
         ).read_text()
         tc = LLMTestCase(
             input=design,
@@ -135,7 +135,7 @@ class TestSystemTestQuality:
     def test_minimal_technique_appropriateness(self, fixture_dir):
         """Minimal fixture uses appropriate ISO 29119 techniques for each component."""
         test_plan = (
-            fixture_dir / "system-design-minimal" / "system-test.md"
+            fixture_dir / "minimal" / "system-test.md"
         ).read_text()
         tc = LLMTestCase(
             input="System test plan for sensor monitoring components",
@@ -154,7 +154,7 @@ class TestSystemTestQuality:
     def test_minimal_scenario_independence(self, fixture_dir):
         """Minimal fixture scenarios are independent and use technical language."""
         test_plan = (
-            fixture_dir / "system-design-minimal" / "system-test.md"
+            fixture_dir / "minimal" / "system-test.md"
         ).read_text()
         tc = LLMTestCase(
             input="System test plan for sensor monitoring components",
