@@ -45,19 +45,42 @@ spec-kit-v-model/
 ├── commands/               # Slash command definitions (AI prompts)
 │   ├── requirements.md
 │   ├── acceptance.md
-│   └── trace.md
+│   ├── trace.md
+│   ├── system-design.md
+│   ├── system-test.md
+│   ├── architecture-design.md
+│   └── integration-test.md
 ├── templates/              # Output file templates
+│   ├── requirements-template.md
+│   ├── acceptance-plan-template.md
+│   ├── system-design-template.md
+│   ├── system-test-template.md
+│   ├── architecture-design-template.md
+│   ├── integration-test-template.md
+│   └── traceability-matrix-template.md
 ├── scripts/
 │   ├── bash/               # Helper scripts (Linux/macOS)
+│   │   ├── setup-v-model.sh
+│   │   ├── validate-coverage.sh
+│   │   ├── validate-system-coverage.sh
+│   │   ├── validate-architecture-coverage.sh
+│   │   ├── build-matrix.sh
+│   │   └── diff-requirements.sh
 │   └── powershell/         # Helper scripts (Windows)
+│       ├── setup-v-model.ps1
+│       ├── validate-coverage.ps1
+│       ├── validate-system-coverage.ps1
+│       ├── validate-architecture-coverage.ps1
+│       ├── build-matrix.ps1
+│       └── diff-requirements.ps1
 ├── tests/
-│   ├── bats/               # BATS-core bash unit tests (27 tests)
-│   ├── pester/             # Pester PowerShell unit tests (27 tests)
-│   ├── fixtures/           # Shared test data (5 sets + 2 golden examples)
+│   ├── bats/               # BATS-core bash unit tests (67 tests)
+│   ├── pester/             # Pester PowerShell unit tests (67 tests)
+│   ├── fixtures/           # Shared test data (4 scenarios + malformed + 2 golden examples)
 │   ├── validators/         # Deterministic structural validators (Python)
 │   └── evals/              # DeepEval prompt evaluations
 │       ├── metrics/        # Custom eval metrics (structural + GEval)
-│       ├── test_*_eval.py  # Eval test cases (15 structural + 6 LLM)
+│       ├── test_*_eval.py  # Eval test cases (37 structural + 26 LLM)
 │       └── conftest.py     # Shared pytest fixtures
 ├── docs/                   # Additional documentation
 ├── extension.yml           # Extension manifest
@@ -81,13 +104,22 @@ a new feature, follow the proactive workflow:
    into traceable REQ-NNN identifiers.
 3. **Acceptance** — `/speckit.v-model.acceptance` generates paired test
    cases (ATP) and BDD scenarios (SCN) with 100% coverage validation.
-4. **Plan** — `/speckit.plan` produces the technical plan, research
-   decisions, and project structure.
-5. **Tasks** — `/speckit.tasks` breaks the plan into dependency-ordered,
-   independently testable tasks.
-6. **Implement** — `/speckit.implement` executes tasks phase by phase.
-7. **Trace** — `/speckit.v-model.trace` generates the audit-ready
-   traceability matrix after implementation.
+4. **Trace (Matrix A)** — `/speckit.v-model.trace` builds the
+   REQ → ATP/SCN traceability matrix.
+5. **System Design** — `/speckit.v-model.system-design` decomposes
+   requirements into system-level components (SYS-NNN).
+6. **System Test** — `/speckit.v-model.system-test` generates system
+   test procedures (STP) linked to SYS identifiers.
+7. **Trace (Matrix A + B)** — `/speckit.v-model.trace` rebuilds the
+   matrix adding SYS → STP traceability.
+8. **Architecture Design** — `/speckit.v-model.architecture-design`
+   refines system components into architecture elements (ARCH-NNN).
+9. **Integration Test** — `/speckit.v-model.integration-test` generates
+   integration test procedures (ITP) linked to ARCH identifiers.
+10. **Trace (Matrix A + B + C)** — `/speckit.v-model.trace` rebuilds the
+    full traceability matrix with ARCH → ITP coverage.
+11. **Research, Plan & Implement** — use spec-kit core (`/speckit.plan`,
+    `/speckit.tasks`, `/speckit.implement`) to execute the design.
 
 All artifacts live in `specs/{feature}/`. See
 [README.md](README.md#proactive-workflow-recommended) for a detailed
@@ -185,29 +217,29 @@ GOOGLE_API_KEY=... pytest tests/evals/ -m eval -v
 
 | Layer | Framework | Tests | What it validates |
 |-------|-----------|-------|-------------------|
-| **BATS** | bats-core | 27 | Bash script logic: setup, coverage validation, matrix building, diff detection |
-| **Pester** | Pester 5 | 27 | PowerShell script parity with Bash |
-| **Structural evals** | pytest + DeepEval | 15 | ID format/hierarchy, template conformance, BDD scenario completeness |
-| **LLM-as-judge evals** | pytest + DeepEval GEval | 6 | Requirements quality (IEEE 29148), BDD quality, traceability completeness |
+| **BATS** | bats-core | 67 | Bash script logic: setup, coverage validation, matrix building, diff detection |
+| **Pester** | Pester 5 | 67 | PowerShell script parity with Bash |
+| **Structural evals** | pytest + DeepEval | 37 | ID format/hierarchy, template conformance, BDD scenario completeness |
+| **LLM-as-judge evals** | pytest + DeepEval GEval | 26 | Requirements quality (IEEE 29148), BDD quality, traceability completeness |
 
 ### Test Fixtures
 
-Test fixtures live in `tests/fixtures/` with 5 scenario sets plus 2 golden examples:
+Test fixtures live in `tests/fixtures/` with 4 scenario directories, a malformed set, and 2 golden examples. Each scenario directory contains 6 V-Model fixture files: `requirements.md`, `acceptance-plan.md`, `system-design.md`, `system-test.md`, `architecture-design.md`, and `integration-test.md`.
 
 - **`minimal/`** — 3 REQs, full coverage (baseline happy path)
 - **`gaps/`** — Intentional coverage gap (REQ-NF-001 has no ATP)
-- **`complex/`** — 16 REQs across 4 categories + orphaned ATP-999-A
+- **`complex/`** — 10 REQs, 6 SYS, 8 ARCH (including 1 CROSS-CUTTING), 8 ITP with 4 techniques + orphaned ATP-999-A
 - **`empty/`** — Empty files for edge case testing
 - **`malformed/`** — Broken ID formats
-- **`golden/medical-device/`** — IEC 62304 blood glucose monitor (reference quality)
-- **`golden/automotive-adas/`** — ISO 26262 emergency braking system (reference quality)
+- **`golden/medical-device/`** — IEC 62304 blood glucose monitor with expected outputs for all 6 V-Model artifact types (reference quality)
+- **`golden/automotive-adas/`** — ISO 26262 emergency braking system with expected outputs for all 6 V-Model artifact types (reference quality)
 
 ### Adding Tests
 
 - **New BATS test**: Add to `tests/bats/` following existing patterns. Use `test_helper.bash` for fixtures.
 - **New Pester test**: Mirror the BATS test in `tests/pester/` for PowerShell parity.
 - **New eval test**: Add to `tests/evals/test_*_eval.py`. Mark with `@pytest.mark.structural` (deterministic) or `@pytest.mark.eval` (LLM).
-- **New fixture**: Add directory under `tests/fixtures/` with `requirements.md` and `acceptance-plan.md`.
+- **New fixture**: Add directory under `tests/fixtures/` with all 6 V-Model fixture files: `requirements.md`, `acceptance-plan.md`, `system-design.md`, `system-test.md`, `architecture-design.md`, and `integration-test.md`.
 
 ### CI Pipelines
 

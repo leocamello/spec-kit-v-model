@@ -97,7 +97,7 @@ foreach ($sys in $sysIds) {
 # Forward: every REQ has at least one SYS
 $reqsWithoutSys = @()
 foreach ($req in $reqIds) {
-    if (-not $reqCovered.ContainsKey($req)) {
+    if (-not $reqCovered.Contains($req)) {
         $reqsWithoutSys += $req
     }
 }
@@ -144,7 +144,7 @@ foreach ($stp in $stpIds) {
 # Orphaned SYS (parent REQ not in requirements.md)
 $orphanedSys = @()
 foreach ($sys in $sysIds) {
-    if ($sysParents.ContainsKey($sys)) {
+    if ($sysParents.Contains($sys)) {
         foreach ($parent in $sysParents[$sys]) {
             if ($parent -notin $reqIds) {
                 $orphanedSys += "$sys references unknown $parent"

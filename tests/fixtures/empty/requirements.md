@@ -1,3 +1,4 @@
-# Requirements Specification
+# Requirements — Empty Fixture
 
-(This file is intentionally empty to test edge cases with missing content.)
+| ID | Description | Priority | Rationale | Verification Method |
+|----|-------------|----------|-----------|---------------------|

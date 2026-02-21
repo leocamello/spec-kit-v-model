@@ -217,12 +217,21 @@ DATE=$(date -u +"%Y-%m-%d")
     if [[ -f "$SYSTEM_DESIGN" ]] && [[ -f "$SYSTEM_TEST" ]]; then
         HAS_SYSTEM_LEVEL=true
 
-        # Extract SYS IDs and descriptions from Decomposition View
+        # Extract SYS IDs and descriptions from Decomposition View only
+        # (other views also have SYS-NNN in tables — must not overwrite parent reqs)
         declare -A sys_descriptions
         declare -A sys_names
         declare -A sys_parent_reqs
+        in_decomposition=false
         while IFS= read -r line; do
-            if [[ "$line" =~ \|[[:space:]]*(SYS-[0-9]{3})[[:space:]]*\|[[:space:]]*([^|]+)\|[[:space:]]*([^|]+)\|[[:space:]]*([^|]+) ]]; then
+            if [[ "$line" =~ ^##[[:space:]]+Decomposition ]]; then
+                in_decomposition=true
+                continue
+            fi
+            if $in_decomposition && [[ "$line" =~ ^##[[:space:]] ]]; then
+                break
+            fi
+            if $in_decomposition && [[ "$line" =~ \|[[:space:]]*(SYS-[0-9]{3})[[:space:]]*\|[[:space:]]*([^|]+)\|[[:space:]]*([^|]+)\|[[:space:]]*([^|]+) ]]; then
                 sid="${BASH_REMATCH[1]}"
                 sname=$(echo "${BASH_REMATCH[2]}" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
                 sdesc=$(echo "${BASH_REMATCH[3]}" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
@@ -377,8 +386,219 @@ DATE=$(date -u +"%Y-%m-%d")
         echo "| **SYS → STP Coverage** | $sys_covered/$total_sys_count ($sys_stp_pct%) |"
     fi
 
-    echo ""
-    echo "## Gap Analysis"
+    # ---- Matrix C: Integration Verification (if architecture-level artifacts exist) ----
+    ARCH_DESIGN="$VMODEL_DIR/architecture-design.md"
+    INTEGRATION_TEST="$VMODEL_DIR/integration-test.md"
+    HAS_ARCH_LEVEL=false
+    if [[ -f "$ARCH_DESIGN" ]] && [[ -f "$INTEGRATION_TEST" ]]; then
+        HAS_ARCH_LEVEL=true
+
+        # Extract ARCH IDs from Logical View only (section-scoped)
+        declare -A arch_names
+        declare -A arch_parent_sys
+        declare -A arch_cross_cutting
+        in_logical=false
+        while IFS= read -r line; do
+            if [[ "$line" =~ ^##[[:space:]]+Logical ]]; then
+                in_logical=true
+                continue
+            fi
+            if $in_logical && [[ "$line" =~ ^##[[:space:]] ]]; then
+                break
+            fi
+            if $in_logical && [[ "$line" =~ \|[[:space:]]*(ARCH-[0-9]{3})[[:space:]]*\|[[:space:]]*([^|]+)\|[[:space:]]*([^|]+)\|[[:space:]]*([^|]+) ]]; then
+                arch_id="${BASH_REMATCH[1]}"
+                aname=$(echo "${BASH_REMATCH[2]}" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+                # skip description (col 3), parent sys is col 4
+                aparents=$(echo "${BASH_REMATCH[4]}" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+                arch_names["$arch_id"]="$aname"
+                arch_parent_sys["$arch_id"]="$aparents"
+                if echo "$aparents" | grep -q '\[CROSS-CUTTING\]'; then
+                    arch_cross_cutting["$arch_id"]=1
+                fi
+            fi
+        done < "$ARCH_DESIGN"
+
+        # Extract ITP sections: "#### Test Case: ITP-NNN-X (Description)"
+        declare -A itp_descriptions
+        itp_regex='Test Case: (ITP-[0-9]{3}-[A-Z])[[:space:]]*\(([^)]+)\)'
+        while IFS= read -r line; do
+            if [[ "$line" =~ $itp_regex ]]; then
+                itp_id="${BASH_REMATCH[1]}"
+                itp_desc="${BASH_REMATCH[2]}"
+                itp_descriptions["$itp_id"]="$itp_desc"
+            fi
+        done < "$INTEGRATION_TEST"
+
+        # Extract ITP technique
+        declare -A itp_techniques
+        current_itp=""
+        while IFS= read -r line; do
+            if [[ "$line" =~ Test\ Case:\ (ITP-[0-9]{3}-[A-Z]) ]]; then
+                current_itp="${BASH_REMATCH[1]}"
+            elif [[ -n "$current_itp" && "$line" =~ ^\*\*Technique\*\*:[[:space:]]*(.+) ]]; then
+                itp_techniques["$current_itp"]=$(echo "${BASH_REMATCH[1]}" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+                current_itp=""
+            fi
+        done < "$INTEGRATION_TEST"
+
+        # Extract ITS IDs
+        arch_its_ids=($(grep -oE 'ITS-[0-9]{3}-[A-Z][0-9]+' "$INTEGRATION_TEST" | sort -u))
+
+        sorted_arch=($(echo "${!arch_names[@]}" | tr ' ' '\n' | sort))
+        sorted_itp=($(echo "${!itp_descriptions[@]}" | tr ' ' '\n' | sort))
+        total_arch_count=${#sorted_arch[@]}
+        total_itp_count=${#sorted_itp[@]}
+        total_its_count=${#arch_its_ids[@]}
+
+        arch_base_key_fn() { echo "$1" | sed 's/^ARCH-//'; }
+        itp_base_key_fn() { echo "$1" | sed 's/^ITP-//' | sed 's/-[A-Z]$//'; }
+        itp_full_key_fn() { echo "$1" | sed 's/^ITP-//'; }
+        its_full_key_fn() { echo "$1" | sed 's/^ITS-//'; }
+
+        cross_cutting_count=0
+        for arch in "${sorted_arch[@]}"; do
+            [[ -n "${arch_cross_cutting[$arch]}" ]] && cross_cutting_count=$((cross_cutting_count + 1))
+        done
+
+        echo ""
+        echo "## Matrix C — Integration Verification (Module Boundary View)"
+        echo ""
+        echo "| System Component (SYS) | Parent REQs | Architecture Module (ARCH) | Module Name | Test Case ID (ITP) | Technique | Scenario ID (ITS) | Status |"
+        echo "|------------------------|-------------|---------------------------|-------------|--------------------|-----------|--------------------|--------|"
+
+        # Build Matrix C rows grouped by SYS
+        # First: rows for ARCH modules with SYS parents
+        if $HAS_SYSTEM_LEVEL; then
+            sys_with_arch=0
+            for sys in "${sorted_sys[@]}"; do
+                sys_key=$(sys_base_key_fn "$sys")
+                has_arch=false
+                parent_reqs="${sys_parent_reqs[$sys]:-—}"
+
+                for arch in "${sorted_arch[@]}"; do
+                    [[ -n "${arch_cross_cutting[$arch]}" ]] && continue
+                    parents="${arch_parent_sys[$arch]}"
+                    if echo "$parents" | grep -qE "(^|,)[[:space:]]*${sys}[[:space:]]*(,|$)"; then
+                        has_arch=true
+                        aname="${arch_names[$arch]}"
+                        arch_key=$(arch_base_key_fn "$arch")
+                        first_arch_itp=true
+
+                        for itp in "${sorted_itp[@]}"; do
+                            itp_key=$(itp_base_key_fn "$itp")
+                            if [[ "$itp_key" == "$arch_key" ]]; then
+                                technique="${itp_techniques[$itp]:-—}"
+                                itp_fkey=$(itp_full_key_fn "$itp")
+
+                                for its in "${arch_its_ids[@]}"; do
+                                    its_fkey=$(its_full_key_fn "$its")
+                                    if [[ "$its_fkey" == "$itp_fkey"* ]]; then
+                                        echo "| $sys ($parent_reqs) | $parent_reqs | $arch | $aname | $itp | $technique | $its | ⬜ Untested |"
+                                        first_arch_itp=false
+                                    fi
+                                done
+
+                                if $first_arch_itp; then
+                                    echo "| $sys ($parent_reqs) | $parent_reqs | $arch | $aname | $itp | $technique | ❌ MISSING | ⬜ Untested |"
+                                    first_arch_itp=false
+                                fi
+                            fi
+                        done
+
+                        if $first_arch_itp; then
+                            echo "| $sys ($parent_reqs) | $parent_reqs | $arch | $aname | ❌ MISSING | — | — | ⬜ Untested |"
+                        fi
+                    fi
+                done
+
+                if $has_arch; then
+                    sys_with_arch=$((sys_with_arch + 1))
+                else
+                    echo "| $sys ($parent_reqs) | $parent_reqs | ❌ MISSING | — | — | — | — | ⬜ Untested |"
+                fi
+            done
+        fi
+
+        # Cross-cutting modules (pseudo-rows)
+        for arch in "${sorted_arch[@]}"; do
+            [[ -z "${arch_cross_cutting[$arch]}" ]] && continue
+            aname="${arch_names[$arch]}"
+            arch_key=$(arch_base_key_fn "$arch")
+            first_cc_itp=true
+
+            for itp in "${sorted_itp[@]}"; do
+                itp_key=$(itp_base_key_fn "$itp")
+                if [[ "$itp_key" == "$arch_key" ]]; then
+                    technique="${itp_techniques[$itp]:-—}"
+                    itp_fkey=$(itp_full_key_fn "$itp")
+
+                    for its in "${arch_its_ids[@]}"; do
+                        its_fkey=$(its_full_key_fn "$its")
+                        if [[ "$its_fkey" == "$itp_fkey"* ]]; then
+                            echo "| N/A (Cross-Cutting) | — | $arch | $aname | $itp | $technique | $its | ⬜ Untested |"
+                            first_cc_itp=false
+                        fi
+                    done
+
+                    if $first_cc_itp; then
+                        echo "| N/A (Cross-Cutting) | — | $arch | $aname | $itp | $technique | ❌ MISSING | ⬜ Untested |"
+                        first_cc_itp=false
+                    fi
+                fi
+            done
+
+            if $first_cc_itp; then
+                echo "| N/A (Cross-Cutting) | — | $arch | $aname | ❌ MISSING | — | — | ⬜ Untested |"
+            fi
+        done
+
+        echo ""
+        echo "### Matrix C Coverage"
+        echo ""
+
+        # Count SYS with ARCH (excluding cross-cutting)
+        if $HAS_SYSTEM_LEVEL; then
+            if [[ $total_sys_count -gt 0 ]]; then
+                sys_arch_pct=$((sys_with_arch * 100 / total_sys_count))
+            else
+                sys_arch_pct=0
+            fi
+        else
+            sys_with_arch=0
+            sys_arch_pct=0
+        fi
+
+        # Count ARCH with ITP
+        arch_covered=0
+        for arch in "${sorted_arch[@]}"; do
+            arch_key=$(arch_base_key_fn "$arch")
+            for itp in "${sorted_itp[@]}"; do
+                itp_key=$(itp_base_key_fn "$itp")
+                if [[ "$itp_key" == "$arch_key" ]]; then
+                    arch_covered=$((arch_covered + 1))
+                    break
+                fi
+            done
+        done
+
+        if [[ $total_arch_count -gt 0 ]]; then
+            arch_itp_pct=$((arch_covered * 100 / total_arch_count))
+        else
+            arch_itp_pct=0
+        fi
+
+        echo "| Metric | Value |"
+        echo "|--------|-------|"
+        echo "| **Total Architecture Modules (ARCH)** | $total_arch_count |"
+        echo "| **Total Cross-Cutting Modules** | $cross_cutting_count |"
+        echo "| **Total Integration Test Cases (ITP)** | $total_itp_count |"
+        echo "| **Total Integration Scenarios (ITS)** | $total_its_count |"
+        if $HAS_SYSTEM_LEVEL; then
+            echo "| **SYS → ARCH Coverage** | $sys_with_arch/$total_sys_count ($sys_arch_pct%) |"
+        fi
+        echo "| **ARCH → ITP Coverage** | $arch_covered/$total_arch_count ($arch_itp_pct%) |"
+    fi
     echo ""
     echo "### Uncovered Requirements (REQ without ATP)"
     echo ""
@@ -440,11 +660,58 @@ DATE=$(date -u +"%Y-%m-%d")
         fi
     fi
 
+    if $HAS_ARCH_LEVEL; then
+        # Architecture-level gaps
+        arch_sys_without_arch=()
+        if $HAS_SYSTEM_LEVEL; then
+            for sys in "${sorted_sys[@]}"; do
+                found=false
+                for arch in "${sorted_arch[@]}"; do
+                    [[ -n "${arch_cross_cutting[$arch]}" ]] && continue
+                    parents="${arch_parent_sys[$arch]}"
+                    if echo "$parents" | grep -qE "(^|,)[[:space:]]*${sys}[[:space:]]*(,|$)"; then
+                        found=true
+                        break
+                    fi
+                done
+                $found || arch_sys_without_arch+=("$sys")
+            done
+        fi
+
+        orphaned_itps=()
+        for itp in "${sorted_itp[@]}"; do
+            itp_key=$(itp_base_key_fn "$itp")
+            has_arch=false
+            for arch in "${sorted_arch[@]}"; do
+                arch_key=$(arch_base_key_fn "$arch")
+                [[ "$itp_key" == "$arch_key" ]] && has_arch=true && break
+            done
+            $has_arch || orphaned_itps+=("$itp")
+        done
+
+        echo ""
+        echo "### Uncovered System Components — Architecture Level (SYS without ARCH)"
+        echo ""
+        if [[ ${#arch_sys_without_arch[@]} -eq 0 ]]; then
+            echo "None — full coverage."
+        else
+            for sys in "${arch_sys_without_arch[@]}"; do echo "- $sys"; done
+        fi
+        echo ""
+        echo "### Orphaned Integration Test Cases (ITP without valid ARCH)"
+        echo ""
+        if [[ ${#orphaned_itps[@]} -eq 0 ]]; then
+            echo "None — all integration tests trace to modules."
+        else
+            for itp in "${orphaned_itps[@]}"; do echo "- $itp"; done
+        fi
+    fi
+
     echo ""
     echo "## Audit Notes"
     echo ""
     echo "- **Matrix generated by**: \`build-matrix.sh\` (deterministic regex parser)"
-    echo "- **Source documents**: \`requirements.md\`, \`acceptance-plan.md\`$(if $HAS_SYSTEM_LEVEL; then echo ', `system-design.md`, `system-test.md`'; fi)"
+    echo "- **Source documents**: \`requirements.md\`, \`acceptance-plan.md\`$(if $HAS_SYSTEM_LEVEL; then echo ', `system-design.md`, `system-test.md`'; fi)$(if $HAS_ARCH_LEVEL; then echo ', `architecture-design.md`, `integration-test.md`'; fi)"
     echo "- **Last validated**: $DATE"
 } > /tmp/vmodel-matrix-full.md
 

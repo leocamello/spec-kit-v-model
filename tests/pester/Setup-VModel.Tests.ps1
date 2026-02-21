@@ -76,6 +76,45 @@ Describe 'Setup-VModel' {
             $LASTEXITCODE | Should -Not -Be 0
             Pop-Location
         }
+
+        It '--require-system-test fails when system-test.md is missing' {
+            $tempDir = Join-Path $TestDrive 'require-system-test'
+            New-Item -ItemType Directory -Path $tempDir -Force | Out-Null
+            Initialize-GitRepo -Path $tempDir
+            Push-Location $tempDir
+            git checkout -b 001-test --quiet
+            $vmodelDir = Join-Path $tempDir 'specs/001-test/v-model'
+            New-Item -ItemType Directory -Path $vmodelDir -Force | Out-Null
+            & pwsh -NoProfile -File "$ScriptsDir/setup-v-model.ps1" -RequireSystemTest 2>&1 | Out-Null
+            $LASTEXITCODE | Should -Not -Be 0
+            Pop-Location
+        }
+
+        It '--require-architecture-design fails when architecture-design.md is missing' {
+            $tempDir = Join-Path $TestDrive 'require-arch-design'
+            New-Item -ItemType Directory -Path $tempDir -Force | Out-Null
+            Initialize-GitRepo -Path $tempDir
+            Push-Location $tempDir
+            git checkout -b 001-test --quiet
+            $vmodelDir = Join-Path $tempDir 'specs/001-test/v-model'
+            New-Item -ItemType Directory -Path $vmodelDir -Force | Out-Null
+            & pwsh -NoProfile -File "$ScriptsDir/setup-v-model.ps1" -RequireArchitectureDesign 2>&1 | Out-Null
+            $LASTEXITCODE | Should -Not -Be 0
+            Pop-Location
+        }
+
+        It '--require-integration-test fails when integration-test.md is missing' {
+            $tempDir = Join-Path $TestDrive 'require-integ-test'
+            New-Item -ItemType Directory -Path $tempDir -Force | Out-Null
+            Initialize-GitRepo -Path $tempDir
+            Push-Location $tempDir
+            git checkout -b 001-test --quiet
+            $vmodelDir = Join-Path $tempDir 'specs/001-test/v-model'
+            New-Item -ItemType Directory -Path $vmodelDir -Force | Out-Null
+            & pwsh -NoProfile -File "$ScriptsDir/setup-v-model.ps1" -RequireIntegrationTest 2>&1 | Out-Null
+            $LASTEXITCODE | Should -Not -Be 0
+            Pop-Location
+        }
     }
 
     Context 'JSON output' {

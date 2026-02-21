@@ -32,22 +32,36 @@ def _section_exists(sections: list[tuple[int, str]], name: str) -> bool:
     return any(name_lower in title.lower() for _, title in sections)
 
 
+def _is_table_format_requirements(text: str) -> bool:
+    """Detect table-based requirements format (| ID | Description | ...)."""
+    return bool(re.search(r"^\|\s*ID\s*\|", text, re.MULTILINE))
+
+
 def validate_requirements(text: str) -> dict:
     """Validate a requirements.md document structure.
 
-    Accepts both template-style sections (Overview) and golden-fixture-style
-    sections (Document Control) since LLM output may follow either convention.
+    Accepts three formats:
+    - Template-style sections (Overview + Requirements)
+    - Golden-fixture-style sections (Document Control + Requirements)
+    - Table-based format (markdown table with ID | Description columns)
     """
     sections = _find_sections(text)
     section_names = [title for _, title in sections]
     issues = []
 
-    # Check for a document-header section (either style is valid)
-    if not (_section_exists(sections, "Overview") or _section_exists(sections, "Document Control")):
-        issues.append("Missing 'Overview' or 'Document Control' section")
+    is_table = _is_table_format_requirements(text)
 
-    if not _section_exists(sections, "Requirements"):
-        issues.append("Missing 'Requirements' section")
+    if is_table:
+        # Table format: just need a heading and REQ entries in table rows
+        if not sections:
+            issues.append("Missing document title heading")
+    else:
+        # Check for a document-header section (either style is valid)
+        if not (_section_exists(sections, "Overview") or _section_exists(sections, "Document Control")):
+            issues.append("Missing 'Overview' or 'Document Control' section")
+
+        if not _section_exists(sections, "Requirements"):
+            issues.append("Missing 'Requirements' section")
 
     # Check for at least one REQ block
     req_pattern = re.compile(r"REQ-(?:[A-Z]+-)?[0-9]{3}")
@@ -57,7 +71,7 @@ def validate_requirements(text: str) -> dict:
     # Check heading hierarchy
     issues.extend(_check_heading_hierarchy(sections))
 
-    total_checks = 4  # Overview, Requirements, REQ block, heading hierarchy
+    total_checks = 4  # header, content section, REQ block, heading hierarchy
     failed = min(len(issues), total_checks)
     score = max(0.0, 1.0 - failed / total_checks)
 
@@ -134,6 +148,138 @@ def validate_traceability_matrix(text: str) -> dict:
         issues.append("Missing 'Gap Analysis' section")
 
     total_checks = 4 + len(required_columns)
+    failed = min(len(issues), total_checks)
+    score = max(0.0, 1.0 - failed / total_checks)
+
+    return {
+        "score": round(score, 2),
+        "issues": issues,
+        "sections_found": section_names,
+    }
+
+
+def validate_system_design(text: str) -> dict:
+    """Validate a system-design.md document structure."""
+    sections = _find_sections(text)
+    section_names = [title for _, title in sections]
+    issues = []
+
+    if not _section_exists(sections, "Decomposition"):
+        issues.append("Missing 'Decomposition' section")
+
+    if not _section_exists(sections, "Dependency"):
+        issues.append("Missing 'Dependency' section")
+
+    if not _section_exists(sections, "Interface"):
+        issues.append("Missing 'Interface' section")
+
+    sys_pattern = re.compile(r"SYS-[0-9]{3}")
+    if not sys_pattern.search(text):
+        issues.append("No SYS-NNN identifiers found")
+
+    total_checks = 4
+    failed = min(len(issues), total_checks)
+    score = max(0.0, 1.0 - failed / total_checks)
+
+    return {
+        "score": round(score, 2),
+        "issues": issues,
+        "sections_found": section_names,
+    }
+
+
+def validate_system_test(text: str) -> dict:
+    """Validate a system-test.md document structure."""
+    sections = _find_sections(text)
+    section_names = [title for _, title in sections]
+    issues = []
+
+    stp_pattern = re.compile(r"STP-[0-9]{3}-[A-Z]")
+    if not stp_pattern.search(text):
+        issues.append("No STP-NNN-X test case identifiers found")
+
+    sts_pattern = re.compile(r"STS-[0-9]{3}-[A-Z][0-9]+")
+    if not sts_pattern.search(text):
+        issues.append("No STS-NNN-X# scenario identifiers found")
+
+    if not _section_exists(sections, "Coverage"):
+        issues.append("Missing 'Coverage' section")
+
+    total_checks = 3
+    failed = min(len(issues), total_checks)
+    score = max(0.0, 1.0 - failed / total_checks)
+
+    return {
+        "score": round(score, 2),
+        "issues": issues,
+        "sections_found": section_names,
+    }
+
+
+def validate_architecture_design(text: str) -> dict:
+    """Validate an architecture-design.md document structure."""
+    sections = _find_sections(text)
+    section_names = [title for _, title in sections]
+    issues = []
+
+    if not _section_exists(sections, "Logical"):
+        issues.append("Missing 'Logical View' section")
+
+    if not _section_exists(sections, "Process"):
+        issues.append("Missing 'Process View' section")
+
+    if not _section_exists(sections, "Interface"):
+        issues.append("Missing 'Interface View' section")
+
+    if not _section_exists(sections, "Data Flow"):
+        issues.append("Missing 'Data Flow View' section")
+
+    arch_pattern = re.compile(r"ARCH-[0-9]{3}")
+    if not arch_pattern.search(text):
+        issues.append("No ARCH-NNN identifiers found")
+
+    if not _section_exists(sections, "Coverage"):
+        issues.append("Missing 'Coverage' section")
+
+    total_checks = 6
+    failed = min(len(issues), total_checks)
+    score = max(0.0, 1.0 - failed / total_checks)
+
+    return {
+        "score": round(score, 2),
+        "issues": issues,
+        "sections_found": section_names,
+    }
+
+
+def validate_integration_test(text: str) -> dict:
+    """Validate an integration-test.md document structure."""
+    sections = _find_sections(text)
+    section_names = [title for _, title in sections]
+    issues = []
+
+    itp_pattern = re.compile(r"ITP-[0-9]{3}-[A-Z]")
+    if not itp_pattern.search(text):
+        issues.append("No ITP-NNN-X test case identifiers found")
+
+    its_pattern = re.compile(r"ITS-[0-9]{3}-[A-Z][0-9]+")
+    if not its_pattern.search(text):
+        issues.append("No ITS-NNN-X# scenario identifiers found")
+
+    if not _section_exists(sections, "Coverage"):
+        issues.append("Missing 'Coverage' section")
+
+    techniques = [
+        "Interface Contract Testing",
+        "Data Flow Testing",
+        "Interface Fault Injection",
+        "Concurrency",
+    ]
+    for technique in techniques:
+        if technique.lower() not in text.lower():
+            issues.append(f"Missing technique: '{technique}'")
+
+    total_checks = 3 + len(techniques)
     failed = min(len(issues), total_checks)
     score = max(0.0, 1.0 - failed / total_checks)
 

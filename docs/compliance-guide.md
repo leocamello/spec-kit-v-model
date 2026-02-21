@@ -58,13 +58,24 @@ Auditors in safety-critical domains verify that system design decisions are:
 
 **How we satisfy this**: The `/speckit.v-model.system-design` command generates design elements aligned with IEEE 1016 views. The `/speckit.v-model.system-test` command generates test procedures mapped to ISO 29119-4 techniques.
 
-### 5. Dual-Matrix Traceability
+### 5. Architecture Design Traceability (IEEE 42010 + ISO 29119-4)
 
-Auditors require end-to-end traceability across *all* V-Model levels, not just one. The dual-matrix approach provides:
+Auditors in safety-critical domains verify that architecture decisions are:
+- Documented via **IEEE 42010** / **Kruchten 4+1** architecture views (Logical, Process, Interface, Data Flow)
+- Tested via **ISO 29119-4** integration techniques (Interface Contract Testing, Data Flow Testing, Interface Fault Injection, Concurrency & Race Condition Testing)
+- Traceable using the `ARCH-NNN` → `ITP-NNN-X` → `ITS-NNN-X#` ID schema
+- Decomposed per **ISO 26262-9 §5** when ASIL allocation applies
+
+**How we satisfy this**: The `/speckit.v-model.architecture-design` command generates architecture elements aligned with IEEE 42010 views. The `/speckit.v-model.integration-test` command generates integration test procedures mapped to ISO 29119-4 techniques. CROSS-CUTTING modules are validated across all dependent modules.
+
+### 6. Triple-Matrix Traceability
+
+Auditors require end-to-end traceability across *all* V-Model levels, not just one. The triple-matrix approach provides:
 - **Matrix A** (Requirements → Acceptance): `REQ-NNN` → `ATP-NNN-X` → `SCN-NNN-X#` — validates *what* was requested
 - **Matrix B** (System Design → System Testing): `SYS-NNN` → `STP-NNN-X` → `STS-NNN-X#` — validates *how* it was designed
+- **Matrix C** (Architecture → Integration Testing): `SYS-NNN` → `ARCH-NNN` → `ITP-NNN-X` → `ITS-NNN-X#` — validates *how modules interact*
 
-**How we satisfy this**: The `/speckit.v-model.trace` command generates both matrices in a single report with independent coverage audits. An auditor sees one consolidated artifact proving traceability at both levels.
+**How we satisfy this**: The `/speckit.v-model.trace` command generates all three matrices in a single report with independent coverage audits. An auditor sees one consolidated artifact proving traceability at all levels.
 
 ## Artifact Mapping to Standards
 
@@ -110,6 +121,32 @@ Auditors require end-to-end traceability across *all* V-Model levels, not just o
 | Fault Injection | Verify error handling | `system-test-plan.md` — failure mode test procedures |
 | Equivalence Partitioning | Reduce test cases systematically | `system-test-plan.md` — input class partitions |
 
+### IEEE 42010:2022 (Architecture Description)
+
+| IEEE 42010 / Kruchten 4+1 Viewpoint | Required Artifact | V-Model Extension Artifact |
+|---|---|---|
+| Logical View | Module responsibilities and domain partitioning | `architecture-design.md` — ARCH-NNN elements with module allocation |
+| Process View | Concurrency and threading models | `architecture-design.md` — process/threading specifications per module |
+| Interface View | Module-to-module API contracts | `architecture-design.md` — interface contracts and protocol bindings |
+| Data Flow View | Data transformations and pipeline stages | `architecture-design.md` — data flow definitions across module boundaries |
+
+### ISO 29119-4 Integration Test Techniques
+
+| ISO 29119-4 Technique | Purpose | V-Model Extension Artifact |
+|---|---|---|
+| Interface Contract Testing | Validate module-to-module API contracts | `integration-test.md` — ITP-NNN-X procedures per interface |
+| Data Flow Testing | Verify data transformations across boundaries | `integration-test.md` — data flow validation procedures |
+| Interface Fault Injection | Test resilience at integration points | `integration-test.md` — fault injection test procedures |
+| Concurrency & Race Condition Testing | Verify thread safety and ordering guarantees | `integration-test.md` — concurrency test procedures |
+
+### ISO 26262-9 §5 (ASIL Decomposition)
+
+| ISO 26262-9 Clause | Required Artifact | V-Model Extension Artifact |
+|---|---|---|
+| §5.4.2 | ASIL decomposition rationale for architecture elements | `architecture-design.md` — ASIL allocation per ARCH-NNN element |
+| §5.4.3 | Independence argument for decomposed elements | `architecture-design.md` — independence justification between modules |
+| §5.4.5 | Verification of decomposed safety requirements | `integration-test.md` — ITP-NNN-X procedures validating decomposed ASILs |
+
 ## ID Schema for Audit Trails
 
 The three-tier ID schema (`REQ-NNN` → `ATP-NNN-X` → `SCN-NNN-X#`) is designed for auditability:
@@ -121,6 +158,8 @@ The three-tier ID schema (`REQ-NNN` → `ATP-NNN-X` → `SCN-NNN-X#`) is designe
 3. **Category prefixes**: `REQ-NF-001` (Non-Functional), `REQ-IF-001` (Interface), `REQ-CN-001` (Constraint) allow auditors to filter by requirement type.
 
 4. **System-level lineage**: The same scheme extends to the System Design ↔ System Testing level: `SYS-NNN` → `STP-NNN-X` → `STS-NNN-X#`. Reading `STS-002-B3` immediately tells the auditor it validates `STP-002-B` which tests `SYS-002`.
+
+5. **Architecture-level lineage**: The scheme extends further to the Architecture Design ↔ Integration Testing level: `ARCH-NNN` → `ITP-NNN-X` → `ITS-NNN-X#`. Reading `ITS-003-A2` immediately tells the auditor it validates `ITP-003-A` which tests `ARCH-003`.
 
 ## Deterministic Validation
 

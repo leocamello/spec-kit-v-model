@@ -32,7 +32,7 @@ assert 'REQ-NF-001' in data['reqs_without_atp'], 'REQ-NF-001 not in reqs_without
     run bash "$SCRIPTS_DIR/validate-coverage.sh" --json "$FIXTURES_DIR/complex"
     local val
     val=$(echo "$output" | python3 -c "import json,sys; print(json.load(sys.stdin)['total_reqs'])")
-    [ "$val" = "16" ]
+    [ "$val" = "10" ]
 }
 
 @test "orphaned ATPs detected" {

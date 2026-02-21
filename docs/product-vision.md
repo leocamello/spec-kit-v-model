@@ -99,17 +99,17 @@ The V-Model Extension Pack enforces a strict separation of concerns:
 | **Quality evaluation** — assessing whether requirements are well-written and scenarios are comprehensive | LLM-as-judge (DeepEval + Gemini) | Qualitative assessment where human-like judgment adds value; clearly labeled as advisory, not deterministic |
 | **Audit trail** — proving who changed what and when | Git (cryptographic commit hashes) | Immutable, mathematically verifiable history; no separate ALM database required |
 
-This architecture means that when you present a traceability matrix to an auditor, the coverage numbers were computed by a script that can be inspected, tested (27 BATS tests, 27 Pester tests), and verified — not by an AI that might produce a different answer on the next run.
+This architecture means that when you present a traceability matrix to an auditor, the coverage numbers were computed by a script that can be inspected, tested (67 BATS tests, 67 Pester tests), and verified — not by an AI that might produce a different answer on the next run.
 
 The AI does what AI is good at: understanding context and generating structured content. The scripts do what scripts are good at: producing the same correct answer every time.
 
 ## The Future Roadmap
 
-The V-Model Extension Pack's MVP covers the top of the V-Model (Requirements ↔ Acceptance Testing). The roadmap extends coverage down the V and adds capabilities that regulated teams have asked for:
+The V-Model Extension Pack covers three levels of the V-Model (Requirements ↔ Acceptance, System Design ↔ System Testing, Architecture ↔ Integration Testing). The roadmap extends coverage further down the V and adds capabilities that regulated teams have asked for:
 
 ### Deeper V-Model Coverage
-- **System Design ↔ System Testing** — Generate system design documents from requirements and paired system test plans.
-- **Architecture ↔ Integration Testing** — Produce component architecture specs with interface contracts and integration test plans.
+- ~~**System Design ↔ System Testing**~~ — ✅ Shipped in v0.2.0.
+- ~~**Architecture ↔ Integration Testing**~~ — ✅ Shipped in v0.3.0.
 - **Module Design ↔ Unit Testing** — Create detailed module designs with paired unit test specifications.
 - **Implementation Gating** — Enforce that all upstream artifacts exist and pass coverage checks before implementation begins.
 

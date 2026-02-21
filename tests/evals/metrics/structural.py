@@ -20,6 +20,11 @@ from tests.validators.system_validators import (
     extract_parent_requirements,
     validate_all as sys_validate_all,
 )
+from tests.validators.architecture_validators import (
+    extract_ids as arch_extract_ids,
+    validate_id_format as arch_validate_id_format,
+    extract_parent_system_components,
+)
 
 
 class StructuralIDMetric(BaseMetric):
@@ -284,6 +289,165 @@ class StructuralSystemTestMetric(BaseMetric):
             self.reason = "; ".join(issues[:5])
         else:
             self.reason = "All system test structural checks pass"
+        return self.score
+
+    def is_successful(self) -> bool:
+        return self.success if self.success is not None else False
+
+
+class StructuralArchitectureDesignMetric(BaseMetric):
+    """Deterministic metric for architecture design structural validation.
+
+    Checks ARCH-NNN ID format, Kruchten 4+1 views presence, and parent SYS references.
+    """
+
+    _KRUCHTEN_VIEWS = [
+        "Logical",
+        "Process",
+        "Interface",
+        "Data Flow",
+    ]
+
+    def __init__(self, threshold: float = 0.95):
+        self.threshold = threshold
+        self.score = None
+        self.reason = None
+        self.success = None
+
+    @property
+    def __name__(self):
+        return "Architecture Design Structural Compliance"
+
+    async def a_measure(self, test_case: LLMTestCase, *args, **kwargs) -> float:
+        return self.measure(test_case)
+
+    def measure(self, test_case: LLMTestCase, *args, **kwargs) -> float:
+        import re
+
+        text = test_case.actual_output or ""
+        issues: list[str] = []
+        total_checks = 0
+
+        # 1. ARCH-NNN ID format compliance
+        arch_ids = arch_extract_ids(text, "ARCH")
+        unique_arch = list(dict.fromkeys(arch_ids))
+        total_checks += max(len(unique_arch), 1)
+        bad = arch_validate_id_format(unique_arch, "ARCH")
+        for b in bad:
+            issues.append(f"Malformed ARCH ID: {b}")
+
+        # 2. Kruchten 4+1 views presence
+        for view in self._KRUCHTEN_VIEWS:
+            total_checks += 1
+            if view.lower() not in text.lower():
+                issues.append(f"Missing Kruchten 4+1 view: {view}")
+
+        # 3. Parent SYS references in every ARCH row
+        for arch_id in unique_arch:
+            total_checks += 1
+            parents = extract_parent_system_components(text, arch_id)
+            if not parents:
+                issues.append(f"{arch_id} has no parent SYS reference")
+
+        if total_checks == 0:
+            self.score = 0.0
+        else:
+            self.score = round(max(0.0, 1.0 - len(issues) / total_checks), 2)
+        self.success = self.score >= self.threshold
+        if issues:
+            self.reason = "; ".join(issues[:5])
+        else:
+            self.reason = "All architecture design structural checks pass"
+        return self.score
+
+    def is_successful(self) -> bool:
+        return self.success if self.success is not None else False
+
+
+class StructuralIntegrationTestMetric(BaseMetric):
+    """Deterministic metric for integration test structural validation.
+
+    Checks ITP-NNN-X / ITS-NNN-X# ID format, integration test technique naming,
+    and module-boundary BDD language (no user-journey phrases).
+    """
+
+    _INTEGRATION_TECHNIQUES = {
+        "Interface Contract Testing",
+        "Data Flow Testing",
+        "Interface Fault Injection",
+        "Concurrency & Race Condition Testing",
+    }
+
+    _USER_JOURNEY_PATTERNS = [
+        "the user clicks",
+        "the user sees",
+        "the user navigates",
+        "the user selects",
+        "the user enters",
+        "the user logs in",
+    ]
+
+    def __init__(self, threshold: float = 0.95):
+        self.threshold = threshold
+        self.score = None
+        self.reason = None
+        self.success = None
+
+    @property
+    def __name__(self):
+        return "Integration Test Structural Compliance"
+
+    async def a_measure(self, test_case: LLMTestCase, *args, **kwargs) -> float:
+        return self.measure(test_case)
+
+    def measure(self, test_case: LLMTestCase, *args, **kwargs) -> float:
+        import re
+
+        text = test_case.actual_output or ""
+        issues: list[str] = []
+        total_checks = 0
+
+        # 1. ITP-NNN-X ID format compliance
+        itp_ids = arch_extract_ids(text, "ITP")
+        unique_itp = list(dict.fromkeys(itp_ids))
+        total_checks += max(len(unique_itp), 1)
+        bad_itp = arch_validate_id_format(unique_itp, "ITP")
+        for b in bad_itp:
+            issues.append(f"Malformed ITP ID: {b}")
+
+        # 2. ITS-NNN-X# ID format compliance
+        its_ids = arch_extract_ids(text, "ITS")
+        unique_its = list(dict.fromkeys(its_ids))
+        total_checks += max(len(unique_its), 1)
+        bad_its = arch_validate_id_format(unique_its, "ITS")
+        for b in bad_its:
+            issues.append(f"Malformed ITS ID: {b}")
+
+        # 3. Integration test technique naming
+        technique_pattern = re.compile(r"\*\*Technique\*\*:\s*(.+)")
+        found_techniques = technique_pattern.findall(text)
+        for tech in found_techniques:
+            total_checks += 1
+            tech_stripped = tech.strip()
+            if tech_stripped not in self._INTEGRATION_TECHNIQUES:
+                issues.append(f"Non-standard integration technique: {tech_stripped}")
+
+        # 4. Module-boundary BDD language (no user-journey phrases)
+        text_lower = text.lower()
+        for phrase in self._USER_JOURNEY_PATTERNS:
+            total_checks += 1
+            if phrase in text_lower:
+                issues.append(f"User-journey phrase detected: '{phrase}'")
+
+        if total_checks == 0:
+            self.score = 0.0
+        else:
+            self.score = round(max(0.0, 1.0 - len(issues) / total_checks), 2)
+        self.success = self.score >= self.threshold
+        if issues:
+            self.reason = "; ".join(issues[:5])
+        else:
+            self.reason = "All integration test structural checks pass"
         return self.score
 
     def is_successful(self) -> bool:

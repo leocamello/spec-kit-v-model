@@ -9,8 +9,8 @@ handoffs:
     agent: speckit.v-model.system-design
     prompt: Review or update the system design
 scripts:
-  sh: scripts/bash/setup-v-model.sh --json --require-reqs
-  ps: scripts/powershell/setup-v-model.ps1 -Json -RequireReqs
+  sh: scripts/bash/setup-v-model.sh --json --require-reqs --require-system-design
+  ps: scripts/powershell/setup-v-model.ps1 -Json -RequireReqs -RequireSystemDesign
 ---
 
 ## User Input
@@ -35,7 +35,8 @@ The script returns JSON with these keys:
 - `VMODEL_DIR`: Path to `specs/{feature}/v-model/` directory
 - `FEATURE_DIR`: Path to `specs/{feature}/` directory
 - `BRANCH`: Current branch name
-- `REQUIREMENTS`: Path to `requirements.md` (MUST exist)
+- `REQUIREMENTS`: Path to `requirements.md` (MUST exist — script uses `--require-reqs`)
+- `SYSTEM_DESIGN`: Path to `system-design.md` (MUST exist — script uses `--require-system-design`)
 - `AVAILABLE_DOCS`: Array of documents that currently exist
 
 For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\''m Groot' (or double-quote if possible: "I'm Groot").

@@ -238,7 +238,86 @@ The command reads `system-design.md` and generates `specs/{feature}/v-model/syst
   * **Then** the AlarmEngine emits a SensorDisconnected event (not a clinical alarm)
 ```
 
-### Step 6: Build the Traceability Matrix
+### Step 6: Generate Architecture Design
+
+```
+/speckit.v-model.architecture-design
+```
+
+The command reads `system-design.md` and generates `specs/{feature}/v-model/architecture-design.md` with architecture elements aligned to IEEE 42010/Kruchten 4+1 views:
+
+```markdown
+### Logical View
+
+| ID | Module | Description | IEEE 42010 View |
+|----|--------|-------------|-----------------|
+| ARCH-001 | SensorProtocolAdapter | Abstracts vendor-specific sensor protocols into a unified VitalSignReading interface | Logical |
+| ARCH-002 | ThresholdEvaluator | Stateless evaluation engine — compares incoming readings against configurable thresholds | Logical |
+| ARCH-003 | AlarmDispatcher | Routes alarm events to audible, visual, and logging subsystems based on severity | Logical |
+
+### Interface View
+
+| ID | Interface | Contract | IEEE 42010 View |
+|----|-----------|----------|-----------------|
+| ARCH-004 | SensorProtocolAdapter → ThresholdEvaluator | Publishes VitalSignReading(type, value, timestamp) via in-process event bus | Interface |
+| ARCH-005 | ThresholdEvaluator → AlarmDispatcher | Emits AlarmTrigger(severity, vitalSignType, value, threshold, timestamp) | Interface |
+
+### Data Flow View
+
+| ID | Flow | Description | IEEE 42010 View |
+|----|------|-------------|-----------------|
+| ARCH-006 | Sensor → Adapter → Evaluator → Dispatcher | End-to-end vital sign processing pipeline with <2.0s latency budget | Data Flow |
+
+### Cross-Cutting Modules
+
+| ID | Module | Description | Tag |
+|----|--------|-------------|-----|
+| ARCH-007 | AuditLogger | Structured logging for all alarm events and sensor state changes | CROSS-CUTTING |
+```
+
+### Step 7: Generate Integration Test Plan
+
+```
+/speckit.v-model.integration-test
+```
+
+The command reads `architecture-design.md` and generates `specs/{feature}/v-model/integration-test.md` with test procedures mapped to ISO 29119-4 integration techniques:
+
+```markdown
+### Architecture Element Validation: ARCH-004 (SensorProtocolAdapter → ThresholdEvaluator Interface)
+
+#### Test Procedure: ITP-004-A (Interface Contract Testing — Event Schema)
+**Linked Architecture Element:** ARCH-004
+**ISO 29119-4 Technique:** Interface Contract Testing
+**Description:** Verify the SensorProtocolAdapter publishes events conforming to the VitalSignReading contract.
+
+* **Test Step: ITS-004-A1**
+  * **Given** the SensorProtocolAdapter is connected to a mock HR sensor
+  * **When** the sensor publishes a reading of 80 BPM
+  * **Then** a VitalSignReading(HR, 80, T) event is published to the event bus with all required fields
+
+#### Test Procedure: ITP-004-B (Data Flow Testing — End-to-End Pipeline)
+**Linked Architecture Element:** ARCH-004
+**ISO 29119-4 Technique:** Data Flow Testing
+**Description:** Verify data flows correctly from adapter through evaluator without transformation loss.
+
+* **Test Step: ITS-004-B1**
+  * **Given** the ThresholdEvaluator is subscribed to the event bus
+  * **When** the SensorProtocolAdapter publishes VitalSignReading(HR, 121, T)
+  * **Then** the ThresholdEvaluator receives the event with value=121 and type=HR intact
+
+#### Test Procedure: ITP-004-C (Interface Fault Injection — Adapter Failure)
+**Linked Architecture Element:** ARCH-004
+**ISO 29119-4 Technique:** Interface Fault Injection
+**Description:** Verify the system handles adapter-to-evaluator communication failure gracefully.
+
+* **Test Step: ITS-004-C1**
+  * **Given** the SensorProtocolAdapter is publishing readings normally
+  * **When** the event bus connection is interrupted for 3.0 seconds
+  * **Then** the ThresholdEvaluator emits a SensorTimeout event (not a false alarm)
+```
+
+### Step 8: Build the Traceability Matrix
 
 ```
 /speckit.v-model.trace
@@ -286,7 +365,26 @@ The command reads `system-design.md` and generates `specs/{feature}/v-model/syst
 
   MATRIX B STATUS: ✅ COMPLIANT
 
-  OVERALL STATUS: ✅ COMPLIANT (both matrices)
+  MATRIX C: Architecture → Integration Testing
+  ────────────────────────────────────────────
+  Total Architecture Elements:         7
+  Elements with Test Coverage:         7  (100%)
+  Total Test Procedures (ITP):         12
+  Test Procedures with Steps:          12 (100%)
+  Total Executable Steps (ITS):        20
+  CROSS-CUTTING Modules:              1
+
+  FORWARD TRACEABILITY (SYS → ARCH → ITP → ITS)
+  Untested Architecture Elements:      0  ✅ Pass
+  ITPs Without Steps:                  0  ✅ Pass
+
+  BACKWARD TRACEABILITY (ITS → ITP → ARCH → SYS)
+  Orphaned Test Procedures:            0  ✅ Pass
+  Orphaned Steps:                      0  ✅ Pass
+
+  MATRIX C STATUS: ✅ COMPLIANT
+
+  OVERALL STATUS: ✅ COMPLIANT (all three matrices)
 ══════════════════════════════════════════════
 ```
 
@@ -302,7 +400,7 @@ The command reads `system-design.md` and generates `specs/{feature}/v-model/syst
 
 This matrix is the audit artifact that IEC 62304 auditors will review to verify software verification completeness.
 
-### Step 7: Continue with Spec Kit Core
+### Step 9: Continue with Spec Kit Core
 
 ```
 /speckit.plan
@@ -393,9 +491,11 @@ This generates the missing ATPs/SCNs for REQ-008, then re-run trace to verify co
 /speckit.specify              → Feature specification (narrative)
 /speckit.v-model.requirements → Formal requirements (REQ-NNN, IEEE 29148 quality)
 /speckit.v-model.acceptance   → Test cases + scenarios (ATP/SCN, BDD format)
-/speckit.v-model.system-design→ System design elements (SYS-NNN, IEEE 1016 views)
-/speckit.v-model.system-test  → Test procedures + steps (STP/STS, ISO 29119-4 techniques)
-/speckit.v-model.trace        → Dual traceability matrix (Matrix A + Matrix B audit artifact)
+/speckit.v-model.system-design       → System design elements (SYS-NNN, IEEE 1016 views)
+/speckit.v-model.system-test        → Test procedures + steps (STP/STS, ISO 29119-4 techniques)
+/speckit.v-model.architecture-design→ Architecture elements (ARCH-NNN, IEEE 42010/4+1 views)
+/speckit.v-model.integration-test   → Integration test procedures + steps (ITP/ITS, ISO 29119-4 techniques)
+/speckit.v-model.trace              → Triple traceability matrix (Matrix A + B + C audit artifact)
 /speckit.plan                 → Technical implementation plan
 /speckit.tasks                → Task breakdown
 /speckit.implement            → Code generation

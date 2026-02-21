@@ -29,7 +29,7 @@ Describe 'Diff-Requirements' {
             $json = $output | ConvertFrom-Json
             $json.added | Should -Contain 'REQ-001'
             $json.added | Should -Contain 'REQ-002'
-            $json.added | Should -Contain 'REQ-NF-001'
+            $json.added | Should -Contain 'REQ-003'
             Pop-Location
         }
     }
@@ -84,7 +84,7 @@ Describe 'Diff-Requirements' {
             git add .
             git commit --quiet -m 'Add requirements'
             $reqFile = Join-Path $vmodelDir 'requirements.md'
-            $content = (Get-Content $reqFile -Raw) -replace '\| REQ-001 \| Test \| Unit \+ Integration \|', '| REQ-001 | Test | Changed description |'
+            $content = (Get-Content $reqFile -Raw) -replace '\| REQ-001 \| The system SHALL process sensor data \|', '| REQ-001 | The system SHALL capture sensor data |'
             $content | Set-Content $reqFile -NoNewline
             $output = & pwsh -NoProfile -File "$ScriptsDir/diff-requirements.ps1" -Json $vmodelDir 2>&1
             $LASTEXITCODE | Should -Be 0

@@ -20,7 +20,7 @@ data = json.load(sys.stdin)
 added = data['added']
 assert 'REQ-001' in added, 'REQ-001 not in added'
 assert 'REQ-002' in added, 'REQ-002 not in added'
-assert 'REQ-NF-001' in added, 'REQ-NF-001 not in added'
+assert 'REQ-003' in added, 'REQ-003 not in added'
 "
 }
 
@@ -65,7 +65,7 @@ assert 'REQ-002' in data['removed'], 'REQ-002 not in removed'
     cd "$TEST_TEMP_DIR"
     git add .
     git commit --quiet -m "Add requirements"
-    sed -i 's/| REQ-001 | Test | Unit + Integration |/| REQ-001 | Test | Changed description |/' "$TEST_TEMP_DIR/vmodel/requirements.md"
+    sed -i 's/| REQ-001 | The system SHALL process sensor data |/| REQ-001 | The system SHALL process MODIFIED sensor data |/' "$TEST_TEMP_DIR/vmodel/requirements.md"
     run bash "$SCRIPTS_DIR/diff-requirements.sh" "$TEST_TEMP_DIR/vmodel" --json
     assert_success
     echo "$output" | python3 -c "

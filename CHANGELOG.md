@@ -5,6 +5,31 @@ All notable changes to the V-Model Extension Pack are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] — 2026-02-21
+
+### Added
+- `architecture-design` command — IEEE 42010/Kruchten 4+1 architecture decomposition with Logical, Process, Interface, and Data Flow views
+- `integration-test` command — ISO 29119-4 integration testing with Interface Contract, Data Flow, Fault Injection, and Concurrency techniques
+- `validate-architecture-coverage.sh` / `validate-architecture-coverage.ps1` — Deterministic ARCH→ITP→ITS bidirectional coverage validation with CROSS-CUTTING module support
+- Matrix C (Integration Verification) in traceability matrix — SYS → ARCH → ITP → ITS with parent REQ annotations
+- `--require-system-design`, `--require-system-test`, `--require-architecture-design`, `--require-integration-test` flags for setup-v-model (bash + PowerShell)
+- Architecture and integration test fixtures across all scenario directories (minimal, complex, gaps, empty, golden)
+- Architecture-level validators (`architecture_validators.py`) and structural/E2E evaluations
+- ARCH-NNN, ITP-NNN-X, ITS-NNN-X# ID patterns in id_validator.py
+- CROSS-CUTTING module tag for infrastructure/utility architecture modules
+- Pester test suite: `Validate-Architecture-Coverage.Tests.ps1` (15 tests)
+- Architecture and integration LLM-as-judge quality metrics
+
+### Changed
+- Extension version bumped from 0.2.0 to 0.3.0
+- setup-v-model.sh/ps1 now detects architecture-design.md and integration-test.md in AVAILABLE_DOCS; 6 symmetric require flags
+- build-matrix.sh/ps1 extended with Matrix C generation
+- trace.md updated from dual-matrix to triple-matrix output (A + B + C)
+- Test fixture directories consolidated to shared scenario pattern (minimal, complex, gaps, empty) with 6 V-Model files each
+- All Pester test fixture paths updated for consolidated directory structure
+- Documentation updated for v0.3.0: README (9-step workflow, 7 commands, 3-tier ID schema), CONTRIBUTING, SECURITY, product-vision, v-model-config
+- Total commands: 5 → 7; BATS tests: 48 → 67; Pester tests: 48 → 67; Structural evals: 21 → 37; LLM-as-judge evals: 16 → 26
+
 ## [0.2.0] — 2026-02-20
 
 ### Added
