@@ -1,41 +1,8 @@
-# Requirements Specification
+# Requirements — Gaps Fixture
 
-## Document Control
-
-| Field | Value |
-|-------|-------|
-| Feature | Gaps Test Fixture |
-| Version | 1.0 |
-| Status | Approved |
-
-## Requirements
-
-### Functional Requirements
-
-#### REQ-001: User Login
-**Description:** The system shall allow users to authenticate using email and password.
-**Priority:** P1
-**Rationale:** Core authentication is required for all user interactions.
-**Verification Method:** Test
-
-#### REQ-002: Password Reset
-**Description:** The system shall allow users to reset their password via an emailed link.
-**Priority:** P1
-**Rationale:** Users must be able to recover access to their accounts.
-**Verification Method:** Test
-
-### Non-Functional Requirements
-
-#### REQ-NF-001: Response Time
-**Description:** The system shall respond to all API requests within 2 seconds under normal load.
-**Priority:** P2
-**Rationale:** Performance is critical for user experience.
-**Verification Method:** Test
-
-## Summary
-
-| Category | Count |
-|----------|-------|
-| Functional | 2 |
-| Non-Functional | 1 |
-| **Total** | **3** |
+| ID | Description | Priority | Rationale | Verification Method |
+|----|-------------|----------|-----------|---------------------|
+| REQ-001 | The system SHALL authenticate users | P1 | Security | Test |
+| REQ-002 | The system SHALL authorize access | P1 | Security | Test |
+| REQ-003 | The system SHALL log audit events | P2 | Compliance | Test |
+| REQ-NF-001 | The system SHALL respond within 2 seconds | P2 | Performance | Test |
