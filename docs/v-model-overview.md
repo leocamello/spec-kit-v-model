@@ -92,6 +92,43 @@ The second V-Model layer pairs **System Design** (left side) with **System Testi
 
 Reading `STS-001-A1` tells you: this step validates test procedure `STP-001-A`, which tests design element `SYS-001`. The same self-documenting lineage as the requirements level.
 
+## Architecture Design ↔ Integration Testing Level
+
+The third V-Model layer pairs **Architecture Design** (left side) with **Integration Testing** (right side). While the System Design ↔ System Testing level validates *how* the system is structured, this level validates *how modules interact across boundaries* — interfaces, data flows, concurrency, and fault propagation between components.
+
+### Standards Alignment
+
+- **IEEE 42010:2022** (Architecture Description) / **Kruchten 4+1** define 4 architecture viewpoints used to describe module interactions:
+  - **Logical View** — Module responsibilities, domain partitioning, and encapsulation boundaries
+  - **Process View** — Concurrency, threading models, and inter-process communication
+  - **Interface View** — Module-to-module API contracts, message schemas, and protocol bindings
+  - **Data Flow View** — Data transformations, pipeline stages, and event propagation paths
+
+- **ISO 29119-4** (Test Techniques) specifies systematic techniques for integration-level testing:
+  - **Interface Contract Testing** — Validates module-to-module API contracts against the Interface View
+  - **Data Flow Testing** — Verifies data transformations and propagation across module boundaries
+  - **Interface Fault Injection** — Injects failures at integration points to verify resilience and error propagation
+  - **Concurrency & Race Condition Testing** — Tests thread safety, deadlocks, and ordering guarantees from the Process View
+
+### Architecture-Level ID Schema
+
+| Tier | ID Format | Example | Meaning |
+|------|-----------|---------|---------|
+| Architecture Element | `ARCH-NNN` | ARCH-001 | A discrete architecture module or component |
+| Test Procedure | `ITP-NNN-X` | ITP-001-A | An integration test procedure for ARCH-001 |
+| Test Step | `ITS-NNN-X#` | ITS-001-A1 | An executable integration test step for ITP-001-A |
+
+Reading `ITS-001-A1` tells you: this step validates test procedure `ITP-001-A`, which tests architecture element `ARCH-001`. The same self-documenting lineage as the requirements and system levels.
+
+### Matrix C: Integration Verification
+
+Matrix C extends the traceability chain one level deeper:
+
+- **Forward**: `SYS-NNN` → `ARCH-NNN` → `ITP-NNN-X` → `ITS-NNN-X#` (no gaps)
+- **Backward**: Every integration test step → traces to an architecture element → traces to a system design element (no orphans)
+
+Architecture modules tagged as `CROSS-CUTTING` (e.g., logging, authentication, configuration) are validated across all dependent modules rather than in isolation.
+
 ## When to Use the V-Model
 
 The V-Model is ideal when:
