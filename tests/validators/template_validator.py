@@ -288,3 +288,96 @@ def validate_integration_test(text: str) -> dict:
         "issues": issues,
         "sections_found": section_names,
     }
+
+
+def validate_module_design(text: str) -> dict:
+    """Validate a module-design.md document structure."""
+    sections = _find_sections(text)
+    section_names = [title for _, title in sections]
+    issues = []
+
+    mod_pattern = re.compile(r"MOD-[0-9]{3}")
+    if not mod_pattern.search(text):
+        issues.append("No MOD-NNN identifiers found")
+
+    module_heading = re.compile(r"### Module: MOD-[0-9]{3}")
+    if not module_heading.search(text):
+        issues.append("No '### Module: MOD-NNN' headings found")
+
+    mod_views = [
+        "Algorithmic",
+        "State Machine",
+        "Internal Data Structures",
+        "Error Handling",
+    ]
+    for view in mod_views:
+        if not _section_exists(sections, view):
+            issues.append(f"Missing '{view}' section")
+
+    pseudocode_block = re.compile(r"```pseudocode")
+    if not pseudocode_block.search(text):
+        issues.append("No ```pseudocode blocks found")
+
+    if not _section_exists(sections, "Coverage"):
+        issues.append("Missing 'Coverage Summary' section")
+
+    total_checks = 8
+    failed = min(len(issues), total_checks)
+    score = max(0.0, 1.0 - failed / total_checks)
+
+    return {
+        "score": round(score, 2),
+        "issues": issues,
+        "sections_found": section_names,
+    }
+
+
+def validate_unit_test(text: str) -> dict:
+    """Validate a unit-test.md document structure."""
+    sections = _find_sections(text)
+    section_names = [title for _, title in sections]
+    issues = []
+
+    utp_pattern = re.compile(r"UTP-[0-9]{3}-[A-Z]")
+    if not utp_pattern.search(text):
+        issues.append("No UTP-NNN-X test case identifiers found")
+
+    uts_pattern = re.compile(r"UTS-[0-9]{3}-[A-Z][0-9]+")
+    if not uts_pattern.search(text):
+        issues.append("No UTS-NNN-X# scenario identifiers found")
+
+    test_case_heading = re.compile(r"#### Test Case: UTP-[0-9]{3}-[A-Z]")
+    if not test_case_heading.search(text):
+        issues.append("No '#### Test Case: UTP-NNN-X' headings found")
+
+    scenario_line = re.compile(r"\*\*Unit Scenario: UTS-[0-9]{3}-[A-Z][0-9]+\*\*")
+    if not scenario_line.search(text):
+        issues.append("No '**Unit Scenario: UTS-NNN-X#**' lines found")
+
+    if not _section_exists(sections, "Coverage"):
+        issues.append("Missing 'Coverage Summary' section")
+
+    valid_techniques = [
+        "Statement & Branch Coverage",
+        "Boundary Value Analysis",
+        "Equivalence Partitioning",
+        "Strict Isolation",
+        "State Transition Testing",
+    ]
+    has_technique = any(t.lower() in text.lower() for t in valid_techniques)
+    if not has_technique:
+        issues.append("No valid unit test techniques found")
+
+    mock_registry = re.compile(r"\*\*Dependency & Mock Registry")
+    if not mock_registry.search(text):
+        issues.append("No Dependency & Mock Registry sections found")
+
+    total_checks = 7
+    failed = min(len(issues), total_checks)
+    score = max(0.0, 1.0 - failed / total_checks)
+
+    return {
+        "score": round(score, 2),
+        "issues": issues,
+        "sections_found": section_names,
+    }

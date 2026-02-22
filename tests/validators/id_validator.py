@@ -10,6 +10,9 @@ ID_PATTERNS = {
     "ARCH": re.compile(r"ARCH-[0-9]{3}"),
     "ITP": re.compile(r"ITP-[0-9]{3}-[A-Z]"),
     "ITS": re.compile(r"ITS-[0-9]{3}-[A-Z][0-9]+"),
+    "MOD": re.compile(r"MOD-[0-9]{3}"),
+    "UTP": re.compile(r"UTP-[0-9]{3}-[A-Z]"),
+    "UTS": re.compile(r"UTS-[0-9]{3}-[A-Z][0-9]+"),
 }
 
 ID_STRICT_PATTERNS = {
@@ -19,6 +22,9 @@ ID_STRICT_PATTERNS = {
     "ARCH": re.compile(r"^ARCH-[0-9]{3}$"),
     "ITP": re.compile(r"^ITP-[0-9]{3}-[A-Z]$"),
     "ITS": re.compile(r"^ITS-[0-9]{3}-[A-Z][0-9]+$"),
+    "MOD": re.compile(r"^MOD-[0-9]{3}$"),
+    "UTP": re.compile(r"^UTP-[0-9]{3}-[A-Z]$"),
+    "UTS": re.compile(r"^UTS-[0-9]{3}-[A-Z][0-9]+$"),
 }
 
 
@@ -188,4 +194,53 @@ def validate_arch_hierarchy(arch_ids: list[str], itp_ids: list[str], its_ids: li
         "orphaned_its": orphaned_its,
         "uncovered_archs": uncovered_archs,
         "itps_without_its": itps_without_its,
+    }
+
+
+# ---- Module-level helpers (v0.4.0) ----
+
+def _mod_base_key(mod_id: str) -> str:
+    """Strip 'MOD-' prefix. E.g. 'MOD-001' -> '001'."""
+    return mod_id[4:]
+
+
+def _utp_base_key(utp_id: str) -> str:
+    """Strip 'UTP-' and trailing '-[A-Z]'. E.g. 'UTP-001-A' -> '001'."""
+    without_prefix = utp_id[4:]
+    return re.sub(r"-[A-Z]$", "", without_prefix)
+
+
+def _utp_full_key(utp_id: str) -> str:
+    """Strip 'UTP-' prefix. E.g. 'UTP-001-A' -> '001-A'."""
+    return utp_id[4:]
+
+
+def _uts_full_key(uts_id: str) -> str:
+    """Strip 'UTS-' prefix. E.g. 'UTS-001-A1' -> '001-A1'."""
+    return uts_id[4:]
+
+
+def validate_mod_hierarchy(mod_ids: list[str], utp_ids: list[str], uts_ids: list[str]) -> dict:
+    """Validate hierarchical consistency between MOD, UTP, and UTS IDs."""
+    mod_bases = {_mod_base_key(m) for m in mod_ids}
+    utp_bases = {_utp_base_key(u) for u in utp_ids}
+    utp_fulls = {_utp_full_key(u) for u in utp_ids}
+    uts_fulls = {_uts_full_key(s) for s in uts_ids}
+
+    orphaned_utps = [u for u in utp_ids if _utp_base_key(u) not in mod_bases]
+    orphaned_uts = [
+        s for s in uts_ids
+        if not any(_uts_full_key(s).startswith(uf) for uf in utp_fulls)
+    ]
+    uncovered_mods = [m for m in mod_ids if _mod_base_key(m) not in utp_bases]
+    utps_without_uts = [
+        u for u in utp_ids
+        if not any(sf.startswith(_utp_full_key(u)) for sf in uts_fulls)
+    ]
+
+    return {
+        "orphaned_utps": orphaned_utps,
+        "orphaned_uts": orphaned_uts,
+        "uncovered_mods": uncovered_mods,
+        "utps_without_uts": utps_without_uts,
     }

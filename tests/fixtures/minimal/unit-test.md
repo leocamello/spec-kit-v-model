@@ -64,7 +64,7 @@
 **Target View**: State Machine View
 **Description**: Verify valid and invalid state transitions of the threshold evaluator.
 
-None — module is self-contained.
+**Dependency & Mock Registry:** None — module is self-contained.
 
 * **Unit Scenario: UTS-002-A1**
   * **Arrange**: Set state to `Idle`; set `config.warn=80.0`, `config.clear=70.0`.
@@ -81,7 +81,7 @@ None — module is self-contained.
 **Target View**: Algorithmic / Logic View
 **Description**: Cover Alerting→Cooldown and Cooldown→Idle branches.
 
-None — module is self-contained.
+**Dependency & Mock Registry:** None — module is self-contained.
 
 * **Unit Scenario: UTS-002-B1**
   * **Arrange**: Set state to `Alerting`; set `config.clear=70.0`.
@@ -105,7 +105,7 @@ None — module is self-contained.
 **Target View**: Algorithmic / Logic View
 **Description**: Exercise render paths with and without an active alert.
 
-None — module is self-contained.
+**Dependency & Mock Registry:** None — module is self-contained.
 
 * **Unit Scenario: UTS-003-A1**
   * **Arrange**: Set `alert_event=AlertEvent(WARN, "High temp")`; set `status.timestamp="2024-01-01T00:00:00Z"`.
@@ -129,7 +129,7 @@ None — module is self-contained.
 **Target View**: Algorithmic / Logic View
 **Description**: Partition log calls into valid and invalid level classes.
 
-None — module is self-contained.
+**Dependency & Mock Registry:** None — module is self-contained.
 
 * **Unit Scenario: UTS-004-A1**
   * **Arrange**: Set `level="INFO"`, `message="startup"`, `source="SensorDriver"`.
