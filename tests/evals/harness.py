@@ -34,6 +34,8 @@ COMMAND_TEMPLATES = {
     "system-test": "system-test-template.md",
     "architecture-design": "architecture-design-template.md",
     "integration-test": "integration-test-template.md",
+    "module-design": "module-design-template.md",
+    "unit-test": "unit-test-template.md",
 }
 
 # Map command names to which docs they need available
@@ -57,6 +59,16 @@ COMMAND_AVAILABLE_DOCS = {
     ),
     "integration-test": lambda ctx: (
         ["requirements.md", "architecture-design.md"]
+        + (["system-design.md"] if "system-design.md" in ctx else [])
+        + (["spec.md"] if "spec.md" in ctx else [])
+    ),
+    "module-design": lambda ctx: (
+        ["requirements.md", "architecture-design.md"]
+        + (["system-design.md"] if "system-design.md" in ctx else [])
+        + (["spec.md"] if "spec.md" in ctx else [])
+    ),
+    "unit-test": lambda ctx: (
+        ["requirements.md", "architecture-design.md", "module-design.md"]
         + (["system-design.md"] if "system-design.md" in ctx else [])
         + (["spec.md"] if "spec.md" in ctx else [])
     ),
@@ -112,6 +124,8 @@ def _build_script_json(command_name: str, context_files: dict[str, str]) -> str:
         "SYSTEM_TEST": f"{_SIM_VMODEL}/system-test.md",
         "ARCH_DESIGN": f"{_SIM_VMODEL}/architecture-design.md",
         "INTEGRATION_TEST": f"{_SIM_VMODEL}/integration-test.md",
+        "MODULE_DESIGN": f"{_SIM_VMODEL}/module-design.md",
+        "UNIT_TEST": f"{_SIM_VMODEL}/unit-test.md",
         "AVAILABLE_DOCS": available_docs,
     })
 
@@ -141,6 +155,8 @@ def _build_file_contents(
         "system-test.md": f"{_SIM_VMODEL}/system-test.md",
         "architecture-design.md": f"{_SIM_VMODEL}/architecture-design.md",
         "integration-test.md": f"{_SIM_VMODEL}/integration-test.md",
+        "module-design.md": f"{_SIM_VMODEL}/module-design.md",
+        "unit-test.md": f"{_SIM_VMODEL}/unit-test.md",
     }
     for filename, content in context_files.items():
         path = path_map.get(filename, f"{_SIM_VMODEL}/{filename}")
