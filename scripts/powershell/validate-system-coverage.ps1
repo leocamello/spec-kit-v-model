@@ -55,8 +55,8 @@ if (-not (Test-Path $SystemTest)) {
 
 # ---- Pass 1: Extract IDs ----
 
-$reqContent = Get-Content -Raw $Requirements
-$designContent = Get-Content -Raw $SystemDesign
+$reqContent = (Get-Content -Raw $Requirements) ?? ''
+$designContent = (Get-Content -Raw $SystemDesign) ?? ''
 
 $reqIds = @([regex]::Matches($reqContent, 'REQ-([A-Z]+-)?[0-9]{3}') |
     ForEach-Object { $_.Value } | Sort-Object -Unique)
