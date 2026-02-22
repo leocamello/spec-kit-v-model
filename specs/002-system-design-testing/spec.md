@@ -122,6 +122,7 @@ A Windows-based automotive ADAS team runs `validate-system-coverage.ps1` to get 
 - **What happens when a REQ-NNN maps to only non-functional requirements (e.g., performance, security)?** The system design should create cross-cutting or quality-attribute components in the relevant design views, not skip them.
 - **How does the system handle circular dependencies in the Dependency View (e.g., SYS-001 depends on SYS-002 which depends on SYS-001)?** The validation script should detect and report cycles without hanging.
 - **What happens when `system-design.md` exists but `system-test.md` does not?** The trace command should include the SYS column but leave the STP column empty with a warning ("System test plan not yet generated").
+- **What happens when `validate-system-coverage.sh` is invoked before `system-test.md` exists?** The script should validate forward coverage (`REQ→SYS`) only and gracefully skip backward coverage checks (`SYS→STP→STS`), exiting with code 0 if forward coverage is complete. The output should clearly indicate partial validation mode.
 - **What happens when the ID numbering in `system-design.md` has gaps (e.g., SYS-001, SYS-003, skipping SYS-002)?** The system should accept gaps in numbering without error — gaps are valid when components are deleted or reorganized.
 - **How does the system handle a requirements.md with hundreds of requirements (e.g., 200+ REQ-NNN)?** The commands should handle large inputs without truncation or performance issues, processing in batches if necessary.
 - **What happens when safety-critical sections (FFI, MC/DC) are requested but the project is not configured for a regulated domain?** The sections should be omitted by default and only included when the domain configuration enables them.
@@ -155,6 +156,7 @@ A Windows-based automotive ADAS team runs `validate-system-coverage.ps1` to get 
 - **FR-011**: The extension MUST provide `validate-system-coverage.sh` (Bash) that deterministically validates: (a) every `REQ-NNN` has ≥1 `SYS-NNN` mapping (forward), (b) every `SYS-NNN` has ≥1 `STP-NNN-X` test case (backward), (c) no orphaned SYS or STP identifiers exist.
 - **FR-012**: The validation script MUST exit with code 0 on full coverage and code 1 on any gap, with human-readable gap reports suitable for CI logs.
 - **FR-013**: The extension MUST provide `validate-system-coverage.ps1` (PowerShell) with identical behavior, output format, and exit codes as the Bash script.
+- **FR-020** *(v0.2.1 patch)*: The `validate-system-coverage.sh` and `validate-system-coverage.ps1` scripts MUST support **partial validation**: when `system-test.md` is absent, the scripts SHALL validate forward coverage (`REQ→SYS`) only and gracefully bypass `SYS→STP→STS` backward coverage checks, exiting with code 0 if forward coverage is complete. This enables running the validation script after generating `system-design.md` but before generating `system-test.md`.
 
 **Traceability & Matrix:**
 

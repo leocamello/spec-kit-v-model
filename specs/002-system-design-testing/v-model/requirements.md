@@ -51,6 +51,7 @@ This document formalizes the requirements for extending the V-Model Extension Pa
 | REQ-034 | When the system design process identifies a necessary technical capability not present in `requirements.md` (a Derived Requirement), the command SHALL flag it as `[DERIVED REQUIREMENT: description]` in the output instead of silently adding a `SYS-NNN` component. | P1 | FR-019, DO-178C/ISO 26262: Derived requirements must flow back up the V-Model for proper traceability. | Test |
 | REQ-035 | When the project's `v-model-config.yml` explicitly enables a regulated domain (e.g., `iso_26262`, `do_178c`), the `/speckit.v-model.system-design` command SHALL generate **Freedom from Interference (FFI)** analysis and **Restricted Complexity** assessment sections in `system-design.md` for each `SYS-NNN` component. | P1 | FR-005, ISO 26262/IEC 61508: Safety-critical decomposition requires FFI analysis to prove isolation between components of different ASIL/SIL levels, and restricted complexity to limit cognitive and computational load. | Test |
 | REQ-036 | When the project's `v-model-config.yml` explicitly enables a regulated domain (e.g., `do_178c`, `iso_26262`), the `/speckit.v-model.system-test` command SHALL generate **Modified Condition/Decision Coverage (MC/DC)** test obligations and **Worst-Case Execution Time (WCET)** verification scenarios in `system-test.md` for each `STP-NNN-X` test case where applicable. | P1 | FR-008, DO-178C Level A/B: Structural coverage beyond statement and branch coverage is mandatory; WCET verification ensures real-time constraints are met. | Test |
+| REQ-037 | *(v0.2.1 patch)* The `validate-system-coverage.sh` script SHALL support **partial validation**: when `system-test.md` is absent, the script SHALL validate forward coverage (`REQ→SYS`) only, gracefully bypass `SYS→STP→STS` backward coverage checks, and exit with code 0 if forward coverage is complete. The output SHALL clearly indicate partial validation mode. | P1 | FR-020, Edge case 9: Enables running the validation script after generating `system-design.md` but before `system-test.md` exists. | Test |
 
 ### Non-Functional Requirements
 
@@ -116,6 +117,6 @@ This document formalizes the requirements for extending the V-Model Extension Pa
 
 ---
 
-**Total Requirements**: 48  
-**By Priority**: P1: 40 | P2: 6 | P3: 2  
+**Total Requirements**: 49  
+**By Priority**: P1: 41 | P2: 6 | P3: 2  
 **By Verification Method**: Test: 31 | Inspection: 17 | Analysis: 0 | Demonstration: 0

@@ -829,15 +829,39 @@ This document defines the Acceptance Test Plan for the System Design ↔ System 
 
 ---
 
+### Requirement Validation: REQ-037 (Partial Validation — v0.2.1 patch)
+
+#### Test Case: ATP-037-A (Forward-Only Validation When system-test.md Absent)
+
+**Linked Requirement:** REQ-037
+**Description:** Verify the script validates forward coverage (REQ→SYS) only when `system-test.md` is absent and exits with code 0 if forward coverage is complete.
+
+* **User Scenario: SCN-037-A1**
+  * **Given** a feature directory contains `requirements.md` with REQ-001 through REQ-005 `And` `system-design.md` with SYS-001 through SYS-005 covering all REQs `And` `system-test.md` does NOT exist
+  * **When** the user runs `validate-system-coverage.sh`
+  * **Then** the script exits with code 0 `And` the output indicates "Partial mode" `And` forward coverage is reported as 100% `And` SYS→STP→STS checks are skipped
+
+#### Test Case: ATP-037-B (Partial Mode Reports Forward Gaps)
+
+**Linked Requirement:** REQ-037
+**Description:** Verify the script detects forward coverage gaps even in partial mode.
+
+* **User Scenario: SCN-037-B1**
+  * **Given** a feature directory contains `requirements.md` with REQ-001 through REQ-005 `And` `system-design.md` covering only REQ-001 through REQ-003 `And` `system-test.md` does NOT exist
+  * **When** the user runs `validate-system-coverage.sh`
+  * **Then** the script exits with code 1 `And` the output identifies REQ-004 and REQ-005 as having no system component mapping `And` backward coverage checks are still skipped
+
+---
+
 ## Coverage Summary
 
 | Metric | Count |
 |--------|-------|
-| Total Requirements (REQ) | 48 |
-| Total Test Cases (ATP) | 62 |
-| Total Scenarios (SCN) | 62 |
-| Requirements with ≥1 ATP | 48 / 48 (100%) |
-| Test Cases with ≥1 SCN | 62 / 62 (100%) |
+| Total Requirements (REQ) | 49 |
+| Total Test Cases (ATP) | 64 |
+| Total Scenarios (SCN) | 64 |
+| Requirements with ≥1 ATP | 49 / 49 (100%) |
+| Test Cases with ≥1 SCN | 64 / 64 (100%) |
 | **Overall Coverage** | **100%** |
 
 ## Uncovered Requirements
