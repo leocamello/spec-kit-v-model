@@ -87,7 +87,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Template validators now accept both template-style ("Overview") and golden-fixture-style ("Document Control", "Test Strategy") sections
-- `validate-coverage` and `build-matrix` scripts extended for dual-matrix support
+- `validate-requirement-coverage` and `build-matrix` scripts extended for dual-matrix support
 - Evals workflow updated with E2E job for command invocation testing
 
 ## [0.1.0] — 2026-02-19
@@ -113,7 +113,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Output templates for requirements, acceptance plan, and traceability matrix
 - Helper scripts (Bash + PowerShell):
   - `setup-v-model` — Directory setup and prerequisite checking
-  - `validate-coverage` — Deterministic REQ→ATP→SCN coverage validation
+  - `validate-requirement-coverage` — Deterministic REQ→ATP→SCN coverage validation
   - `build-matrix` — Deterministic traceability matrix builder
   - `diff-requirements` — Detects changed/added requirements for incremental updates
 - Extension configuration template (`config-template.yml`)

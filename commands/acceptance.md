@@ -40,7 +40,7 @@ Parse the JSON output for:
 - `REQUIREMENTS`: Path to `requirements.md`
 - `AVAILABLE_DOCS`: Array of existing documents — check for `"acceptance-plan.md"` to detect existing plan
 
-**Note on script paths**: The helper scripts (`diff-requirements`, `validate-coverage`) are in the same directory as the setup script. Derive the scripts directory from the `{SCRIPT}` path (i.e., its parent directory).
+**Note on script paths**: The helper scripts (`diff-requirements`, `validate-requirement-coverage`) are in the same directory as the setup script. Derive the scripts directory from the `{SCRIPT}` path (i.e., its parent directory).
 
 For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\''m Groot' (or double-quote if possible: "I'm Groot").
 
@@ -217,10 +217,10 @@ The outcome MUST be something the system can actually verify — a database stat
 After generating all batches, run the coverage validation script:
 
 ```bash
-{SCRIPTS_DIR}/validate-coverage.sh --json {VMODEL_DIR}
+{SCRIPTS_DIR}/validate-requirement-coverage.sh --json {VMODEL_DIR}
 ```
 ```powershell
-{SCRIPTS_DIR}/validate-coverage.ps1 -Json {VMODEL_DIR}
+{SCRIPTS_DIR}/validate-requirement-coverage.ps1 -Json {VMODEL_DIR}
 ```
 
 Parse the JSON output for:
@@ -256,7 +256,7 @@ Append a coverage summary section to the end of `acceptance-plan.md`:
 
 **Validation Status**: ✅ Full Coverage / ❌ Gaps Remaining (see flagged items)
 **Generated**: {DATE}
-**Validated by**: `validate-coverage.sh` (deterministic)
+**Validated by**: `validate-requirement-coverage.sh` (deterministic)
 ```
 
 ### 8. Report Completion

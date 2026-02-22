@@ -37,5 +37,5 @@ Brief description of what this PR does.
 ### Testing
 - [ ] Extension installs with `specify extension add --dev`
 - [ ] All 4 Bash scripts run without errors
-- [ ] `validate-coverage.sh` correctly detects gaps for category-prefixed IDs
+- [ ] `validate-requirement-coverage.sh` correctly detects gaps for category-prefixed IDs
 - [ ] `build-matrix.sh` generates a valid traceability matrix

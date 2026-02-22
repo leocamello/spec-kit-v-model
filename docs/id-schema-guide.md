@@ -143,7 +143,7 @@ Reading any ID in this tree tells you exactly where it belongs: `SCN-003-B1` →
 
 ### What the Deterministic Validator Checks (Matrix A)
 
-The `validate-coverage.sh` script performs bidirectional validation:
+The `validate-requirement-coverage.sh` script performs bidirectional validation:
 
 - **Forward traceability** (no gaps): Every `REQ` has at least one `ATP`, and every `ATP` has at least one `SCN`.
 - **Backward traceability** (no orphans): Every `ATP` traces back to an existing `REQ`, and every `SCN` traces back to an existing `ATP`.
@@ -749,9 +749,9 @@ This separation exists because:
 1. **An AI cannot grade its own homework.** If the same model generates the test plan and evaluates its completeness, there is no independent verification.
 2. **Coverage is binary.** Either `REQ-003` has a matching `ATP-003-*` or it doesn't. This is a pattern-matching problem, not a reasoning problem.
 3. **Auditors demand reproducibility.** Running the validation script twice must produce identical results. LLMs are stochastic by nature.
-4. **Scripts are inspectable.** An auditor can read `validate-coverage.sh`, understand its logic, and trust its output. An LLM's internal reasoning is opaque.
+4. **Scripts are inspectable.** An auditor can read `validate-requirement-coverage.sh`, understand its logic, and trust its output. An LLM's internal reasoning is opaque.
 
-The validation scripts (`validate-coverage.sh`, `validate-system-coverage.sh`, `validate-architecture-coverage.sh`, `validate-module-coverage.sh`, `build-matrix.sh`) are themselves tested by 91 BATS tests and 91 Pester tests to ensure they correctly detect gaps, orphans, and coverage violations.
+The validation scripts (`validate-requirement-coverage.sh`, `validate-system-coverage.sh`, `validate-architecture-coverage.sh`, `validate-module-coverage.sh`, `build-matrix.sh`) are themselves tested by 91 BATS tests and 91 Pester tests to ensure they correctly detect gaps, orphans, and coverage violations.
 
 ---
 

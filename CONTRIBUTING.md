@@ -65,7 +65,7 @@ spec-kit-v-model/
 ├── scripts/
 │   ├── bash/               # Helper scripts (Linux/macOS)
 │   │   ├── setup-v-model.sh
-│   │   ├── validate-coverage.sh
+│   │   ├── validate-requirement-coverage.sh
 │   │   ├── validate-system-coverage.sh
 │   │   ├── validate-architecture-coverage.sh
 │   │   ├── validate-module-coverage.sh
@@ -73,7 +73,7 @@ spec-kit-v-model/
 │   │   └── diff-requirements.sh
 │   └── powershell/         # Helper scripts (Windows)
 │       ├── setup-v-model.ps1
-│       ├── validate-coverage.ps1
+│       ├── validate-requirement-coverage.ps1
 │       ├── validate-system-coverage.ps1
 │       ├── validate-architecture-coverage.ps1
 │       ├── validate-module-coverage.ps1
@@ -164,7 +164,7 @@ walkthrough with examples.
 4. **Commit** with a descriptive message:
 
    ```bash
-   git commit -m "Add support for custom ID prefixes in validate-coverage"
+   git commit -m "Add support for custom ID prefixes in validate-requirement-coverage"
    ```
 
 5. **Push and open a Pull Request** against `main`.

@@ -489,7 +489,7 @@ This document defines the Acceptance Test Plan for the System Design ↔ System 
 **Description:** Verify each matrix includes a coverage percentage that matches the corresponding validation script output.
 
 * **User Scenario: SCN-027-A1**
-  * **Given** a complete set of V-Model artifacts exists `And` `validate-coverage.sh` reports 100% for Matrix A `And` `validate-system-coverage.sh` reports 95% for Matrix B
+  * **Given** a complete set of V-Model artifacts exists `And` `validate-requirement-coverage.sh` reports 100% for Matrix A `And` `validate-system-coverage.sh` reports 95% for Matrix B
   * **When** the user invokes `/speckit.v-model.trace`
   * **Then** the Matrix A coverage percentage in `traceability-matrix.md` equals 100% `And` the Matrix B coverage percentage equals 95% `And` both match the script outputs exactly
 
@@ -765,15 +765,15 @@ This document defines the Acceptance Test Plan for the System Design ↔ System 
 
 ### Requirement Validation: REQ-IF-004 (Validation Script Output Format)
 
-#### Test Case: ATP-IF-004-A (Consistent Format with validate-coverage.sh)
+#### Test Case: ATP-IF-004-A (Consistent Format with validate-requirement-coverage.sh)
 
 **Linked Requirement:** REQ-IF-004
-**Description:** Verify `validate-system-coverage.sh` output matches the format of `validate-coverage.sh` (section headers, gap lists, pass/fail verdict).
+**Description:** Verify `validate-system-coverage.sh` output matches the format of `validate-requirement-coverage.sh` (section headers, gap lists, pass/fail verdict).
 
 * **User Scenario: SCN-IF-004-A1**
   * **Given** a set of V-Model artifacts with known coverage gaps exists
   * **When** the user runs `validate-system-coverage.sh`
-  * **Then** the output contains section headers (e.g., "Forward Coverage", "Backward Coverage"), gap lists with specific IDs, a pass/fail verdict, and coverage percentages `And` the format is consistent with `validate-coverage.sh` output
+  * **Then** the output contains section headers (e.g., "Forward Coverage", "Backward Coverage"), gap lists with specific IDs, a pass/fail verdict, and coverage percentages `And` the format is consistent with `validate-requirement-coverage.sh` output
 
 ---
 
@@ -872,4 +872,4 @@ None — full coverage achieved.
 
 **Validation Status**: ✅ Full Coverage
 **Generated**: 2026-02-20
-**Validated by**: `validate-coverage.sh` (deterministic)
+**Validated by**: `validate-requirement-coverage.sh` (deterministic)

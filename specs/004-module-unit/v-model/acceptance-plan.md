@@ -1178,7 +1178,7 @@ This document defines the Acceptance Test Plan for the Module Design ↔ Unit Te
 
 **Validation Status**: ✅ Full Coverage
 **Generated**: 2026-02-21
-**Validated by**: `validate-coverage.sh` (deterministic)
+**Validated by**: `validate-requirement-coverage.sh` (deterministic)
 
 ## Uncovered Requirements
 

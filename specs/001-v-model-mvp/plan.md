@@ -32,7 +32,7 @@ and directory setup. All artifacts are plaintext Markdown stored in Git.
 | Principle | Status | Evidence |
 |-----------|--------|----------|
 | I. V-Model Discipline | ✅ PASS | Three commands enforce paired generation: requirements → acceptance → trace. ID schema (REQ → ATP → SCN) encodes lineage. |
-| II. Deterministic Verification | ✅ PASS | `validate-coverage.sh` and `build-matrix.sh` use regex parsing for coverage and matrix generation. AI is never trusted to verify its own output. |
+| II. Deterministic Verification | ✅ PASS | `validate-requirement-coverage.sh` and `build-matrix.sh` use regex parsing for coverage and matrix generation. AI is never trusted to verify its own output. |
 | III. Specification as Source of Truth | ✅ PASS | `requirements.md` is the authoritative source; acceptance plan and matrix derive from it. IDs reference source requirements. |
 | IV. Git as QMS | ✅ PASS | All artifacts are plaintext Markdown in Git. `diff-requirements.sh` uses `git show` for change detection. |
 | V. Human-in-the-Loop | ✅ PASS | Commands generate drafts. Human reviews and commits. `[NEEDS CLARIFICATION]` markers halt dependent generation. |
@@ -64,12 +64,12 @@ commands/
 scripts/
 ├── bash/
 │   ├── setup-v-model.sh     # V-Model directory setup + prerequisite checking
-│   ├── validate-coverage.sh # Deterministic coverage gap analysis (regex)
+│   ├── validate-requirement-coverage.sh # Deterministic coverage gap analysis (regex)
 │   ├── build-matrix.sh      # Deterministic traceability matrix builder (regex)
 │   └── diff-requirements.sh # Git-based requirement change detection
 └── powershell/
     ├── setup-v-model.ps1    # PowerShell equivalent of setup script
-    ├── validate-coverage.ps1
+    ├── validate-requirement-coverage.ps1
     ├── build-matrix.ps1
     └── diff-requirements.ps1
 

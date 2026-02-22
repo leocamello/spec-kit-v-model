@@ -28,7 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Output templates for requirements, acceptance plan, and traceability matrix
 - Helper scripts (Bash + PowerShell):
   - `setup-v-model` — Directory setup and prerequisite checking
-  - `validate-coverage` — Deterministic REQ→ATP→SCN coverage validation
+  - `validate-requirement-coverage` — Deterministic REQ→ATP→SCN coverage validation
   - `build-matrix` — Deterministic traceability matrix builder
   - `diff-requirements` — Detects changed/added requirements for incremental updates
 - Extension configuration template (`config-template.yml`)

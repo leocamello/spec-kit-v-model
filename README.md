@@ -155,7 +155,7 @@ calculations are performed by **deterministic scripts**:
 | Concern | Handled by | Why |
 |---------|-----------|-----|
 | Generate requirements & test plans | AI (Copilot) | Creative translation from natural language |
-| Validate requirements ↔ acceptance coverage | `validate-coverage.sh` | Deterministic — regex-based, mathematically correct |
+| Validate requirements ↔ acceptance coverage | `validate-requirement-coverage.sh` | Deterministic — regex-based, mathematically correct |
 | Validate system design ↔ system test coverage | `validate-system-coverage.sh` | Deterministic — SYS→STP→STS cross-reference |
 | Validate architecture ↔ integration coverage | `validate-architecture-coverage.sh` | Deterministic — ARCH→ITP→ITS cross-reference |
 | Validate module ↔ unit test coverage | `validate-module-coverage.sh` | Deterministic — ARCH→MOD→UTP→UTS cross-reference |
