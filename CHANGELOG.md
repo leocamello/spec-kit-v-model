@@ -5,6 +5,35 @@ All notable changes to the V-Model Extension Pack are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] — 2026-02-22
+
+### Added
+- `module-design` command — DO-178C/ISO 26262-compliant low-level module designs with four mandatory views (Algorithmic/Logic, State Machine, Internal Data Structures, Error Handling & Return Codes)
+- `unit-test` command — ISO 29119-4 white-box unit test plans with five named techniques (Statement & Branch Coverage, Boundary Value Analysis, Equivalence Partitioning, State Transition Testing, Strict Isolation) and Dependency & Mock Registries
+- `validate-module-coverage.sh` / `validate-module-coverage.ps1` — Deterministic ARCH→MOD→UTP→UTS bidirectional coverage validation with EXTERNAL and CROSS-CUTTING module support
+- Matrix D (Unit Verification) in traceability matrix — ARCH → MOD → UTP → UTS with parent ARCH annotations
+- `--require-module-design`, `--require-unit-test` flags for setup-v-model (bash + PowerShell)
+- Module design and unit test fixtures across all scenario directories (minimal, complex, gaps, empty, golden)
+- Module-level validators (`validate_module_design()`, `validate_unit_test()` in template_validator.py; `module_validators.py`)
+- MOD-NNN, UTP-NNN-X, UTS-NNN-X# ID patterns in id_validator.py
+- EXTERNAL and DERIVED MODULE tags for third-party and emergent module designs
+- Pester test suite: `Validate-Module-Coverage.Tests.ps1` (16 tests)
+- Module design and unit test LLM-as-judge quality metrics (completeness, logic quality, data structure precision, coverage quality, technique appropriateness, isolation strictness)
+- E2E evaluation tests for module-design and unit-test commands (4 tests each)
+- `docs/id-schema-guide.md` — Comprehensive guide to the four-tier ID schema, intra-level vs inter-level linking, lifecycle, and end-to-end traceability examples
+
+### Changed
+- Extension version bumped from 0.3.0 to 0.4.0
+- setup-v-model.sh/ps1 now detects module-design.md and unit-test.md in AVAILABLE_DOCS; 8 symmetric require flags
+- build-matrix.sh/ps1 extended with Matrix D generation
+- trace.md updated from triple-matrix to quadruple-matrix output (A + B + C + D)
+- Test fixture directories expanded from 6 to 8 V-Model files each (+module-design.md, +unit-test.md)
+- Documentation updated for v0.4.0: README (12-step workflow, 9 commands, 4-tier ID schema), CONTRIBUTING, SECURITY, compliance-guide, usage-examples, v-model-config, v-model-overview, product-vision
+- Total commands: 7 → 9; BATS tests: 67 → 91; Pester tests: 67 → 91; Structural evals: 37 → 51; LLM-as-judge evals: 26 → 36
+
+### Fixed
+- BATS test for validate-system-coverage partial mode now correctly expects exit 0 (script was updated in v0.2.0 but test was not)
+
 ## [0.3.0] — 2026-02-21
 
 ### Added

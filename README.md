@@ -296,8 +296,8 @@ GOOGLE_API_KEY=... pytest tests/evals/ -m eval -v
 
 | Layer | Tests | What it validates |
 |-------|-------|-------------------|
-| BATS | 83 | Bash script logic (setup, coverage, system coverage, architecture coverage, module coverage, matrix, diff) |
-| Pester | 83 | PowerShell script parity |
+| BATS | 91 | Bash script logic (setup, coverage, system coverage, architecture coverage, module coverage, matrix, diff) |
+| Pester | 91 | PowerShell script parity |
 | Structural evals | 51 | ID format, template conformance, section completeness across all V-levels |
 | LLM-as-judge evals | 36 | Requirements quality, BDD quality, design quality, traceability (requires API key) |
 

@@ -80,8 +80,8 @@ spec-kit-v-model/
 │       ├── build-matrix.ps1
 │       └── diff-requirements.ps1
 ├── tests/
-│   ├── bats/               # BATS-core bash unit tests (83 tests)
-│   ├── pester/             # Pester PowerShell unit tests (83 tests)
+│   ├── bats/               # BATS-core bash unit tests (91 tests)
+│   ├── pester/             # Pester PowerShell unit tests (91 tests)
 │   ├── fixtures/           # Shared test data (4 scenarios + malformed + 2 golden examples)
 │   ├── validators/         # Deterministic structural validators (Python)
 │   └── evals/              # DeepEval prompt evaluations
@@ -230,8 +230,8 @@ GOOGLE_API_KEY=... pytest tests/evals/ -m eval -v
 
 | Layer | Framework | Tests | What it validates |
 |-------|-----------|-------|-------------------|
-| **BATS** | bats-core | 83 | Bash script logic: setup, coverage validation, matrix building, diff detection |
-| **Pester** | Pester 5 | 83 | PowerShell script parity with Bash |
+| **BATS** | bats-core | 91 | Bash script logic: setup, coverage validation, matrix building, diff detection |
+| **Pester** | Pester 5 | 91 | PowerShell script parity with Bash |
 | **Structural evals** | pytest + DeepEval | 51 | ID format/hierarchy, template conformance, BDD scenario completeness |
 | **LLM-as-judge evals** | pytest + DeepEval GEval | 36 | Requirements quality (IEEE 29148), BDD quality, traceability completeness |
 

@@ -140,14 +140,15 @@ load "test_helper"
     teardown_temp_dir
 }
 
-@test "system coverage: missing system-test.md exits 1" {
+@test "system coverage: missing system-test.md runs partial mode" {
     setup_temp_dir
     mkdir -p "$TEST_TEMP_DIR/vmodel"
     touch "$TEST_TEMP_DIR/vmodel/requirements.md"
     touch "$TEST_TEMP_DIR/vmodel/system-design.md"
     run bash "$SCRIPTS_DIR/validate-system-coverage.sh" "$TEST_TEMP_DIR/vmodel"
-    assert_failure
+    assert_success
     assert_output --partial "system-test.md not found"
+    assert_output --partial "Partial mode"
     teardown_temp_dir
 }
 

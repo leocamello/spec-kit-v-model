@@ -99,7 +99,7 @@ The V-Model Extension Pack enforces a strict separation of concerns:
 | **Quality evaluation** — assessing whether requirements are well-written and scenarios are comprehensive | LLM-as-judge (DeepEval + Gemini) | Qualitative assessment where human-like judgment adds value; clearly labeled as advisory, not deterministic |
 | **Audit trail** — proving who changed what and when | Git (cryptographic commit hashes) | Immutable, mathematically verifiable history; no separate ALM database required |
 
-This architecture means that when you present a traceability matrix to an auditor, the coverage numbers were computed by a script that can be inspected, tested (83 BATS tests, 83 Pester tests), and verified — not by an AI that might produce a different answer on the next run.
+This architecture means that when you present a traceability matrix to an auditor, the coverage numbers were computed by a script that can be inspected, tested (91 BATS tests, 91 Pester tests), and verified — not by an AI that might produce a different answer on the next run.
 
 The AI does what AI is good at: understanding context and generating structured content. The scripts do what scripts are good at: producing the same correct answer every time.
 

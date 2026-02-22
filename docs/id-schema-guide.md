@@ -751,7 +751,7 @@ This separation exists because:
 3. **Auditors demand reproducibility.** Running the validation script twice must produce identical results. LLMs are stochastic by nature.
 4. **Scripts are inspectable.** An auditor can read `validate-coverage.sh`, understand its logic, and trust its output. An LLM's internal reasoning is opaque.
 
-The validation scripts (`validate-coverage.sh`, `validate-system-coverage.sh`, `validate-architecture-coverage.sh`, `validate-module-coverage.sh`, `build-matrix.sh`) are themselves tested by 83 BATS tests and 83 Pester tests to ensure they correctly detect gaps, orphans, and coverage violations.
+The validation scripts (`validate-coverage.sh`, `validate-system-coverage.sh`, `validate-architecture-coverage.sh`, `validate-module-coverage.sh`, `build-matrix.sh`) are themselves tested by 91 BATS tests and 91 Pester tests to ensure they correctly detect gaps, orphans, and coverage violations.
 
 ---
 
