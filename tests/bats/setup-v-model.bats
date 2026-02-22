@@ -74,6 +74,46 @@ teardown() {
     assert_failure
 }
 
+@test "--require-module-design fails when missing" {
+    init_git_repo "$TEST_TEMP_DIR"
+    cd "$TEST_TEMP_DIR"
+    git checkout -b 001-test --quiet
+    mkdir -p "$TEST_TEMP_DIR/specs/001-test/v-model"
+    run bash "$SCRIPTS_DIR/setup-v-model.sh" --require-module-design
+    assert_failure
+}
+
+@test "--require-unit-test fails when missing" {
+    init_git_repo "$TEST_TEMP_DIR"
+    cd "$TEST_TEMP_DIR"
+    git checkout -b 001-test --quiet
+    mkdir -p "$TEST_TEMP_DIR/specs/001-test/v-model"
+    run bash "$SCRIPTS_DIR/setup-v-model.sh" --require-unit-test
+    assert_failure
+}
+
+@test "detects existing module-design.md" {
+    init_git_repo "$TEST_TEMP_DIR"
+    cd "$TEST_TEMP_DIR"
+    git checkout -b 001-test --quiet
+    mkdir -p "$TEST_TEMP_DIR/specs/001-test/v-model"
+    touch "$TEST_TEMP_DIR/specs/001-test/v-model/module-design.md"
+    run bash "$SCRIPTS_DIR/setup-v-model.sh" --json
+    assert_success
+    assert_output --partial '"module-design.md"'
+}
+
+@test "detects existing unit-test.md" {
+    init_git_repo "$TEST_TEMP_DIR"
+    cd "$TEST_TEMP_DIR"
+    git checkout -b 001-test --quiet
+    mkdir -p "$TEST_TEMP_DIR/specs/001-test/v-model"
+    touch "$TEST_TEMP_DIR/specs/001-test/v-model/unit-test.md"
+    run bash "$SCRIPTS_DIR/setup-v-model.sh" --json
+    assert_success
+    assert_output --partial '"unit-test.md"'
+}
+
 @test "--json outputs valid JSON" {
     init_git_repo "$TEST_TEMP_DIR"
     cd "$TEST_TEMP_DIR"
