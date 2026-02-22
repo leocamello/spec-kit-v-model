@@ -68,14 +68,26 @@ Auditors in safety-critical domains verify that architecture decisions are:
 
 **How we satisfy this**: The `/speckit.v-model.architecture-design` command generates architecture elements aligned with IEEE 42010 views. The `/speckit.v-model.integration-test` command generates integration test procedures mapped to ISO 29119-4 techniques. CROSS-CUTTING modules are validated across all dependent modules.
 
-### 6. Triple-Matrix Traceability
+### 6. Module Design Traceability (DO-178C Low-Level Requirements + ISO 26262 Part 6)
 
-Auditors require end-to-end traceability across *all* V-Model levels, not just one. The triple-matrix approach provides:
+Auditors in safety-critical domains verify that module-level designs are:
+- Documented with **four mandatory views** (Algorithmic/Logic, State Machine, Internal Data Structures, Error Handling & Return Codes)
+- Decomposed from architecture elements (`MOD-NNN` decomposes `ARCH-NNN`)
+- Tested via **white-box techniques** (Statement & Branch Coverage, Boundary Value Analysis, Strict Isolation, State Transition Testing)
+- Traceable using the `MOD-NNN` → `UTP-NNN-X` → `UTS-NNN-X#` ID schema
+- Unit tests enforce **strict isolation** with explicit Dependency & Mock Registries per test procedure
+
+**How we satisfy this**: The `/speckit.v-model.module-design` command generates module designs with pseudocode, state machines, data structures, and error handling. The `/speckit.v-model.unit-test` command generates white-box unit test procedures with strict isolation — every external dependency is mocked via Dependency & Mock Registries. Modules tagged `[EXTERNAL]` or `[CROSS-CUTTING]` are handled with appropriate bypass rules.
+
+### 7. Quadruple-Matrix Traceability
+
+Auditors require end-to-end traceability across *all* V-Model levels, not just one. The quadruple-matrix approach provides:
 - **Matrix A** (Requirements → Acceptance): `REQ-NNN` → `ATP-NNN-X` → `SCN-NNN-X#` — validates *what* was requested
 - **Matrix B** (System Design → System Testing): `SYS-NNN` → `STP-NNN-X` → `STS-NNN-X#` — validates *how* it was designed
 - **Matrix C** (Architecture → Integration Testing): `SYS-NNN` → `ARCH-NNN` → `ITP-NNN-X` → `ITS-NNN-X#` — validates *how modules interact*
+- **Matrix D** (Module Design → Unit Testing): `ARCH-NNN` → `MOD-NNN` → `UTP-NNN-X` → `UTS-NNN-X#` — validates *how each module works internally*
 
-**How we satisfy this**: The `/speckit.v-model.trace` command generates all three matrices in a single report with independent coverage audits. An auditor sees one consolidated artifact proving traceability at all levels.
+**How we satisfy this**: The `/speckit.v-model.trace` command generates all four matrices in a single report with independent coverage audits. An auditor sees one consolidated artifact proving traceability at all levels.
 
 ## Artifact Mapping to Standards
 
@@ -86,6 +98,8 @@ Auditors require end-to-end traceability across *all* V-Model levels, not just o
 | 5.2 Software Requirements Analysis | Software Requirements Specification | `requirements.md` |
 | 5.7.1 Verification Strategy | Verification plan for each requirement | `acceptance-plan.md` |
 | 5.7.4 Software Requirements Verification | Traceability of requirements to tests | `traceability-matrix.md` |
+| 5.5 Software Detailed Design | Software unit detailed design | `module-design.md` |
+| 5.7.2 Software Unit Verification | Unit-level verification plan | `unit-test.md` |
 
 ### ISO 26262 (Automotive Functional Safety)
 
@@ -94,6 +108,8 @@ Auditors require end-to-end traceability across *all* V-Model levels, not just o
 | Part 6, 6.4.2 | Software safety requirements | `requirements.md` |
 | Part 6, 9.4.1 | Software unit verification plan | `acceptance-plan.md` |
 | Part 6, 9.5 | Requirements traceability | `traceability-matrix.md` |
+| Part 6, 7.4.5 | Software unit design | `module-design.md` |
+| Part 6, 9.4.2 | Software unit verification plan | `unit-test.md` |
 
 ### DO-178C (Aviation)
 
@@ -102,6 +118,8 @@ Auditors require end-to-end traceability across *all* V-Model levels, not just o
 | 6.3.1 | High-level requirements | `requirements.md` |
 | 6.4.2 | Test cases and procedures | `acceptance-plan.md` |
 | 6.3.4 | Traceability analysis | `traceability-matrix.md` |
+| 6.3.2 | Low-level requirements | `module-design.md` |
+| 6.4.3 | Low-level requirement test cases | `unit-test.md` |
 
 ### IEEE 1016:2009 (Software Design Description)
 
@@ -161,11 +179,13 @@ The three-tier ID schema (`REQ-NNN` → `ATP-NNN-X` → `SCN-NNN-X#`) is designe
 
 5. **Architecture-level lineage**: The scheme extends further to the Architecture Design ↔ Integration Testing level: `ARCH-NNN` → `ITP-NNN-X` → `ITS-NNN-X#`. Reading `ITS-003-A2` immediately tells the auditor it validates `ITP-003-A` which tests `ARCH-003`.
 
+6. **Module-level lineage**: At the bottom of the V, the scheme completes with Module Design ↔ Unit Testing: `MOD-NNN` → `UTP-NNN-X` → `UTS-NNN-X#`. Reading `UTS-001-A1` immediately tells the auditor it validates `UTP-001-A` which tests `MOD-001`.
+
 ## Deterministic Validation
 
 A critical compliance requirement: **the traceability matrix must be generated by a deterministic tool, not human judgment or AI self-assessment**.
 
-Our helper scripts (`validate-coverage.sh`, `build-matrix.sh`) use regex pattern matching to:
+Our helper scripts (`validate-coverage.sh`, `validate-module-coverage.sh`, `build-matrix.sh`) use regex pattern matching to:
 - Extract all IDs from markdown files
 - Cross-reference coverage in both directions
 - Calculate exact metrics

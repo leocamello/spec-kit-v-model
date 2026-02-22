@@ -317,11 +317,13 @@ The command reads `architecture-design.md` and generates `specs/{feature}/v-mode
   * **Then** the ThresholdEvaluator emits a SensorTimeout event (not a false alarm)
 ```
 
-### Step 8: Build the Traceability Matrix
+### Step 8: Build the Traceability Matrix (Progressive)
 
 ```
 /speckit.v-model.trace
 ```
+
+Run after acceptance for Matrix A, after system-test for A+B, after integration-test for A+B+C, and after unit-test for A+B+C+D.
 
 **Section 1 — Coverage Audit:**
 ```
@@ -384,7 +386,26 @@ The command reads `architecture-design.md` and generates `specs/{feature}/v-mode
 
   MATRIX C STATUS: ✅ COMPLIANT
 
-  OVERALL STATUS: ✅ COMPLIANT (all three matrices)
+  MATRIX D: Module Design → Unit Testing
+  ────────────────────────────────────────────
+  Total Module Designs:              7
+  Modules with Test Coverage:        7  (100%)
+  Total Test Procedures (UTP):       14
+  Test Procedures with Scenarios:    14 (100%)
+  Total Executable Scenarios (UTS):  28
+  EXTERNAL Modules:                  1
+
+  FORWARD TRACEABILITY (ARCH → MOD → UTP → UTS)
+  Untested Module Designs:           0  ✅ Pass
+  UTPs Without Scenarios:            0  ✅ Pass
+
+  BACKWARD TRACEABILITY (UTS → UTP → MOD → ARCH)
+  Orphaned Test Procedures:          0  ✅ Pass
+  Orphaned Scenarios:                0  ✅ Pass
+
+  MATRIX D STATUS: ✅ COMPLIANT
+
+  OVERALL STATUS: ✅ COMPLIANT (all four matrices)
 ══════════════════════════════════════════════
 ```
 
@@ -400,7 +421,104 @@ The command reads `architecture-design.md` and generates `specs/{feature}/v-mode
 
 This matrix is the audit artifact that IEC 62304 auditors will review to verify software verification completeness.
 
-### Step 9: Continue with Spec Kit Core
+### Step 9: Generate Module Design
+
+```
+/speckit.v-model.module-design
+```
+
+The command reads `architecture-design.md` and generates `specs/{feature}/v-model/module-design.md` with detailed module designs aligned to DO-178C low-level requirements:
+
+```markdown
+### Module: MOD-001 (SensorProtocolParser)
+
+**Source File:** `src/sensor_protocol_parser.py`
+**Parent Architecture Elements:** ARCH-001
+
+#### Algorithmic / Logic View
+
+```pseudocode
+FUNCTION parse_vital_reading(raw_bytes: ByteArray) -> VitalSignReading:
+    IF length(raw_bytes) < HEADER_SIZE THEN
+        RETURN Error("Insufficient data: expected >= 8 bytes")
+    END IF
+    sensor_type = extract_enum(raw_bytes[0:2], VITAL_SIGN_TYPES)
+    value = extract_float32(raw_bytes[2:6])
+    timestamp = extract_utc_millis(raw_bytes[6:14])
+    IF value < VALID_RANGE[sensor_type].min OR value > VALID_RANGE[sensor_type].max THEN
+        RETURN Error("Value out of range for " + sensor_type)
+    END IF
+    RETURN VitalSignReading(sensor_type, value, timestamp)
+END FUNCTION
+```
+
+#### State Machine View
+
+N/A — Stateless
+
+#### Internal Data Structures
+
+| Name | Type | Size | Constraint |
+|------|------|------|------------|
+| HEADER_SIZE | const int | 4 bytes | Fixed at 8 |
+| VITAL_SIGN_TYPES | enum | 3 values | {HR, BP, SpO2} |
+| VALID_RANGE | dict | 3 entries | HR: 0-300, BP: 0-400, SpO2: 0-100 |
+
+#### Error Handling & Return Codes
+
+| Error Condition | Return | Upstream Contract |
+|----------------|--------|-------------------|
+| Insufficient bytes | Error("Insufficient data") | ARCH-001 Interface View: caller retries |
+| Out-of-range value | Error("Value out of range") | ARCH-001 Interface View: logged and discarded |
+```
+
+### Step 10: Generate Unit Test Plan
+
+```
+/speckit.v-model.unit-test
+```
+
+The command reads `module-design.md` and generates `specs/{feature}/v-model/unit-test.md` with white-box unit test procedures:
+
+```markdown
+### Module Under Test: MOD-001 (SensorProtocolParser)
+
+#### Test Procedure: UTP-001-A (Statement & Branch Coverage — parse_vital_reading)
+**Linked Module:** MOD-001
+**Technique:** Statement & Branch Coverage
+**Description:** Exercise every line and branch of the parse_vital_reading function.
+
+**Dependency & Mock Registry:** None — module is self-contained.
+
+* **Unit Scenario: UTS-001-A1**
+  * **Arrange:** Construct valid raw_bytes for HR sensor: [0x00, 0x01, ...] (14 bytes, value=80.0)
+  * **Act:** Call parse_vital_reading(raw_bytes)
+  * **Assert:** Returns VitalSignReading(HR, 80.0, expected_timestamp)
+
+* **Unit Scenario: UTS-001-A2**
+  * **Arrange:** Construct raw_bytes with only 4 bytes (below HEADER_SIZE)
+  * **Act:** Call parse_vital_reading(raw_bytes)
+  * **Assert:** Returns Error("Insufficient data: expected >= 8 bytes")
+
+#### Test Procedure: UTP-001-B (Boundary Value Analysis — Value Ranges)
+**Linked Module:** MOD-001
+**Technique:** Boundary Value Analysis
+**Description:** Test parse_vital_reading at exact boundary values.
+
+**Dependency & Mock Registry:** None — module is self-contained.
+
+* **Unit Scenario: UTS-001-B1**
+  * **Arrange:** Construct raw_bytes for HR with value = 0 (minimum valid)
+  * **Act:** Call parse_vital_reading(raw_bytes)
+  * **Assert:** Returns VitalSignReading(HR, 0, timestamp) — accepted
+
+* **Unit Scenario: UTS-001-B2**
+  * **Arrange:** Construct raw_bytes for HR with value = 301 (above maximum)
+  * **Act:** Call parse_vital_reading(raw_bytes)
+  * **Assert:** Returns Error("Value out of range for HR")
+```
+
+### Step 11: Continue with Spec Kit Core
 
 ```
 /speckit.plan
@@ -495,7 +613,9 @@ This generates the missing ATPs/SCNs for REQ-008, then re-run trace to verify co
 /speckit.v-model.system-test        → Test procedures + steps (STP/STS, ISO 29119-4 techniques)
 /speckit.v-model.architecture-design→ Architecture elements (ARCH-NNN, IEEE 42010/4+1 views)
 /speckit.v-model.integration-test   → Integration test procedures + steps (ITP/ITS, ISO 29119-4 techniques)
-/speckit.v-model.trace              → Triple traceability matrix (Matrix A + B + C audit artifact)
+/speckit.v-model.module-design      → Module designs (MOD-NNN, pseudocode + 4 views)
+/speckit.v-model.unit-test          → Unit test procedures + scenarios (UTP/UTS, white-box techniques)
+/speckit.v-model.trace              → Quadruple traceability matrix (Matrix A + B + C + D audit artifact)
 /speckit.plan                 → Technical implementation plan
 /speckit.tasks                → Task breakdown
 /speckit.implement            → Code generation
