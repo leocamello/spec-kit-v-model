@@ -27,6 +27,12 @@
 .PARAMETER RequireIntegrationTest
     Require integration-test.md to exist.
 
+.PARAMETER RequireModuleDesign
+    Require module-design.md to exist.
+
+.PARAMETER RequireUnitTest
+    Require unit-test.md to exist.
+
 .EXAMPLE
     ./setup-v-model.ps1 -Json
 #>
@@ -39,7 +45,9 @@ param(
     [switch]$RequireSystemDesign,
     [switch]$RequireSystemTest,
     [switch]$RequireArchitectureDesign,
-    [switch]$RequireIntegrationTest
+    [switch]$RequireIntegrationTest,
+    [switch]$RequireModuleDesign,
+    [switch]$RequireUnitTest
 )
 
 $ErrorActionPreference = 'Stop'
@@ -121,6 +129,8 @@ $SystemDesign = Join-Path $VModelDir 'system-design.md'
 $SystemTest = Join-Path $VModelDir 'system-test.md'
 $ArchDesign = Join-Path $VModelDir 'architecture-design.md'
 $IntegrationTest = Join-Path $VModelDir 'integration-test.md'
+$ModuleDesign = Join-Path $VModelDir 'module-design.md'
+$UnitTestDoc = Join-Path $VModelDir 'unit-test.md'
 $Spec = Join-Path $FeatureDir 'spec.md'
 
 # Prerequisite checks
@@ -154,6 +164,16 @@ if ($RequireIntegrationTest -and -not (Test-Path $IntegrationTest)) {
     exit 1
 }
 
+if ($RequireModuleDesign -and -not (Test-Path $ModuleDesign)) {
+    Write-Error "ERROR: module-design.md not found in $VModelDir`nRun /speckit.v-model.module-design first."
+    exit 1
+}
+
+if ($RequireUnitTest -and -not (Test-Path $UnitTestDoc)) {
+    Write-Error "ERROR: unit-test.md not found in $VModelDir`nRun /speckit.v-model.unit-test first."
+    exit 1
+}
+
 # Build available docs list
 $docs = @()
 if (Test-Path $Spec)        { $docs += 'spec.md' }
@@ -164,6 +184,8 @@ if (Test-Path $SystemDesign) { $docs += 'system-design.md' }
 if (Test-Path $SystemTest)   { $docs += 'system-test.md' }
 if (Test-Path $ArchDesign)   { $docs += 'architecture-design.md' }
 if (Test-Path $IntegrationTest) { $docs += 'integration-test.md' }
+if (Test-Path $ModuleDesign) { $docs += 'module-design.md' }
+if (Test-Path $UnitTestDoc)  { $docs += 'unit-test.md' }
 
 if ($Json) {
     $output = [ordered]@{
@@ -179,6 +201,8 @@ if ($Json) {
         SYSTEM_TEST      = $SystemTest
         ARCH_DESIGN      = $ArchDesign
         INTEGRATION_TEST = $IntegrationTest
+        MODULE_DESIGN    = $ModuleDesign
+        UNIT_TEST        = $UnitTestDoc
         AVAILABLE_DOCS   = $docs
     }
     $output | ConvertTo-Json -Compress
@@ -196,4 +220,6 @@ if ($Json) {
     $checkMark = if (Test-Path $SystemTest)   { '✓' } else { '✗' }; Write-Output "  $checkMark system-test.md"
     $checkMark = if (Test-Path $ArchDesign)   { '✓' } else { '✗' }; Write-Output "  $checkMark architecture-design.md"
     $checkMark = if (Test-Path $IntegrationTest) { '✓' } else { '✗' }; Write-Output "  $checkMark integration-test.md"
+    $checkMark = if (Test-Path $ModuleDesign) { '✓' } else { '✗' }; Write-Output "  $checkMark module-design.md"
+    $checkMark = if (Test-Path $UnitTestDoc)  { '✓' } else { '✗' }; Write-Output "  $checkMark unit-test.md"
 }

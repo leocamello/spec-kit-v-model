@@ -676,6 +676,255 @@ if ($hasArchLevel) {
     }
 }
 
+# ---- Matrix D: Implementation Verification (if module-level artifacts exist) ----
+$ModuleDesignFile = Join-Path $VModelDir 'module-design.md'
+$UnitTestFile = Join-Path $VModelDir 'unit-test.md'
+$hasModuleLevel = (Test-Path $ModuleDesignFile) -and (Test-Path $ArchDesign)
+
+if ($hasModuleLevel) {
+    # Parse architecture-design.md for ARCH→SYS lineage if not already parsed by Matrix C
+    if (-not $hasArchLevel) {
+        $archDesignContent = Get-Content $ArchDesign
+        $archNames = [ordered]@{}
+        $archParentSys = [ordered]@{}
+        $archCrossCutting = @{}
+        $inLogical = $false
+        foreach ($line in $archDesignContent) {
+            if ($line -match '(?i)^##\s+Logical') {
+                $inLogical = $true
+                continue
+            }
+            if ($inLogical -and $line -match '^##\s') {
+                break
+            }
+            if ($inLogical -and $line -match '\|\s*(ARCH-[0-9]{3})\s*\|\s*([^|]+)\|\s*([^|]+)\|\s*([^|]+)') {
+                $archId = $Matches[1]
+                $aname = $Matches[2].Trim()
+                $aparents = $Matches[4].Trim()
+                $archNames[$archId] = $aname
+                $archParentSys[$archId] = $aparents
+                if ($aparents -match '\[CROSS-CUTTING\]') {
+                    $archCrossCutting[$archId] = $true
+                }
+            }
+        }
+        $sortedArch = @($archNames.Keys | Sort-Object)
+        $totalArchCount = $sortedArch.Count
+        function Get-ArchBaseKeyC($id) { $id -replace '^ARCH-', '' }
+    }
+
+    $modContent = Get-Content $ModuleDesignFile
+
+    # Extract MOD IDs from heading lines + metadata
+    $modNames = [ordered]@{}
+    $modParentArch = @{}
+    $modExternalFlag = @{}
+    $currentMod = ''
+    $inMeta = $false
+    foreach ($line in $modContent) {
+        if ($line -match '^###\s+Module:\s*(MOD-[0-9]{3})\s*\(([^)]*)\)') {
+            $currentMod = $Matches[1]
+            $modNames[$currentMod] = $Matches[2]
+            $inMeta = $true
+            if ($line -match '\[EXTERNAL\]') {
+                $modExternalFlag[$currentMod] = $true
+            }
+            continue
+        }
+        if ($line -match '^####' -or $line -match '^---$') {
+            $inMeta = $false
+        }
+        if ($line -match '^###\s' -and $line -notmatch 'Module:') {
+            $currentMod = ''
+            $inMeta = $false
+        }
+        if ($currentMod -and $inMeta) {
+            if ($line -match '^\*\*Parent Architecture Modules\*\*:') {
+                $parents = @([regex]::Matches($line, 'ARCH-[0-9]{3}') |
+                    ForEach-Object { $_.Value })
+                $modParentArch[$currentMod] = $parents
+            }
+            if ($line -match '\[EXTERNAL\]') {
+                $modExternalFlag[$currentMod] = $true
+            }
+        }
+    }
+
+    $sortedMod = @($modNames.Keys | Sort-Object)
+    $totalModCount = $sortedMod.Count
+
+    function Get-ModBaseKeyD($id) { $id -replace '^MOD-', '' }
+
+    # Extract UTP/UTS from unit-test.md (if exists)
+    $utpDescriptions = [ordered]@{}
+    $utpTechniquesD = @{}
+    $modUtpIds = @()
+    $modUtsIds = @()
+    $hasUnitTest = Test-Path $UnitTestFile
+
+    if ($hasUnitTest) {
+        $utContent = Get-Content $UnitTestFile
+        $utRaw = Get-Content -Raw $UnitTestFile
+
+        foreach ($line in $utContent) {
+            if ($line -match 'Test Case:\s*(UTP-[0-9]{3}-[A-Z])\s*\(([^)]+)\)') {
+                $utpDescriptions[$Matches[1]] = $Matches[2]
+            }
+        }
+
+        $currentUtp = ''
+        foreach ($line in $utContent) {
+            if ($line -match 'Test Case:\s*(UTP-[0-9]{3}-[A-Z])') {
+                $currentUtp = $Matches[1]
+            } elseif ($currentUtp -and $line -match '^\*\*Technique\*\*:\s*(.+)') {
+                $utpTechniquesD[$currentUtp] = $Matches[1].Trim()
+                $currentUtp = ''
+            }
+        }
+
+        $modUtpIds = @([regex]::Matches($utRaw, 'UTP-[0-9]{3}-[A-Z]') |
+            ForEach-Object { $_.Value } | Sort-Object -Unique)
+        $modUtsIds = @([regex]::Matches($utRaw, 'UTS-[0-9]{3}-[A-Z][0-9]+') |
+            ForEach-Object { $_.Value } | Sort-Object -Unique)
+    }
+
+    $sortedUtp = @($utpDescriptions.Keys | Sort-Object)
+    $totalUtpCount = $sortedUtp.Count
+    $totalUtsCount = $modUtsIds.Count
+
+    function Get-UtpBaseKeyD($id) { ($id -replace '^UTP-', '') -replace '-[A-Z]$', '' }
+    function Get-UtpFullKeyD($id) { $id -replace '^UTP-', '' }
+    function Get-UtsFullKeyD($id) { $id -replace '^UTS-', '' }
+
+    $externalCount = 0
+    foreach ($mod in $sortedMod) {
+        if ($modExternalFlag.Contains($mod)) { $externalCount++ }
+    }
+
+    $matrixDLines = @()
+    $matrixDLines += '| Architecture Module (ARCH) | Parent System | Module Design (MOD) | Module Name | Test Case ID (UTP) | Technique | Scenario ID (UTS) | Status |'
+    $matrixDLines += '|---------------------------|---------------|---------------------|-------------|--------------------|-----------|--------------------|--------|'
+
+    if ($hasArchLevel) {
+        foreach ($arch in $sortedArch) {
+            $archKey = Get-ArchBaseKeyC $arch
+            $aname = $archNames[$arch]
+
+            if ($archCrossCutting.Contains($arch)) {
+                $parentSysDisplay = '[CROSS-CUTTING]'
+            } else {
+                $parentSysDisplay = if ($archParentSys.Contains($arch)) { $archParentSys[$arch] } else { '—' }
+            }
+
+            $hasMod = $false
+            foreach ($mod in $sortedMod) {
+                if (-not $modParentArch.Contains($mod)) { continue }
+                $modArchParents = $modParentArch[$mod]
+                if ($arch -in $modArchParents) {
+                    $hasMod = $true
+                    $mname = $modNames[$mod]
+                    $modKey = Get-ModBaseKeyD $mod
+
+                    if ($modExternalFlag.Contains($mod)) {
+                        $matrixDLines += "| $arch ($parentSysDisplay) | $parentSysDisplay | $mod | $mname [EXTERNAL] | — (integration level) | — | — | ⬜ Bypassed |"
+                        continue
+                    }
+
+                    if ($hasUnitTest) {
+                        $firstModUtp = $true
+                        foreach ($utp in $sortedUtp) {
+                            $utpKey = Get-UtpBaseKeyD $utp
+                            if ($utpKey -eq $modKey) {
+                                $technique = if ($utpTechniquesD.Contains($utp)) { $utpTechniquesD[$utp] } else { '—' }
+                                $utpFKey = Get-UtpFullKeyD $utp
+
+                                foreach ($uts in $modUtsIds) {
+                                    $utsFKey = Get-UtsFullKeyD $uts
+                                    if ($utsFKey.StartsWith($utpFKey)) {
+                                        $matrixDLines += "| $arch ($parentSysDisplay) | $parentSysDisplay | $mod | $mname | $utp | $technique | $uts | ⬜ Untested |"
+                                        $firstModUtp = $false
+                                    }
+                                }
+
+                                if ($firstModUtp) {
+                                    $matrixDLines += "| $arch ($parentSysDisplay) | $parentSysDisplay | $mod | $mname | $utp | $technique | ❌ MISSING | ⬜ Untested |"
+                                    $firstModUtp = $false
+                                }
+                            }
+                        }
+
+                        if ($firstModUtp) {
+                            $matrixDLines += "| $arch ($parentSysDisplay) | $parentSysDisplay | $mod | $mname | ❌ MISSING | — | — | ⬜ Untested |"
+                        }
+                    } else {
+                        $matrixDLines += "| $arch ($parentSysDisplay) | $parentSysDisplay | $mod | $mname | ⏳ Pending | — | — | ⬜ Untested |"
+                    }
+                }
+            }
+
+            if (-not $hasMod) {
+                $matrixDLines += "| $arch ($parentSysDisplay) | $parentSysDisplay | ❌ MISSING | — | — | — | — | ⬜ Untested |"
+            }
+        }
+    }
+
+    # Matrix D coverage metrics
+    $archWithMod = 0
+    foreach ($arch in $sortedArch) {
+        foreach ($mod in $sortedMod) {
+            if ($modParentArch.Contains($mod)) {
+                if ($arch -in $modParentArch[$mod]) {
+                    $archWithMod++
+                    break
+                }
+            }
+        }
+    }
+
+    if ($totalArchCount -gt 0) { $archModPct = [math]::Floor($archWithMod * 100 / $totalArchCount) }
+    else { $archModPct = 0 }
+
+    $modWithUtp = 0
+    $testableMod = $totalModCount - $externalCount
+    if ($hasUnitTest) {
+        foreach ($mod in $sortedMod) {
+            if ($modExternalFlag.Contains($mod)) { continue }
+            $modKey = Get-ModBaseKeyD $mod
+            foreach ($utp in $sortedUtp) {
+                $utpKey = Get-UtpBaseKeyD $utp
+                if ($utpKey -eq $modKey) { $modWithUtp++; break }
+            }
+        }
+    }
+
+    if ($testableMod -gt 0 -and $hasUnitTest) { $modUtpPct = [math]::Floor($modWithUtp * 100 / $testableMod) }
+    else { $modUtpPct = 0 }
+
+    $fullOutput += ''
+    $fullOutput += '## Matrix D — Implementation Verification (Module View)'
+    $fullOutput += ''
+    $fullOutput += $matrixDLines
+    $fullOutput += ''
+    $fullOutput += '### Matrix D Coverage'
+    $fullOutput += ''
+    $fullOutput += '| Metric | Value |'
+    $fullOutput += '|--------|-------|'
+    $fullOutput += "| **Total Module Designs (MOD)** | $totalModCount |"
+    $fullOutput += "| **External Modules** | $externalCount |"
+    $fullOutput += "| **Testable Modules** | $testableMod |"
+    if ($hasUnitTest) {
+        $fullOutput += "| **Total Unit Test Cases (UTP)** | $totalUtpCount |"
+        $fullOutput += "| **Total Unit Scenarios (UTS)** | $totalUtsCount |"
+    }
+    $fullOutput += "| **ARCH → MOD Coverage** | $archWithMod/$totalArchCount ($archModPct%) |"
+    if ($hasUnitTest) {
+        $fullOutput += "| **MOD → UTP Coverage** | $modWithUtp/$testableMod ($modUtpPct%) |"
+    } else {
+        $fullOutput += '| **MOD → UTP Coverage** | ⏳ Pending (unit-test.md not found) |'
+    }
+    $fullOutput += ''
+}
+
 $fullOutput += ''
 $fullOutput += '## Audit Notes'
 $fullOutput += ''
@@ -683,6 +932,8 @@ $fullOutput += '- **Matrix generated by**: `build-matrix.ps1` (deterministic reg
 $sourceDocs = '`requirements.md`, `acceptance-plan.md`'
 if ($hasSystemLevel) { $sourceDocs += ', `system-design.md`, `system-test.md`' }
 if ($hasArchLevel) { $sourceDocs += ', `architecture-design.md`, `integration-test.md`' }
+if ($hasModuleLevel) { $sourceDocs += ', `module-design.md`' }
+if ($hasUnitTest) { $sourceDocs += ', `unit-test.md`' }
 $fullOutput += "- **Source documents**: $sourceDocs"
 $fullOutput += "- **Last validated**: $date"
 

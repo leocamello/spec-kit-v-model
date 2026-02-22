@@ -707,11 +707,265 @@ DATE=$(date -u +"%Y-%m-%d")
         fi
     fi
 
+    # ---- Matrix D: Implementation Verification (if module-level artifacts exist) ----
+    MODULE_DESIGN="$VMODEL_DIR/module-design.md"
+    UNIT_TEST="$VMODEL_DIR/unit-test.md"
+    HAS_MODULE_LEVEL=false
+    if [[ -f "$MODULE_DESIGN" ]] && [[ -f "$ARCH_DESIGN" ]]; then
+        HAS_MODULE_LEVEL=true
+
+        # Parse architecture-design.md for ARCH→SYS lineage if not already parsed by Matrix C
+        if ! $HAS_ARCH_LEVEL; then
+            declare -A arch_names
+            declare -A arch_parent_sys
+            declare -A arch_cross_cutting
+            in_logical_d=false
+            while IFS= read -r line; do
+                if [[ "$line" =~ ^##[[:space:]]+Logical ]]; then
+                    in_logical_d=true
+                    continue
+                fi
+                if $in_logical_d && [[ "$line" =~ ^##[[:space:]] ]]; then
+                    break
+                fi
+                if $in_logical_d && [[ "$line" =~ \|[[:space:]]*(ARCH-[0-9]{3})[[:space:]]*\|[[:space:]]*([^|]+)\|[[:space:]]*([^|]+)\|[[:space:]]*([^|]+) ]]; then
+                    arch_id="${BASH_REMATCH[1]}"
+                    aname=$(echo "${BASH_REMATCH[2]}" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+                    aparents=$(echo "${BASH_REMATCH[4]}" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+                    arch_names["$arch_id"]="$aname"
+                    arch_parent_sys["$arch_id"]="$aparents"
+                    if echo "$aparents" | grep -q '\[CROSS-CUTTING\]'; then
+                        arch_cross_cutting["$arch_id"]=1
+                    fi
+                fi
+            done < "$ARCH_DESIGN"
+            sorted_arch=($(echo "${!arch_names[@]}" | tr ' ' '\n' | sort))
+            total_arch_count=${#sorted_arch[@]}
+            arch_base_key_fn() { echo "$1" | sed 's/^ARCH-//'; }
+        fi
+
+        # Extract MOD IDs from module-design.md (heading lines + metadata)
+        declare -A mod_names
+        declare -A mod_parent_arch
+        declare -A mod_external_flag
+        local_current_mod=""
+        local_in_meta=true
+        mod_heading_regex='^###[[:space:]]+Module:[[:space:]]*(MOD-[0-9]{3})'
+        while IFS= read -r line; do
+            if [[ "$line" =~ $mod_heading_regex ]]; then
+                local_current_mod="${BASH_REMATCH[1]}"
+                # Extract name from parentheses
+                local_name=$(echo "$line" | sed -n 's/.*(\([^)]*\)).*/\1/p')
+                mod_names["$local_current_mod"]="$local_name"
+                local_in_meta=true
+                if echo "$line" | grep -q '\[EXTERNAL\]'; then
+                    mod_external_flag["$local_current_mod"]=1
+                fi
+                continue
+            fi
+            if [[ "$line" =~ ^#### ]] || [[ "$line" =~ ^---$ ]]; then
+                local_in_meta=false
+            fi
+            if [[ "$line" =~ ^###[[:space:]] ]] && ! [[ "$line" =~ Module: ]]; then
+                local_current_mod=""
+                local_in_meta=false
+            fi
+            if [[ -n "$local_current_mod" ]] && $local_in_meta; then
+                if [[ "$line" =~ ^\*\*Parent\ Architecture\ Modules\*\*: ]]; then
+                    parents=$(echo "$line" | grep -oE 'ARCH-[0-9]{3}' || true)
+                    mod_parent_arch["$local_current_mod"]="$parents"
+                fi
+                if echo "$line" | grep -q '\[EXTERNAL\]'; then
+                    mod_external_flag["$local_current_mod"]=1
+                fi
+            fi
+        done < "$MODULE_DESIGN"
+
+        sorted_mod=($(echo "${!mod_names[@]}" | tr ' ' '\n' | sort))
+        total_mod_count=${#sorted_mod[@]}
+
+        mod_base_key_fn() { echo "$1" | sed 's/^MOD-//'; }
+
+        # Extract UTP/UTS from unit-test.md (if exists)
+        declare -A utp_descriptions
+        declare -A utp_techniques
+        mod_utp_ids=()
+        mod_uts_ids=()
+        HAS_UNIT_TEST=false
+        if [[ -f "$UNIT_TEST" ]]; then
+            HAS_UNIT_TEST=true
+            utp_regex='Test Case: (UTP-[0-9]{3}-[A-Z])[[:space:]]*\(([^)]+)\)'
+            while IFS= read -r line; do
+                if [[ "$line" =~ $utp_regex ]]; then
+                    utp_id="${BASH_REMATCH[1]}"
+                    utp_descriptions["$utp_id"]="${BASH_REMATCH[2]}"
+                fi
+            done < "$UNIT_TEST"
+
+            current_utp=""
+            while IFS= read -r line; do
+                if [[ "$line" =~ Test\ Case:\ (UTP-[0-9]{3}-[A-Z]) ]]; then
+                    current_utp="${BASH_REMATCH[1]}"
+                elif [[ -n "$current_utp" && "$line" =~ ^\*\*Technique\*\*:[[:space:]]*(.+) ]]; then
+                    utp_techniques["$current_utp"]=$(echo "${BASH_REMATCH[1]}" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+                    current_utp=""
+                fi
+            done < "$UNIT_TEST"
+
+            mod_utp_ids=($(grep -oE 'UTP-[0-9]{3}-[A-Z]' "$UNIT_TEST" | sort -u))
+            mod_uts_ids=($(grep -oE 'UTS-[0-9]{3}-[A-Z][0-9]+' "$UNIT_TEST" | sort -u))
+        fi
+
+        sorted_utp=($(echo "${!utp_descriptions[@]}" | tr ' ' '\n' | sort))
+        total_utp_count=${#sorted_utp[@]}
+        total_uts_count=${#mod_uts_ids[@]}
+
+        utp_base_key_d() { echo "$1" | sed 's/^UTP-//' | sed 's/-[A-Z]$//'; }
+        utp_full_key_d() { echo "$1" | sed 's/^UTP-//'; }
+        uts_full_key_d() { echo "$1" | sed 's/^UTS-//'; }
+
+        # Count external modules
+        external_count=0
+        for mod in "${sorted_mod[@]}"; do
+            [[ -n "${mod_external_flag[$mod]}" ]] && external_count=$((external_count + 1))
+        done
+
+        echo ""
+        echo "## Matrix D — Implementation Verification (Module View)"
+        echo ""
+        echo "| Architecture Module (ARCH) | Parent System | Module Design (MOD) | Module Name | Test Case ID (UTP) | Technique | Scenario ID (UTS) | Status |"
+        echo "|---------------------------|---------------|---------------------|-------------|--------------------|-----------|--------------------|--------|"
+
+        # Build Matrix D rows grouped by ARCH
+        for arch in "${sorted_arch[@]}"; do
+                arch_key=$(arch_base_key_fn "$arch")
+                aname="${arch_names[$arch]}"
+
+                # Determine parent SYS for display
+                if [[ -n "${arch_cross_cutting[$arch]}" ]]; then
+                    parent_sys_display="[CROSS-CUTTING]"
+                else
+                    parent_sys_display="${arch_parent_sys[$arch]:-—}"
+                fi
+
+                has_mod=false
+                for mod in "${sorted_mod[@]}"; do
+                    parents="${mod_parent_arch[$mod]}"
+                    if echo "$parents" | grep -qw "$arch"; then
+                        has_mod=true
+                        mname="${mod_names[$mod]}"
+                        mod_key=$(mod_base_key_fn "$mod")
+
+                        # Check if external
+                        if [[ -n "${mod_external_flag[$mod]}" ]]; then
+                            echo "| $arch ($parent_sys_display) | $parent_sys_display | $mod | $mname [EXTERNAL] | — (integration level) | — | — | ⬜ Bypassed |"
+                            continue
+                        fi
+
+                        if $HAS_UNIT_TEST; then
+                            first_mod_utp=true
+                            for utp in "${sorted_utp[@]}"; do
+                                utp_key=$(utp_base_key_d "$utp")
+                                if [[ "$utp_key" == "$mod_key" ]]; then
+                                    technique="${utp_techniques[$utp]:-—}"
+                                    utp_fkey=$(utp_full_key_d "$utp")
+
+                                    for uts in "${mod_uts_ids[@]}"; do
+                                        uts_fkey=$(uts_full_key_d "$uts")
+                                        if [[ "$uts_fkey" == "$utp_fkey"* ]]; then
+                                            echo "| $arch ($parent_sys_display) | $parent_sys_display | $mod | $mname | $utp | $technique | $uts | ⬜ Untested |"
+                                            first_mod_utp=false
+                                        fi
+                                    done
+
+                                    if $first_mod_utp; then
+                                        echo "| $arch ($parent_sys_display) | $parent_sys_display | $mod | $mname | $utp | $technique | ❌ MISSING | ⬜ Untested |"
+                                        first_mod_utp=false
+                                    fi
+                                fi
+                            done
+
+                            if $first_mod_utp; then
+                                echo "| $arch ($parent_sys_display) | $parent_sys_display | $mod | $mname | ❌ MISSING | — | — | ⬜ Untested |"
+                            fi
+                        else
+                            echo "| $arch ($parent_sys_display) | $parent_sys_display | $mod | $mname | ⏳ Pending | — | — | ⬜ Untested |"
+                        fi
+                    fi
+                done
+
+                if ! $has_mod; then
+                    echo "| $arch ($parent_sys_display) | $parent_sys_display | ❌ MISSING | — | — | — | — | ⬜ Untested |"
+                fi
+            done
+
+        echo ""
+        echo "### Matrix D Coverage"
+        echo ""
+
+        # Count ARCH with MOD
+        arch_with_mod=0
+        for arch in "${sorted_arch[@]}"; do
+            for mod in "${sorted_mod[@]}"; do
+                parents="${mod_parent_arch[$mod]}"
+                if echo "$parents" | grep -qw "$arch"; then
+                    arch_with_mod=$((arch_with_mod + 1))
+                    break
+                fi
+            done
+        done
+
+        if [[ $total_arch_count -gt 0 ]]; then
+            arch_mod_pct=$((arch_with_mod * 100 / total_arch_count))
+        else
+            arch_mod_pct=0
+        fi
+
+        # Count MOD with UTP (excluding external)
+        mod_with_utp=0
+        testable_mod=$((total_mod_count - external_count))
+        if $HAS_UNIT_TEST; then
+            for mod in "${sorted_mod[@]}"; do
+                [[ -n "${mod_external_flag[$mod]}" ]] && continue
+                mod_key=$(mod_base_key_fn "$mod")
+                for utp in "${sorted_utp[@]}"; do
+                    utp_key=$(utp_base_key_d "$utp")
+                    if [[ "$utp_key" == "$mod_key" ]]; then
+                        mod_with_utp=$((mod_with_utp + 1))
+                        break
+                    fi
+                done
+            done
+        fi
+
+        if [[ $testable_mod -gt 0 ]] && $HAS_UNIT_TEST; then
+            mod_utp_pct=$((mod_with_utp * 100 / testable_mod))
+        else
+            mod_utp_pct=0
+        fi
+
+        echo "| Metric | Value |"
+        echo "|--------|-------|"
+        echo "| **Total Module Designs (MOD)** | $total_mod_count |"
+        echo "| **External Modules** | $external_count |"
+        echo "| **Testable Modules** | $testable_mod |"
+        if $HAS_UNIT_TEST; then
+            echo "| **Total Unit Test Cases (UTP)** | $total_utp_count |"
+            echo "| **Total Unit Scenarios (UTS)** | $total_uts_count |"
+        fi
+        echo "| **ARCH → MOD Coverage** | $arch_with_mod/$total_arch_count ($arch_mod_pct%) |"
+        if $HAS_UNIT_TEST; then
+            echo "| **MOD → UTP Coverage** | $mod_with_utp/$testable_mod ($mod_utp_pct%) |"
+        else
+            echo "| **MOD → UTP Coverage** | ⏳ Pending (unit-test.md not found) |"
+        fi
+    fi
+
     echo ""
     echo "## Audit Notes"
     echo ""
     echo "- **Matrix generated by**: \`build-matrix.sh\` (deterministic regex parser)"
-    echo "- **Source documents**: \`requirements.md\`, \`acceptance-plan.md\`$(if $HAS_SYSTEM_LEVEL; then echo ', `system-design.md`, `system-test.md`'; fi)$(if $HAS_ARCH_LEVEL; then echo ', `architecture-design.md`, `integration-test.md`'; fi)"
+    echo "- **Source documents**: \`requirements.md\`, \`acceptance-plan.md\`$(if $HAS_SYSTEM_LEVEL; then echo ', `system-design.md`, `system-test.md`'; fi)$(if $HAS_ARCH_LEVEL; then echo ', `architecture-design.md`, `integration-test.md`'; fi)$(if $HAS_MODULE_LEVEL; then echo ', `module-design.md`'; fi)$(if $HAS_UNIT_TEST; then echo ', `unit-test.md`'; fi)"
     echo "- **Last validated**: $DATE"
 } > /tmp/vmodel-matrix-full.md
 

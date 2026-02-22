@@ -12,6 +12,8 @@
 #   --require-system-test         Require system-test.md to exist
 #   --require-architecture-design Require architecture-design.md to exist
 #   --require-integration-test    Require integration-test.md to exist
+#   --require-module-design       Require module-design.md to exist
+#   --require-unit-test           Require unit-test.md to exist
 #   --help, -h                    Show help message
 #
 # OUTPUTS:
@@ -26,6 +28,8 @@ REQUIRE_SYSTEM_DESIGN=false
 REQUIRE_SYSTEM_TEST=false
 REQUIRE_ARCHITECTURE_DESIGN=false
 REQUIRE_INTEGRATION_TEST=false
+REQUIRE_MODULE_DESIGN=false
+REQUIRE_UNIT_TEST=false
 
 for arg in "$@"; do
     case "$arg" in
@@ -36,6 +40,8 @@ for arg in "$@"; do
         --require-system-test) REQUIRE_SYSTEM_TEST=true ;;
         --require-architecture-design) REQUIRE_ARCHITECTURE_DESIGN=true ;;
         --require-integration-test) REQUIRE_INTEGRATION_TEST=true ;;
+        --require-module-design) REQUIRE_MODULE_DESIGN=true ;;
+        --require-unit-test) REQUIRE_UNIT_TEST=true ;;
         --help|-h)
             cat << 'EOF'
 Usage: setup-v-model.sh [OPTIONS]
@@ -50,6 +56,8 @@ OPTIONS:
   --require-system-test         Require system-test.md to exist
   --require-architecture-design Require architecture-design.md to exist
   --require-integration-test    Require integration-test.md to exist
+  --require-module-design       Require module-design.md to exist
+  --require-unit-test           Require unit-test.md to exist
   --help, -h                    Show this help message
 EOF
             exit 0
@@ -126,6 +134,8 @@ SYSTEM_DESIGN="$VMODEL_DIR/system-design.md"
 SYSTEM_TEST="$VMODEL_DIR/system-test.md"
 ARCH_DESIGN="$VMODEL_DIR/architecture-design.md"
 INTEGRATION_TEST="$VMODEL_DIR/integration-test.md"
+MODULE_DESIGN="$VMODEL_DIR/module-design.md"
+UNIT_TEST="$VMODEL_DIR/unit-test.md"
 SPEC="$FEATURE_DIR/spec.md"
 
 # Prerequisite checks
@@ -165,6 +175,18 @@ if $REQUIRE_INTEGRATION_TEST && [[ ! -f "$INTEGRATION_TEST" ]]; then
     exit 1
 fi
 
+if $REQUIRE_MODULE_DESIGN && [[ ! -f "$MODULE_DESIGN" ]]; then
+    echo "ERROR: module-design.md not found in $VMODEL_DIR" >&2
+    echo "Run /speckit.v-model.module-design first." >&2
+    exit 1
+fi
+
+if $REQUIRE_UNIT_TEST && [[ ! -f "$UNIT_TEST" ]]; then
+    echo "ERROR: unit-test.md not found in $VMODEL_DIR" >&2
+    echo "Run /speckit.v-model.unit-test first." >&2
+    exit 1
+fi
+
 # Build available docs list
 docs=()
 [[ -f "$SPEC" ]] && docs+=("spec.md")
@@ -175,6 +197,8 @@ docs=()
 [[ -f "$SYSTEM_TEST" ]] && docs+=("system-test.md")
 [[ -f "$ARCH_DESIGN" ]] && docs+=("architecture-design.md")
 [[ -f "$INTEGRATION_TEST" ]] && docs+=("integration-test.md")
+[[ -f "$MODULE_DESIGN" ]] && docs+=("module-design.md")
+[[ -f "$UNIT_TEST" ]] && docs+=("unit-test.md")
 
 if $JSON_MODE; then
     if [[ ${#docs[@]} -eq 0 ]]; then
@@ -183,8 +207,8 @@ if $JSON_MODE; then
         json_docs=$(printf '"%s",' "${docs[@]}")
         json_docs="[${json_docs%,}]"
     fi
-    printf '{"REPO_ROOT":"%s","BRANCH":"%s","FEATURE_DIR":"%s","VMODEL_DIR":"%s","SPEC":"%s","REQUIREMENTS":"%s","ACCEPTANCE":"%s","TRACE_MATRIX":"%s","SYSTEM_DESIGN":"%s","SYSTEM_TEST":"%s","ARCH_DESIGN":"%s","INTEGRATION_TEST":"%s","AVAILABLE_DOCS":%s}\n' \
-        "$REPO_ROOT" "$BRANCH" "$FEATURE_DIR" "$VMODEL_DIR" "$SPEC" "$REQUIREMENTS" "$ACCEPTANCE" "$TRACE_MATRIX" "$SYSTEM_DESIGN" "$SYSTEM_TEST" "$ARCH_DESIGN" "$INTEGRATION_TEST" "$json_docs"
+    printf '{"REPO_ROOT":"%s","BRANCH":"%s","FEATURE_DIR":"%s","VMODEL_DIR":"%s","SPEC":"%s","REQUIREMENTS":"%s","ACCEPTANCE":"%s","TRACE_MATRIX":"%s","SYSTEM_DESIGN":"%s","SYSTEM_TEST":"%s","ARCH_DESIGN":"%s","INTEGRATION_TEST":"%s","MODULE_DESIGN":"%s","UNIT_TEST":"%s","AVAILABLE_DOCS":%s}\n' \
+        "$REPO_ROOT" "$BRANCH" "$FEATURE_DIR" "$VMODEL_DIR" "$SPEC" "$REQUIREMENTS" "$ACCEPTANCE" "$TRACE_MATRIX" "$SYSTEM_DESIGN" "$SYSTEM_TEST" "$ARCH_DESIGN" "$INTEGRATION_TEST" "$MODULE_DESIGN" "$UNIT_TEST" "$json_docs"
 else
     echo "REPO_ROOT: $REPO_ROOT"
     echo "BRANCH: $BRANCH"
@@ -199,4 +223,6 @@ else
     [[ -f "$SYSTEM_TEST" ]] && echo "  ✓ system-test.md" || echo "  ✗ system-test.md"
     [[ -f "$ARCH_DESIGN" ]] && echo "  ✓ architecture-design.md" || echo "  ✗ architecture-design.md"
     [[ -f "$INTEGRATION_TEST" ]] && echo "  ✓ integration-test.md" || echo "  ✗ integration-test.md"
+    [[ -f "$MODULE_DESIGN" ]] && echo "  ✓ module-design.md" || echo "  ✗ module-design.md"
+    [[ -f "$UNIT_TEST" ]] && echo "  ✓ unit-test.md" || echo "  ✗ unit-test.md"
 fi
