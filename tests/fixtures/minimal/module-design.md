@@ -23,8 +23,11 @@ N/A — Stateless
 
 | Name | Type | Description |
 |------|------|-------------|
+| bus_addr | uint8 | I2C peripheral address (0x00–0x7F) |
+| register | uint8 | Target register offset |
 | raw | bytes[2] | Two-byte big-endian I2C register payload |
 | value | float | Converted sensor value in engineering units |
+| SensorReading | struct{value: float, timestamp: datetime, unit: string} | Typed sensor measurement returned to caller |
 
 #### Error Handling & Return Codes
 
@@ -43,7 +46,7 @@ N/A — Stateless
 #### Algorithmic / Logic View
 
 ```pseudocode
-FUNCTION evaluate(reading, config):
+FUNCTION evaluate(reading: SensorReading, config: ThresholdConfig) → AlertEvent | None:
     IF state = Idle AND reading.value >= config.warn THEN
         state ← Alerting
         RETURN AlertEvent(WARN, "Threshold exceeded")
@@ -70,6 +73,8 @@ stateDiagram-v2
 |------|------|-------------|
 | state | enum{Idle,Alerting,Cooldown} | Current evaluator state |
 | timer | float | Remaining cooldown seconds |
+| ThresholdConfig | struct{warn: float, clear: float, cooldown_s: float} | Alert threshold parameters; constraint: warn > clear |
+| AlertEvent | struct{level: enum{WARN,CRITICAL}, message: string} | Emitted when threshold is crossed |
 
 #### Error Handling & Return Codes
 
@@ -87,7 +92,7 @@ stateDiagram-v2
 #### Algorithmic / Logic View
 
 ```pseudocode
-FUNCTION render_frame(alert_event, status):
+FUNCTION render_frame(alert_event: AlertEvent | None, status: DisplayStatus) → byte_matrix:
     frame ← blank_frame(WIDTH, HEIGHT)
     draw_header(frame, status.timestamp)
     IF alert_event IS NOT None THEN
@@ -104,6 +109,9 @@ N/A — Stateless
 | Name | Type | Description |
 |------|------|-------------|
 | frame | byte_matrix | Pixel buffer (WIDTH × HEIGHT) |
+| DisplayStatus | struct{timestamp: datetime, connected: bool} | Current display state passed from caller |
+| WIDTH | const uint16 = 128 | Display width in pixels |
+| HEIGHT | const uint16 = 64 | Display height in pixels |
 
 #### Error Handling & Return Codes
 
@@ -121,7 +129,7 @@ N/A — Stateless
 #### Algorithmic / Logic View
 
 ```pseudocode
-FUNCTION write_log(level, message, source):
+FUNCTION write_log(level: LogLevel, message: string, source: string) → Result:
     IF level NOT IN {DEBUG, INFO, WARN, ERROR} THEN
         RETURN Error(InvalidLogLevel)
     entry ← LogEntry(now(), level, source, message)
@@ -137,7 +145,9 @@ N/A — Stateless
 
 | Name | Type | Description |
 |------|------|-------------|
-| entry | LogEntry | Structured log record with timestamp, level, source, message |
+| LogLevel | enum{DEBUG,INFO,WARN,ERROR} | Severity classification |
+| LogEntry | struct{timestamp: datetime, level: LogLevel, source: string, message: string} | Structured log record |
+| MAX_BUFFER | const uint16 = 64 | Maximum buffered entries when sink unavailable |
 
 #### Error Handling & Return Codes
 
