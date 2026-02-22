@@ -96,7 +96,7 @@ spec-kit-v-model/
 4. **Commit** with a descriptive message:
 
    ```bash
-   git commit -m "Add support for custom ID prefixes in validate-coverage"
+   git commit -m "Add support for custom ID prefixes in validate-requirement-coverage"
    ```
 
 5. **Push and open a Pull Request** against `main`.

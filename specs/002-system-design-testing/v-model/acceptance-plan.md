@@ -489,7 +489,7 @@ This document defines the Acceptance Test Plan for the System Design ↔ System 
 **Description:** Verify each matrix includes a coverage percentage that matches the corresponding validation script output.
 
 * **User Scenario: SCN-027-A1**
-  * **Given** a complete set of V-Model artifacts exists `And` `validate-coverage.sh` reports 100% for Matrix A `And` `validate-system-coverage.sh` reports 95% for Matrix B
+  * **Given** a complete set of V-Model artifacts exists `And` `validate-requirement-coverage.sh` reports 100% for Matrix A `And` `validate-system-coverage.sh` reports 95% for Matrix B
   * **When** the user invokes `/speckit.v-model.trace`
   * **Then** the Matrix A coverage percentage in `traceability-matrix.md` equals 100% `And` the Matrix B coverage percentage equals 95% `And` both match the script outputs exactly
 
@@ -765,15 +765,15 @@ This document defines the Acceptance Test Plan for the System Design ↔ System 
 
 ### Requirement Validation: REQ-IF-004 (Validation Script Output Format)
 
-#### Test Case: ATP-IF-004-A (Consistent Format with validate-coverage.sh)
+#### Test Case: ATP-IF-004-A (Consistent Format with validate-requirement-coverage.sh)
 
 **Linked Requirement:** REQ-IF-004
-**Description:** Verify `validate-system-coverage.sh` output matches the format of `validate-coverage.sh` (section headers, gap lists, pass/fail verdict).
+**Description:** Verify `validate-system-coverage.sh` output matches the format of `validate-requirement-coverage.sh` (section headers, gap lists, pass/fail verdict).
 
 * **User Scenario: SCN-IF-004-A1**
   * **Given** a set of V-Model artifacts with known coverage gaps exists
   * **When** the user runs `validate-system-coverage.sh`
-  * **Then** the output contains section headers (e.g., "Forward Coverage", "Backward Coverage"), gap lists with specific IDs, a pass/fail verdict, and coverage percentages `And` the format is consistent with `validate-coverage.sh` output
+  * **Then** the output contains section headers (e.g., "Forward Coverage", "Backward Coverage"), gap lists with specific IDs, a pass/fail verdict, and coverage percentages `And` the format is consistent with `validate-requirement-coverage.sh` output
 
 ---
 
@@ -829,15 +829,39 @@ This document defines the Acceptance Test Plan for the System Design ↔ System 
 
 ---
 
+### Requirement Validation: REQ-037 (Partial Validation — v0.2.1 patch)
+
+#### Test Case: ATP-037-A (Forward-Only Validation When system-test.md Absent)
+
+**Linked Requirement:** REQ-037
+**Description:** Verify the script validates forward coverage (REQ→SYS) only when `system-test.md` is absent and exits with code 0 if forward coverage is complete.
+
+* **User Scenario: SCN-037-A1**
+  * **Given** a feature directory contains `requirements.md` with REQ-001 through REQ-005 `And` `system-design.md` with SYS-001 through SYS-005 covering all REQs `And` `system-test.md` does NOT exist
+  * **When** the user runs `validate-system-coverage.sh`
+  * **Then** the script exits with code 0 `And` the output indicates "Partial mode" `And` forward coverage is reported as 100% `And` SYS→STP→STS checks are skipped
+
+#### Test Case: ATP-037-B (Partial Mode Reports Forward Gaps)
+
+**Linked Requirement:** REQ-037
+**Description:** Verify the script detects forward coverage gaps even in partial mode.
+
+* **User Scenario: SCN-037-B1**
+  * **Given** a feature directory contains `requirements.md` with REQ-001 through REQ-005 `And` `system-design.md` covering only REQ-001 through REQ-003 `And` `system-test.md` does NOT exist
+  * **When** the user runs `validate-system-coverage.sh`
+  * **Then** the script exits with code 1 `And` the output identifies REQ-004 and REQ-005 as having no system component mapping `And` backward coverage checks are still skipped
+
+---
+
 ## Coverage Summary
 
 | Metric | Count |
 |--------|-------|
-| Total Requirements (REQ) | 48 |
-| Total Test Cases (ATP) | 62 |
-| Total Scenarios (SCN) | 62 |
-| Requirements with ≥1 ATP | 48 / 48 (100%) |
-| Test Cases with ≥1 SCN | 62 / 62 (100%) |
+| Total Requirements (REQ) | 49 |
+| Total Test Cases (ATP) | 64 |
+| Total Scenarios (SCN) | 64 |
+| Requirements with ≥1 ATP | 49 / 49 (100%) |
+| Test Cases with ≥1 SCN | 64 / 64 (100%) |
 | **Overall Coverage** | **100%** |
 
 ## Uncovered Requirements
@@ -848,4 +872,4 @@ None — full coverage achieved.
 
 **Validation Status**: ✅ Full Coverage
 **Generated**: 2026-02-20
-**Validated by**: `validate-coverage.sh` (deterministic)
+**Validated by**: `validate-requirement-coverage.sh` (deterministic)

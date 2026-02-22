@@ -51,12 +51,13 @@ This document formalizes the requirements for extending the V-Model Extension Pa
 | REQ-034 | When the system design process identifies a necessary technical capability not present in `requirements.md` (a Derived Requirement), the command SHALL flag it as `[DERIVED REQUIREMENT: description]` in the output instead of silently adding a `SYS-NNN` component. | P1 | FR-019, DO-178C/ISO 26262: Derived requirements must flow back up the V-Model for proper traceability. | Test |
 | REQ-035 | When the project's `v-model-config.yml` explicitly enables a regulated domain (e.g., `iso_26262`, `do_178c`), the `/speckit.v-model.system-design` command SHALL generate **Freedom from Interference (FFI)** analysis and **Restricted Complexity** assessment sections in `system-design.md` for each `SYS-NNN` component. | P1 | FR-005, ISO 26262/IEC 61508: Safety-critical decomposition requires FFI analysis to prove isolation between components of different ASIL/SIL levels, and restricted complexity to limit cognitive and computational load. | Test |
 | REQ-036 | When the project's `v-model-config.yml` explicitly enables a regulated domain (e.g., `do_178c`, `iso_26262`), the `/speckit.v-model.system-test` command SHALL generate **Modified Condition/Decision Coverage (MC/DC)** test obligations and **Worst-Case Execution Time (WCET)** verification scenarios in `system-test.md` for each `STP-NNN-X` test case where applicable. | P1 | FR-008, DO-178C Level A/B: Structural coverage beyond statement and branch coverage is mandatory; WCET verification ensures real-time constraints are met. | Test |
+| REQ-037 | *(v0.2.1 patch)* The `validate-system-coverage.sh` script SHALL support **partial validation**: when `system-test.md` is absent, the script SHALL validate forward coverage (`REQ→SYS`) only, gracefully bypass `SYS→STP→STS` backward coverage checks, and exit with code 0 if forward coverage is complete. The output SHALL clearly indicate partial validation mode. | P1 | FR-020, Edge case 9: Enables running the validation script after generating `system-design.md` but before `system-test.md` exists. | Test |
 
 ### Non-Functional Requirements
 
 | ID | Description | Priority | Rationale | Verification Method |
 |----|-------------|----------|-----------|---------------------|
-| REQ-NF-001 | The `validate-system-coverage.sh` script SHALL use regex-based parsing consistent with `validate-coverage.sh` from v0.1.0, requiring no runtime database or external tooling beyond standard Bash utilities. | P1 | Assumption 3: Deterministic validation must be self-contained and portable. | Inspection |
+| REQ-NF-001 | The `validate-system-coverage.sh` script SHALL use regex-based parsing consistent with `validate-requirement-coverage.sh` from v0.1.0, requiring no runtime database or external tooling beyond standard Bash utilities. | P1 | Assumption 3: Deterministic validation must be self-contained and portable. | Inspection |
 | REQ-NF-002 | The `/speckit.v-model.system-design` and `/speckit.v-model.system-test` commands SHALL handle input files with 200 or more `REQ-NNN` identifiers without truncation, data loss, or degraded output quality. | P2 | Edge case 6: Large-scale projects (automotive, aerospace) may have hundreds of requirements. | Test |
 | REQ-NF-003 | The `validate-system-coverage.sh` script SHALL accept gaps in `SYS-NNN` numbering (e.g., SYS-001, SYS-003 without SYS-002) without reporting false-positive errors. | P1 | Edge case 5: Gaps are valid when components are deleted or reorganized. | Test |
 | REQ-NF-004 | All v0.2.0 commands and scripts SHALL preserve backward compatibility: existing `requirements.md`, `acceptance-plan.md`, and `traceability-matrix.md` files SHALL NOT be modified by any v0.2.0 operation. | P1 | Assumption 4, SC-009: Existing v0.1.0 artifacts must remain untouched. | Test |
@@ -68,8 +69,8 @@ This document formalizes the requirements for extending the V-Model Extension Pa
 |----|-------------|----------|-----------|---------------------|
 | REQ-IF-001 | The `/speckit.v-model.system-design` command SHALL read its input exclusively from `{FEATURE_DIR}/v-model/requirements.md` and write its output exclusively to `{FEATURE_DIR}/v-model/system-design.md`. | P1 | Consistent with v0.1.0 file layout conventions (`v-model/` subdirectory). | Inspection |
 | REQ-IF-002 | The `/speckit.v-model.system-test` command SHALL read its input exclusively from `{FEATURE_DIR}/v-model/system-design.md` and write its output exclusively to `{FEATURE_DIR}/v-model/system-test.md`. | P1 | Consistent with v0.1.0 file layout conventions. | Inspection |
-| REQ-IF-003 | The `validate-system-coverage.sh` script SHALL accept three file paths as arguments: `requirements.md`, `system-design.md`, and `system-test.md`, in that order. | P1 | Consistent with `validate-coverage.sh` argument convention from v0.1.0. | Test |
-| REQ-IF-004 | The `validate-system-coverage.sh` script SHALL output a structured coverage summary to stdout in the same format as `validate-coverage.sh` (section headers, gap lists, pass/fail verdict, coverage percentages). | P1 | Consistent user experience and CI log parsing across validation scripts. | Test |
+| REQ-IF-003 | The `validate-system-coverage.sh` script SHALL accept three file paths as arguments: `requirements.md`, `system-design.md`, and `system-test.md`, in that order. | P1 | Consistent with `validate-requirement-coverage.sh` argument convention from v0.1.0. | Test |
+| REQ-IF-004 | The `validate-system-coverage.sh` script SHALL output a structured coverage summary to stdout in the same format as `validate-requirement-coverage.sh` (section headers, gap lists, pass/fail verdict, coverage percentages). | P1 | Consistent user experience and CI log parsing across validation scripts. | Test |
 
 ### Constraint Requirements
 
@@ -83,14 +84,14 @@ This document formalizes the requirements for extending the V-Model Extension Pa
 
 - Users already have a valid `requirements.md` generated by `/speckit.v-model.requirements` (v0.1.0). The system design command does not generate requirements — it decomposes them.
 - The many-to-many REQ↔SYS relationship is documented explicitly in the Decomposition View's "Parent Requirements" field, not inferred at runtime.
-- The `validate-system-coverage.sh` script uses regex-based parsing consistent with `validate-coverage.sh` from v0.1.0 — no runtime database or external tooling required.
+- The `validate-system-coverage.sh` script uses regex-based parsing consistent with `validate-requirement-coverage.sh` from v0.1.0 — no runtime database or external tooling required.
 - Backward compatibility with v0.1.0 artifacts is mandatory — existing files are never modified by v0.2.0 operations.
 - Safety-critical sections are optional, activated by domain configuration in `v-model-config.yml`.
 
 ## Dependencies
 
 - **Spec Kit ≥ 0.1.0**: Required platform version for extension command registration and agent system.
-- **V-Model Extension v0.1.0**: Existing `requirements.md`, `acceptance-plan.md`, `validate-coverage.sh`, `build-matrix.sh`, and `trace.md` command must be present and functional.
+- **V-Model Extension v0.1.0**: Existing `requirements.md`, `acceptance-plan.md`, `validate-requirement-coverage.sh`, `build-matrix.sh`, and `trace.md` command must be present and functional.
 - **Bash ≥ 4.0**: Required for `validate-system-coverage.sh` (regex, associative arrays).
 - **PowerShell ≥ 7.0**: Required for `validate-system-coverage.ps1` cross-platform parity.
 
@@ -116,6 +117,6 @@ This document formalizes the requirements for extending the V-Model Extension Pa
 
 ---
 
-**Total Requirements**: 48  
-**By Priority**: P1: 40 | P2: 6 | P3: 2  
+**Total Requirements**: 49  
+**By Priority**: P1: 41 | P2: 6 | P3: 2  
 **By Verification Method**: Test: 31 | Inspection: 17 | Analysis: 0 | Demonstration: 0

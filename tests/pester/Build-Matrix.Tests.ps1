@@ -102,4 +102,39 @@ Describe 'Build-Matrix' {
             ($output -join "`n") | Should -Match 'Orphaned System Test Cases'
         }
     }
+
+    Context 'Matrix D - module-level tests' {
+        It 'includes Matrix D when module artifacts exist' {
+            $output = & pwsh -NoProfile -File "$ScriptsDir/build-matrix.ps1" "$FixturesDir/minimal" 2>&1
+            $LASTEXITCODE | Should -Be 0
+            ($output -join "`n") | Should -Match 'Matrix D'
+        }
+
+        It 'Matrix D contains MOD and UTP identifiers' {
+            $output = & pwsh -NoProfile -File "$ScriptsDir/build-matrix.ps1" "$FixturesDir/minimal" 2>&1
+            $LASTEXITCODE | Should -Be 0
+            ($output -join "`n") | Should -Match 'MOD-001'
+            ($output -join "`n") | Should -Match 'UTP-001-A'
+            ($output -join "`n") | Should -Match 'UTS-001-A1'
+        }
+
+        It 'Matrix D shows module coverage metrics' {
+            $output = & pwsh -NoProfile -File "$ScriptsDir/build-matrix.ps1" "$FixturesDir/minimal" 2>&1
+            $LASTEXITCODE | Should -Be 0
+            $text = ($output -join "`n")
+            $text | Should -Match 'ARCH'
+            $text | Should -Match 'MOD'
+            $text | Should -Match 'UTP'
+        }
+
+        It 'no Matrix D when module artifacts absent' {
+            $tempDir = Join-Path $TestDrive 'no-module-vmodel'
+            New-Item -ItemType Directory -Path $tempDir -Force | Out-Null
+            Copy-Item (Join-Path $FixturesDir 'minimal/requirements.md') $tempDir
+            Copy-Item (Join-Path $FixturesDir 'minimal/acceptance-plan.md') $tempDir
+            $output = & pwsh -NoProfile -File "$ScriptsDir/build-matrix.ps1" $tempDir 2>&1
+            $LASTEXITCODE | Should -Be 0
+            ($output -join "`n") | Should -Not -Match 'Matrix D'
+        }
+    }
 }

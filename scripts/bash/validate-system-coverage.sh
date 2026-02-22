@@ -11,13 +11,16 @@
 #   - No orphaned SYS (SYS referencing non-existent REQ)
 #   - No orphaned STP (STP referencing non-existent SYS)
 #
+# Supports partial validation: when system-test.md is absent, validates
+# forward coverage (REQ→SYS) only and gracefully skips SYS→STP→STS checks.
+#
 # Usage: ./validate-system-coverage.sh [OPTIONS] <vmodel-dir>
 #
 # OPTIONS:
 #   --json    Output in JSON format (for AI consumption)
 #
 # EXIT CODES:
-#   0 = full coverage
+#   0 = full coverage (or forward-only coverage in partial mode)
 #   1 = gaps found
 
 set -e
@@ -55,9 +58,9 @@ if [[ ! -f "$SYSTEM_DESIGN" ]]; then
     exit 1
 fi
 
+PARTIAL_MODE=false
 if [[ ! -f "$SYSTEM_TEST" ]]; then
-    echo "ERROR: system-test.md not found in $VMODEL_DIR" >&2
-    exit 1
+    PARTIAL_MODE=true
 fi
 
 # ---- Pass 1: Extract IDs ----
@@ -68,11 +71,13 @@ req_ids=($(grep -oE 'REQ-([A-Z]+-)?[0-9]{3}' "$REQUIREMENTS" | sort -u))
 # SYS IDs from system-design.md
 sys_ids=($(grep -oE 'SYS-[0-9]{3}' "$SYSTEM_DESIGN" | sort -u))
 
-# STP IDs from system-test.md
-stp_ids=($(grep -oE 'STP-[0-9]{3}-[A-Z]' "$SYSTEM_TEST" | sort -u))
-
-# STS IDs from system-test.md
-sts_ids=($(grep -oE 'STS-[0-9]{3}-[A-Z][0-9]+' "$SYSTEM_TEST" | sort -u))
+# STP and STS IDs from system-test.md (only if not in partial mode)
+stp_ids=()
+sts_ids=()
+if ! $PARTIAL_MODE; then
+    stp_ids=($(grep -oE 'STP-[0-9]{3}-[A-Z]' "$SYSTEM_TEST" | sort -u))
+    sts_ids=($(grep -oE 'STS-[0-9]{3}-[A-Z][0-9]+' "$SYSTEM_TEST" | sort -u))
+fi
 
 total_reqs=${#req_ids[@]}
 total_sys=${#sys_ids[@]}
@@ -110,44 +115,64 @@ for req in "${req_ids[@]}"; do
     fi
 done
 
-# Check backward coverage: every SYS has at least one STP
+# Check backward coverage: every SYS has at least one STP (skip in partial mode)
 sys_base_key() { echo "$1" | sed 's/^SYS-//'; }
 stp_base_key() { echo "$1" | sed 's/^STP-//' | sed 's/-[A-Z]$//'; }
 stp_full_key() { echo "$1" | sed 's/^STP-//'; }
 sts_full_key() { echo "$1" | sed 's/^STS-//'; }
 
 sys_without_stp=()
-for sys in "${sys_ids[@]}"; do
-    sys_key=$(sys_base_key "$sys")
-    has_stp=false
+stps_without_sts=()
+orphaned_stps=()
+
+if ! $PARTIAL_MODE; then
+    for sys in "${sys_ids[@]}"; do
+        sys_key=$(sys_base_key "$sys")
+        has_stp=false
+        for stp in "${stp_ids[@]}"; do
+            stp_key=$(stp_base_key "$stp")
+            if [[ "$sys_key" == "$stp_key" ]]; then
+                has_stp=true
+                break
+            fi
+        done
+        if ! $has_stp; then
+            sys_without_stp+=("$sys")
+        fi
+    done
+
+    # Check STP→STS coverage
+    for stp in "${stp_ids[@]}"; do
+        stp_key=$(stp_full_key "$stp")
+        has_sts=false
+        for sts in "${sts_ids[@]}"; do
+            sts_key=$(sts_full_key "$sts")
+            if [[ "$sts_key" == "$stp_key"* ]]; then
+                has_sts=true
+                break
+            fi
+        done
+        if ! $has_sts; then
+            stps_without_sts+=("$stp")
+        fi
+    done
+
+    # Check for orphaned STP (STP referencing non-existent SYS)
     for stp in "${stp_ids[@]}"; do
         stp_key=$(stp_base_key "$stp")
-        if [[ "$sys_key" == "$stp_key" ]]; then
-            has_stp=true
-            break
+        has_sys=false
+        for sys in "${sys_ids[@]}"; do
+            sys_key=$(sys_base_key "$sys")
+            if [[ "$stp_key" == "$sys_key" ]]; then
+                has_sys=true
+                break
+            fi
+        done
+        if ! $has_sys; then
+            orphaned_stps+=("$stp")
         fi
     done
-    if ! $has_stp; then
-        sys_without_stp+=("$sys")
-    fi
-done
-
-# Check STP→STS coverage
-stps_without_sts=()
-for stp in "${stp_ids[@]}"; do
-    stp_key=$(stp_full_key "$stp")
-    has_sts=false
-    for sts in "${sts_ids[@]}"; do
-        sts_key=$(sts_full_key "$sts")
-        if [[ "$sts_key" == "$stp_key"* ]]; then
-            has_sts=true
-            break
-        fi
-    done
-    if ! $has_sts; then
-        stps_without_sts+=("$stp")
-    fi
-done
+fi
 
 # Check for orphaned SYS (SYS with parent REQ not in requirements.md)
 orphaned_sys=()
@@ -165,23 +190,6 @@ for sys in "${sys_ids[@]}"; do
             break
         fi
     done
-done
-
-# Check for orphaned STP (STP referencing non-existent SYS)
-orphaned_stps=()
-for stp in "${stp_ids[@]}"; do
-    stp_key=$(stp_base_key "$stp")
-    has_sys=false
-    for sys in "${sys_ids[@]}"; do
-        sys_key=$(sys_base_key "$sys")
-        if [[ "$stp_key" == "$sys_key" ]]; then
-            has_sys=true
-            break
-        fi
-    done
-    if ! $has_sys; then
-        orphaned_stps+=("$stp")
-    fi
 done
 
 # ---- Calculate coverage ----
@@ -209,10 +217,14 @@ else
 fi
 
 has_gaps=false
-if [[ ${#reqs_without_sys[@]} -gt 0 ]] || [[ ${#sys_without_stp[@]} -gt 0 ]] || \
-   [[ ${#stps_without_sts[@]} -gt 0 ]] || [[ ${#orphaned_sys[@]} -gt 0 ]] || \
-   [[ ${#orphaned_stps[@]} -gt 0 ]]; then
+if [[ ${#reqs_without_sys[@]} -gt 0 ]] || [[ ${#orphaned_sys[@]} -gt 0 ]]; then
     has_gaps=true
+fi
+if ! $PARTIAL_MODE; then
+    if [[ ${#sys_without_stp[@]} -gt 0 ]] || [[ ${#stps_without_sts[@]} -gt 0 ]] || \
+       [[ ${#orphaned_stps[@]} -gt 0 ]]; then
+        has_gaps=true
+    fi
 fi
 
 # ---- Output ----
@@ -227,6 +239,7 @@ fmt_array() {
 if $JSON_MODE; then
     cat << EOF
 {
+  "partial_mode": $PARTIAL_MODE,
   "total_reqs": $total_reqs,
   "total_sys": $total_sys,
   "total_stps": $total_stps,
@@ -247,11 +260,16 @@ if $JSON_MODE; then
 EOF
 else
     echo "=== System-Level Coverage Validation ==="
+    if $PARTIAL_MODE; then
+        echo "(Partial mode — system-test.md not found, validating forward coverage only)"
+    fi
     echo ""
     echo "Totals: $total_reqs REQs | $total_sys SYS | $total_stps STPs | $total_stss STSs"
     echo "REQ → SYS coverage: $reqs_covered_count/$total_reqs ($req_coverage%)"
-    echo "SYS → STP coverage: $sys_covered_count/$total_sys ($sys_coverage%)"
-    echo "STP → STS coverage: $stps_covered_count/$total_stps ($stp_coverage%)"
+    if ! $PARTIAL_MODE; then
+        echo "SYS → STP coverage: $sys_covered_count/$total_sys ($sys_coverage%)"
+        echo "STP → STS coverage: $stps_covered_count/$total_stps ($stp_coverage%)"
+    fi
     echo ""
 
     if [[ ${#reqs_without_sys[@]} -gt 0 ]]; then
@@ -261,18 +279,27 @@ else
         done
     fi
 
-    if [[ ${#sys_without_stp[@]} -gt 0 ]]; then
-        echo "❌ System components WITHOUT test cases:"
-        for sys in "${sys_without_stp[@]}"; do
-            echo "   - $sys"
-        done
-    fi
+    if ! $PARTIAL_MODE; then
+        if [[ ${#sys_without_stp[@]} -gt 0 ]]; then
+            echo "❌ System components WITHOUT test cases:"
+            for sys in "${sys_without_stp[@]}"; do
+                echo "   - $sys"
+            done
+        fi
 
-    if [[ ${#stps_without_sts[@]} -gt 0 ]]; then
-        echo "❌ Test cases WITHOUT scenarios:"
-        for stp in "${stps_without_sts[@]}"; do
-            echo "   - $stp"
-        done
+        if [[ ${#stps_without_sts[@]} -gt 0 ]]; then
+            echo "❌ Test cases WITHOUT scenarios:"
+            for stp in "${stps_without_sts[@]}"; do
+                echo "   - $stp"
+            done
+        fi
+
+        if [[ ${#orphaned_stps[@]} -gt 0 ]]; then
+            echo "⚠️  Orphaned test cases (referencing non-existent SYS):"
+            for stp in "${orphaned_stps[@]}"; do
+                echo "   - $stp"
+            done
+        fi
     fi
 
     if [[ ${#orphaned_sys[@]} -gt 0 ]]; then
@@ -282,15 +309,13 @@ else
         done
     fi
 
-    if [[ ${#orphaned_stps[@]} -gt 0 ]]; then
-        echo "⚠️  Orphaned test cases (referencing non-existent SYS):"
-        for stp in "${orphaned_stps[@]}"; do
-            echo "   - $stp"
-        done
-    fi
-
     if ! $has_gaps; then
-        echo "✅ Full system-level coverage — all requirements decomposed, all components tested."
+        if $PARTIAL_MODE; then
+            echo "✅ Forward coverage complete — all requirements decomposed into system components."
+            echo "   (SYS→STP→STS validation skipped — generate system-test.md for full validation)"
+        else
+            echo "✅ Full system-level coverage — all requirements decomposed, all components tested."
+        fi
     fi
 fi
 

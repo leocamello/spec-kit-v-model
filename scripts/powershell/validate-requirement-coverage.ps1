@@ -14,8 +14,8 @@
     Output in JSON format (for AI consumption).
 
 .EXAMPLE
-    ./validate-coverage.ps1 ./specs/001-feature/v-model
-    ./validate-coverage.ps1 -Json ./specs/001-feature/v-model
+    ./validate-requirement-coverage.ps1 ./specs/001-feature/v-model
+    ./validate-requirement-coverage.ps1 -Json ./specs/001-feature/v-model
 
 .NOTES
     Exit code 0 = full coverage, 1 = gaps found.

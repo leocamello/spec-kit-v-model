@@ -67,7 +67,7 @@ scripts/
 │   ├── setup-v-model.sh                  # MODIFIED — add --require-system-design flag, ARCH/ITP doc detection
 │   ├── validate-architecture-coverage.sh # NEW — ARCH→ITP→ITS coverage validation (3-file input)
 │   ├── build-matrix.sh                   # MODIFIED — add Matrix C parsing (ARCH→ITP→ITS)
-│   ├── validate-coverage.sh              # EXISTING — unchanged
+│   ├── validate-requirement-coverage.sh              # EXISTING — unchanged
 │   ├── validate-system-coverage.sh       # EXISTING — unchanged
 │   └── diff-requirements.sh              # EXISTING — unchanged
 └── powershell/

@@ -51,7 +51,7 @@ without a parent requirement.
 Coverage calculations, traceability matrices, and structural validations
 MUST be computed by deterministic scripts, never by AI self-assessment.
 
-- Regex-based helper scripts (`validate-coverage.sh`, `build-matrix.sh`)
+- Regex-based helper scripts (`validate-requirement-coverage.sh`, `build-matrix.sh`)
   perform mathematically correct coverage analysis.
 - AI is used for creative translation (requirements → test cases) but
   MUST NOT be trusted to verify its own output.
@@ -132,7 +132,7 @@ auditors expect, reducing the burden of manual documentation.
 ### Quality Gates
 
 1. **Structural Validation**: Every requirements document MUST pass
-   `validate-coverage.sh` (all REQs have ATPs, all ATPs have SCNs).
+   `validate-requirement-coverage.sh` (all REQs have ATPs, all ATPs have SCNs).
    A traceability gap MUST cause a hard failure in the CI pipeline—
    incomplete coverage is never a warning, always a blocking error.
 2. **Traceability Matrix**: `build-matrix.sh` MUST produce a complete

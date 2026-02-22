@@ -52,7 +52,7 @@ Modern AI coding tools ("vibe coding") often generate code without structured te
 
 The V-Model Extension Pack enforces discipline by **requiring paired generation**: every development artifact (specification) automatically generates its testing counterpart (test plan), with traceable IDs linking them.
 
-## The Three-Tier ID Schema
+## The Four-Tier ID Schema
 
 This extension uses a hierarchical ID scheme that encodes traceability directly:
 
@@ -62,7 +62,7 @@ This extension uses a hierarchical ID scheme that encodes traceability directly:
 | Test Case | `ATP-NNN-X` | ATP-001-A | A logical test condition for REQ-001 |
 | Scenario | `SCN-NNN-X#` | SCN-001-A1 | An executable BDD scenario for ATP-001-A |
 
-Reading `SCN-001-A1` tells you: this scenario validates test case `ATP-001-A`, which tests requirement `REQ-001`. No lookup table needed.
+Reading `SCN-001-A1` tells you: this scenario validates test case `ATP-001-A`, which tests requirement `REQ-001`. No lookup table needed. The same pattern repeats at system, architecture, and module levels.
 
 ## System Design ↔ System Testing Level
 
@@ -128,6 +128,44 @@ Matrix C extends the traceability chain one level deeper:
 - **Backward**: Every integration test step → traces to an architecture element → traces to a system design element (no orphans)
 
 Architecture modules tagged as `CROSS-CUTTING` (e.g., logging, authentication, configuration) are validated across all dependent modules rather than in isolation.
+
+## Module Design ↔ Unit Testing Level
+
+The fourth and innermost V-Model layer pairs **Module Design** (left side) with **Unit Testing** (right side). This is the bottom of the V — the most detailed level where individual functions, algorithms, and data structures are specified and tested in isolation.
+
+### Standards Alignment
+
+- **Module Design** specifies each module's internal behavior using 4 required views:
+  - **Algorithmic / Logic View** — Pseudocode with typed parameters, return types, and control flow
+  - **State Machine View** — Stateful modules define all states and transitions in `stateDiagram-v2`; stateless modules use "N/A — Stateless" bypass
+  - **Internal Data Structures** — Typed structs, enums, constants, and constraints
+  - **Error Handling & Return Codes** — Concrete error conditions, exceptions, and recovery actions
+
+- **Unit Testing** uses white-box techniques targeting specific module views:
+  - **Statement & Branch Coverage** — Exercises all code paths in the Algorithmic / Logic View
+  - **Boundary Value Analysis** — Tests edge values for numeric or range-based inputs
+  - **Equivalence Partitioning** — Groups inputs into representative equivalence classes
+  - **State Transition Testing** — Covers valid/invalid state transitions for stateful modules
+  - **Strict Isolation** — Every external dependency is mocked; no real DB, network, or hardware
+
+### Module-Level ID Schema
+
+| Tier | ID Format | Example | Meaning |
+|------|-----------|---------|---------|
+| Module Design | `MOD-NNN` | MOD-001 | A discrete module within an architecture element |
+| Test Procedure | `UTP-NNN-X` | UTP-001-A | A unit test procedure for MOD-001 |
+| Test Scenario | `UTS-NNN-X#` | UTS-001-A1 | A unit test scenario for UTP-001-A |
+
+Reading `UTS-001-A1` tells you: this scenario validates test procedure `UTP-001-A`, which tests module `MOD-001`. The same self-documenting lineage as all other levels.
+
+### Matrix D: Implementation Verification
+
+Matrix D extends the traceability chain to the innermost level:
+
+- **Forward**: `ARCH-NNN` → `MOD-NNN` → `UTP-NNN-X` → `UTS-NNN-X#` (no gaps)
+- **Backward**: Every unit test scenario → traces to a module → traces to an architecture element (no orphans)
+
+Modules tagged as `[EXTERNAL]` (third-party or hardware-interfacing) are bypassed for unit test coverage. Modules tagged as `[CROSS-CUTTING]` (logging, diagnostics) are tested normally.
 
 ## When to Use the V-Model
 

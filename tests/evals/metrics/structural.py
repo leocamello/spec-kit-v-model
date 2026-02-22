@@ -25,6 +25,15 @@ from tests.validators.architecture_validators import (
     validate_id_format as arch_validate_id_format,
     extract_parent_system_components,
 )
+from tests.validators.module_validators import (
+    validate_module_design as mv_validate_module_design,
+    validate_unit_test as mv_validate_unit_test,
+    extract_ids as mod_extract_ids,
+)
+from tests.validators.id_validator import (
+    extract_ids as id_extract_ids,
+    validate_mod_hierarchy,
+)
 
 
 class StructuralIDMetric(BaseMetric):
@@ -448,6 +457,188 @@ class StructuralIntegrationTestMetric(BaseMetric):
             self.reason = "; ".join(issues[:5])
         else:
             self.reason = "All integration test structural checks pass"
+        return self.score
+
+    def is_successful(self) -> bool:
+        return self.success if self.success is not None else False
+
+
+class StructuralModuleDesignMetric(BaseMetric):
+    """Deterministic metric for module design structural validation.
+
+    Checks MOD-NNN ID format, pseudocode blocks, 4 required views,
+    parent ARCH references, and stateless bypass patterns.
+    """
+
+    _REQUIRED_VIEWS = [
+        "Algorithmic",
+        "State Machine",
+        "Internal Data Structures",
+        "Error Handling",
+    ]
+
+    def __init__(self, threshold: float = 0.95):
+        self.threshold = threshold
+        self.score = None
+        self.reason = None
+        self.success = None
+
+    @property
+    def __name__(self):
+        return "Module Design Structural Compliance"
+
+    async def a_measure(self, test_case: LLMTestCase, *args, **kwargs) -> float:
+        return self.measure(test_case)
+
+    def measure(self, test_case: LLMTestCase, *args, **kwargs) -> float:
+        import re
+
+        text = test_case.actual_output or ""
+        issues: list[str] = []
+        total_checks = 0
+
+        # 1. MOD-NNN ID format compliance
+        mod_ids = mod_extract_ids(text, "MOD")
+        unique_mod = list(dict.fromkeys(mod_ids))
+        total_checks += max(len(unique_mod), 1)
+        mod_pat = re.compile(r"^MOD-\d{3}$")
+        for m in unique_mod:
+            if not mod_pat.match(m):
+                issues.append(f"Malformed MOD ID: {m}")
+
+        # 2. Module heading format
+        heading_pattern = re.compile(r"### Module: MOD-\d{3}")
+        headings = heading_pattern.findall(text)
+        total_checks += 1
+        if not headings:
+            issues.append("No '### Module: MOD-NNN' headings found")
+
+        # 3. Required views presence
+        for view in self._REQUIRED_VIEWS:
+            total_checks += 1
+            if view.lower() not in text.lower():
+                issues.append(f"Missing view: {view}")
+
+        # 4. Pseudocode blocks
+        total_checks += 1
+        if "```pseudocode" not in text:
+            issues.append("No ```pseudocode blocks found")
+
+        # 5. Parent ARCH references
+        arch_ref = re.compile(r"\*\*Parent Architecture Modules?\*\*:\s*(ARCH-\d{3})")
+        for mod_heading in re.finditer(r"### Module: (MOD-\d{3})", text):
+            total_checks += 1
+            mod_id = mod_heading.group(1)
+            start = mod_heading.end()
+            snippet = text[start:start + 500]
+            if not arch_ref.search(snippet):
+                issues.append(f"{mod_id} has no parent ARCH reference")
+
+        if total_checks == 0:
+            self.score = 0.0
+        else:
+            self.score = round(max(0.0, 1.0 - len(issues) / total_checks), 2)
+        self.success = self.score >= self.threshold
+        if issues:
+            self.reason = "; ".join(issues[:5])
+        else:
+            self.reason = "All module design structural checks pass"
+        return self.score
+
+    def is_successful(self) -> bool:
+        return self.success if self.success is not None else False
+
+
+class StructuralUnitTestMetric(BaseMetric):
+    """Deterministic metric for unit test structural validation.
+
+    Checks UTP-NNN-X / UTS-NNN-X# ID format, unit test technique naming,
+    mock registry presence, and Arrange/Act/Assert structure.
+    """
+
+    _UNIT_TECHNIQUES = {
+        "Statement & Branch Coverage",
+        "Boundary Value Analysis",
+        "Equivalence Partitioning",
+        "Strict Isolation",
+        "State Transition Testing",
+        "MC/DC Coverage",
+        "Variable-Level Fault Injection",
+    }
+
+    def __init__(self, threshold: float = 0.95):
+        self.threshold = threshold
+        self.score = None
+        self.reason = None
+        self.success = None
+
+    @property
+    def __name__(self):
+        return "Unit Test Structural Compliance"
+
+    async def a_measure(self, test_case: LLMTestCase, *args, **kwargs) -> float:
+        return self.measure(test_case)
+
+    def measure(self, test_case: LLMTestCase, *args, **kwargs) -> float:
+        import re
+
+        text = test_case.actual_output or ""
+        issues: list[str] = []
+        total_checks = 0
+
+        # 1. UTP-NNN-X ID format compliance
+        utp_ids = id_extract_ids(text, "UTP")
+        unique_utp = list(dict.fromkeys(utp_ids))
+        total_checks += max(len(unique_utp), 1)
+        utp_pat = re.compile(r"^UTP-\d{3}-[A-Z]$")
+        for u in unique_utp:
+            if not utp_pat.match(u):
+                issues.append(f"Malformed UTP ID: {u}")
+
+        # 2. UTS-NNN-X# ID format compliance
+        uts_ids = id_extract_ids(text, "UTS")
+        unique_uts = list(dict.fromkeys(uts_ids))
+        total_checks += max(len(unique_uts), 1)
+        uts_pat = re.compile(r"^UTS-\d{3}-[A-Z]\d+$")
+        for s in unique_uts:
+            if not uts_pat.match(s):
+                issues.append(f"Malformed UTS ID: {s}")
+
+        # 3. Unit test technique naming
+        technique_pattern = re.compile(r"\*\*Technique\*\*:\s*(.+)")
+        found_techniques = technique_pattern.findall(text)
+        for tech in found_techniques:
+            total_checks += 1
+            tech_stripped = tech.strip()
+            if tech_stripped not in self._UNIT_TECHNIQUES:
+                issues.append(f"Non-standard unit technique: {tech_stripped}")
+
+        # 4. Test case headings
+        total_checks += 1
+        tc_heading = re.compile(r"#### Test Case: UTP-\d{3}-[A-Z]")
+        if not tc_heading.search(text):
+            issues.append("No '#### Test Case: UTP-NNN-X' headings found")
+
+        # 5. Unit Scenario lines
+        total_checks += 1
+        scn_pattern = re.compile(r"\*\*Unit Scenario: UTS-\d{3}-[A-Z]\d+\*\*")
+        if not scn_pattern.search(text):
+            issues.append("No '**Unit Scenario: UTS-NNN-X#**' lines found")
+
+        # 6. Mock registry presence
+        total_checks += 1
+        if "**Dependency & Mock Registry" not in text:
+            issues.append("No Dependency & Mock Registry sections found")
+
+        if total_checks == 0:
+            self.score = 0.0
+        else:
+            self.score = round(max(0.0, 1.0 - len(issues) / total_checks), 2)
+        self.success = self.score >= self.threshold
+        if issues:
+            self.reason = "; ".join(issues[:5])
+        else:
+            self.reason = "All unit test structural checks pass"
         return self.score
 
     def is_successful(self) -> bool:

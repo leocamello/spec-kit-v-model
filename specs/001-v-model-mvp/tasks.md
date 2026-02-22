@@ -58,15 +58,15 @@
 
 **Goal**: Produce a three-tier Acceptance Test Plan (ATP + SCN) with 100% bidirectional coverage for every requirement
 
-**Independent Test**: Provide a valid requirements.md → verify output contains ATP-NNN-X and SCN-NNN-X# for every REQ, run validate-coverage.sh → exit code 0
+**Independent Test**: Provide a valid requirements.md → verify output contains ATP-NNN-X and SCN-NNN-X# for every REQ, run validate-requirement-coverage.sh → exit code 0
 
 ### Implementation for User Story 2
 
-- [x] T015 [US2] Create deterministic coverage validation script in scripts/bash/validate-coverage.sh (regex extraction of REQ/ATP/SCN IDs, cross-reference, gap/orphan detection, --json output, exit code 0/1)
-- [x] T016 [P] [US2] Create PowerShell equivalent in scripts/powershell/validate-coverage.ps1
+- [x] T015 [US2] Create deterministic coverage validation script in scripts/bash/validate-requirement-coverage.sh (regex extraction of REQ/ATP/SCN IDs, cross-reference, gap/orphan detection, --json output, exit code 0/1)
+- [x] T016 [P] [US2] Create PowerShell equivalent in scripts/powershell/validate-requirement-coverage.ps1
 - [x] T017 [US2] Create requirement change detection script in scripts/bash/diff-requirements.sh (git show comparison, added/modified/removed classification, --json output)
 - [x] T018 [P] [US2] Create PowerShell equivalent in scripts/powershell/diff-requirements.ps1
-- [x] T019 [US2] Create acceptance command definition in commands/acceptance.md (workflow: load requirements.md → generate ATP-NNN-X test cases → generate SCN-NNN-X# BDD scenarios → run validate-coverage.sh → enforce 100% coverage gate)
+- [x] T019 [US2] Create acceptance command definition in commands/acceptance.md (workflow: load requirements.md → generate ATP-NNN-X test cases → generate SCN-NNN-X# BDD scenarios → run validate-requirement-coverage.sh → enforce 100% coverage gate)
 - [x] T020 [US2] Define test case quality criteria in commands/acceptance.md (traceable, independent, repeatable, clear expected result)
 - [x] T021 [US2] Define BDD scenario quality criteria in commands/acceptance.md (declarative, single-action, strict preconditions, observable outcomes)
 - [x] T022 [US2] Define incremental update rules in commands/acceptance.md (added REQs → new ATPs/SCNs, modified → regenerate in-place, removed → flag [DEPRECATED], batching in groups of 5)
@@ -96,7 +96,7 @@
 
 **Goal**: Provide a standalone CI-ready coverage validation tool that exits with meaningful codes
 
-**Independent Test**: Run validate-coverage.sh against fixture directories with known states → assert correct exit codes and gap reports
+**Independent Test**: Run validate-requirement-coverage.sh against fixture directories with known states → assert correct exit codes and gap reports
 
 *Note: The core script was implemented in Phase 4 (T015). This phase covers CI integration and fixture validation.*
 
@@ -107,7 +107,7 @@
 - [x] T029 [P] [US4] Create complex test fixture in tests/fixtures/complex/ (10+ REQs across all categories)
 - [x] T030 [P] [US4] Create empty test fixture in tests/fixtures/empty/ (headers only, no requirement entries)
 - [x] T031 [P] [US4] Create malformed test fixture in tests/fixtures/malformed/ (broken Markdown structure)
-- [x] T032 [US4] Create BATS test suite for validate-coverage in tests/bats/validate-coverage.bats
+- [x] T032 [US4] Create BATS test suite for validate-requirement-coverage in tests/bats/validate-requirement-coverage.bats
 - [x] T033 [P] [US4] Create BATS test suite for build-matrix in tests/bats/build-matrix.bats
 - [x] T034 [P] [US4] Create BATS test suite for setup-v-model in tests/bats/setup-v-model.bats
 - [x] T035 [P] [US4] Create BATS test suite for diff-requirements in tests/bats/diff-requirements.bats
@@ -161,7 +161,7 @@
 - **US1 Requirements (Phase 3)**: Depends on Foundational (templates + setup script)
 - **US2 Acceptance (Phase 4)**: Depends on Foundational; benefits from US1 but independently testable
 - **US3 Trace (Phase 5)**: Depends on Foundational; benefits from US1 + US2 but independently testable
-- **US4 Validation (Phase 6)**: Depends on US2 (validate-coverage.sh created there)
+- **US4 Validation (Phase 6)**: Depends on US2 (validate-requirement-coverage.sh created there)
 - **US5 Change Detection (Phase 7)**: Depends on US2 (diff-requirements.sh created there)
 - **Polish (Phase 8)**: Can start after Foundational; some tasks parallel with user stories
 
@@ -193,7 +193,7 @@
 2. Complete Phase 2: Foundational (setup script, templates)
 3. Complete Phase 3: User Story 1 (requirements command)
 4. Complete Phase 4: User Story 2 (acceptance command + coverage validation)
-5. **STOP and VALIDATE**: Generate requirements + acceptance plan for a sample feature → run validate-coverage.sh → confirm 100% coverage
+5. **STOP and VALIDATE**: Generate requirements + acceptance plan for a sample feature → run validate-requirement-coverage.sh → confirm 100% coverage
 6. This delivers the core V-Model promise: paired dev-spec and test-spec
 
 ### Full Delivery

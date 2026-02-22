@@ -64,7 +64,7 @@ commands/
 scripts/
 ├── bash/
 │   ├── setup-v-model.sh             # EXISTING — unchanged
-│   ├── validate-coverage.sh         # EXISTING — unchanged
+│   ├── validate-requirement-coverage.sh         # EXISTING — unchanged
 │   ├── validate-system-coverage.sh  # NEW — REQ→SYS and SYS→STP coverage validation
 │   ├── build-matrix.sh              # MODIFIED — extended for Matrix B data
 │   └── diff-requirements.sh         # EXISTING — unchanged

@@ -121,13 +121,14 @@ Describe 'Validate-System-Coverage' {
             $LASTEXITCODE | Should -Not -Be 0
         }
 
-        It 'exits 1 when system-test.md is missing' {
+        It 'runs partial mode when system-test.md is missing' {
             $tempDir = Join-Path $TestDrive 'missing-systest'
             New-Item -ItemType Directory -Path $tempDir -Force | Out-Null
             New-Item -ItemType File -Path (Join-Path $tempDir 'requirements.md') -Force | Out-Null
             New-Item -ItemType File -Path (Join-Path $tempDir 'system-design.md') -Force | Out-Null
-            & pwsh -NoProfile -File "$ScriptsDir/validate-system-coverage.ps1" $tempDir 2>&1 | Out-Null
-            $LASTEXITCODE | Should -Not -Be 0
+            $output = & pwsh -NoProfile -File "$ScriptsDir/validate-system-coverage.ps1" $tempDir 2>&1
+            $LASTEXITCODE | Should -Be 0
+            $output | Out-String | Should -Match 'Partial mode'
         }
 
         It '--help exits 0' {

@@ -70,7 +70,7 @@ with 100% coverage validated by the deterministic coverage script.
    `acceptance-plan.md` where every REQ-NNN has at least one ATP-NNN-X
    test case and every ATP has at least one SCN-NNN-X# BDD scenario.
 2. **Given** the generated acceptance plan, **When** the deterministic
-   `validate-coverage.sh` script is executed, **Then** it reports 100%
+   `validate-requirement-coverage.sh` script is executed, **Then** it reports 100%
    REQ-to-ATP coverage and 100% ATP-to-SCN coverage with exit code 0.
 3. **Given** requirements have been added or modified since the last
    generation, **When** the command is re-invoked, **Then** new requirements
@@ -117,7 +117,7 @@ to ATPs to REQs, with no gaps or orphans.
 
 An engineer wants to verify that their acceptance plan achieves 100%
 coverage without relying on AI self-assessment. They run the deterministic
-`validate-coverage.sh` script against a V-Model directory and receive a
+`validate-requirement-coverage.sh` script against a V-Model directory and receive a
 machine-readable report of gaps, orphans, and coverage percentages.
 
 **Why this priority**: Deterministic validation is what separates this
@@ -132,7 +132,7 @@ exit codes and gap reports.
 **Acceptance Scenarios**:
 
 1. **Given** a V-Model directory with full coverage, **When**
-   `validate-coverage.sh` is executed, **Then** it exits with code 0 and
+   `validate-requirement-coverage.sh` is executed, **Then** it exits with code 0 and
    reports 100% REQ-to-ATP and ATP-to-SCN coverage.
 2. **Given** a V-Model directory where REQ-003 has no ATP, **When** the
    script is executed, **Then** it exits with code 1 and the gap report

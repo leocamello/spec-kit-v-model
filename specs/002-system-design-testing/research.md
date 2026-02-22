@@ -100,7 +100,7 @@ Each matrix includes an independently calculated coverage percentage verified by
 
 ### RQ-7: How should validate-system-coverage.sh handle the many-to-many REQ↔SYS relationship?
 
-**Finding**: Unlike v0.1.0's validate-coverage.sh (which validates 1:N REQ→ATP mapping), the system-level script must handle many-to-many:
+**Finding**: Unlike v0.1.0's validate-requirement-coverage.sh (which validates 1:N REQ→ATP mapping), the system-level script must handle many-to-many:
 - A single REQ may map to multiple SYS components
 - A single SYS may satisfy multiple REQs
 - Forward coverage: every REQ must appear as a parent in at least one SYS
@@ -113,9 +113,9 @@ Each matrix includes an independently calculated coverage percentage verified by
 4. Backward check: iterate all SYS-NNN from `sys_exists`; verify each appears in `sys_to_stp`.
 5. Orphan check: verify all SYS parent REQs exist in `requirements.md`; verify all STP parent SYS exist in `system-design.md`.
 
-**Rationale**: Associative arrays (Bash 4+) provide O(1) lookup for coverage verification. The three-pass approach (parse, cross-reference, report) is consistent with `validate-coverage.sh`'s architecture.
+**Rationale**: Associative arrays (Bash 4+) provide O(1) lookup for coverage verification. The three-pass approach (parse, cross-reference, report) is consistent with `validate-requirement-coverage.sh`'s architecture.
 
-**Source**: `validate-coverage.sh` implementation patterns, Constitution Principle II.
+**Source**: `validate-requirement-coverage.sh` implementation patterns, Constitution Principle II.
 
 ### RQ-8: What STS scenario language style distinguishes system tests from acceptance tests?
 

@@ -6,7 +6,7 @@
 # REQ-NNN, ATP-NNN-X, and SCN-NNN-X# IDs. Cross-references them to
 # verify 100% coverage at each tier.
 #
-# Usage: ./validate-coverage.sh [OPTIONS] <vmodel-dir>
+# Usage: ./validate-requirement-coverage.sh [OPTIONS] <vmodel-dir>
 #
 # OPTIONS:
 #   --json    Output in JSON format (for AI consumption)
@@ -24,7 +24,7 @@ for arg in "$@"; do
     case "$arg" in
         --json) JSON_MODE=true ;;
         --help|-h)
-            echo "Usage: validate-coverage.sh [--json] <vmodel-dir>"
+            echo "Usage: validate-requirement-coverage.sh [--json] <vmodel-dir>"
             exit 0
             ;;
         *) VMODEL_DIR="$arg" ;;

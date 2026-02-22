@@ -24,7 +24,9 @@ An extension for [GitHub Spec Kit](https://github.com/github/spec-kit) that enfo
 - **`/speckit.v-model.system-test`** — Generate ISO 29119-compliant system test plans (STP/STS)
 - **`/speckit.v-model.architecture-design`** — IEEE 42010/Kruchten 4+1 architecture decomposition (ARCH-NNN) with Logical, Process, Interface, and Data Flow views
 - **`/speckit.v-model.integration-test`** — ISO 29119-4 integration testing (ITP/ITS) with Interface Contract, Data Flow, Fault Injection, and Concurrency techniques
-- **`/speckit.v-model.trace`** — Build a regulatory-grade Triple Traceability Matrix (Matrix A + B + C)
+- **`/speckit.v-model.module-design`** — Detailed module design (MOD-NNN) with pseudocode, state machines, data structures, and error handling views
+- **`/speckit.v-model.unit-test`** — Unit test plans (UTP/UTS) with Statement & Branch Coverage, Boundary Value Analysis, State Transition Testing, and strict isolation
+- **`/speckit.v-model.trace`** — Build a regulatory-grade Quadruple Traceability Matrix (Matrix A + B + C + D)
 
 ## Installation
 
@@ -42,7 +44,7 @@ specify extension add v-model
 ### Method 2: Install from GitHub release
 
 ```bash
-specify extension add v-model --from https://github.com/leocamello/spec-kit-v-model/archive/refs/tags/v0.3.0.zip
+specify extension add v-model --from https://github.com/leocamello/spec-kit-v-model/archive/refs/tags/v0.4.0.zip
 ```
 
 ### Method 3: Install from local directory (development)
@@ -73,10 +75,13 @@ Step 5: /speckit.v-model.system-test           →  STP/STS procedures (ISO 2911
 Step 6: /speckit.v-model.trace                 →  Matrix A + B (+ system verification)
 Step 7: /speckit.v-model.architecture-design   →  ARCH-NNN modules (IEEE 42010/4+1)
 Step 8: /speckit.v-model.integration-test      →  ITP/ITS procedures (ISO 29119-4)
-Step 9: /speckit.v-model.trace                 →  Matrix A + B + C (full traceability)
+Step 9: /speckit.v-model.trace                 →  Matrix A + B + C (architecture traceability)
+Step 10: /speckit.v-model.module-design        →  MOD-NNN modules (pseudocode + state machines)
+Step 11: /speckit.v-model.unit-test            →  UTP/UTS procedures (white-box techniques)
+Step 12: /speckit.v-model.trace                →  Matrix A + B + C + D (full traceability)
 ```
 
-> **Progressive traceability:** The `/speckit.v-model.trace` command is run three times — after each design↔test pair — so coverage gaps are caught at each V-level rather than discovered at the end.
+> **Progressive traceability:** The `/speckit.v-model.trace` command is run four times — after each design↔test pair — so coverage gaps are caught at each V-level rather than discovered at the end.
 
 **Example — Feature 002: Custom ID Prefix Support**
 
@@ -108,7 +113,16 @@ Step 9: /speckit.v-model.trace                 →  Matrix A + B + C (full trace
 # 8. Generate integration tests (ISO 29119-4 integration techniques)
 /speckit.v-model.integration-test
 
-# 9. Build traceability matrix (Matrix A + B + C: full traceability)
+# 9. Build traceability matrix (Matrix A + B + C: architecture traceability)
+/speckit.v-model.trace
+
+# 10. Generate module design (pseudocode, state machines, data structures)
+/speckit.v-model.module-design
+
+# 11. Generate unit test plan (white-box techniques, strict isolation)
+/speckit.v-model.unit-test
+
+# 12. Build traceability matrix (Matrix A + B + C + D: full traceability)
 /speckit.v-model.trace
 
 # After: continue with spec-kit core
@@ -127,7 +141,9 @@ specs/{feature}/v-model/
 ├── system-test.md               →  STP/STS procedures
 ├── architecture-design.md       →  ARCH-NNN modules
 ├── integration-test.md          →  ITP/ITS procedures
-└── traceability-matrix.md       →  Matrix A + B + C
+├── module-design.md             →  MOD-NNN detailed modules
+├── unit-test.md                 →  UTP/UTS unit test procedures
+└── traceability-matrix.md       →  Matrix A + B + C + D
 ```
 
 ### Key Principle: Scripts Verify, AI Generates
@@ -139,10 +155,11 @@ calculations are performed by **deterministic scripts**:
 | Concern | Handled by | Why |
 |---------|-----------|-----|
 | Generate requirements & test plans | AI (Copilot) | Creative translation from natural language |
-| Validate requirements ↔ acceptance coverage | `validate-coverage.sh` | Deterministic — regex-based, mathematically correct |
+| Validate requirements ↔ acceptance coverage | `validate-requirement-coverage.sh` | Deterministic — regex-based, mathematically correct |
 | Validate system design ↔ system test coverage | `validate-system-coverage.sh` | Deterministic — SYS→STP→STS cross-reference |
 | Validate architecture ↔ integration coverage | `validate-architecture-coverage.sh` | Deterministic — ARCH→ITP→ITS cross-reference |
-| Build traceability matrix | `build-matrix.sh` | Deterministic — audit-grade accuracy, 3 matrices |
+| Validate module ↔ unit test coverage | `validate-module-coverage.sh` | Deterministic — ARCH→MOD→UTP→UTS cross-reference |
+| Build traceability matrix | `build-matrix.sh` | Deterministic — audit-grade accuracy, 4 matrices |
 | Detect requirement changes | `diff-requirements.sh` | Deterministic — git-based diff |
 
 ### Command Reference
@@ -199,13 +216,29 @@ Reads `system-design.md` and generates `architecture-design.md` with `ARCH-NNN` 
 
 Reads `architecture-design.md` and generates `integration-test.md` with `ITP-NNN-X` test procedures and `ITS-NNN-X#` test steps using four integration techniques (Interface Contract, Data Flow, Fault Injection, Concurrency).
 
-#### 7. Build Traceability Matrix (Step 3/6/9)
+#### 7. Generate Module Design (Step 10)
+
+```bash
+/speckit.v-model.module-design
+```
+
+Reads `architecture-design.md` and generates `module-design.md` with `MOD-NNN` modules. Each module includes pseudocode (Algorithmic / Logic View), state machine diagrams, internal data structures, and error handling specifications. Modules tagged `[EXTERNAL]` or `[CROSS-CUTTING]` are handled with appropriate bypass rules.
+
+#### 8. Generate Unit Test Plan (Step 11)
+
+```bash
+/speckit.v-model.unit-test
+```
+
+Reads `module-design.md` and generates `unit-test.md` with `UTP-NNN-X` test procedures and `UTS-NNN-X#` scenarios. Uses white-box techniques (Statement & Branch Coverage, Boundary Value Analysis, State Transition Testing, Equivalence Partitioning) with strict isolation — every external dependency is mocked via Dependency & Mock Registries.
+
+#### 9. Build Traceability Matrix (Step 3/6/9/12)
 
 ```bash
 /speckit.v-model.trace
 ```
 
-Uses deterministic scripts (not AI) to build a regulatory-grade triple matrix. Run progressively — after acceptance for Matrix A, after system-test for A+B, after integration-test for A+B+C.
+Uses deterministic scripts (not AI) to build a regulatory-grade quadruple matrix. Run progressively — after acceptance for Matrix A, after system-test for A+B, after integration-test for A+B+C, after unit-test for A+B+C+D.
 
 ## ID Schema
 
@@ -216,10 +249,13 @@ The ID scheme encodes traceability directly in the identifier:
 | Requirements ↔ Acceptance | `REQ-NNN` | `ATP-NNN-X` | `SCN-NNN-X#` | A |
 | System ↔ System Test | `SYS-NNN` | `STP-NNN-X` | `STS-NNN-X#` | B |
 | Architecture ↔ Integration | `ARCH-NNN` | `ITP-NNN-X` | `ITS-NNN-X#` | C |
+| Module ↔ Unit Test | `MOD-NNN` | `UTP-NNN-X` | `UTS-NNN-X#` | D |
 
 Category prefixes: `NF` (Non-Functional), `IF` (Interface), `CN` (Constraint). Functional requirements have no prefix (e.g., `REQ-NF-001`, `ATP-NF-001-A`).
 
-Each ID is self-documenting — reading `SCN-001-A1` tells you: Scenario 1 → of Test Case A → validating Requirement 001. The same lineage applies at every level: `ITS-003-A2` → `ITP-003-A` → `ARCH-003`.
+Each ID is self-documenting — reading `SCN-001-A1` tells you: Scenario 1 → of Test Case A → validating Requirement 001. The same lineage applies at every level: `ITS-003-A2` → `ITP-003-A` → `ARCH-003`, and `UTS-001-A1` → `UTP-001-A` → `MOD-001`.
+
+For a comprehensive explanation of ID formats, lifecycle, cross-level linking mechanisms, and end-to-end traceability examples, see the [Artifact ID Schema Guide](docs/id-schema-guide.md).
 
 ## Configuration
 
@@ -237,6 +273,9 @@ id_prefixes:
   architecture_modules: "ARCH"
   integration_test_procedures: "ITP"
   integration_test_steps: "ITS"
+  module_designs: "MOD"
+  unit_test_procedures: "UTP"
+  unit_test_scenarios: "UTS"
 coverage_threshold: 100
 batch_size: 5
 ```
@@ -257,10 +296,10 @@ GOOGLE_API_KEY=... pytest tests/evals/ -m eval -v
 
 | Layer | Tests | What it validates |
 |-------|-------|-------------------|
-| BATS | 67 | Bash script logic (setup, coverage, system coverage, architecture coverage, matrix, diff) |
-| Pester | 67 | PowerShell script parity |
-| Structural evals | 37 | ID format, template conformance, section completeness across all V-levels |
-| LLM-as-judge evals | 26 | Requirements quality, BDD quality, design quality, traceability (requires API key) |
+| BATS | 91 | Bash script logic (setup, coverage, system coverage, architecture coverage, module coverage, matrix, diff) |
+| Pester | 91 | PowerShell script parity |
+| Structural evals | 51 | ID format, template conformance, section completeness across all V-levels |
+| LLM-as-judge evals | 36 | Requirements quality, BDD quality, design quality, traceability (requires API key) |
 
 See [CONTRIBUTING.md](CONTRIBUTING.md#testing) for full details.
 

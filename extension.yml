@@ -3,7 +3,7 @@ schema_version: "1.0"
 extension:
   id: "v-model"
   name: "V-Model Extension Pack"
-  version: "0.3.0"
+  version: "0.4.0"
   description: "Enforces V-Model paired generation of development specs and test specs with full traceability."
   author: "leocamello"
   repository: "https://github.com/leocamello/spec-kit-v-model"
@@ -42,9 +42,17 @@ provides:
       file: "commands/integration-test.md"
       description: "Generate ISO 29119-4 integration test plan with four named techniques for every architecture module"
 
+    - name: "speckit.v-model.module-design"
+      file: "commands/module-design.md"
+      description: "Decompose architecture modules into DO-178C/ISO 26262-compliant low-level module designs with four mandatory views"
+
+    - name: "speckit.v-model.unit-test"
+      file: "commands/unit-test.md"
+      description: "Generate ISO 29119-4 white-box unit test plan with five named techniques for every module design"
+
     - name: "speckit.v-model.trace"
       file: "commands/trace.md"
-      description: "Build a regulatory-grade Traceability Matrix (Matrix A + B + C: REQ → ATP → SYS → STP → ARCH → ITP)"
+      description: "Build a regulatory-grade Traceability Matrix (Matrix A + B + C + D: REQ → ATP → SYS → STP → ARCH → ITP → MOD → UTP)"
 
   config:
     - name: "v-model-config.yml"
@@ -78,5 +86,8 @@ defaults:
     architecture_modules: "ARCH"
     integration_test_cases: "ITP"
     integration_test_scenarios: "ITS"
+    module_designs: "MOD"
+    unit_test_cases: "UTP"
+    unit_test_scenarios: "UTS"
   coverage_threshold: 100
   batch_size: 5

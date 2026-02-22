@@ -1,5 +1,5 @@
 ---
-description: Build a regulatory-grade Bidirectional Traceability Matrix with triple-matrix output (Matrix A Validation + Matrix B Verification + Matrix C Integration Verification) and coverage audit.
+description: Build a regulatory-grade Bidirectional Traceability Matrix with quadruple-matrix output (Matrix A Validation + Matrix B System Verification + Matrix C Integration Verification + Matrix D Implementation Verification) and coverage audit.
 handoffs:
   - label: Fix Coverage Gaps
     agent: speckit.v-model.acceptance
@@ -107,14 +107,16 @@ The script:
 4. Identifies gaps (uncovered REQs) and orphans (unlinked ATPs/SCNs)
 5. **If `system-design.md` and `system-test.md` exist**, generates Matrix B (Verification) alongside Matrix A (Validation) — parsing SYS components from the Decomposition View and STP/STS test cases
 6. **If `architecture-design.md` and `integration-test.md` exist**, generates Matrix C (Integration Verification) — parsing ARCH modules from the Logical View and ITP/ITS test cases
-7. Generates the complete traceability matrix with coverage metrics
-8. Writes output to `{VMODEL_DIR}/traceability-matrix.md`
+7. **If `module-design.md` exists (with `architecture-design.md`)**, generates Matrix D (Implementation Verification) — parsing MOD modules and their parent ARCH mappings; if `unit-test.md` also exists, includes UTP/UTS test cases
+8. Generates the complete traceability matrix with coverage metrics
+9. Writes output to `{VMODEL_DIR}/traceability-matrix.md`
 
-**Triple-matrix output (v0.3.0+):**
+**Quadruple-matrix output (v0.4.0+):**
 - **Matrix A — Validation (User View):** REQ → ATP → SCN. Always present.
 - **Matrix B — Verification (Architectural View):** REQ → SYS → STP → STS. Only present when system-level artifacts exist.
 - **Matrix C — Integration Verification (Module Boundary View):** SYS → ARCH → ITP → ITS. Only present when architecture-level artifacts exist. Includes parent REQ annotations in SYS column and CROSS-CUTTING pseudo-rows.
-- Backward compatible: v0.1.0 feature directories (no system artifacts) produce Matrix A only; v0.2.0 directories produce Matrix A + B.
+- **Matrix D — Implementation Verification (Module View):** ARCH → MOD → UTP → UTS. Only present when module-design.md and architecture-design.md exist. Each ARCH cell includes parent SYS identifiers in parentheses; `[CROSS-CUTTING]` modules display `([CROSS-CUTTING])` instead of SYS lineage; `[EXTERNAL]` modules display bypass annotations. If unit-test.md is absent, UTP/UTS columns show "⏳ Pending".
+- Backward compatible: v0.1.0 feature directories (no system artifacts) produce Matrix A only; v0.2.0 directories produce Matrix A + B; v0.3.0 directories produce Matrix A + B + C.
 
 ### 3. Present Results (3 Sections)
 
@@ -198,6 +200,15 @@ DEPRECATION CANDIDATES:
 | **SYS-001** (REQ-001) | REQ-001 | ARCH-001 | HTTP Router | ITP-001-A | Interface Contract Testing | ITS-001-A1 | ⬜ Pending Execution |
 | **N/A (Cross-Cutting)** | — | ARCH-005 | Logger | ITP-005-A | Interface Contract Testing | ITS-005-A1 | ⬜ Pending Execution |
 
+**Matrix D — Implementation Verification (Module View)** *(only when module-design.md and architecture-design.md exist)*:
+
+| Architecture Module (ARCH) | Parent System | Module Design (MOD) | Module Name | Test Case ID (UTP) | Technique | Scenario ID (UTS) | Status |
+|---|---|---|---|---|---|---|---|
+| **ARCH-001** (SYS-001) | SYS-001 | MOD-001 | Sensor Parser | UTP-001-A | Statement & Branch Coverage | UTS-001-A1 | ⬜ Pending Execution |
+| **ARCH-001** (SYS-001) | SYS-001 | MOD-001 | Sensor Parser | UTP-001-B | Boundary Value Analysis | UTS-001-B1 | ⬜ Pending Execution |
+| **ARCH-005** ([CROSS-CUTTING]) | [CROSS-CUTTING] | MOD-005 | Logger Core | UTP-005-A | Statement & Branch Coverage | UTS-005-A1 | ⬜ Pending Execution |
+| **ARCH-003** (SYS-002) | SYS-002 | MOD-003 | AWS SDK Wrapper [EXTERNAL] | — (integration level) | — | — | ⬜ Bypassed |
+
 If either matrix is very large (>50 rows), display the first 20 rows in the response and reference the full file:
 "Full matrix available at: `{VMODEL_DIR}/traceability-matrix.md`"
 
@@ -219,6 +230,10 @@ Include baseline metadata at the bottom of the matrix:
 | Acceptance Plan Last Modified | {file modification date} |
 | System Design Source | {path to system-design.md, or "N/A — not present"} |
 | System Test Source | {path to system-test.md, or "N/A — not present"} |
+| Architecture Design Source | {path to architecture-design.md, or "N/A — not present"} |
+| Integration Test Source | {path to integration-test.md, or "N/A — not present"} |
+| Module Design Source | {path to module-design.md, or "N/A — not present"} |
+| Unit Test Source | {path to unit-test.md, or "N/A — not present"} |
 | Validation Tool | `build-matrix.sh` (deterministic — not AI-generated) |
 | Git Commit (if available) | {short SHA or "uncommitted changes"} |
 ```
@@ -239,11 +254,20 @@ Based on the analysis:
 - **If both gaps and orphans exist**:
   "❌ Bidirectional traceability failures found in both directions. Address gaps first (run `/speckit.v-model.acceptance`), then clean up orphans manually, then re-run `/speckit.v-model.trace`."
 
+- **If Matrix D shows ARCH→MOD gaps**:
+  "⚠️ Architecture modules without module designs found. Run `/speckit.v-model.module-design` to generate module designs for the {N} uncovered ARCH modules. Then re-run `/speckit.v-model.trace`."
+
+- **If Matrix D shows MOD→UTP gaps (unit-test.md exists)**:
+  "⚠️ Module designs without unit test cases found. Run `/speckit.v-model.unit-test` to generate unit tests for the {N} uncovered modules. Then re-run `/speckit.v-model.trace`."
+
+- **If Matrix D shows UTP pending (unit-test.md absent)**:
+  "ℹ️ Module designs found but unit test plan not yet generated. Run `/speckit.v-model.unit-test` to generate unit tests, then re-run `/speckit.v-model.trace` to complete Matrix D."
+
 ## Operating Constraints
 
 ### Read-Only Command
 
-This command MUST NOT modify `requirements.md` or `acceptance-plan.md`. It only writes to `traceability-matrix.md`. If issues are found, it recommends corrective actions but does not execute them.
+This command MUST NOT modify `requirements.md`, `acceptance-plan.md`, or any other V-Model artifact. It only writes to `traceability-matrix.md`. If issues are found, it recommends corrective actions but does not execute them.
 
 ### Deterministic Output
 

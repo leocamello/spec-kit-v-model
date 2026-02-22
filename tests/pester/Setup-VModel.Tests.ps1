@@ -115,6 +115,64 @@ Describe 'Setup-VModel' {
             $LASTEXITCODE | Should -Not -Be 0
             Pop-Location
         }
+
+        It '--require-module-design fails when module-design.md is missing' {
+            $tempDir = Join-Path $TestDrive 'require-mod-design'
+            New-Item -ItemType Directory -Path $tempDir -Force | Out-Null
+            Initialize-GitRepo -Path $tempDir
+            Push-Location $tempDir
+            git checkout -b 001-test --quiet
+            $vmodelDir = Join-Path $tempDir 'specs/001-test/v-model'
+            New-Item -ItemType Directory -Path $vmodelDir -Force | Out-Null
+            & pwsh -NoProfile -File "$ScriptsDir/setup-v-model.ps1" -RequireModuleDesign 2>&1 | Out-Null
+            $LASTEXITCODE | Should -Not -Be 0
+            Pop-Location
+        }
+
+        It '--require-unit-test fails when unit-test.md is missing' {
+            $tempDir = Join-Path $TestDrive 'require-unit-test'
+            New-Item -ItemType Directory -Path $tempDir -Force | Out-Null
+            Initialize-GitRepo -Path $tempDir
+            Push-Location $tempDir
+            git checkout -b 001-test --quiet
+            $vmodelDir = Join-Path $tempDir 'specs/001-test/v-model'
+            New-Item -ItemType Directory -Path $vmodelDir -Force | Out-Null
+            & pwsh -NoProfile -File "$ScriptsDir/setup-v-model.ps1" -RequireUnitTest 2>&1 | Out-Null
+            $LASTEXITCODE | Should -Not -Be 0
+            Pop-Location
+        }
+    }
+
+    Context 'Module-level document detection' {
+        It 'detects existing module-design.md' {
+            $tempDir = Join-Path $TestDrive 'detects-mod-design'
+            New-Item -ItemType Directory -Path $tempDir -Force | Out-Null
+            Initialize-GitRepo -Path $tempDir
+            Push-Location $tempDir
+            git checkout -b 001-test --quiet
+            $vmodelDir = Join-Path $tempDir 'specs/001-test/v-model'
+            New-Item -ItemType Directory -Path $vmodelDir -Force | Out-Null
+            New-Item -ItemType File -Path (Join-Path $vmodelDir 'module-design.md') -Force | Out-Null
+            $output = & pwsh -NoProfile -File "$ScriptsDir/setup-v-model.ps1" -Json 2>&1
+            $LASTEXITCODE | Should -Be 0
+            $output | Should -Match 'module-design\.md'
+            Pop-Location
+        }
+
+        It 'detects existing unit-test.md' {
+            $tempDir = Join-Path $TestDrive 'detects-unit-test'
+            New-Item -ItemType Directory -Path $tempDir -Force | Out-Null
+            Initialize-GitRepo -Path $tempDir
+            Push-Location $tempDir
+            git checkout -b 001-test --quiet
+            $vmodelDir = Join-Path $tempDir 'specs/001-test/v-model'
+            New-Item -ItemType Directory -Path $vmodelDir -Force | Out-Null
+            New-Item -ItemType File -Path (Join-Path $vmodelDir 'unit-test.md') -Force | Out-Null
+            $output = & pwsh -NoProfile -File "$ScriptsDir/setup-v-model.ps1" -Json 2>&1
+            $LASTEXITCODE | Should -Be 0
+            $output | Should -Match 'unit-test\.md'
+            Pop-Location
+        }
     }
 
     Context 'JSON output' {
