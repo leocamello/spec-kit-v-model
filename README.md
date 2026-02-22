@@ -255,6 +255,8 @@ Category prefixes: `NF` (Non-Functional), `IF` (Interface), `CN` (Constraint). F
 
 Each ID is self-documenting — reading `SCN-001-A1` tells you: Scenario 1 → of Test Case A → validating Requirement 001. The same lineage applies at every level: `ITS-003-A2` → `ITP-003-A` → `ARCH-003`, and `UTS-001-A1` → `UTP-001-A` → `MOD-001`.
 
+For a comprehensive explanation of ID formats, lifecycle, cross-level linking mechanisms, and end-to-end traceability examples, see the [Artifact ID Schema Guide](docs/id-schema-guide.md).
+
 ## Configuration
 
 Optional configuration via `v-model-config.yml`:
