@@ -28,11 +28,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - build-matrix.sh/ps1 extended with Matrix D generation
 - trace.md updated from triple-matrix to quadruple-matrix output (A + B + C + D)
 - Test fixture directories expanded from 6 to 8 V-Model files each (+module-design.md, +unit-test.md)
+- Renamed `validate-coverage` → `validate-requirement-coverage` across all scripts, tests, docs, and specs for consistent `validate-{design-level}-coverage` naming convention
 - Documentation updated for v0.4.0: README (12-step workflow, 9 commands, 4-tier ID schema), CONTRIBUTING, SECURITY, compliance-guide, usage-examples, v-model-config, v-model-overview, product-vision
-- Total commands: 7 → 9; BATS tests: 67 → 91; Pester tests: 67 → 91; Structural evals: 37 → 51; LLM-as-judge evals: 26 → 36
+- Total commands: 7 → 9; BATS tests: 67 → 91; Pester tests: 67 → 91; Structural evals: 37 → 51; LLM-as-judge evals: 26 → 36; E2E evals: 24 → 32
 
 ### Fixed
 - BATS test for validate-system-coverage partial mode now correctly expects exit 0 (script was updated in v0.2.0 but test was not)
+- PowerShell `validate-system-coverage.ps1` now supports partial mode when `system-test.md` is absent (parity with bash script)
+- PowerShell `validate-system-coverage.ps1` handles empty files via null-coalescing (`Get-Content -Raw` returns `$null` for 0-byte files)
+- Minimal module-design fixture now includes typed function signatures and complete type definitions for all pseudocode references
 
 ## [0.3.0] — 2026-02-21
 
