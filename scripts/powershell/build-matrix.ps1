@@ -925,6 +925,112 @@ if ($hasModuleLevel) {
     $fullOutput += ''
 }
 
+# ---- Matrix H: Hazard Traceability (if hazard-analysis.md exists) ----
+$HazardAnalysisFile = Join-Path $VModelDir 'hazard-analysis.md'
+$hasHazardLevel = $false
+
+if ((Test-Path $HazardAnalysisFile) -and $hasSystemLevel) {
+    $hasHazardLevel = $true
+    $hazardContent = Get-Content -Path $HazardAnalysisFile -Raw
+    $hazardLines = $hazardContent -split "`n"
+
+    $sortedHaz = @([regex]::Matches($hazardContent, 'HAZ-[0-9]{3}') | ForEach-Object { $_.Value } | Sort-Object -Unique)
+    $totalHazCount = $sortedHaz.Count
+
+    # Build HAZ -> mitigation mapping from FMEA table rows
+    $hazMitigations = @{}
+    foreach ($haz in $sortedHaz) {
+        $escapedHaz = [regex]::Escape($haz)
+        $row = $hazardLines | Where-Object { $_ -match "^\|\s*$escapedHaz\s*\|" } | Select-Object -First 1
+        if ($row) {
+            $cols = $row -split '\|'
+            $mitCell = if ($cols.Count -ge 11) { $cols[10] } else { '' }
+            $mitRefs = @([regex]::Matches($mitCell, '(REQ-(?:[A-Z]+-)?[0-9]{3}|SYS-[0-9]{3})') | ForEach-Object { $_.Value })
+            $hazMitigations[$haz] = $mitRefs
+        }
+    }
+
+    # Build mitigation -> verification mapping
+    $reqToAtp = @{}
+    foreach ($atpId in $atpDescriptions.Keys) {
+        $atpBase = $atpId -replace '^ATP-' -replace '-[A-Z]$'
+        $reqKey = "REQ-$atpBase"
+        if ($reqToAtp.ContainsKey($reqKey)) {
+            $reqToAtp[$reqKey] += " $atpId"
+        } else {
+            $reqToAtp[$reqKey] = $atpId
+        }
+    }
+
+    $sysToStp = @{}
+    if (Test-Path $SystemTestFile) {
+        $stpHIds = @([regex]::Matches((Get-Content -Path $SystemTestFile -Raw), 'STP-[0-9]{3}-[A-Z]') | ForEach-Object { $_.Value } | Sort-Object -Unique)
+        foreach ($stpId in $stpHIds) {
+            $stpBase = $stpId -replace '^STP-' -replace '-[A-Z]$'
+            $sysKey = "SYS-$stpBase"
+            if ($sysToStp.ContainsKey($sysKey)) {
+                $sysToStp[$sysKey] += " $stpId"
+            } else {
+                $sysToStp[$sysKey] = $stpId
+            }
+        }
+    }
+
+    $fullOutput += ''
+    $fullOutput += '## Matrix H — Hazard Traceability'
+    $fullOutput += ''
+    $fullOutput += '| HAZ ID | Mitigation | Verification | Status |'
+    $fullOutput += '|--------|-----------|-------------|--------|'
+
+    $hazWithVerification = 0
+    foreach ($haz in $sortedHaz) {
+        $mitList = $hazMitigations[$haz]
+        if (-not $mitList -or $mitList.Count -eq 0) {
+            $fullOutput += "| $haz | ⚠️ No mitigation | ⚠️ No test coverage | ⬜ Pending |"
+            continue
+        }
+
+        $firstMit = $true
+        $hazHasAnyVerification = $false
+        foreach ($mit in $mitList) {
+            $verification = ''
+            if ($mit -match '^REQ-') {
+                $verification = $reqToAtp[$mit]
+            } elseif ($mit -match '^SYS-') {
+                $verification = $sysToStp[$mit]
+            }
+
+            if (-not $verification) {
+                $verification = '⚠️ No test coverage'
+            } else {
+                $hazHasAnyVerification = $true
+            }
+
+            if ($firstMit) {
+                $fullOutput += "| $haz | $mit | $verification | ⬜ Pending |"
+                $firstMit = $false
+            } else {
+                $fullOutput += "| | $mit | $verification | ⬜ Pending |"
+            }
+        }
+
+        if ($hazHasAnyVerification) {
+            $hazWithVerification++
+        }
+    }
+
+    $fullOutput += ''
+    $fullOutput += '### Matrix H Coverage'
+    $fullOutput += ''
+
+    $hazVerPct = if ($totalHazCount -gt 0) { [math]::Floor($hazWithVerification * 100 / $totalHazCount) } else { 0 }
+
+    $fullOutput += '| Metric | Value |'
+    $fullOutput += '|--------|-------|'
+    $fullOutput += "| **Total Hazards (HAZ)** | $totalHazCount |"
+    $fullOutput += "| **HAZ with Verification** | $hazWithVerification/$totalHazCount ($hazVerPct%) |"
+}
+
 $fullOutput += ''
 $fullOutput += '## Audit Notes'
 $fullOutput += ''
@@ -934,6 +1040,7 @@ if ($hasSystemLevel) { $sourceDocs += ', `system-design.md`, `system-test.md`' }
 if ($hasArchLevel) { $sourceDocs += ', `architecture-design.md`, `integration-test.md`' }
 if ($hasModuleLevel) { $sourceDocs += ', `module-design.md`' }
 if ($hasUnitTest) { $sourceDocs += ', `unit-test.md`' }
+if ($hasHazardLevel) { $sourceDocs += ', `hazard-analysis.md`' }
 $fullOutput += "- **Source documents**: $sourceDocs"
 $fullOutput += "- **Last validated**: $date"
 

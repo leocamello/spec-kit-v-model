@@ -13,6 +13,7 @@ ID_PATTERNS = {
     "MOD": re.compile(r"MOD-[0-9]{3}"),
     "UTP": re.compile(r"UTP-[0-9]{3}-[A-Z]"),
     "UTS": re.compile(r"UTS-[0-9]{3}-[A-Z][0-9]+"),
+    "HAZ": re.compile(r"HAZ-[0-9]{3}"),
 }
 
 ID_STRICT_PATTERNS = {
@@ -25,6 +26,7 @@ ID_STRICT_PATTERNS = {
     "MOD": re.compile(r"^MOD-[0-9]{3}$"),
     "UTP": re.compile(r"^UTP-[0-9]{3}-[A-Z]$"),
     "UTS": re.compile(r"^UTS-[0-9]{3}-[A-Z][0-9]+$"),
+    "HAZ": re.compile(r"^HAZ-[0-9]{3}$"),
 }
 
 
