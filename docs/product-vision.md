@@ -119,7 +119,7 @@ The MVP provides universal structural traceability — traceable IDs, bidirectio
 
 - **Pre-built Regulatory Template Packs** — Domain-specific templates for IEC 62304, ISO 26262, and DO-178C that pre-populate the required sections, terminology, and compliance language for each standard (e.g., automatically inserting ASIL-D or Class C specific verbiage into requirement templates).
 - **Change Impact Analysis** — When a requirement changes, automatically identify every downstream artifact (test cases, scenarios, matrix entries) that requires re-validation. Eliminates the manual "what else does this affect?" search.
-- **Hazard Analysis Integration** — Link requirements directly to hazard mitigations, supporting FMEA (Failure Mode and Effects Analysis) workflows where every identified hazard must trace to a mitigation requirement and a verification test.
+- ~~**Hazard Analysis Integration**~~ ✅ *Shipped in v0.5.0* — The `/speckit.v-model.hazard-analysis` command generates ISO 14971/26262 FMEA registers with operational state awareness, mitigation traceability, and Matrix H.
 - **Bidirectional ALM Synchronization** — Two-way sync with enterprise ALM platforms (Jama Connect, IBM DOORS, Siemens Polarion), eliminating the risk of fragmented sources of truth between Git and the enterprise system of record.
 
 ### Quality Intelligence

@@ -191,7 +191,7 @@ Scripts handle all deterministic logic (counting, cross-referencing, matrix buil
 
 ### ID Schema
 
-The four-tier ID schema is a core architectural decision. Any changes must preserve:
+The four-tier ID schema (plus the cross-cutting `HAZ-NNN` hazard prefix) is a core architectural decision. Any changes must preserve:
 
 - **Self-documenting lineage**: `SCN-001-A1` → `ATP-001-A` → `REQ-001`
 - **Category prefix support**: `REQ-NF-001`, `ATP-NF-001-A`, `SCN-NF-001-A1`

@@ -167,6 +167,32 @@ Matrix D extends the traceability chain to the innermost level:
 
 Modules tagged as `[EXTERNAL]` (third-party or hardware-interfacing) are bypassed for unit test coverage. Modules tagged as `[CROSS-CUTTING]` (logging, diagnostics) are tested normally.
 
+## Hazard Analysis (Cross-Cutting)
+
+Hazard analysis is a **cross-cutting concern** — it operates alongside the V-Model hierarchy rather than within a single tier. In regulated industries (medical devices, automotive, aerospace), identifying and mitigating hazards is legally mandated before a product can ship.
+
+### Standards Alignment
+
+- **ISO 14971** (Medical Risk Management) requires systematic identification of hazards, estimation of associated risks, evaluation of risk acceptability, and control of risks.
+- **ISO 26262 Part 9** (Automotive HARA) requires Hazard Analysis and Risk Assessment at the concept and system levels.
+- Both standards require hazards to be contextualized by **operational state** — the same failure mode may have dramatically different severity depending on the system's current mode of operation.
+
+### Hazard Analysis ID Schema
+
+| Tier | ID Format | Example | Meaning |
+|------|-----------|---------|---------|
+| Hazard | `HAZ-NNN` | HAZ-001 | A discrete hazard entry in the FMEA register |
+
+The `HAZ-NNN` prefix is unique: it does not participate in the intra-level parent/child encoding used by design↔test pairs. Instead, each HAZ entry links to `SYS-NNN` components (via the FMEA Component column) and references `REQ-NNN` or `SYS-NNN` IDs in the Mitigation column. This creates a cross-cutting trace: Hazard → Mitigation → Requirement → Test Case.
+
+### Matrix H: Hazard Traceability
+
+Matrix H links hazards to their mitigation verification:
+
+- **Forward**: Every `SYS-NNN` component → at least one `HAZ-NNN` hazard analyzed (no unanalyzed components)
+- **Backward**: Every `HAZ-NNN` mitigation → references a valid `REQ-NNN` or `SYS-NNN` → traces to verification tests
+- **State consistency**: Every operational state mentioned in hazard entries → exists in `system-design.md`
+
 ## When to Use the V-Model
 
 The V-Model is ideal when:
