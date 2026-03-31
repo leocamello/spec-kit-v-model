@@ -53,6 +53,15 @@ Each component traces to one or more parent requirements via the "Parent Require
 | Patient Profile | Companion app local storage | Until account deletion | OS-level keychain / keystore | TLS 1.3 (app-to-cloud sync) |
 | Export Archive | Generated on demand (CSV/PDF) | Transient; deleted after BLE transfer confirmed | Not stored at rest | BLE 5.0 LE Secure Connections |
 
+## Operational States
+
+| State | Description |
+|-------|------------|
+| MONITORING | Normal continuous glucose monitoring; sensor active, BLE connected |
+| SENSOR_WARMUP | Initial calibration period after sensor insertion (typically 1–2 hours) |
+| BLE_DISCONNECTED | Bluetooth link lost; transmitter buffering locally; no companion app display |
+| LOW_BATTERY | Transmitter battery below threshold; reduced sampling or imminent shutdown |
+
 ## Coverage Summary
 
 | Metric | Value |

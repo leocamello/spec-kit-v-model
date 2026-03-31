@@ -56,6 +56,16 @@ Each component traces to one or more parent requirements via the "Parent Require
 | Fused Threat History | NVRAM event log (4 MB) | Last 1,000 braking events | AES-128-CMAC integrity tag | Internal bus — no transit protection required |
 | DTC Log | Non-volatile flash (1 MB) | Lifetime of vehicle (read via OBD-II) | AES-128-CMAC integrity tag | UDS over CAN (ISO 14229) |
 
+## Operational States
+
+| State | Description |
+|-------|------------|
+| PARKED | Vehicle stationary with engine off or in park |
+| LOW_SPEED | Vehicle moving at 5–30 km/h (urban crawl, parking lots) |
+| URBAN | Vehicle moving at 30–60 km/h (city driving, intersections) |
+| HIGHWAY | Vehicle moving at 60–200 km/h (highway, high-speed roads) |
+| SENSOR_DEGRADED | One or more sensors reporting fault; system in fallback mode |
+
 ## Coverage Summary
 
 | Metric | Value |
