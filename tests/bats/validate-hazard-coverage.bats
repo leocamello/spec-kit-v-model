@@ -10,7 +10,7 @@ load "test_helper"
 @test "hazard coverage: full coverage shows success message" {
     run bash "$SCRIPTS_DIR/validate-hazard-coverage.sh" "$FIXTURES_DIR/minimal"
     assert_success
-    assert_output --partial "Forward coverage"
+    assert_output --partial "Forward Coverage"
 }
 
 @test "hazard coverage: full coverage JSON has_gaps=false" {
@@ -221,7 +221,8 @@ load "test_helper"
     setup_temp_dir
     run bash "$SCRIPTS_DIR/build-matrix.sh" "$FIXTURES_DIR/minimal" --output "$TEST_TEMP_DIR/matrix.md"
     assert_success
-    assert_output --partial "5/5 (100%)"
+    run grep "5/5 (100%)" "$TEST_TEMP_DIR/matrix.md"
+    assert_success
     teardown_temp_dir
 }
 

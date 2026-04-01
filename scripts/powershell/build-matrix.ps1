@@ -944,7 +944,7 @@ if ((Test-Path $HazardAnalysisFile) -and $hasSystemLevel) {
         $row = $hazardLines | Where-Object { $_ -match "^\|\s*$escapedHaz\s*\|" } | Select-Object -First 1
         if ($row) {
             $cols = $row -split '\|'
-            $mitCell = if ($cols.Count -ge 11) { $cols[10] } else { '' }
+            $mitCell = if ($cols.Count -ge 10) { $cols[9] } else { '' }
             $mitRefs = @([regex]::Matches($mitCell, '(REQ-(?:[A-Z]+-)?[0-9]{3}|SYS-[0-9]{3})') | ForEach-Object { $_.Value })
             $hazMitigations[$haz] = $mitRefs
         }

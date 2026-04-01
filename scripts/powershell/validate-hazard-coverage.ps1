@@ -107,7 +107,7 @@ if ($hasRequirements -or (-not $Partial)) {
         if ($row) {
             $cols = $row -split '\|'
             # Mitigation is column 10 (index 10 in split result since leading | creates empty [0])
-            $mitCell = if ($cols.Count -ge 11) { $cols[10] } else { '' }
+            $mitCell = if ($cols.Count -ge 10) { $cols[9] } else { '' }
             $mitRefs = @([regex]::Matches($mitCell, '(REQ-(?:[A-Z]+-)?[0-9]{3}|SYS-[0-9]{3})') | ForEach-Object { $_.Value })
             if ($mitRefs.Count -eq 0) {
                 $backwardGaps += "$haz`: no mitigation references found"
@@ -171,7 +171,7 @@ foreach ($line in ($hazardAnalysis -split "`n")) {
     if ($line -match '^\|\s*HAZ-[0-9]{3}\s*\|') {
         $cols = $line -split '\|'
         if ($cols.Count -ge 6) {
-            $state = $cols[5].Trim()
+            $state = $cols[4].Trim()
             if ($state) { $hazStates += $state }
         }
     }
