@@ -963,8 +963,8 @@ if ((Test-Path $HazardAnalysisFile) -and $hasSystemLevel) {
     }
 
     $sysToStp = @{}
-    if (Test-Path $SystemTestFile) {
-        $stpHIds = @([regex]::Matches((Get-Content -Path $SystemTestFile -Raw), 'STP-[0-9]{3}-[A-Z]') | ForEach-Object { $_.Value } | Sort-Object -Unique)
+    if (Test-Path $SystemTest) {
+        $stpHIds = @([regex]::Matches((Get-Content -Path $SystemTest -Raw), 'STP-[0-9]{3}-[A-Z]') | ForEach-Object { $_.Value } | Sort-Object -Unique)
         foreach ($stpId in $stpHIds) {
             $stpBase = $stpId -replace '^STP-' -replace '-[A-Z]$'
             $sysKey = "SYS-$stpBase"
