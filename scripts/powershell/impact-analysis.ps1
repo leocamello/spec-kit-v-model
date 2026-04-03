@@ -141,8 +141,8 @@ foreach ($file in $mdFiles) {
             $AllIds[$lid] = $true
         }
 
-        # Heading or bold table row → first ID is owner
-        if ($line -match '^#' -or $line -match '^\s*\|\s*\*\*') {
+        # Heading or table row → first ID is owner
+        if ($line -match '^#' -or $line -match '^\s*\|') {
             $owner = $lineIds[0]
         }
 

@@ -1,0 +1,1 @@
+{"changed_ids":["MOD-001"],"direction":"upward","suspect_artifacts":{"REQ":["REQ-001"],"ATP":["ATP-001-A"],"SCN":["SCN-001-A1"],"SYS":["SYS-001"],"ARCH":["ARCH-001","ARCH-002"]},"blast_radius":{"total":6,"by_level":{"REQ":1,"ATP":1,"SCN":1,"SYS":1,"ARCH":2}},"revalidation_order":["REQ-001","ATP-001-A","SCN-001-A1","SYS-001","ARCH-001","ARCH-002"]}

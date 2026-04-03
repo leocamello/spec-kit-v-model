@@ -94,6 +94,8 @@ build_graph() {
         id_pat = "(REQ|ATP|SCN|SYS|STP|STS|ARCH|ITP|ITS|MOD|UTP|UTS|HAZ)(-[A-Z]+)?-[0-9]{3}(-[A-Z][0-9]?)?"
         owner = ""
     }
+    # Reset owner at the start of each new file
+    FNR == 1 { owner = "" }
     {
         # Extract all IDs on this line
         line = $0
@@ -107,8 +109,8 @@ build_graph() {
         }
         if (n == 0) next
 
-        # Heading or bold-table-row → first ID is the owner
-        if ($0 ~ /^#/ || $0 ~ /^[[:space:]]*\|[[:space:]]*\*\*/) {
+        # Heading or table row → first ID is the owner
+        if ($0 ~ /^#/ || $0 ~ /^[[:space:]]*\|/) {
             owner = ids[1]
         }
 
