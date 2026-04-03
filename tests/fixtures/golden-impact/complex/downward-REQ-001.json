@@ -1,1 +1,58 @@
-{"changed_ids":["REQ-001"],"direction":"downward","suspect_artifacts":{"HAZ":["HAZ-001","HAZ-002"],"SYS":["SYS-001"],"ARCH":["ARCH-001","ARCH-002","ARCH-008"],"ITP":["ITP-001-A","ITP-001-B","ITP-002-A","ITP-006-A","ITP-007-A"],"MOD":["MOD-001","MOD-002","MOD-008"]},"blast_radius":{"total":14,"by_level":{"HAZ":2,"SYS":1,"ARCH":3,"ITP":5,"MOD":3}},"revalidation_order":["MOD-001","MOD-002","MOD-008","ITP-001-A","ITP-001-B","ITP-002-A","ITP-006-A","ITP-007-A","ARCH-001","ARCH-002","ARCH-008","SYS-001","HAZ-001","HAZ-002"]}
+{
+    "changed_ids": [
+        "REQ-001"
+    ],
+    "direction": "downward",
+    "suspect_artifacts": {
+        "HAZ": [
+            "HAZ-001",
+            "HAZ-002"
+        ],
+        "SYS": [
+            "SYS-001"
+        ],
+        "ARCH": [
+            "ARCH-001",
+            "ARCH-002",
+            "ARCH-008"
+        ],
+        "ITP": [
+            "ITP-001-A",
+            "ITP-001-B",
+            "ITP-002-A",
+            "ITP-006-A",
+            "ITP-007-A"
+        ],
+        "MOD": [
+            "MOD-001",
+            "MOD-002",
+            "MOD-008"
+        ]
+    },
+    "blast_radius": {
+        "total": 14,
+        "by_level": {
+            "HAZ": 2,
+            "SYS": 1,
+            "ARCH": 3,
+            "ITP": 5,
+            "MOD": 3
+        }
+    },
+    "revalidation_order": [
+        "MOD-001",
+        "MOD-002",
+        "MOD-008",
+        "ITP-001-A",
+        "ITP-001-B",
+        "ITP-002-A",
+        "ITP-006-A",
+        "ITP-007-A",
+        "ARCH-001",
+        "ARCH-002",
+        "ARCH-008",
+        "SYS-001",
+        "HAZ-001",
+        "HAZ-002"
+    ]
+}

@@ -1,1 +1,48 @@
-{"changed_ids":["REQ-001"],"direction":"downward","suspect_artifacts":{"SYS":["SYS-001","SYS-002"],"STP":["STP-001-A","STP-002-A"],"ARCH":["ARCH-001","ARCH-002"],"ITP":["ITP-001-A"],"MOD":["MOD-001","MOD-002"]},"blast_radius":{"total":9,"by_level":{"SYS":2,"STP":2,"ARCH":2,"ITP":1,"MOD":2}},"revalidation_order":["MOD-001","MOD-002","ITP-001-A","ARCH-001","ARCH-002","STP-001-A","STP-002-A","SYS-001","SYS-002"]}
+{
+    "changed_ids": [
+        "REQ-001"
+    ],
+    "direction": "downward",
+    "suspect_artifacts": {
+        "SYS": [
+            "SYS-001",
+            "SYS-002"
+        ],
+        "STP": [
+            "STP-001-A",
+            "STP-002-A"
+        ],
+        "ARCH": [
+            "ARCH-001",
+            "ARCH-002"
+        ],
+        "ITP": [
+            "ITP-001-A"
+        ],
+        "MOD": [
+            "MOD-001",
+            "MOD-002"
+        ]
+    },
+    "blast_radius": {
+        "total": 9,
+        "by_level": {
+            "SYS": 2,
+            "STP": 2,
+            "ARCH": 2,
+            "ITP": 1,
+            "MOD": 2
+        }
+    },
+    "revalidation_order": [
+        "MOD-001",
+        "MOD-002",
+        "ITP-001-A",
+        "ARCH-001",
+        "ARCH-002",
+        "STP-001-A",
+        "STP-002-A",
+        "SYS-001",
+        "SYS-002"
+    ]
+}

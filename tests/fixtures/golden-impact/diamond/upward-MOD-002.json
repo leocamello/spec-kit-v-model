@@ -1,1 +1,40 @@
-{"changed_ids":["MOD-002"],"direction":"upward","suspect_artifacts":{"REQ":["REQ-001","REQ-002","REQ-NF-001"],"SYS":["SYS-001","SYS-002","SYS-003"],"ARCH":["ARCH-002","ARCH-003"]},"blast_radius":{"total":8,"by_level":{"REQ":3,"SYS":3,"ARCH":2}},"revalidation_order":["REQ-001","REQ-002","REQ-NF-001","SYS-001","SYS-002","SYS-003","ARCH-002","ARCH-003"]}
+{
+    "changed_ids": [
+        "MOD-002"
+    ],
+    "direction": "upward",
+    "suspect_artifacts": {
+        "REQ": [
+            "REQ-001",
+            "REQ-002",
+            "REQ-NF-001"
+        ],
+        "SYS": [
+            "SYS-001",
+            "SYS-002",
+            "SYS-003"
+        ],
+        "ARCH": [
+            "ARCH-002",
+            "ARCH-003"
+        ]
+    },
+    "blast_radius": {
+        "total": 8,
+        "by_level": {
+            "REQ": 3,
+            "SYS": 3,
+            "ARCH": 2
+        }
+    },
+    "revalidation_order": [
+        "REQ-001",
+        "REQ-002",
+        "REQ-NF-001",
+        "SYS-001",
+        "SYS-002",
+        "SYS-003",
+        "ARCH-002",
+        "ARCH-003"
+    ]
+}

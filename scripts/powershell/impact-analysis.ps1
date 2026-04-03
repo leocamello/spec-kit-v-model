@@ -100,9 +100,19 @@ function Get-IdLevel {
     if ($Id -match '^(REQ|ATP|SCN|SYS|STP|STS|ARCH|ITP|ITS|MOD|UTP|UTS|HAZ)(-[A-Z]+)?') {
         $prefix = $Matches[0]
         switch -Regex ($prefix) {
-            '^REQ' { return "REQ" }
-            '^ATP' { return "ATP" }
-            '^SCN' { return "SCN" }
+            '^REQ'  { return "REQ" }
+            '^ATP'  { return "ATP" }
+            '^SCN'  { return "SCN" }
+            '^SYS'  { return "SYS" }
+            '^STP'  { return "STP" }
+            '^STS'  { return "STS" }
+            '^ARCH' { return "ARCH" }
+            '^ITP'  { return "ITP" }
+            '^ITS'  { return "ITS" }
+            '^MOD'  { return "MOD" }
+            '^UTP'  { return "UTP" }
+            '^UTS'  { return "UTS" }
+            '^HAZ'  { return "HAZ" }
             default { return $Matches[1] }
         }
     }

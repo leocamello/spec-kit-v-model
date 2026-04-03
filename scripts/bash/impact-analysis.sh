@@ -72,10 +72,21 @@ classify_id() {
     local prefix
     prefix=$(echo "$id" | grep -oE '^(REQ|ATP|SCN|SYS|STP|STS|ARCH|ITP|ITS|MOD|UTP|UTS|HAZ)(-[A-Z]+)?' | head -1)
     # Map compound prefixes to base level
+    # Map any compound prefix (e.g., SYS-DR, REQ-NF) to its base level
     case "$prefix" in
-        REQ|REQ-NF|REQ-IF|REQ-CN) echo "REQ" ;;
-        ATP|ATP-NF|ATP-IF|ATP-CN) echo "ATP" ;;
-        SCN|SCN-NF|SCN-IF|SCN-CN) echo "SCN" ;;
+        REQ|REQ-*) echo "REQ" ;;
+        ATP|ATP-*) echo "ATP" ;;
+        SCN|SCN-*) echo "SCN" ;;
+        SYS|SYS-*) echo "SYS" ;;
+        STP|STP-*) echo "STP" ;;
+        STS|STS-*) echo "STS" ;;
+        ARCH|ARCH-*) echo "ARCH" ;;
+        ITP|ITP-*) echo "ITP" ;;
+        ITS|ITS-*) echo "ITS" ;;
+        MOD|MOD-*) echo "MOD" ;;
+        UTP|UTP-*) echo "UTP" ;;
+        UTS|UTS-*) echo "UTS" ;;
+        HAZ|HAZ-*) echo "HAZ" ;;
         *) echo "$prefix" ;;
     esac
 }
@@ -552,31 +563,42 @@ format_json() {
 
         local suspects_json="\"downstream\":{${down_json}},\"upstream\":{${up_json}}"
 
-        # blast_radius
-        local by_level_json=""
-        local down_total
-        down_total=$(compute_blast_total BLAST_DOWN)
-        local up_total
-        up_total=$(compute_blast_total BLAST_UP)
-        local total=$(( down_total + up_total ))
-
-        for level in "${LEVELS_TOP_DOWN[@]}"; do
-            local count=$(( ${BLAST_DOWN[$level]:-0} + ${BLAST_UP[$level]:-0} ))
-            if [[ $count -gt 0 ]]; then
-                [[ -n "$by_level_json" ]] && by_level_json="$by_level_json,"
-                by_level_json="$by_level_json\"$level\":$count"
-            fi
-        done
-
-        # revalidation_order (combine both)
+        # revalidation_order (combine both, deduplicate) — build first to compute unique blast radius
         local order_json=""
+        local -A order_seen
+        local -A unique_blast
+        local unique_total=0
         for id in "${ORDER_DOWN[@]}"; do
+            [[ -n "${order_seen[$id]}" ]] && continue
+            order_seen["$id"]=1
+            local lvl
+            lvl=$(classify_id "$id")
+            unique_blast["$lvl"]=$(( ${unique_blast[$lvl]:-0} + 1 ))
+            unique_total=$(( unique_total + 1 ))
             [[ -n "$order_json" ]] && order_json="$order_json,"
             order_json="$order_json\"$id\""
         done
         for id in "${ORDER_UP[@]}"; do
+            [[ -n "${order_seen[$id]}" ]] && continue
+            order_seen["$id"]=1
+            local lvl
+            lvl=$(classify_id "$id")
+            unique_blast["$lvl"]=$(( ${unique_blast[$lvl]:-0} + 1 ))
+            unique_total=$(( unique_total + 1 ))
             [[ -n "$order_json" ]] && order_json="$order_json,"
             order_json="$order_json\"$id\""
+        done
+
+        # blast_radius (from deduplicated suspects)
+        local by_level_json=""
+        local total=$unique_total
+
+        for level in "${LEVELS_TOP_DOWN[@]}"; do
+            local count=${unique_blast[$level]:-0}
+            if [[ $count -gt 0 ]]; then
+                [[ -n "$by_level_json" ]] && by_level_json="$by_level_json,"
+                by_level_json="$by_level_json\"$level\":$count"
+            fi
         done
 
         printf '{"changed_ids":[%s],"direction":"%s","suspect_artifacts":{%s},"blast_radius":{"total":%d,"by_level":{%s}},"revalidation_order":[%s]}\n' \

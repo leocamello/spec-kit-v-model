@@ -37,6 +37,9 @@ from tests.validators.id_validator import (
 from tests.validators.hazard_validators import (
     validate_all as hazard_validate_all,
 )
+from tests.validators.impact_validators import (
+    validate_all as impact_validate_all,
+)
 
 
 class StructuralIDMetric(BaseMetric):
@@ -679,6 +682,46 @@ class StructuralHazardAnalysisMetric(BaseMetric):
             self.reason = "; ".join(result["issues"][:5])
         else:
             self.reason = f"All hazard analysis structural checks pass ({result['haz_count']} HAZ, {result['row_count']} rows)"
+        return self.score
+
+    def is_successful(self) -> bool:
+        return self.success if self.success is not None else False
+
+
+class StructuralImpactAnalysisMetric(BaseMetric):
+    """Deterministic metric for impact-analysis JSON output validation.
+
+    Checks JSON structure (top-level keys, direction, changed_ids),
+    suspect artifact formats, blast radius consistency,
+    revalidation order integrity, and no self-references.
+    """
+
+    def __init__(self, threshold: float = 1.0):
+        self.threshold = threshold
+        self.score = None
+        self.reason = None
+        self.success = None
+
+    @property
+    def __name__(self):
+        return "Impact Analysis Structural Compliance"
+
+    async def a_measure(self, test_case: LLMTestCase, *args, **kwargs) -> float:
+        return self.measure(test_case)
+
+    def measure(self, test_case: LLMTestCase, *args, **kwargs) -> float:
+        text = test_case.actual_output or ""
+        result = impact_validate_all(text)
+        self.score = result["score"]
+        self.success = self.score >= self.threshold
+        if result["issues"]:
+            self.reason = "; ".join(result["issues"][:5])
+        else:
+            self.reason = (
+                f"All impact analysis checks pass "
+                f"(direction={result['direction']}, "
+                f"blast_total={result['blast_total']})"
+            )
         return self.score
 
     def is_successful(self) -> bool:
