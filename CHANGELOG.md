@@ -5,6 +5,32 @@ All notable changes to the V-Model Extension Pack are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased] — impact-analysis (005b)
+
+### Added
+- `impact-analysis` command — Deterministic change impact analysis that builds a dependency graph from all V-Model markdown artifacts and traverses it to identify suspect artifacts affected by a change
+  - `--downward` mode: trace from requirements to tests/modules (default)
+  - `--upward` mode: trace from modules/tests back to requirements
+  - `--full` mode: bidirectional traversal combining both directions
+  - `--json` flag for CI integration (structured JSON output with blast radius, suspect artifacts by level, re-validation order)
+  - Multi-ID support: analyze impact of multiple changed IDs in a single run
+  - Performance: <2s for 500+ IDs across 10+ artifact files
+- `impact-analysis.sh` / `impact-analysis.ps1` — Bash and PowerShell scripts with awk-based graph parser, BFS traversal, and V-Model level classification
+- `commands/impact-analysis.md` — Command definition with usage examples, exit codes, and quality criteria
+- Impact-specific test fixtures: `linear/` (simple chain), `diamond/` (fan-out/fan-in), `disconnected/` (isolated subgraphs)
+- 17 golden JSON output files across 6 fixture sets × 3 traversal modes
+- Python structural validator (`impact_validators.py`): 8 validation functions (JSON structure, direction, changed IDs, suspect artifacts, blast radius consistency, revalidation order, no self-reference)
+- `StructuralImpactAnalysisMetric` DeepEval metric wrapper
+- 30 evaluation tests: 17 structural, 8 golden comparison, 5 graph property tests
+- 32 BATS tests (`impact-analysis.bats`): all fixtures, all modes, golden comparison, error handling, structural validation, performance
+- 14 Pester tests (`Impact-Analysis.Tests.ps1`): PowerShell parity
+- Dogfooded V-Model artifacts for impact-analysis feature (`specs/005b-impact-analysis/`)
+
+### Changed
+- `classify_id()` in both Bash and PowerShell now maps ALL compound prefixes (e.g., `SYS-DR`, `REQ-DR`) to their base V-Model level, not just `REQ-NF/IF/CN` and `ATP-NF/IF/CN`
+- Documentation updated: README (11 commands, impact-analysis in workflow + Features + Command Reference), compliance-guide (new Change Impact Analysis section, moved from Future to implemented), id-schema-guide (SYS-DR compound prefix, impact-analysis in Incremental Updates), usage-examples (expanded Example 3 with impact-first workflow), product-vision (marked as shipped), v-model-overview (impact-analysis reference), CONTRIBUTING (test counts + fixtures)
+- Total commands: 10 → 11; BATS tests: 117 → 153; Pester tests: 111 → 129; Structural evals: 60 → 89; LLM-as-judge evals: 42 (unchanged)
+
 ## [Unreleased] — hazard-analysis (005a)
 
 ### Added
