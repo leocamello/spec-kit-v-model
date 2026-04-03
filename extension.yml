@@ -54,6 +54,10 @@ provides:
       file: "commands/hazard-analysis.md"
       description: "Generate an ISO 14971/ISO 26262-compliant Hazard Analysis (FMEA) with operational state awareness and traceable HAZ-NNN IDs"
 
+    - name: "speckit.v-model.impact-analysis"
+      file: "commands/impact-analysis.md"
+      description: "Run deterministic impact analysis to identify all V-Model artifacts affected by a change (downward, upward, or full traversal)"
+
     - name: "speckit.v-model.trace"
       file: "commands/trace.md"
       description: "Build a regulatory-grade Traceability Matrix (Matrix A + B + C + D + H: REQ → ATP → SYS → STP → ARCH → ITP → MOD → UTP + HAZ → Mitigation → Verification)"
