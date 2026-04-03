@@ -191,6 +191,8 @@ SYS-002    — AlarmEngine (evaluates thresholds, triggers alarms)
 SYS-003    — ClinicalDashboard (displays real-time vitals)
 ```
 
+The `system-design.md` may also contain a **Derived Requirements** section with `SYS-DR-NNN` identifiers. These are requirements that arise from design decisions rather than original user requirements — a standard V-Model concept required by DO-178C and ISO 26262. The `SYS-DR` prefix classifies to the SYS level for traceability purposes.
+
 ### Test Case: `STP-NNN-X`
 
 STP stands for **System Test Procedure**. Each procedure validates a specific aspect of one system design element using ISO 29119-4 techniques:
@@ -525,6 +527,8 @@ When requirements change after downstream artifacts already exist:
 
 The `diff-requirements.sh` script detects which requirements changed between baselines, enabling surgical regeneration of only the affected downstream artifacts.
 
+The `/speckit.v-model.impact-analysis` command extends this capability across the full V-Model graph. Given any changed ID, it traverses the dependency graph to identify all suspect artifacts — not just direct children, but the complete transitive closure. For example, changing `REQ-003` surfaces suspects at every level: `SYS-NNN`, `ARCH-NNN`, `MOD-NNN`, `HAZ-NNN`, and all associated test artifacts.
+
 ---
 
 ## Cross-Level Traceability: The Four Matrices
@@ -752,7 +756,7 @@ This separation exists because:
 3. **Auditors demand reproducibility.** Running the validation script twice must produce identical results. LLMs are stochastic by nature.
 4. **Scripts are inspectable.** An auditor can read `validate-requirement-coverage.sh`, understand its logic, and trust its output. An LLM's internal reasoning is opaque.
 
-The validation scripts (`validate-requirement-coverage.sh`, `validate-system-coverage.sh`, `validate-architecture-coverage.sh`, `validate-module-coverage.sh`, `validate-hazard-coverage.sh`, `build-matrix.sh`) are themselves tested by 117 BATS tests and 111 Pester tests to ensure they correctly detect gaps, orphans, and coverage violations.
+The validation scripts (`validate-requirement-coverage.sh`, `validate-system-coverage.sh`, `validate-architecture-coverage.sh`, `validate-module-coverage.sh`, `validate-hazard-coverage.sh`, `impact-analysis.sh`, `build-matrix.sh`) are themselves tested by 153 BATS tests and 129 Pester tests to ensure they correctly detect gaps, orphans, coverage violations, and change impact.
 
 ---
 

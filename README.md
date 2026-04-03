@@ -27,6 +27,7 @@ An extension for [GitHub Spec Kit](https://github.com/github/spec-kit) that enfo
 - **`/speckit.v-model.module-design`** — Detailed module design (MOD-NNN) with pseudocode, state machines, data structures, and error handling views
 - **`/speckit.v-model.unit-test`** — Unit test plans (UTP/UTS) with Statement & Branch Coverage, Boundary Value Analysis, State Transition Testing, and strict isolation
 - **`/speckit.v-model.hazard-analysis`** — ISO 14971/26262 Failure Mode and Effects Analysis (FMEA) with `HAZ-NNN` hazard identifiers, operational state awareness, and mitigation traceability
+- **`/speckit.v-model.impact-analysis`** — Deterministic change impact analysis: trace a changed ID downward, upward, or both to identify all suspect artifacts and blast radius across V-Model levels
 - **`/speckit.v-model.trace`** — Build a regulatory-grade Traceability Matrix (Matrix A + B + C + D, plus Matrix H when hazard analysis exists)
 
 ## Installation
@@ -81,9 +82,15 @@ Step 10: /speckit.v-model.trace                →  Matrix A + B + C + H (archit
 Step 11: /speckit.v-model.module-design        →  MOD-NNN modules (pseudocode + state machines)
 Step 12: /speckit.v-model.unit-test            →  UTP/UTS procedures (white-box techniques)
 Step 13: /speckit.v-model.trace                →  Matrix A + B + C + D + H (full traceability)
+
+# On change — run impact analysis to identify suspect artifacts:
+/speckit.v-model.impact-analysis --downward REQ-001   →  Downstream suspects + blast radius
+/speckit.v-model.impact-analysis --upward MOD-004     →  Upstream requirements at risk
 ```
 
 > **Progressive traceability:** The `/speckit.v-model.trace` command is run after each design↔test pair — so coverage gaps are caught at each V-level rather than discovered at the end. Matrix H (hazard traceability) is automatically included when `hazard-analysis.md` exists.
+>
+> **Change impact analysis:** When any artifact changes, run `/speckit.v-model.impact-analysis` to deterministically identify all suspect artifacts across the V-Model before re-generating or re-validating.
 
 **Example — Feature 002: Custom ID Prefix Support**
 
@@ -247,7 +254,17 @@ Reads `module-design.md` and generates `unit-test.md` with `UTP-NNN-X` test proc
 
 Reads `requirements.md` + `system-design.md` (+ optional `architecture-design.md`) and generates `hazard-analysis.md` with `HAZ-NNN` hazard identifiers. Each entry includes Failure Mode, Operational State, Effect, Severity, Likelihood, Risk Level, Mitigation (linked to REQ/SYS IDs), and Residual Risk. Supports progressive deepening — re-running after architecture appends ARCH-level failure modes.
 
-#### 10. Build Traceability Matrix (Step 3/6/9/12)
+#### 10. Impact Analysis (Deterministic)
+
+```bash
+/speckit.v-model.impact-analysis --downward REQ-001 <vmodel-dir>
+/speckit.v-model.impact-analysis --upward MOD-004 <vmodel-dir>
+/speckit.v-model.impact-analysis --full SYS-001 <vmodel-dir>
+```
+
+Uses deterministic scripts (not AI) to build a dependency graph from all V-Model markdown artifacts and traverse it to identify suspect artifacts affected by a change. `--downward` traces from requirements to tests/modules; `--upward` traces from modules/tests to requirements; `--full` combines both directions. Outputs a blast radius summary, suspect artifact list by V-Model level, and a re-validation order. Supports `--json` for CI integration.
+
+#### 11. Build Traceability Matrix (Step 3/6/9/12)
 
 ```bash
 /speckit.v-model.trace
@@ -312,9 +329,9 @@ GOOGLE_API_KEY=... pytest tests/evals/ -m eval -v
 
 | Layer | Tests | What it validates |
 |-------|-------|-------------------|
-| BATS | 117 | Bash script logic (setup, coverage, system coverage, architecture coverage, module coverage, hazard coverage, matrix, diff) |
-| Pester | 111 | PowerShell script parity |
-| Structural evals | 60 | ID format, template conformance, section completeness across all V-levels including hazard analysis |
+| BATS | **153** | Bash script logic (setup, coverage, system coverage, architecture coverage, module coverage, hazard coverage, impact analysis, matrix, diff) |
+| Pester | 129 | PowerShell script parity |
+| Structural evals | 89 | ID format, template conformance, section completeness across all V-levels including hazard analysis and impact analysis |
 | LLM-as-judge evals | 42 | Requirements quality, BDD quality, design quality, hazard analysis quality, traceability (requires API key) |
 
 See [CONTRIBUTING.md](CONTRIBUTING.md#testing) for full details.

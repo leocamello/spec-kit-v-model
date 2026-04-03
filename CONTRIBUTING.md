@@ -80,13 +80,13 @@ spec-kit-v-model/
 │       ├── build-matrix.ps1
 │       └── diff-requirements.ps1
 ├── tests/
-│   ├── bats/               # BATS-core bash unit tests (91 tests)
-│   ├── pester/             # Pester PowerShell unit tests (91 tests)
+│   ├── bats/               # BATS-core bash unit tests (153 tests)
+│   ├── pester/             # Pester PowerShell unit tests (129 tests)
 │   ├── fixtures/           # Shared test data (4 scenarios + malformed + 2 golden examples)
 │   ├── validators/         # Deterministic structural validators (Python)
 │   └── evals/              # DeepEval prompt evaluations
 │       ├── metrics/        # Custom eval metrics (structural + GEval)
-│       ├── test_*_eval.py  # Eval test cases (51 structural + 36 LLM)
+│       ├── test_*_eval.py  # Eval test cases (89 structural + 42 LLM)
 │       └── conftest.py     # Shared pytest fixtures
 ├── docs/                   # Additional documentation
 ├── extension.yml           # Extension manifest
@@ -230,29 +230,33 @@ GOOGLE_API_KEY=... pytest tests/evals/ -m eval -v
 
 | Layer | Framework | Tests | What it validates |
 |-------|-----------|-------|-------------------|
-| **BATS** | bats-core | 91 | Bash script logic: setup, coverage validation, matrix building, diff detection |
-| **Pester** | Pester 5 | 91 | PowerShell script parity with Bash |
-| **Structural evals** | pytest + DeepEval | 51 | ID format/hierarchy, template conformance, BDD scenario completeness |
-| **LLM-as-judge evals** | pytest + DeepEval GEval | 36 | Requirements quality (IEEE 29148), BDD quality, traceability completeness |
+| **BATS** | bats-core | 153 | Bash script logic: setup, coverage validation, impact analysis, matrix building, diff detection |
+| **Pester** | Pester 5 | 129 | PowerShell script parity with Bash |
+| **Structural evals** | pytest + DeepEval | 89 | ID format/hierarchy, template conformance, BDD scenario completeness, impact analysis graph properties |
+| **LLM-as-judge evals** | pytest + DeepEval GEval | 42 | Requirements quality (IEEE 29148), BDD quality, traceability completeness |
 
 ### Test Fixtures
 
-Test fixtures live in `tests/fixtures/` with 4 scenario directories, a malformed set, and 2 golden examples. Each scenario directory contains 8 V-Model fixture files: `requirements.md`, `acceptance-plan.md`, `system-design.md`, `system-test.md`, `architecture-design.md`, `integration-test.md`, `module-design.md`, and `unit-test.md`.
+Test fixtures live in `tests/fixtures/` with 4 scenario directories, a malformed set, 2 golden examples, golden impact outputs, and 3 impact-specific fixture sets. Each scenario directory contains V-Model fixture files (up to 9: `requirements.md`, `acceptance-plan.md`, `system-design.md`, `system-test.md`, `architecture-design.md`, `integration-test.md`, `module-design.md`, `unit-test.md`, and `hazard-analysis.md`).
 
 - **`minimal/`** — 3 REQs, full coverage (baseline happy path)
 - **`gaps/`** — Intentional coverage gap (REQ-NF-001 has no ATP)
 - **`complex/`** — 10 REQs, 6 SYS, 8 ARCH (including 1 CROSS-CUTTING), 8 ITP with 4 techniques + orphaned ATP-999-A
 - **`empty/`** — Empty files for edge case testing
 - **`malformed/`** — Broken ID formats
-- **`golden/medical-device/`** — IEC 62304 blood glucose monitor with expected outputs for all 8 V-Model artifact types (reference quality)
-- **`golden/automotive-adas/`** — ISO 26262 emergency braking system with expected outputs for all 8 V-Model artifact types (reference quality)
+- **`golden/medical-device/`** — IEC 62304 blood glucose monitor with expected outputs for all V-Model artifact types (reference quality)
+- **`golden/automotive-adas/`** — ISO 26262 emergency braking system with expected outputs for all V-Model artifact types (reference quality)
+- **`golden-impact/`** — Expected JSON outputs for impact analysis across all fixture sets and traversal modes
+- **`impact/linear/`** — Simple chain REQ→SYS→ARCH→MOD (tests basic traversal)
+- **`impact/diamond/`** — Fan-out/fan-in topology with cross-cutting component
+- **`impact/disconnected/`** — Two isolated subgraphs (tests traversal boundary isolation)
 
 ### Adding Tests
 
 - **New BATS test**: Add to `tests/bats/` following existing patterns. Use `test_helper.bash` for fixtures.
 - **New Pester test**: Mirror the BATS test in `tests/pester/` for PowerShell parity.
 - **New eval test**: Add to `tests/evals/test_*_eval.py`. Mark with `@pytest.mark.structural` (deterministic) or `@pytest.mark.eval` (LLM).
-- **New fixture**: Add directory under `tests/fixtures/` with all 8 V-Model fixture files: `requirements.md`, `acceptance-plan.md`, `system-design.md`, `system-test.md`, `architecture-design.md`, `integration-test.md`, `module-design.md`, and `unit-test.md`.
+- **New fixture**: Add directory under `tests/fixtures/` with V-Model fixture files. For impact analysis fixtures, add under `tests/fixtures/impact/` with golden JSON outputs under `tests/fixtures/golden-impact/`.
 
 ### CI Pipelines
 

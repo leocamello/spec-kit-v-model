@@ -196,7 +196,7 @@ Matrix H links hazards to their mitigation verification:
 ## When to Use the V-Model
 
 The V-Model is ideal when:
-- **Requirements are well-defined** and unlikely to change significantly
+- **Requirements are well-defined** and unlikely to change significantly (when they do, the `/speckit.v-model.impact-analysis` command identifies all suspect artifacts automatically)
 - **Regulatory compliance** is required (medical, automotive, aerospace, industrial)
 - **Safety is critical** — software failures could harm people or property
 - **Audit trails** are mandatory — you need to prove every requirement was tested

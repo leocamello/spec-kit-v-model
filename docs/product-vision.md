@@ -118,7 +118,7 @@ The V-Model Extension Pack covers four levels of the V-Model (Requirements ↔ A
 The MVP provides universal structural traceability — traceable IDs, bidirectional matrices, and deterministic coverage validation — that satisfies the core traceability requirements of all major safety standards. The regulatory accelerators below will add domain-specific boilerplate and workflows on top of this foundation:
 
 - **Pre-built Regulatory Template Packs** — Domain-specific templates for IEC 62304, ISO 26262, and DO-178C that pre-populate the required sections, terminology, and compliance language for each standard (e.g., automatically inserting ASIL-D or Class C specific verbiage into requirement templates).
-- **Change Impact Analysis** — When a requirement changes, automatically identify every downstream artifact (test cases, scenarios, matrix entries) that requires re-validation. Eliminates the manual "what else does this affect?" search.
+- ~~**Change Impact Analysis**~~ ✅ *Shipped in v0.5.0* — The `/speckit.v-model.impact-analysis` command builds a dependency graph from all V-Model artifacts and traverses it downward, upward, or both to identify all suspect artifacts affected by a change. Supports `--json` for CI integration.
 - ~~**Hazard Analysis Integration**~~ ✅ *Shipped in v0.5.0* — The `/speckit.v-model.hazard-analysis` command generates ISO 14971/26262 FMEA registers with operational state awareness, mitigation traceability, and Matrix H.
 - **Bidirectional ALM Synchronization** — Two-way sync with enterprise ALM platforms (Jama Connect, IBM DOORS, Siemens Polarion), eliminating the risk of fragmented sources of truth between Git and the enterprise system of record.
 

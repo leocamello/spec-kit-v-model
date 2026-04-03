@@ -557,12 +557,58 @@ The acceptance command then generates test cases with automotive-specific scenar
 
 ## Example 3: Handling Requirement Changes
 
-When requirements change after the acceptance plan exists:
+When requirements change after downstream artifacts already exist, start with impact analysis to understand the blast radius:
 
 ```
-# Modify REQ-003: Change alarm threshold from 2.0 seconds to 1.5 seconds
-# (based on updated clinical risk assessment)
+# Step 1: Identify all suspect artifacts before making changes
+/speckit.v-model.impact-analysis --downward REQ-003 specs/feature-001/v-model/
+```
 
+Output:
+```
+## Suspect Artifacts (Downstream of REQ-003)
+
+### SYS
+- SYS-002
+
+### STP
+- STP-002-A
+- STP-002-B
+
+### HAZ
+- HAZ-003
+
+### ARCH
+- ARCH-002
+
+### ITP
+- ITP-002-A
+
+### MOD
+- MOD-002
+
+### UTP
+- UTP-002-A
+
+## Blast Radius
+| Level | Count |
+|-------|-------|
+| SYS   | 1     |
+| STP   | 2     |
+| HAZ   | 1     |
+| ARCH  | 1     |
+| ITP   | 1     |
+| MOD   | 1     |
+| UTP   | 1     |
+| **Total** | **8** |
+```
+
+Now you know exactly which artifacts need re-validation. Proceed with the change:
+
+```
+# Step 2: Modify REQ-003 (change alarm threshold from 2.0 seconds to 1.5 seconds)
+
+# Step 3: Regenerate acceptance tests for the modified requirement
 /speckit.v-model.acceptance
 ```
 
@@ -575,6 +621,14 @@ The command:
 Then re-run trace to update the matrix:
 ```
 /speckit.v-model.trace
+```
+
+For CI integration, use JSON output to enforce blast-radius policies:
+```bash
+# Block merge if blast radius exceeds threshold
+blast=$(impact-analysis.sh --json --downward REQ-003 ./v-model/ \
+  | python3 -c "import json,sys; print(json.load(sys.stdin)['blast_radius']['total'])")
+if [ "$blast" -gt 50 ]; then echo "Change too broad for single PR"; exit 1; fi
 ```
 
 ## Example 4: Handling Coverage Gaps
@@ -616,6 +670,7 @@ This generates the missing ATPs/SCNs for REQ-008, then re-run trace to verify co
 /speckit.v-model.module-design      → Module designs (MOD-NNN, pseudocode + 4 views)
 /speckit.v-model.unit-test          → Unit test procedures + scenarios (UTP/UTS, white-box techniques)
 /speckit.v-model.hazard-analysis    → Hazard register (HAZ-NNN, ISO 14971/26262 FMEA)
+/speckit.v-model.impact-analysis   → Change impact analysis (blast radius, suspect artifacts)
 /speckit.v-model.trace              → Traceability matrix (Matrix A + B + C + D + H audit artifact)
 /speckit.plan                 → Technical implementation plan
 /speckit.tasks                → Task breakdown
