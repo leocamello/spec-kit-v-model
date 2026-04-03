@@ -26,7 +26,8 @@ An extension for [GitHub Spec Kit](https://github.com/github/spec-kit) that enfo
 - **`/speckit.v-model.integration-test`** — ISO 29119-4 integration testing (ITP/ITS) with Interface Contract, Data Flow, Fault Injection, and Concurrency techniques
 - **`/speckit.v-model.module-design`** — Detailed module design (MOD-NNN) with pseudocode, state machines, data structures, and error handling views
 - **`/speckit.v-model.unit-test`** — Unit test plans (UTP/UTS) with Statement & Branch Coverage, Boundary Value Analysis, State Transition Testing, and strict isolation
-- **`/speckit.v-model.trace`** — Build a regulatory-grade Quadruple Traceability Matrix (Matrix A + B + C + D)
+- **`/speckit.v-model.hazard-analysis`** — ISO 14971/26262 Failure Mode and Effects Analysis (FMEA) with `HAZ-NNN` hazard identifiers, operational state awareness, and mitigation traceability
+- **`/speckit.v-model.trace`** — Build a regulatory-grade Traceability Matrix (Matrix A + B + C + D, plus Matrix H when hazard analysis exists)
 
 ## Installation
 
@@ -72,16 +73,17 @@ Step 2: /speckit.v-model.acceptance            →  Paired ATP + SCN with 100% c
 Step 3: /speckit.v-model.trace                 →  Matrix A (requirements ↔ acceptance)
 Step 4: /speckit.v-model.system-design         →  SYS-NNN components (IEEE 1016 views)
 Step 5: /speckit.v-model.system-test           →  STP/STS procedures (ISO 29119-4)
-Step 6: /speckit.v-model.trace                 →  Matrix A + B (+ system verification)
-Step 7: /speckit.v-model.architecture-design   →  ARCH-NNN modules (IEEE 42010/4+1)
-Step 8: /speckit.v-model.integration-test      →  ITP/ITS procedures (ISO 29119-4)
-Step 9: /speckit.v-model.trace                 →  Matrix A + B + C (architecture traceability)
-Step 10: /speckit.v-model.module-design        →  MOD-NNN modules (pseudocode + state machines)
-Step 11: /speckit.v-model.unit-test            →  UTP/UTS procedures (white-box techniques)
-Step 12: /speckit.v-model.trace                →  Matrix A + B + C + D (full traceability)
+Step 6: /speckit.v-model.hazard-analysis       →  HAZ-NNN hazards (ISO 14971/26262 FMEA)
+Step 7: /speckit.v-model.trace                 →  Matrix A + B + H (+ hazard traceability)
+Step 8: /speckit.v-model.architecture-design   →  ARCH-NNN modules (IEEE 42010/4+1)
+Step 9: /speckit.v-model.integration-test      →  ITP/ITS procedures (ISO 29119-4)
+Step 10: /speckit.v-model.trace                →  Matrix A + B + C + H (architecture traceability)
+Step 11: /speckit.v-model.module-design        →  MOD-NNN modules (pseudocode + state machines)
+Step 12: /speckit.v-model.unit-test            →  UTP/UTS procedures (white-box techniques)
+Step 13: /speckit.v-model.trace                →  Matrix A + B + C + D + H (full traceability)
 ```
 
-> **Progressive traceability:** The `/speckit.v-model.trace` command is run four times — after each design↔test pair — so coverage gaps are caught at each V-level rather than discovered at the end.
+> **Progressive traceability:** The `/speckit.v-model.trace` command is run after each design↔test pair — so coverage gaps are caught at each V-level rather than discovered at the end. Matrix H (hazard traceability) is automatically included when `hazard-analysis.md` exists.
 
 **Example — Feature 002: Custom ID Prefix Support**
 
@@ -104,25 +106,28 @@ Step 12: /speckit.v-model.trace                →  Matrix A + B + C + D (full t
 # 5. Generate system test procedures (ISO 29119-4 techniques)
 /speckit.v-model.system-test
 
-# 6. Build traceability matrix (Matrix A + B: + system verification)
+# 6. Generate hazard analysis (ISO 14971/26262 FMEA)
+/speckit.v-model.hazard-analysis
+
+# 7. Build traceability matrix (Matrix A + B + H: + system & hazard verification)
 /speckit.v-model.trace
 
-# 7. Generate architecture design (IEEE 42010/Kruchten 4+1 views)
+# 8. Generate architecture design (IEEE 42010/Kruchten 4+1 views)
 /speckit.v-model.architecture-design
 
-# 8. Generate integration tests (ISO 29119-4 integration techniques)
+# 9. Generate integration tests (ISO 29119-4 integration techniques)
 /speckit.v-model.integration-test
 
-# 9. Build traceability matrix (Matrix A + B + C: architecture traceability)
+# 10. Build traceability matrix (Matrix A + B + C + H: architecture traceability)
 /speckit.v-model.trace
 
-# 10. Generate module design (pseudocode, state machines, data structures)
+# 11. Generate module design (pseudocode, state machines, data structures)
 /speckit.v-model.module-design
 
-# 11. Generate unit test plan (white-box techniques, strict isolation)
+# 12. Generate unit test plan (white-box techniques, strict isolation)
 /speckit.v-model.unit-test
 
-# 12. Build traceability matrix (Matrix A + B + C + D: full traceability)
+# 13. Build traceability matrix (Matrix A + B + C + D + H: full traceability)
 /speckit.v-model.trace
 
 # After: continue with spec-kit core
@@ -139,11 +144,12 @@ specs/{feature}/v-model/
 ├── acceptance-plan.md           →  ATP + SCN test cases
 ├── system-design.md             →  SYS-NNN components
 ├── system-test.md               →  STP/STS procedures
+├── hazard-analysis.md           →  HAZ-NNN hazards (FMEA register)
 ├── architecture-design.md       →  ARCH-NNN modules
 ├── integration-test.md          →  ITP/ITS procedures
 ├── module-design.md             →  MOD-NNN detailed modules
 ├── unit-test.md                 →  UTP/UTS unit test procedures
-└── traceability-matrix.md       →  Matrix A + B + C + D
+└── traceability-matrix.md       →  Matrix A + B + C + D + H
 ```
 
 ### Key Principle: Scripts Verify, AI Generates
@@ -159,7 +165,8 @@ calculations are performed by **deterministic scripts**:
 | Validate system design ↔ system test coverage | `validate-system-coverage.sh` | Deterministic — SYS→STP→STS cross-reference |
 | Validate architecture ↔ integration coverage | `validate-architecture-coverage.sh` | Deterministic — ARCH→ITP→ITS cross-reference |
 | Validate module ↔ unit test coverage | `validate-module-coverage.sh` | Deterministic — ARCH→MOD→UTP→UTS cross-reference |
-| Build traceability matrix | `build-matrix.sh` | Deterministic — audit-grade accuracy, 4 matrices |
+| Validate hazard ↔ system coverage | `validate-hazard-coverage.sh` | Deterministic — SYS→HAZ forward, HAZ→REQ/SYS backward, state consistency |
+| Build traceability matrix | `build-matrix.sh` | Deterministic — audit-grade accuracy, up to 5 matrices (A–D + H) |
 | Detect requirement changes | `diff-requirements.sh` | Deterministic — git-based diff |
 
 ### Command Reference
@@ -232,13 +239,21 @@ Reads `architecture-design.md` and generates `module-design.md` with `MOD-NNN` m
 
 Reads `module-design.md` and generates `unit-test.md` with `UTP-NNN-X` test procedures and `UTS-NNN-X#` scenarios. Uses white-box techniques (Statement & Branch Coverage, Boundary Value Analysis, State Transition Testing, Equivalence Partitioning) with strict isolation — every external dependency is mocked via Dependency & Mock Registries.
 
-#### 9. Build Traceability Matrix (Step 3/6/9/12)
+#### 9. Hazard Analysis (Cross-Cutting)
+
+```bash
+/speckit.v-model.hazard-analysis
+```
+
+Reads `requirements.md` + `system-design.md` (+ optional `architecture-design.md`) and generates `hazard-analysis.md` with `HAZ-NNN` hazard identifiers. Each entry includes Failure Mode, Operational State, Effect, Severity, Likelihood, Risk Level, Mitigation (linked to REQ/SYS IDs), and Residual Risk. Supports progressive deepening — re-running after architecture appends ARCH-level failure modes.
+
+#### 10. Build Traceability Matrix (Step 3/6/9/12)
 
 ```bash
 /speckit.v-model.trace
 ```
 
-Uses deterministic scripts (not AI) to build a regulatory-grade quadruple matrix. Run progressively — after acceptance for Matrix A, after system-test for A+B, after integration-test for A+B+C, after unit-test for A+B+C+D.
+Uses deterministic scripts (not AI) to build a regulatory-grade traceability matrix. Run progressively — after acceptance for Matrix A, after system-test for A+B, after integration-test for A+B+C, after unit-test for A+B+C+D. When `hazard-analysis.md` exists, Matrix H (Hazard Traceability: HAZ → Mitigation → Verification) is automatically appended.
 
 ## ID Schema
 
@@ -250,6 +265,7 @@ The ID scheme encodes traceability directly in the identifier:
 | System ↔ System Test | `SYS-NNN` | `STP-NNN-X` | `STS-NNN-X#` | B |
 | Architecture ↔ Integration | `ARCH-NNN` | `ITP-NNN-X` | `ITS-NNN-X#` | C |
 | Module ↔ Unit Test | `MOD-NNN` | `UTP-NNN-X` | `UTS-NNN-X#` | D |
+| Hazard ↔ Mitigation (cross-cutting) | `HAZ-NNN` | — | — | H |
 
 Category prefixes: `NF` (Non-Functional), `IF` (Interface), `CN` (Constraint). Functional requirements have no prefix (e.g., `REQ-NF-001`, `ATP-NF-001-A`).
 
@@ -296,10 +312,10 @@ GOOGLE_API_KEY=... pytest tests/evals/ -m eval -v
 
 | Layer | Tests | What it validates |
 |-------|-------|-------------------|
-| BATS | 91 | Bash script logic (setup, coverage, system coverage, architecture coverage, module coverage, matrix, diff) |
-| Pester | 91 | PowerShell script parity |
-| Structural evals | 51 | ID format, template conformance, section completeness across all V-levels |
-| LLM-as-judge evals | 36 | Requirements quality, BDD quality, design quality, traceability (requires API key) |
+| BATS | 117 | Bash script logic (setup, coverage, system coverage, architecture coverage, module coverage, hazard coverage, matrix, diff) |
+| Pester | 111 | PowerShell script parity |
+| Structural evals | 60 | ID format, template conformance, section completeness across all V-levels including hazard analysis |
+| LLM-as-judge evals | 42 | Requirements quality, BDD quality, design quality, hazard analysis quality, traceability (requires API key) |
 
 See [CONTRIBUTING.md](CONTRIBUTING.md#testing) for full details.
 

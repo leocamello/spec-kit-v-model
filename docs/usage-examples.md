@@ -405,7 +405,7 @@ Run after acceptance for Matrix A, after system-test for A+B, after integration-
 
   MATRIX D STATUS: ✅ COMPLIANT
 
-  OVERALL STATUS: ✅ COMPLIANT (all four matrices)
+  OVERALL STATUS: ✅ COMPLIANT (all matrices)
 ══════════════════════════════════════════════
 ```
 
@@ -615,7 +615,8 @@ This generates the missing ATPs/SCNs for REQ-008, then re-run trace to verify co
 /speckit.v-model.integration-test   → Integration test procedures + steps (ITP/ITS, ISO 29119-4 techniques)
 /speckit.v-model.module-design      → Module designs (MOD-NNN, pseudocode + 4 views)
 /speckit.v-model.unit-test          → Unit test procedures + scenarios (UTP/UTS, white-box techniques)
-/speckit.v-model.trace              → Quadruple traceability matrix (Matrix A + B + C + D audit artifact)
+/speckit.v-model.hazard-analysis    → Hazard register (HAZ-NNN, ISO 14971/26262 FMEA)
+/speckit.v-model.trace              → Traceability matrix (Matrix A + B + C + D + H audit artifact)
 /speckit.plan                 → Technical implementation plan
 /speckit.tasks                → Task breakdown
 /speckit.implement            → Code generation

@@ -10,3 +10,11 @@
 | SYS-004 | Storage Manager | Persists data with encryption | REQ-004, REQ-NF-002, REQ-CN-001 | Service |
 | SYS-005 | REST API Gateway | Exposes query API | REQ-005 | Service |
 | SYS-006 | Metrics Exporter | Exposes Prometheus metrics | REQ-IF-002 | Utility |
+
+## Operational States
+
+| State | Description |
+|-------|------------|
+| NORMAL | Standard operation with all data sources connected |
+| DEGRADED | One or more data sources unavailable; system operates on partial data |
+| MAINTENANCE | System undergoing planned maintenance; reduced functionality |

@@ -34,6 +34,9 @@ from tests.validators.id_validator import (
     extract_ids as id_extract_ids,
     validate_mod_hierarchy,
 )
+from tests.validators.hazard_validators import (
+    validate_all as hazard_validate_all,
+)
 
 
 class StructuralIDMetric(BaseMetric):
@@ -639,6 +642,43 @@ class StructuralUnitTestMetric(BaseMetric):
             self.reason = "; ".join(issues[:5])
         else:
             self.reason = "All unit test structural checks pass"
+        return self.score
+
+    def is_successful(self) -> bool:
+        return self.success if self.success is not None else False
+
+
+class StructuralHazardAnalysisMetric(BaseMetric):
+    """Deterministic metric for hazard analysis (FMEA) structural validation.
+
+    Checks HAZ-NNN ID format, sequential numbering, required sections,
+    FMEA table fields (severity/likelihood/risk), mitigation references,
+    and optional SYS component coverage.
+    """
+
+    def __init__(self, threshold: float = 0.95, system_design_text: str | None = None):
+        self.threshold = threshold
+        self.system_design_text = system_design_text
+        self.score = None
+        self.reason = None
+        self.success = None
+
+    @property
+    def __name__(self):
+        return "Hazard Analysis Structural Compliance"
+
+    async def a_measure(self, test_case: LLMTestCase, *args, **kwargs) -> float:
+        return self.measure(test_case)
+
+    def measure(self, test_case: LLMTestCase, *args, **kwargs) -> float:
+        text = test_case.actual_output or ""
+        result = hazard_validate_all(text, self.system_design_text)
+        self.score = result["score"]
+        self.success = self.score >= self.threshold
+        if result["issues"]:
+            self.reason = "; ".join(result["issues"][:5])
+        else:
+            self.reason = f"All hazard analysis structural checks pass ({result['haz_count']} HAZ, {result['row_count']} rows)"
         return self.score
 
     def is_successful(self) -> bool:

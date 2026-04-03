@@ -5,6 +5,30 @@ All notable changes to the V-Model Extension Pack are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased] — hazard-analysis (005a)
+
+### Added
+- `hazard-analysis` command — ISO 14971/26262 Failure Mode and Effects Analysis (FMEA) with `HAZ-NNN` hazard identifiers, operational state awareness, severity × likelihood risk matrix, mitigation traceability to REQ/SYS IDs, and progressive deepening (append-only at architecture level)
+- `hazard-analysis-template.md` — FMEA table template with 10 columns (HAZ ID, Component, Failure Mode, Operational State, Effect, Severity, Likelihood, Risk Level, Mitigation, Residual Risk)
+- `validate-hazard-coverage.sh` / `validate-hazard-coverage.ps1` — Three-dimensional deterministic validator: forward (SYS→HAZ), backward (HAZ→REQ/SYS), and operational state consistency checks with `--partial` and `--json` flags
+- Matrix H (Hazard Traceability) in traceability matrix — HAZ → Mitigation → Verification linkage
+- HAZ-NNN ID pattern in `id_validator.py`
+- Hazard analysis fixtures: minimal (5 HAZ), complex (12 HAZ, 3 states), gaps (3 HAZ, intentional coverage gaps), golden/automotive-adas (15 HAZ, ISO 26262, 5 states), golden/medical-device (12 HAZ, ISO 14971, 4 states)
+- Python structural validator (`hazard_validators.py`): FMEA row parsing, HAZ ID validation, severity/likelihood/risk scale checks, SYS coverage, mitigation reference validation
+- `StructuralHazardAnalysisMetric` DeepEval metric wrapper
+- 3 LLM-as-judge GEval metrics: FMEA completeness, severity assessment quality, operational state coverage
+- 9 structural + 6 LLM-as-judge evaluation tests
+- 26 BATS tests (`validate-hazard-coverage.bats`)
+- 20 Pester tests (`Validate-Hazard-Coverage.Tests.ps1`)
+- Dogfooded V-Model artifacts for hazard-analysis feature (`specs/005a-hazard-analysis/`)
+
+### Changed
+- `build-matrix.sh` / `build-matrix.ps1` extended with Matrix H generation block (auto-detected when hazard-analysis.md exists)
+- `trace.md` updated for five-matrix output (A + B + C + D + H)
+- Complex and golden system-design fixtures updated with Operational States sections
+- Documentation updated: README (10 commands, 13-step workflow, Matrix H), id-schema-guide (13 ID types), compliance-guide (Section 8: Hazard Analysis, Matrix H), v-model-overview (Hazard Analysis section), usage-examples, product-vision, CONTRIBUTING
+- Total commands: 9 → 10; BATS tests: 91 → 117; Pester tests: 91 → 111; Structural evals: 51 → 60; LLM-as-judge evals: 36 → 42
+
 ## [0.4.0] — 2026-02-22
 
 ### Added

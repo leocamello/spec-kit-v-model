@@ -15,7 +15,7 @@ A self-documenting ID schema eliminates the need for lookup tables. Reading `SCN
 
 No database query needed. No cross-referencing spreadsheets. The ID itself encodes the full lineage.
 
-This same principle applies at every level of the V-Model — from requirements all the way down to unit test scenarios. The result is a four-tier hierarchy of 12 ID types that form an unbroken chain of custody from *what was specified* to *how it was verified*.
+This same principle applies at every level of the V-Model — from requirements all the way down to unit test scenarios. The result is a four-tier hierarchy of 12 ID types, plus a cross-cutting hazard prefix, that form an unbroken chain of custody from *what was specified* to *how it was verified*.
 
 ## The Four-Tier ID Hierarchy — Overview
 
@@ -25,6 +25,7 @@ This same principle applies at every level of the V-Model — from requirements 
 | System Design ↔ System Test | `SYS-NNN` | `STP-NNN-X` | `STS-NNN-X#` | B |
 | Architecture ↔ Integration Test | `ARCH-NNN` | `ITP-NNN-X` | `ITS-NNN-X#` | C |
 | Module Design ↔ Unit Test | `MOD-NNN` | `UTP-NNN-X` | `UTS-NNN-X#` | D |
+| Hazard Analysis (cross-cutting) | `HAZ-NNN` | — | — | H |
 
 **Format conventions** (consistent across all levels):
 
@@ -528,7 +529,7 @@ The `diff-requirements.sh` script detects which requirements changed between bas
 
 ## Cross-Level Traceability: The Four Matrices
 
-The `/speckit.v-model.trace` command builds all four matrices in a single consolidated report. Each matrix validates traceability within its level (via intra-level ID links) and between levels (via explicit parent fields).
+The `/speckit.v-model.trace` command builds all four structural matrices plus Matrix H (when hazard analysis exists) in a single consolidated report. Each matrix validates traceability within its level (via intra-level ID links) and between levels (via explicit parent fields).
 
 ### Matrix A — Requirements → Acceptance Testing
 
@@ -751,11 +752,11 @@ This separation exists because:
 3. **Auditors demand reproducibility.** Running the validation script twice must produce identical results. LLMs are stochastic by nature.
 4. **Scripts are inspectable.** An auditor can read `validate-requirement-coverage.sh`, understand its logic, and trust its output. An LLM's internal reasoning is opaque.
 
-The validation scripts (`validate-requirement-coverage.sh`, `validate-system-coverage.sh`, `validate-architecture-coverage.sh`, `validate-module-coverage.sh`, `build-matrix.sh`) are themselves tested by 91 BATS tests and 91 Pester tests to ensure they correctly detect gaps, orphans, and coverage violations.
+The validation scripts (`validate-requirement-coverage.sh`, `validate-system-coverage.sh`, `validate-architecture-coverage.sh`, `validate-module-coverage.sh`, `validate-hazard-coverage.sh`, `build-matrix.sh`) are themselves tested by 117 BATS tests and 111 Pester tests to ensure they correctly detect gaps, orphans, and coverage violations.
 
 ---
 
-## Summary of All 12 ID Types
+## Summary of All 13 ID Types
 
 | ID | Full Name | Format | Example | Intra-Level Parent | Inter-Level Parent | Level |
 |----|-----------|--------|---------|--------------------|--------------------|-------|
@@ -765,6 +766,7 @@ The validation scripts (`validate-requirement-coverage.sh`, `validate-system-cov
 | `SYS` | System Design Element | `SYS-NNN` | `SYS-002` | — | `REQ` (via `Parent Requirements`) | 2 |
 | `STP` | System Test Procedure | `STP-NNN-X` | `STP-002-A` | `SYS` (via `NNN`) | — | 2 |
 | `STS` | System Test Step | `STS-NNN-X#` | `STS-002-A2` | `STP` (via `NNN-X`) | — | 2 |
+| `HAZ` | Hazard (FMEA) | `HAZ-NNN` | `HAZ-005` | — | `SYS` (via FMEA Component column) | H |
 | `ARCH` | Architecture Element | `ARCH-NNN` | `ARCH-005` | — | `SYS` (via `Parent System Components`) | 3 |
 | `ITP` | Integration Test Procedure | `ITP-NNN-X` | `ITP-005-A` | `ARCH` (via `NNN`) | — | 3 |
 | `ITS` | Integration Test Step | `ITS-NNN-X#` | `ITS-005-A1` | `ITP` (via `NNN-X`) | — | 3 |

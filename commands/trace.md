@@ -1,5 +1,5 @@
 ---
-description: Build a regulatory-grade Bidirectional Traceability Matrix with quadruple-matrix output (Matrix A Validation + Matrix B System Verification + Matrix C Integration Verification + Matrix D Implementation Verification) and coverage audit.
+description: Build a regulatory-grade Bidirectional Traceability Matrix with five-matrix output (Matrix A Validation + Matrix B System Verification + Matrix C Integration Verification + Matrix D Implementation Verification + Matrix H Hazard Traceability) and coverage audit.
 handoffs:
   - label: Fix Coverage Gaps
     agent: speckit.v-model.acceptance
@@ -108,15 +108,17 @@ The script:
 5. **If `system-design.md` and `system-test.md` exist**, generates Matrix B (Verification) alongside Matrix A (Validation) — parsing SYS components from the Decomposition View and STP/STS test cases
 6. **If `architecture-design.md` and `integration-test.md` exist**, generates Matrix C (Integration Verification) — parsing ARCH modules from the Logical View and ITP/ITS test cases
 7. **If `module-design.md` exists (with `architecture-design.md`)**, generates Matrix D (Implementation Verification) — parsing MOD modules and their parent ARCH mappings; if `unit-test.md` also exists, includes UTP/UTS test cases
-8. Generates the complete traceability matrix with coverage metrics
-9. Writes output to `{VMODEL_DIR}/traceability-matrix.md`
+8. **If `hazard-analysis.md` exists (with `system-design.md`)**, generates Matrix H (Hazard Traceability) — parsing HAZ entries, their mitigations (REQ/SYS), and resolving to verification test cases (ATP/STP)
+9. Generates the complete traceability matrix with coverage metrics
+10. Writes output to `{VMODEL_DIR}/traceability-matrix.md`
 
-**Quadruple-matrix output (v0.4.0+):**
+**Five-matrix output (v0.5.0+):**
 - **Matrix A — Validation (User View):** REQ → ATP → SCN. Always present.
 - **Matrix B — Verification (Architectural View):** REQ → SYS → STP → STS. Only present when system-level artifacts exist.
 - **Matrix C — Integration Verification (Module Boundary View):** SYS → ARCH → ITP → ITS. Only present when architecture-level artifacts exist. Includes parent REQ annotations in SYS column and CROSS-CUTTING pseudo-rows.
 - **Matrix D — Implementation Verification (Module View):** ARCH → MOD → UTP → UTS. Only present when module-design.md and architecture-design.md exist. Each ARCH cell includes parent SYS identifiers in parentheses; `[CROSS-CUTTING]` modules display `([CROSS-CUTTING])` instead of SYS lineage; `[EXTERNAL]` modules display bypass annotations. If unit-test.md is absent, UTP/UTS columns show "⏳ Pending".
-- Backward compatible: v0.1.0 feature directories (no system artifacts) produce Matrix A only; v0.2.0 directories produce Matrix A + B; v0.3.0 directories produce Matrix A + B + C.
+- **Matrix H — Hazard Traceability:** HAZ → Mitigation (REQ/SYS) → Verification (ATP/STP). Only present when hazard-analysis.md and system-design.md exist. Gaps where a mitigation has no test coverage show "⚠️ No test coverage".
+- Backward compatible: v0.1.0 feature directories (no system artifacts) produce Matrix A only; v0.2.0 produce A + B; v0.3.0 produce A + B + C; v0.4.0 produce A + B + C + D; projects without hazard-analysis.md omit Matrix H.
 
 ### 3. Present Results (3 Sections)
 
