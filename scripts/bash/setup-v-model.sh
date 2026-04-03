@@ -110,13 +110,21 @@ find_feature_dir() {
     local repo_root="$1"
     local branch="$2"
     local specs_dir="$repo_root/specs"
-    if [[ "$branch" =~ ^([0-9]{3})- ]]; then
+
+    # Strip common branch prefixes (feature/, bugfix/, hotfix/)
+    local clean_branch="$branch"
+    clean_branch="${clean_branch#feature/}"
+    clean_branch="${clean_branch#bugfix/}"
+    clean_branch="${clean_branch#hotfix/}"
+
+    # Match NNN- or NNNx- patterns (e.g., 005-, 005a-, 005b-)
+    if [[ "$clean_branch" =~ ^([0-9]{3}[a-z]?)- ]]; then
         local prefix="${BASH_REMATCH[1]}"
         for dir in "$specs_dir"/"$prefix"-*; do
             [[ -d "$dir" ]] && echo "$dir" && return
         done
     fi
-    echo "$specs_dir/$branch"
+    echo "$specs_dir/$clean_branch"
 }
 
 REPO_ROOT=$(get_repo_root)

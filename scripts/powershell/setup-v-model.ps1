@@ -102,14 +102,19 @@ function Find-FeatureDir {
     param([string]$RepoRoot, [string]$Branch)
 
     $specsDir = Join-Path $RepoRoot 'specs'
-    if ($Branch -match '^(\d{3})-') {
+
+    # Strip common branch prefixes (feature/, bugfix/, hotfix/)
+    $cleanBranch = $Branch -replace '^(feature|bugfix|hotfix)/', ''
+
+    # Match NNN- or NNNx- patterns (e.g., 005-, 005a-, 005b-)
+    if ($cleanBranch -match '^(\d{3}[a-z]?)-') {
         $prefix = $Matches[1]
         $candidates = Get-ChildItem -Path $specsDir -Directory -Filter "$prefix-*" -ErrorAction SilentlyContinue
         if ($candidates) {
             return $candidates[0].FullName
         }
     }
-    return Join-Path $specsDir $Branch
+    return Join-Path $specsDir $cleanBranch
 }
 
 $RepoRoot = Get-RepoRoot
