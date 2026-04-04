@@ -319,22 +319,37 @@ if ($Json) {
             upstream = $upSuspects
         }
 
-        $downTotal = Get-BlastTotal $downResult.Blast
-        $upTotal = Get-BlastTotal $upResult.Blast
-        $total = $downTotal + $upTotal
+        # Deduplicate: IDs appearing in both downstream and upstream count once
+        $orderSeen = @{}
+        $combinedOrder = @()
+        $uniqueBlast = @{}
+        $uniqueTotal = 0
+        foreach ($id in $downResult.Order) {
+            if ($orderSeen.ContainsKey($id)) { continue }
+            $orderSeen[$id] = $true
+            $combinedOrder += $id
+            $lvl = Get-IdLevel $id
+            if (-not $uniqueBlast.ContainsKey($lvl)) { $uniqueBlast[$lvl] = 0 }
+            $uniqueBlast[$lvl]++
+            $uniqueTotal++
+        }
+        foreach ($id in $upResult.Order) {
+            if ($orderSeen.ContainsKey($id)) { continue }
+            $orderSeen[$id] = $true
+            $combinedOrder += $id
+            $lvl = Get-IdLevel $id
+            if (-not $uniqueBlast.ContainsKey($lvl)) { $uniqueBlast[$lvl] = 0 }
+            $uniqueBlast[$lvl]++
+            $uniqueTotal++
+        }
 
         $byLevel = @{}
         foreach ($level in $LevelsTopDown) {
-            $count = 0
-            if ($downResult.Blast.ContainsKey($level)) { $count += $downResult.Blast[$level] }
-            if ($upResult.Blast.ContainsKey($level)) { $count += $upResult.Blast[$level] }
-            if ($count -gt 0) { $byLevel[$level] = $count }
+            if ($uniqueBlast.ContainsKey($level) -and $uniqueBlast[$level] -gt 0) {
+                $byLevel[$level] = $uniqueBlast[$level]
+            }
         }
-        $result["blast_radius"] = @{ total = $total; by_level = $byLevel }
-
-        $combinedOrder = @()
-        $combinedOrder += $downResult.Order
-        $combinedOrder += $upResult.Order
+        $result["blast_radius"] = @{ total = $uniqueTotal; by_level = $byLevel }
         $result["revalidation_order"] = $combinedOrder
 
     } else {
