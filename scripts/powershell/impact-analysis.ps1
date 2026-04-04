@@ -51,6 +51,9 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+# Normalize -Ids: when called via `pwsh -File`, comma-separated values arrive as a single string
+$Ids = @($Ids | ForEach-Object { $_ -split ',' } | Where-Object { $_ -ne '' })
+
 # V-Model level ordering
 $LevelsTopDown = @("REQ","ATP","SCN","HAZ","SYS","STP","STS","ARCH","ITP","ITS","MOD","UTP","UTS")
 $LevelsBottomUp = @("UTS","UTP","MOD","ITS","ITP","ARCH","STS","STP","SYS","HAZ","SCN","ATP","REQ")
