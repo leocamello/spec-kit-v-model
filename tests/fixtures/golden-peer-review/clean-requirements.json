@@ -1,0 +1,17 @@
+{
+  "review_file": "tests/fixtures/golden-peer-review/clean-requirements.md",
+  "artifact": "requirements.md (10 requirements)",
+  "standard": "INCOSE Guide for Writing Requirements",
+  "critical": 0,
+  "major": 0,
+  "minor": 0,
+  "observation": 0,
+  "total": 0,
+  "prf_headings": 0,
+  "prf_critical": 0,
+  "prf_major": 0,
+  "prf_minor": 0,
+  "prf_observation": 0,
+  "summary_match": true,
+  "exit_code": 0
+}
