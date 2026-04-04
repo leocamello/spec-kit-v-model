@@ -144,7 +144,7 @@ function Add-Edge {
 foreach ($file in $mdFiles) {
     $owner = ""
     foreach ($line in (Get-Content $file.FullName)) {
-        $lineIds = [regex]::Matches($line, $IdPattern) | ForEach-Object { $_.Value }
+        $lineIds = @([regex]::Matches($line, $IdPattern) | ForEach-Object { $_.Value })
         if ($lineIds.Count -eq 0) { continue }
 
         foreach ($lid in $lineIds) {
