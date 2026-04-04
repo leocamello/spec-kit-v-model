@@ -12,6 +12,12 @@ Describe 'Validate-HazardCoverage' {
             $LASTEXITCODE | Should -Be 0
         }
 
+        It 'shows success message with Forward Coverage' {
+            $output = & pwsh -NoProfile -File "$ScriptsDir/validate-hazard-coverage.ps1" "$FixturesDir/minimal" 2>&1
+            $LASTEXITCODE | Should -Be 0
+            ($output -join "`n") | Should -Match 'Forward Coverage'
+        }
+
         It 'JSON shows has_gaps false' {
             $output = & pwsh -NoProfile -File "$ScriptsDir/validate-hazard-coverage.ps1" -Json "$FixturesDir/minimal" 2>&1
             $LASTEXITCODE | Should -Be 0
@@ -112,6 +118,11 @@ Describe 'Validate-HazardCoverage' {
             $json = $output | ConvertFrom-Json
             $json.state_warnings | Should -Contain 'EMERGENCY'
         }
+
+        It 'detects backward gap (HAZ-002)' {
+            $output = & pwsh -NoProfile -File "$ScriptsDir/validate-hazard-coverage.ps1" "$FixturesDir/gaps" 2>&1
+            ($output -join "`n") | Should -Match 'HAZ-002'
+        }
     }
 
     Context 'Partial mode' {
@@ -123,11 +134,22 @@ Describe 'Validate-HazardCoverage' {
             $LASTEXITCODE | Should -Be 0
             Remove-Item -Recurse -Force $tempDir
         }
+
+        It '--Partial JSON shows partial_mode true' {
+            $tempDir = New-TemporaryFile | ForEach-Object { Remove-Item $_; New-Item -ItemType Directory -Path $_ }
+            Copy-Item "$FixturesDir/minimal/hazard-analysis.md" "$tempDir/"
+            Copy-Item "$FixturesDir/minimal/system-design.md" "$tempDir/"
+            $output = & pwsh -NoProfile -File "$ScriptsDir/validate-hazard-coverage.ps1" -Partial -Json "$tempDir" 2>&1
+            $LASTEXITCODE | Should -Be 0
+            $json = $output | ConvertFrom-Json
+            $json.partial_mode | Should -Be $true
+            Remove-Item -Recurse -Force $tempDir
+        }
     }
 
     Context 'Error handling' {
         It 'exits 1 when no arguments' {
-            & pwsh -NoProfile -File "$ScriptsDir/validate-hazard-coverage.ps1" 2>&1 | Out-Null
+            & pwsh -NoProfile -NonInteractive -File "$ScriptsDir/validate-hazard-coverage.ps1" 2>&1 | Out-Null
             $LASTEXITCODE | Should -Be 1
         }
 
@@ -165,6 +187,25 @@ Describe 'Build-Matrix: Matrix H' {
             $count | Should -Be 5
             Remove-Item $tempFile
         }
+
+        It 'Matrix H coverage is 100%' {
+            $tempFile = New-TemporaryFile
+            & pwsh -NoProfile -File "$ScriptsDir/build-matrix.ps1" -Output $tempFile "$FixturesDir/minimal" 2>&1 | Out-Null
+            $content = Get-Content $tempFile -Raw
+            $content | Should -Match '5/5 \(100%\)'
+            Remove-Item $tempFile
+        }
+    }
+
+    Context 'Complex fixture' {
+        It 'Matrix H has 12 HAZ entries' {
+            $tempFile = New-TemporaryFile
+            & pwsh -NoProfile -File "$ScriptsDir/build-matrix.ps1" -Output $tempFile "$FixturesDir/complex" 2>&1 | Out-Null
+            $content = Get-Content $tempFile -Raw
+            $count = ([regex]::Matches($content, '^\| HAZ-', [System.Text.RegularExpressions.RegexOptions]::Multiline)).Count
+            $count | Should -Be 12
+            Remove-Item $tempFile
+        }
     }
 
     Context 'Backward compatibility' {
@@ -172,6 +213,12 @@ Describe 'Build-Matrix: Matrix H' {
             $output = & pwsh -NoProfile -File "$ScriptsDir/build-matrix.ps1" "$FixturesDir/empty" 2>&1
             $LASTEXITCODE | Should -Be 0
             ($output -join "`n") | Should -Not -Match 'Matrix H'
+        }
+
+        It 'gaps fixture still generates Matrix H' {
+            $output = & pwsh -NoProfile -File "$ScriptsDir/build-matrix.ps1" "$FixturesDir/gaps" 2>&1
+            $LASTEXITCODE | Should -Be 0
+            ($output -join "`n") | Should -Match 'Matrix H'
         }
     }
 }

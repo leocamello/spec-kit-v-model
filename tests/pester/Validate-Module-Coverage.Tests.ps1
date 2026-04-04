@@ -100,7 +100,7 @@ Describe 'Validate-Module-Coverage' {
 
     Context 'Error handling' {
         It 'exits 1 when vmodel-dir argument is missing' {
-            & pwsh -NoProfile -Command "& '$ScriptsDir/validate-module-coverage.ps1'" 2>&1 | Out-Null
+            & pwsh -NoProfile -NonInteractive -Command "& '$ScriptsDir/validate-module-coverage.ps1'" 2>&1 | Out-Null
             $LASTEXITCODE | Should -Not -Be 0
         }
 
