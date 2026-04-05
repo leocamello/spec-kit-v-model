@@ -25,11 +25,26 @@ param(
     [Parameter(Position = 0)]
     [string]$ReviewFile,
 
-    [switch]$Json
+    [switch]$Json,
+
+    [Alias('h')]
+    [switch]$Help
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+
+if ($Help) {
+    Write-Output "Usage: Peer-Review-Check.ps1 [-Json] <review-file>"
+    Write-Output ""
+    Write-Output "Parse a peer-review report and return CI exit codes."
+    Write-Output ""
+    Write-Output "EXIT CODES:"
+    Write-Output "  0 = clean (no findings or observations only)"
+    Write-Output "  1 = Critical or Major findings (blocks PR)"
+    Write-Output "  2 = Minor findings only (warning)"
+    exit 0
+}
 
 if (-not $ReviewFile) {
     Write-Error "ERROR: review-file argument required`nUsage: Peer-Review-Check.ps1 [-Json] <review-file>"
