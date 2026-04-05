@@ -5,6 +5,31 @@ All notable changes to the V-Model Extension Pack are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased] — audit-report (005e)
+
+### Added
+- `audit-report` command — 100% deterministic (no AI) release audit report builder that produces a point-in-time `release-audit-report.md` for regulatory submission
+  - Artifact inventory: discovers all 11 V-Model files, pins each to Git SHA + last-modified date, reports Present/Missing status
+  - Traceability matrix embedding: extracts and embeds all matrices (A–D + H) from `traceability-matrix.md` into the report
+  - Coverage analysis: computes forward/backward coverage per matrix, identifies gaps and orphans
+  - Hazard management summary: extracts HAZ-NNN entries with severity, likelihood, mitigation, and residual risk
+  - Anomaly detection: surfaces failed tests, skipped tests, and untested scenarios from the traceability matrix
+  - Waiver cross-referencing: reads `waivers.md` (WAV-NNN entries), classifies anomalies as Waived or BLOCKING, detects orphaned waivers referencing non-existent test IDs
+  - Compliance gating: ✅ RELEASE READY (0 anomalies, exit 0), ⚠️ RELEASE CANDIDATE (all waived, exit 0), ❌ NOT READY (unwaived failures, exit 1)
+  - Executive summary, signature block, and known anomalies sections
+  - `--json` flag for CI integration (structured JSON with metadata, inventory, coverage, anomalies, hazards, summary)
+  - CLI options: `--system-name`, `--version`, `--git-tag`, `--regulatory-context`, `--output`
+  - Exit codes: 0 = RELEASE READY/CANDIDATE, 1 = NOT READY, 2 = error (missing required artifacts)
+- `build-audit-report.sh` / `Build-Audit-Report.ps1` — Bash and PowerShell scripts (1:1 parity) implementing all 10 modules (MOD-001 through MOD-010)
+- 5 test fixture directories under `tests/fixtures/audit-report/`: clean (all pass), waived (skipped + waivers), blocking (failed test), orphaned-waiver, missing-required
+- 70 BATS tests (`build-audit-report.bats`): help/args, exit codes, all 5 scenarios, artifact inventory, hazard section, coverage analysis, anomaly rendering, JSON structure + scenarios, matrix embedding, signature block
+- 70 Pester tests (`Build-Audit-Report.Tests.ps1`): 1:1 parity with BATS
+
+### Changed
+- `extension.yml`: registered `speckit.v-model.audit-report` command (14th command)
+- Documentation updated: README (14 commands, audit-report in workflow + Features + Command Reference + Scripts table + testing counts), CHANGELOG
+- Total commands: 13 → 14; BATS tests: 269 → 339; Pester tests: 252 → 322
+
 ## [Unreleased] — test-results (005d)
 
 ### Added
