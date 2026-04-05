@@ -58,6 +58,10 @@ provides:
       file: "commands/impact-analysis.md"
       description: "Run deterministic impact analysis to identify all V-Model artifacts affected by a change (downward, upward, or full traversal)"
 
+    - name: "speckit.v-model.peer-review"
+      file: "commands/peer-review.md"
+      description: "AI-powered stateless linter for any V-Model artifact — evaluates against standards-based criteria and produces PRF-{ARTIFACT}-NNN findings with CI exit codes"
+
     - name: "speckit.v-model.trace"
       file: "commands/trace.md"
       description: "Build a regulatory-grade Traceability Matrix (Matrix A + B + C + D + H: REQ → ATP → SYS → STP → ARCH → ITP → MOD → UTP + HAZ → Mitigation → Verification)"
@@ -98,5 +102,6 @@ defaults:
     unit_test_cases: "UTP"
     unit_test_scenarios: "UTS"
     hazards: "HAZ"
+    peer_review_findings: "PRF"
   coverage_threshold: 100
   batch_size: 5

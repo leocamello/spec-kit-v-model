@@ -1,0 +1,17 @@
+{
+  "review_file": "tests/fixtures/golden-peer-review/mixed-severity-hazard-analysis.md",
+  "artifact": "hazard-analysis.md (12 hazards)",
+  "standard": "ISO 14971 / ISO 26262",
+  "critical": 1,
+  "major": 2,
+  "minor": 3,
+  "observation": 1,
+  "total": 7,
+  "prf_headings": 7,
+  "prf_critical": 1,
+  "prf_major": 2,
+  "prf_minor": 3,
+  "prf_observation": 1,
+  "summary_match": true,
+  "exit_code": 1
+}

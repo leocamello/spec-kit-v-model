@@ -28,6 +28,7 @@ An extension for [GitHub Spec Kit](https://github.com/github/spec-kit) that enfo
 - **`/speckit.v-model.unit-test`** — Unit test plans (UTP/UTS) with Statement & Branch Coverage, Boundary Value Analysis, State Transition Testing, and strict isolation
 - **`/speckit.v-model.hazard-analysis`** — ISO 14971/26262 Failure Mode and Effects Analysis (FMEA) with `HAZ-NNN` hazard identifiers, operational state awareness, and mitigation traceability
 - **`/speckit.v-model.impact-analysis`** — Deterministic change impact analysis: trace a changed ID downward, upward, or both to identify all suspect artifacts and blast radius across V-Model levels
+- **`/speckit.v-model.peer-review`** — AI-powered stateless linter for any V-Model artifact: evaluates against standards-based criteria (INCOSE, IEEE 1016/42010, ISO 29119/14971) and produces `PRF-{ARTIFACT}-NNN` findings with CI exit codes (0=clean, 1=blocks, 2=warning)
 - **`/speckit.v-model.trace`** — Build a regulatory-grade Traceability Matrix (Matrix A + B + C + D, plus Matrix H when hazard analysis exists)
 
 ## Installation
@@ -86,11 +87,17 @@ Step 13: /speckit.v-model.trace                →  Matrix A + B + C + D + H (fu
 # On change — run impact analysis to identify suspect artifacts:
 /speckit.v-model.impact-analysis --downward REQ-001   →  Downstream suspects + blast radius
 /speckit.v-model.impact-analysis --upward MOD-004     →  Upstream requirements at risk
+
+# At any time — run peer review to lint any artifact:
+/speckit.v-model.peer-review requirements.md           →  PRF-REQ-NNN findings (INCOSE criteria)
+/speckit.v-model.peer-review system-design.md          →  PRF-SYS-NNN findings (IEEE 1016 criteria)
 ```
 
 > **Progressive traceability:** The `/speckit.v-model.trace` command is run after each design↔test pair — so coverage gaps are caught at each V-level rather than discovered at the end. Matrix H (hazard traceability) is automatically included when `hazard-analysis.md` exists.
 >
 > **Change impact analysis:** When any artifact changes, run `/speckit.v-model.impact-analysis` to deterministically identify all suspect artifacts across the V-Model before re-generating or re-validating.
+>
+> **Peer review:** Run `/speckit.v-model.peer-review` on any artifact at any time — it operates like ESLint for V-Model documents, catching structural and quality issues before the human reviewer sees them. Findings are stateless (regenerated each run) and advisory-only (not in the traceability chain).
 
 **Example — Feature 002: Custom ID Prefix Support**
 
@@ -156,6 +163,7 @@ specs/{feature}/v-model/
 ├── integration-test.md          →  ITP/ITS procedures
 ├── module-design.md             →  MOD-NNN detailed modules
 ├── unit-test.md                 →  UTP/UTS unit test procedures
+├── peer-review-{artifact}.md    →  PRF-NNN findings (stateless, advisory-only)
 └── traceability-matrix.md       →  Matrix A + B + C + D + H
 ```
 
@@ -173,6 +181,7 @@ calculations are performed by **deterministic scripts**:
 | Validate architecture ↔ integration coverage | `validate-architecture-coverage.sh` | Deterministic — ARCH→ITP→ITS cross-reference |
 | Validate module ↔ unit test coverage | `validate-module-coverage.sh` | Deterministic — ARCH→MOD→UTP→UTS cross-reference |
 | Validate hazard ↔ system coverage | `validate-hazard-coverage.sh` | Deterministic — SYS→HAZ forward, HAZ→REQ/SYS backward, state consistency |
+| Check peer-review findings | `peer-review-check.sh` | Deterministic — parse AI-generated review, exit 0/1/2 by severity |
 | Build traceability matrix | `build-matrix.sh` | Deterministic — audit-grade accuracy, up to 5 matrices (A–D + H) |
 | Detect requirement changes | `diff-requirements.sh` | Deterministic — git-based diff |
 
@@ -264,7 +273,19 @@ Reads `requirements.md` + `system-design.md` (+ optional `architecture-design.md
 
 Uses deterministic scripts (not AI) to build a dependency graph from all V-Model markdown artifacts and traverse it to identify suspect artifacts affected by a change. `--downward` traces from requirements to tests/modules; `--upward` traces from modules/tests to requirements; `--full` combines both directions. Outputs a blast radius summary, suspect artifact list by V-Model level, and a re-validation order. Supports `--json` for CI integration.
 
-#### 11. Build Traceability Matrix (Step 3/6/9/12)
+#### 11. Peer Review (Cross-Cutting)
+
+```bash
+/speckit.v-model.peer-review requirements.md
+/speckit.v-model.peer-review system-design.md
+/speckit.v-model.peer-review hazard-analysis.md
+```
+
+AI-powered stateless linter for any V-Model artifact. Evaluates the artifact against standards-based criteria specific to its type (INCOSE for requirements, IEEE 1016 for system design, ISO 29119 for test plans, ISO 14971 for hazard analysis) and produces `PRF-{ARTIFACT}-NNN` findings with severity classifications (Critical, Major, Minor, Observation).
+
+The companion `peer-review-check.sh` / `Peer-Review-Check.ps1` scripts parse the generated review and return CI exit codes: **0** = clean (no findings or observations only), **1** = Critical or Major findings (blocks PR), **2** = Minor findings only (warning). Findings are advisory-only — PRF IDs do not participate in the traceability chain.
+
+#### 12. Build Traceability Matrix (Step 3/6/9/12)
 
 ```bash
 /speckit.v-model.trace
@@ -329,8 +350,8 @@ GOOGLE_API_KEY=... pytest tests/evals/ -m eval -v
 
 | Layer | Tests | What it validates |
 |-------|-------|-------------------|
-| BATS | **153** | Bash script logic (setup, coverage, system coverage, architecture coverage, module coverage, hazard coverage, impact analysis, matrix, diff) |
-| Pester | 129 | PowerShell script parity |
+| BATS | **208** | Bash script logic (setup, coverage, system coverage, architecture coverage, module coverage, hazard coverage, impact analysis, peer-review check, matrix, diff, parity) |
+| Pester | 191 | PowerShell script parity |
 | Structural evals | 89 | ID format, template conformance, section completeness across all V-levels including hazard analysis and impact analysis |
 | LLM-as-judge evals | 42 | Requirements quality, BDD quality, design quality, hazard analysis quality, traceability (requires API key) |
 

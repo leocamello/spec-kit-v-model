@@ -5,6 +5,28 @@ All notable changes to the V-Model Extension Pack are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased] — peer-review (005c)
+
+### Added
+- `peer-review` command — AI-powered stateless linter for any V-Model artifact, evaluating against standards-based criteria (INCOSE for requirements, IEEE 1016/42010 for design, ISO 29119/29119-4 for tests, ISO 14971 for hazard analysis, DO-178C for module design) and producing `PRF-{ARTIFACT}-NNN` findings with severity classifications (Critical, Major, Minor, Observation)
+  - 9 supported artifact types with type-specific review criteria
+  - Stateless linting model: no `Status` field — findings regenerated from scratch each run, like ESLint
+  - Advisory-only: PRF IDs do not participate in traceability chain or affect coverage metrics
+  - CI-hookable via companion parser scripts
+- `peer-review-template.md` — Output format template with header, summary table, and per-finding structure
+- `peer-review-check.sh` / `Peer-Review-Check.ps1` — Deterministic CI parser scripts that read AI-generated peer-review reports and return exit codes: 0 (clean), 1 (Critical/Major — blocks PR), 2 (Minor — warning)
+  - `--json` / `-Json` flag for structured output (severity counts, PRF heading cross-validation, summary match check)
+  - `--help` / `-Help` flag for usage information
+- 5 peer-review test fixture scenarios: clean (0 findings), critical-major (exit 1), minor-only (exit 2), mixed-severity (all 4 levels), observations-only (exit 0), each with `.md` report and `.json` golden output
+- 38 BATS tests (`peer-review-check.bats`): all fixture scenarios, severity counting, PRF cross-validation, metadata extraction, error handling, JSON structure
+- 38 Pester tests (`Peer-Review-Check.Tests.ps1`): 1:1 parity with BATS
+- Dogfooded V-Model artifacts for peer-review feature (`specs/005c-peer-review/`): 37 REQs, 74 ATPs, 6 SYS, 25 STPs, 10 ARCH, 25 ITPs, 16 MODs, 48 UTPs, full traceability matrices
+
+### Changed
+- `extension.yml`: registered `speckit.v-model.peer-review` command (12th command), added `peer_review_findings: "PRF"` to `defaults.id_prefixes`
+- Documentation updated: README (12 commands, peer-review in workflow + Features + Command Reference + Scripts table + directory tree), CHANGELOG
+- Total commands: 11 → 12; BATS tests: 170 → 208; Pester tests: 153 → 191
+
 ## [Unreleased] — impact-analysis (005b)
 
 ### Added

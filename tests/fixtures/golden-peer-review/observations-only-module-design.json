@@ -1,0 +1,17 @@
+{
+  "review_file": "tests/fixtures/golden-peer-review/observations-only-module-design.md",
+  "artifact": "module-design.md (8 modules)",
+  "standard": "DO-178C / ISO 26262",
+  "critical": 0,
+  "major": 0,
+  "minor": 0,
+  "observation": 2,
+  "total": 2,
+  "prf_headings": 2,
+  "prf_critical": 0,
+  "prf_major": 0,
+  "prf_minor": 0,
+  "prf_observation": 2,
+  "summary_match": true,
+  "exit_code": 0
+}

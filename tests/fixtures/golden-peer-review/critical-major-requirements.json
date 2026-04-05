@@ -1,0 +1,17 @@
+{
+  "review_file": "tests/fixtures/golden-peer-review/critical-major-requirements.md",
+  "artifact": "requirements.md (15 requirements)",
+  "standard": "INCOSE Guide for Writing Requirements",
+  "critical": 1,
+  "major": 2,
+  "minor": 0,
+  "observation": 0,
+  "total": 3,
+  "prf_headings": 3,
+  "prf_critical": 1,
+  "prf_major": 2,
+  "prf_minor": 0,
+  "prf_observation": 0,
+  "summary_match": true,
+  "exit_code": 1
+}

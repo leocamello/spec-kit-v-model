@@ -1,0 +1,17 @@
+{
+  "review_file": "tests/fixtures/golden-peer-review/minor-only-system-design.md",
+  "artifact": "system-design.md (8 components)",
+  "standard": "IEEE 1016",
+  "critical": 0,
+  "major": 0,
+  "minor": 2,
+  "observation": 0,
+  "total": 2,
+  "prf_headings": 2,
+  "prf_critical": 0,
+  "prf_major": 0,
+  "prf_minor": 2,
+  "prf_observation": 0,
+  "summary_match": true,
+  "exit_code": 2
+}
