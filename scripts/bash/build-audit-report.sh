@@ -176,8 +176,8 @@ for i in "${!EXPECTED_FILES[@]}"; do
     name="${HUMAN_NAMES[$i]}"
     filepath="$VMODEL_DIR/$file"
     if [[ -f "$filepath" ]]; then
-        sha=$(git log -1 --format='%h' -- "$filepath" 2>/dev/null || echo "N/A")
-        gdate=$(git log -1 --format='%aI' -- "$filepath" 2>/dev/null | cut -d'T' -f1)
+        sha=$(git -C "$VMODEL_DIR" log -1 --format='%h' -- "$file" 2>/dev/null || echo "N/A")
+        gdate=$(git -C "$VMODEL_DIR" log -1 --format='%aI' -- "$file" 2>/dev/null | cut -d'T' -f1)
         [[ -z "$gdate" ]] && gdate="N/A"
         printf '%s\t%s\t%s\t%s\t%s\n' "$name" "$file" "$sha" "$gdate" "Present" >> "$WORK_DIR/artifacts.tsv"
         ((artifact_found++)) || true
@@ -187,7 +187,7 @@ for i in "${!EXPECTED_FILES[@]}"; do
 done
 
 # Resolve git SHA for report metadata
-GIT_SHA=$(git log -1 --format='%h' 2>/dev/null || echo "N/A")
+GIT_SHA=$(git -C "$VMODEL_DIR" log -1 --format='%h' 2>/dev/null || echo "N/A")
 
 # ============================================================
 # MOD-003 + MOD-004: Parse Matrix File & Compute Coverage
