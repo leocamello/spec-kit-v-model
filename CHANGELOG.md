@@ -5,6 +5,28 @@ All notable changes to the V-Model Extension Pack are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased] — test-results (005d)
+
+### Added
+- `test-results` command — 100% deterministic (no AI) JUnit XML + Cobertura XML ingestor that updates the traceability matrix in-place, flipping `⬜ Untested` to `✅ Passed` / `❌ Failed` / `⏭️ Skipped` with Date, Commit SHA, and optional Coverage columns
+  - JUnit XML parsing: extracts V-Model IDs (SCN/STS/ITS/UTS) from test case names via regex, handles retries (last occurrence wins), multi-suite support
+  - Cobertura XML parsing: maps code coverage to modules via `coverage-map.yml` or convention-based matching from `module-design.md`, adds `{stmt}% stmt / {branch}% branch` column to Matrix D with `⚠` threshold warnings
+  - In-place matrix update: modifies existing `traceability-matrix.md`, preserves unmatched rows and non-table content, adds Date + Commit columns on first run
+  - Re-run safe: subsequent runs overwrite previous status/date/commit values
+  - Exit codes: 0 = all passed, 1 = failures detected, 2 = no V-Model ID matches
+  - `--json` flag for CI integration (structured JSON with per-matrix counts, coverage data, matrix path)
+- `parse_test_results.py` — stdlib-only Python helper (xml.etree.ElementTree, json, re, sys, argparse) with 5 modules: extract_testcases, classify_results, extract_coverage, map_coverage_to_modules, match_ids
+- `ingest-test-results.sh` / `Ingest-Test-Results.ps1` — Bash and PowerShell wrappers (1:1 parity) that call the Python helper, update the matrix, and print summary
+- 23 test fixtures: 8 JUnit XML scenarios (all-pass, mixed, all-fail, all-skipped, no-matches, with-retries, multi-suite, extra-ids), 2 Cobertura XML (full/partial), 3 matrix fixtures, 10 golden JSON outputs
+- 61 BATS tests (`ingest-test-results.bats`): Python helper golden validation, exit codes, ID matching, retry dedup, summary counts, coverage mapping, wrapper help/args/exit/matrix/re-run/summary/JSON/coverage
+- 61 Pester tests (`Ingest-Test-Results.Tests.ps1`): 1:1 parity with BATS
+- Dogfooded V-Model artifacts for test-results feature (`specs/005d-test-results/`): 30 REQs, 44 ATPs, 50 SCNs, 7 SYS, 31 STPs, 45 STSs, 9 ARCH, 13 ITPs, 21 ITSs, 9 MODs, 27 UTPs, 53 UTSs, full traceability matrices
+
+### Changed
+- `extension.yml`: registered `speckit.v-model.test-results` command (13th command)
+- Documentation updated: README (13 commands, test-results in workflow + Features + Command Reference + Scripts table + testing counts), CHANGELOG
+- Total commands: 12 → 13; BATS tests: 208 → 269; Pester tests: 191 → 252
+
 ## [Unreleased] — peer-review (005c)
 
 ### Added
