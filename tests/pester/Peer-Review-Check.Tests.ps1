@@ -242,12 +242,14 @@ Describe 'Peer-Review-Check' {
     Context 'JSON output structure' {
         It 'produces valid JSON' {
             $output = & pwsh -NoProfile -File "$ScriptsDir/Peer-Review-Check.ps1" -Json "$FixturesDir/mixed-severity-hazard-analysis.md" 2>&1
-            { $output | ConvertFrom-Json } | Should -Not -Throw
+            $strings = $output | Where-Object { $_ -is [string] }
+            { $strings | ConvertFrom-Json } | Should -Not -Throw
         }
 
         It 'has all required fields' {
             $output = & pwsh -NoProfile -File "$ScriptsDir/Peer-Review-Check.ps1" -Json "$FixturesDir/clean-requirements.md" 2>&1
-            $json = $output | ConvertFrom-Json
+            $strings = $output | Where-Object { $_ -is [string] }
+            $json = $strings | ConvertFrom-Json
             $json.PSObject.Properties.Name | Should -Contain 'review_file'
             $json.PSObject.Properties.Name | Should -Contain 'artifact'
             $json.PSObject.Properties.Name | Should -Contain 'standard'
