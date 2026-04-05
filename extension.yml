@@ -62,6 +62,10 @@ provides:
       file: "commands/peer-review.md"
       description: "AI-powered stateless linter for any V-Model artifact — evaluates against standards-based criteria and produces PRF-{ARTIFACT}-NNN findings with CI exit codes"
 
+    - name: "speckit.v-model.test-results"
+      file: "commands/test-results.md"
+      description: "Ingest JUnit XML test results and optional Cobertura XML code coverage into the traceability matrix (100% deterministic, no AI)"
+
     - name: "speckit.v-model.trace"
       file: "commands/trace.md"
       description: "Build a regulatory-grade Traceability Matrix (Matrix A + B + C + D + H: REQ → ATP → SYS → STP → ARCH → ITP → MOD → UTP + HAZ → Mitigation → Verification)"
