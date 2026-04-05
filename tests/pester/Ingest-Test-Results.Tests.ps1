@@ -27,28 +27,28 @@ Describe 'Ingest-Test-Results' {
         It 'all-pass matches golden JSON' {
             $output = & python3 $PythonHelper --junit "$FixturesDir/junit/all-pass.xml" 2>$null
             $LASTEXITCODE | Should -Be 0
-            $expected = Get-Content "$FixturesDir/golden/all-pass.json" -Raw
+            $expected = (Get-Content "$FixturesDir/golden/all-pass.json" -Raw) -replace "`r`n", "`n"
             ($output -join "`n") | Should -Be $expected.TrimEnd()
         }
 
         It 'mixed-results matches golden JSON' {
             $output = & python3 $PythonHelper --junit "$FixturesDir/junit/mixed-results.xml" 2>$null
             $LASTEXITCODE | Should -Be 1
-            $expected = Get-Content "$FixturesDir/golden/mixed-results.json" -Raw
+            $expected = (Get-Content "$FixturesDir/golden/mixed-results.json" -Raw) -replace "`r`n", "`n"
             ($output -join "`n") | Should -Be $expected.TrimEnd()
         }
 
         It 'all-fail matches golden JSON' {
             $output = & python3 $PythonHelper --junit "$FixturesDir/junit/all-fail.xml" 2>$null
             $LASTEXITCODE | Should -Be 1
-            $expected = Get-Content "$FixturesDir/golden/all-fail.json" -Raw
+            $expected = (Get-Content "$FixturesDir/golden/all-fail.json" -Raw) -replace "`r`n", "`n"
             ($output -join "`n") | Should -Be $expected.TrimEnd()
         }
 
         It 'all-skipped matches golden JSON' {
             $output = & python3 $PythonHelper --junit "$FixturesDir/junit/all-skipped.xml" 2>$null
             $LASTEXITCODE | Should -Be 0
-            $expected = Get-Content "$FixturesDir/golden/all-skipped.json" -Raw
+            $expected = (Get-Content "$FixturesDir/golden/all-skipped.json" -Raw) -replace "`r`n", "`n"
             ($output -join "`n") | Should -Be $expected.TrimEnd()
         }
 
@@ -59,28 +59,28 @@ Describe 'Ingest-Test-Results' {
 
         It 'no-matches matches golden JSON' {
             $output = & python3 $PythonHelper --junit "$FixturesDir/junit/no-matches.xml" 2>$null
-            $expected = Get-Content "$FixturesDir/golden/no-matches.json" -Raw
+            $expected = (Get-Content "$FixturesDir/golden/no-matches.json" -Raw) -replace "`r`n", "`n"
             ($output -join "`n") | Should -Be $expected.TrimEnd()
         }
 
         It 'with-retries matches golden JSON' {
             $output = & python3 $PythonHelper --junit "$FixturesDir/junit/with-retries.xml" 2>$null
             $LASTEXITCODE | Should -Be 0
-            $expected = Get-Content "$FixturesDir/golden/with-retries.json" -Raw
+            $expected = (Get-Content "$FixturesDir/golden/with-retries.json" -Raw) -replace "`r`n", "`n"
             ($output -join "`n") | Should -Be $expected.TrimEnd()
         }
 
         It 'multi-suite matches golden JSON' {
             $output = & python3 $PythonHelper --junit "$FixturesDir/junit/multi-suite.xml" 2>$null
             $LASTEXITCODE | Should -Be 0
-            $expected = Get-Content "$FixturesDir/golden/multi-suite.json" -Raw
+            $expected = (Get-Content "$FixturesDir/golden/multi-suite.json" -Raw) -replace "`r`n", "`n"
             ($output -join "`n") | Should -Be $expected.TrimEnd()
         }
 
         It 'extra-ids matches golden JSON' {
             $output = & python3 $PythonHelper --junit "$FixturesDir/junit/extra-ids.xml" 2>$null
             $LASTEXITCODE | Should -Be 0
-            $expected = Get-Content "$FixturesDir/golden/extra-ids.json" -Raw
+            $expected = (Get-Content "$FixturesDir/golden/extra-ids.json" -Raw) -replace "`r`n", "`n"
             ($output -join "`n") | Should -Be $expected.TrimEnd()
         }
 
@@ -90,7 +90,7 @@ Describe 'Ingest-Test-Results' {
                 --coverage-map "$FixturesDir/matrix/coverage-map.yml" `
                 --coverage-threshold 100 2>$null
             $LASTEXITCODE | Should -Be 0
-            $expected = Get-Content "$FixturesDir/golden/with-full-coverage.json" -Raw
+            $expected = (Get-Content "$FixturesDir/golden/with-full-coverage.json" -Raw) -replace "`r`n", "`n"
             ($output -join "`n") | Should -Be $expected.TrimEnd()
         }
 
@@ -100,7 +100,7 @@ Describe 'Ingest-Test-Results' {
                 --coverage-map "$FixturesDir/matrix/coverage-map.yml" `
                 --coverage-threshold 100 2>$null
             $LASTEXITCODE | Should -Be 0
-            $expected = Get-Content "$FixturesDir/golden/with-partial-coverage.json" -Raw
+            $expected = (Get-Content "$FixturesDir/golden/with-partial-coverage.json" -Raw) -replace "`r`n", "`n"
             ($output -join "`n") | Should -Be $expected.TrimEnd()
         }
     }
