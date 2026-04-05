@@ -84,11 +84,11 @@ $total = $critical + $major + $minor + $observation
 
 # ---- Cross-Validate Against Actual Findings ----
 
-$prfCount = ($lines | Where-Object { $_ -match '^###\s+PRF-[A-Z]+-\d{3}' }).Count
-$prfCritical = ($lines | Where-Object { $_ -match '^\|\s*\*\*Severity\*\*\s*\|\s*Critical\s*\|' }).Count
-$prfMajor = ($lines | Where-Object { $_ -match '^\|\s*\*\*Severity\*\*\s*\|\s*Major\s*\|' }).Count
-$prfMinor = ($lines | Where-Object { $_ -match '^\|\s*\*\*Severity\*\*\s*\|\s*Minor\s*\|' }).Count
-$prfObservation = ($lines | Where-Object { $_ -match '^\|\s*\*\*Severity\*\*\s*\|\s*Observation\s*\|' }).Count
+$prfCount = @($lines | Where-Object { $_ -match '^###\s+PRF-[A-Z]+-\d{3}' }).Count
+$prfCritical = @($lines | Where-Object { $_ -match '^\|\s*\*\*Severity\*\*\s*\|\s*Critical\s*\|' }).Count
+$prfMajor = @($lines | Where-Object { $_ -match '^\|\s*\*\*Severity\*\*\s*\|\s*Major\s*\|' }).Count
+$prfMinor = @($lines | Where-Object { $_ -match '^\|\s*\*\*Severity\*\*\s*\|\s*Minor\s*\|' }).Count
+$prfObservation = @($lines | Where-Object { $_ -match '^\|\s*\*\*Severity\*\*\s*\|\s*Observation\s*\|' }).Count
 
 $prfTotal = $prfCritical + $prfMajor + $prfMinor + $prfObservation
 
