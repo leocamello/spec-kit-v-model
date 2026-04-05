@@ -130,19 +130,19 @@ function Parse-Columns {
 
 # ---- Validate arguments ----
 if ([string]::IsNullOrWhiteSpace($VModelDir)) {
-    Write-Error "ERROR: V-Model directory argument required"
+    [Console]::Error.WriteLine("ERROR: V-Model directory argument required")
     exit 2
 }
 
 if (-not (Test-Path $VModelDir -PathType Container)) {
-    Write-Error "ERROR: Directory not found: $VModelDir"
+    [Console]::Error.WriteLine("ERROR: Directory not found: $VModelDir")
     exit 2
 }
 
 foreach ($reqFile in $RequiredFiles) {
     $reqPath = Join-Path $VModelDir $reqFile
     if (-not (Test-Path $reqPath)) {
-        Write-Error "ERROR: Required artifact missing: $reqFile"
+        [Console]::Error.WriteLine("ERROR: Required artifact missing: $reqFile")
         exit 2
     }
 }
@@ -150,6 +150,12 @@ foreach ($reqFile in $RequiredFiles) {
 if ([string]::IsNullOrWhiteSpace($Output)) {
     $Output = Join-Path $VModelDir "release-audit-report.md"
 }
+
+# Resolve VModelDir to absolute path and work from there for git context
+$VModelDir = (Resolve-Path $VModelDir).Path
+$Output = [System.IO.Path]::GetFullPath($Output)
+$OriginalLocation = Get-Location
+Set-Location $VModelDir
 
 $GenerationDate = (Get-Date -Format "yyyy-MM-dd")
 
@@ -544,15 +550,16 @@ if ($Json) {
 
     $jsonObj | ConvertTo-Json -Depth 10
 
-    # Print summary to stderr
-    Write-Host "=== Audit Report Summary ===" -ForegroundColor Cyan
-    Write-Host "Artifacts: $artifactFound/$($ExpectedFiles.Count)"
-    Write-Host "Matrices: $matrixCount"
-    Write-Host "Tests: $totalTests ($([char]0x2705) $totalPassed | $([char]0x274C) $totalFailed | $([char]0x23ED)$([char]0xFE0F) $totalSkipped | $([char]0x2B1C) $totalUntested)"
-    Write-Host "Hazards: $totalHazards"
-    Write-Host "Anomalies: $anomalyCount (waived: $waivedCount, blocking: $blockingCount)"
-    if ($orphanedCount -gt 0) { Write-Host "Orphaned waivers: $orphanedCount" }
-    Write-Host "Status: $ComplianceStatus"
+    # Print summary to stderr (not stdout) so JSON output stays clean
+    [Console]::Error.WriteLine("=== Audit Report Summary ===")
+    [Console]::Error.WriteLine("Artifacts: $artifactFound/$($ExpectedFiles.Count)")
+    [Console]::Error.WriteLine("Matrices: $matrixCount")
+    [Console]::Error.WriteLine("Tests: $totalTests ($([char]0x2705) $totalPassed | $([char]0x274C) $totalFailed | $([char]0x23ED)$([char]0xFE0F) $totalSkipped | $([char]0x2B1C) $totalUntested)")
+    [Console]::Error.WriteLine("Hazards: $totalHazards")
+    [Console]::Error.WriteLine("Anomalies: $anomalyCount (waived: $waivedCount, blocking: $blockingCount)")
+    if ($orphanedCount -gt 0) { [Console]::Error.WriteLine("Orphaned waivers: $orphanedCount") }
+    [Console]::Error.WriteLine("Status: $ComplianceStatus")
+    Set-Location $OriginalLocation
     exit $ExitCode
 }
 
@@ -691,4 +698,5 @@ Write-Host "Anomalies: $anomalyCount (waived: $waivedCount, blocking: $blockingC
 if ($orphanedCount -gt 0) { Write-Host "Orphaned waivers: $orphanedCount" }
 Write-Host "Status: $ComplianceStatus"
 Write-Host "Report written to: $Output"
+Set-Location $OriginalLocation
 exit $ExitCode
