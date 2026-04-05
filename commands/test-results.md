@@ -51,13 +51,13 @@ scripts/bash/ingest-test-results.sh --input results.xml --json specs/<feature>/v
 ### PowerShell
 ```powershell
 # Basic: ingest JUnit XML results
-scripts/powershell/Ingest-Test-Results.ps1 -Input test-results.xml -VModelDir specs/<feature>/v-model
+scripts/powershell/Ingest-Test-Results.ps1 -InputFile test-results.xml -VModelDir specs/<feature>/v-model
 
 # With code coverage
-scripts/powershell/Ingest-Test-Results.ps1 -Input results.xml -Coverage coverage.xml -VModelDir specs/<feature>/v-model
+scripts/powershell/Ingest-Test-Results.ps1 -InputFile results.xml -Coverage coverage.xml -VModelDir specs/<feature>/v-model
 
 # JSON output
-scripts/powershell/Ingest-Test-Results.ps1 -Input results.xml -Json -VModelDir specs/<feature>/v-model
+scripts/powershell/Ingest-Test-Results.ps1 -InputFile results.xml -Json -VModelDir specs/<feature>/v-model
 ```
 
 ## Arguments
