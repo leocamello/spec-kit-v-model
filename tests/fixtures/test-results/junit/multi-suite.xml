@@ -1,0 +1,16 @@
+<testsuites>
+  <testsuite name="acceptance" tests="2" failures="0" time="0.8">
+    <testcase name="SCN-001-A1 Given valid sensor data" time="0.5"/>
+    <testcase name="SCN-001-A2 Given boundary data" time="0.3"/>
+  </testsuite>
+  <testsuite name="system" tests="1" failures="0" time="0.4">
+    <testcase name="STS-001-A1 System processes input" time="0.4"/>
+  </testsuite>
+  <testsuite name="integration" tests="1" failures="0" time="0.3">
+    <testcase name="ITS-001-A1 Contract validation" time="0.3"/>
+  </testsuite>
+  <testsuite name="unit" tests="2" failures="0" time="0.3">
+    <testcase name="UTS-001-A1 Boundary at zero" time="0.1"/>
+    <testcase name="UTS-002-A1 Parse empty input" time="0.2"/>
+  </testsuite>
+</testsuites>

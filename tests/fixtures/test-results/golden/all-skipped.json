@@ -1,0 +1,60 @@
+{
+  "test_results": [
+    {
+      "id": "SCN-001-A1",
+      "matrix": "A",
+      "status": "skipped",
+      "duration": 0.0,
+      "message": "CI environment not configured"
+    },
+    {
+      "id": "STS-001-A1",
+      "matrix": "B",
+      "status": "skipped",
+      "duration": 0.0,
+      "message": "Requires hardware"
+    },
+    {
+      "id": "UTS-001-A1",
+      "matrix": "D",
+      "status": "skipped",
+      "duration": 0.0,
+      "message": ""
+    }
+  ],
+  "coverage": {},
+  "summary": {
+    "total": 3,
+    "passed": 0,
+    "failed": 0,
+    "skipped": 3,
+    "per_matrix": {
+      "A": {
+        "total": 1,
+        "passed": 0,
+        "failed": 0,
+        "skipped": 1
+      },
+      "B": {
+        "total": 1,
+        "passed": 0,
+        "failed": 0,
+        "skipped": 1
+      },
+      "C": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0
+      },
+      "D": {
+        "total": 1,
+        "passed": 0,
+        "failed": 0,
+        "skipped": 1
+      }
+    },
+    "unmatched_count": 0
+  },
+  "unmatched_tests": []
+}

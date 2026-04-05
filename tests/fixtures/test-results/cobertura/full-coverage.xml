@@ -1,0 +1,23 @@
+<?xml version="1.0" ?>
+<coverage version="5.5" timestamp="1711900800000" lines-valid="100" lines-covered="100" line-rate="1.0" branches-valid="50" branches-covered="50" branch-rate="1.0">
+  <packages>
+    <package name="src.parser" line-rate="1.0" branch-rate="1.0">
+      <classes>
+        <class name="reader.py" filename="src/reader.py" line-rate="1.0" branch-rate="1.0">
+          <lines>
+            <line number="1" hits="1"/><line number="2" hits="1"/><line number="3" hits="1"/>
+            <line number="4" hits="1"/><line number="5" hits="1"/><line number="6" hits="1"/>
+            <line number="7" hits="1"/><line number="8" hits="1"/><line number="9" hits="1"/>
+            <line number="10" hits="1"/>
+          </lines>
+        </class>
+        <class name="writer.py" filename="src/writer.py" line-rate="1.0" branch-rate="1.0">
+          <lines>
+            <line number="1" hits="1"/><line number="2" hits="1"/><line number="3" hits="1"/>
+            <line number="4" hits="1"/><line number="5" hits="1"/>
+          </lines>
+        </class>
+      </classes>
+    </package>
+  </packages>
+</coverage>

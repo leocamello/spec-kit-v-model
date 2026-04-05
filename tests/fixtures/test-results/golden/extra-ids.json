@@ -1,0 +1,67 @@
+{
+  "test_results": [
+    {
+      "id": "SCN-001-A1",
+      "matrix": "A",
+      "status": "passed",
+      "duration": 0.3,
+      "message": null
+    },
+    {
+      "id": "SCN-999-A1",
+      "matrix": "A",
+      "status": "passed",
+      "duration": 0.2,
+      "message": null
+    },
+    {
+      "id": "UTS-001-A1",
+      "matrix": "D",
+      "status": "passed",
+      "duration": 0.2,
+      "message": null
+    },
+    {
+      "id": "UTS-999-A1",
+      "matrix": "D",
+      "status": "passed",
+      "duration": 0.3,
+      "message": null
+    }
+  ],
+  "coverage": {},
+  "summary": {
+    "total": 4,
+    "passed": 4,
+    "failed": 0,
+    "skipped": 0,
+    "per_matrix": {
+      "A": {
+        "total": 2,
+        "passed": 2,
+        "failed": 0,
+        "skipped": 0
+      },
+      "B": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0
+      },
+      "C": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0
+      },
+      "D": {
+        "total": 2,
+        "passed": 2,
+        "failed": 0,
+        "skipped": 0
+      }
+    },
+    "unmatched_count": 0
+  },
+  "unmatched_tests": []
+}

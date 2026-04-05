@@ -1,0 +1,60 @@
+{
+  "test_results": [
+    {
+      "id": "SCN-001-A1",
+      "matrix": "A",
+      "status": "failed",
+      "duration": 0.3,
+      "message": "Timeout exceeded"
+    },
+    {
+      "id": "STS-001-A1",
+      "matrix": "B",
+      "status": "failed",
+      "duration": 0.3,
+      "message": "NullPointerException"
+    },
+    {
+      "id": "UTS-001-A1",
+      "matrix": "D",
+      "status": "failed",
+      "duration": 0.3,
+      "message": "Expected 0, got -1"
+    }
+  ],
+  "coverage": {},
+  "summary": {
+    "total": 3,
+    "passed": 0,
+    "failed": 3,
+    "skipped": 0,
+    "per_matrix": {
+      "A": {
+        "total": 1,
+        "passed": 0,
+        "failed": 1,
+        "skipped": 0
+      },
+      "B": {
+        "total": 1,
+        "passed": 0,
+        "failed": 1,
+        "skipped": 0
+      },
+      "C": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0
+      },
+      "D": {
+        "total": 1,
+        "passed": 0,
+        "failed": 1,
+        "skipped": 0
+      }
+    },
+    "unmatched_count": 0
+  },
+  "unmatched_tests": []
+}

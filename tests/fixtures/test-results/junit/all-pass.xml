@@ -1,0 +1,6 @@
+<testsuite name="acceptance" tests="4" failures="0" time="1.4">
+  <testcase name="SCN-001-A1 Given valid sensor data When processed Then alert generated" time="0.5"/>
+  <testcase name="SCN-001-A2 Given boundary sensor data When processed Then alert generated" time="0.3"/>
+  <testcase name="STS-001-A1 System processes input within 100ms" time="0.4"/>
+  <testcase name="UTS-001-A1 Boundary value at zero returns default" time="0.2"/>
+</testsuite>

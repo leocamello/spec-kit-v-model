@@ -29,6 +29,7 @@ An extension for [GitHub Spec Kit](https://github.com/github/spec-kit) that enfo
 - **`/speckit.v-model.hazard-analysis`** — ISO 14971/26262 Failure Mode and Effects Analysis (FMEA) with `HAZ-NNN` hazard identifiers, operational state awareness, and mitigation traceability
 - **`/speckit.v-model.impact-analysis`** — Deterministic change impact analysis: trace a changed ID downward, upward, or both to identify all suspect artifacts and blast radius across V-Model levels
 - **`/speckit.v-model.peer-review`** — AI-powered stateless linter for any V-Model artifact: evaluates against standards-based criteria (INCOSE, IEEE 1016/42010, ISO 29119/14971) and produces `PRF-{ARTIFACT}-NNN` findings with CI exit codes (0=clean, 1=blocks, 2=warning)
+- **`/speckit.v-model.test-results`** — Ingest JUnit XML test results and optional Cobertura XML code coverage into the traceability matrix, flipping `⬜ Untested` to `✅ Passed` / `❌ Failed` / `⏭️ Skipped` with Date, Commit SHA, and Coverage columns (100% deterministic, no AI)
 - **`/speckit.v-model.trace`** — Build a regulatory-grade Traceability Matrix (Matrix A + B + C + D, plus Matrix H when hazard analysis exists)
 
 ## Installation
@@ -91,6 +92,10 @@ Step 13: /speckit.v-model.trace                →  Matrix A + B + C + D + H (fu
 # At any time — run peer review to lint any artifact:
 /speckit.v-model.peer-review requirements.md           →  PRF-REQ-NNN findings (INCOSE criteria)
 /speckit.v-model.peer-review system-design.md          →  PRF-SYS-NNN findings (IEEE 1016 criteria)
+
+# After CI — ingest test results into the traceability matrix:
+/speckit.v-model.test-results --input results.xml                          →  Update ⬜ Untested to ✅/❌/⏭️
+/speckit.v-model.test-results --input results.xml --coverage cobertura.xml →  + code coverage on Matrix D
 ```
 
 > **Progressive traceability:** The `/speckit.v-model.trace` command is run after each design↔test pair — so coverage gaps are caught at each V-level rather than discovered at the end. Matrix H (hazard traceability) is automatically included when `hazard-analysis.md` exists.
@@ -98,6 +103,8 @@ Step 13: /speckit.v-model.trace                →  Matrix A + B + C + D + H (fu
 > **Change impact analysis:** When any artifact changes, run `/speckit.v-model.impact-analysis` to deterministically identify all suspect artifacts across the V-Model before re-generating or re-validating.
 >
 > **Peer review:** Run `/speckit.v-model.peer-review` on any artifact at any time — it operates like ESLint for V-Model documents, catching structural and quality issues before the human reviewer sees them. Findings are stateless (regenerated each run) and advisory-only (not in the traceability chain).
+>
+> **Test results ingestion:** After CI completes, run `/speckit.v-model.test-results` to ingest JUnit XML results (and optional Cobertura XML coverage) into the traceability matrix — flipping `⬜ Untested` to `✅ Passed` / `❌ Failed` / `⏭️ Skipped` with audit metadata (Date + Commit SHA). This bridges "we planned to test it" → "we proved it works."
 
 **Example — Feature 002: Custom ID Prefix Support**
 
@@ -144,6 +151,9 @@ Step 13: /speckit.v-model.trace                →  Matrix A + B + C + D + H (fu
 # 13. Build traceability matrix (Matrix A + B + C + D + H: full traceability)
 /speckit.v-model.trace
 
+# 14. After CI — ingest test execution results into the matrix
+/speckit.v-model.test-results --input test-results.xml
+
 # After: continue with spec-kit core
 /speckit.plan
 /speckit.tasks
@@ -182,6 +192,8 @@ calculations are performed by **deterministic scripts**:
 | Validate module ↔ unit test coverage | `validate-module-coverage.sh` | Deterministic — ARCH→MOD→UTP→UTS cross-reference |
 | Validate hazard ↔ system coverage | `validate-hazard-coverage.sh` | Deterministic — SYS→HAZ forward, HAZ→REQ/SYS backward, state consistency |
 | Check peer-review findings | `peer-review-check.sh` | Deterministic — parse AI-generated review, exit 0/1/2 by severity |
+| Ingest test results into matrix | `ingest-test-results.sh` | Deterministic — parse JUnit XML + Cobertura XML, update matrix in-place |
+| Parse test results XML | `parse_test_results.py` | Deterministic — stdlib-only Python parser, JSON output |
 | Build traceability matrix | `build-matrix.sh` | Deterministic — audit-grade accuracy, up to 5 matrices (A–D + H) |
 | Detect requirement changes | `diff-requirements.sh` | Deterministic — git-based diff |
 
@@ -285,7 +297,16 @@ AI-powered stateless linter for any V-Model artifact. Evaluates the artifact aga
 
 The companion `peer-review-check.sh` / `Peer-Review-Check.ps1` scripts parse the generated review and return CI exit codes: **0** = clean (no findings or observations only), **1** = Critical or Major findings (blocks PR), **2** = Minor findings only (warning). Findings are advisory-only — PRF IDs do not participate in the traceability chain.
 
-#### 12. Build Traceability Matrix (Step 3/6/9/12)
+#### 12. Ingest Test Results (Deterministic)
+
+```bash
+/speckit.v-model.test-results --input test-results.xml
+/speckit.v-model.test-results --input test-results.xml --coverage cobertura.xml --coverage-map coverage-map.yml
+```
+
+Uses deterministic scripts (no AI) to parse JUnit XML test results and update the traceability matrix in-place, flipping `⬜ Untested` to `✅ Passed` / `❌ Failed` / `⏭️ Skipped`. Each updated row includes Date and Commit SHA for audit trail. Optionally accepts Cobertura XML code coverage reports — when provided, Matrix D rows gain a Coverage column (`95.0% stmt / 88.0% branch`) with `⚠` warnings when below threshold. Supports `--json` for CI integration. Exit codes: 0 = all passed, 1 = failures detected, 2 = no V-Model ID matches.
+
+#### 13. Build Traceability Matrix (Step 3/6/9/12)
 
 ```bash
 /speckit.v-model.trace
@@ -350,8 +371,8 @@ GOOGLE_API_KEY=... pytest tests/evals/ -m eval -v
 
 | Layer | Tests | What it validates |
 |-------|-------|-------------------|
-| BATS | **208** | Bash script logic (setup, coverage, system coverage, architecture coverage, module coverage, hazard coverage, impact analysis, peer-review check, matrix, diff, parity) |
-| Pester | 191 | PowerShell script parity |
+| BATS | **269** | Bash script logic (setup, coverage, system coverage, architecture coverage, module coverage, hazard coverage, impact analysis, peer-review check, test-results ingestion, matrix, diff, parity) |
+| Pester | 252 | PowerShell script parity |
 | Structural evals | 89 | ID format, template conformance, section completeness across all V-levels including hazard analysis and impact analysis |
 | LLM-as-judge evals | 42 | Requirements quality, BDD quality, design quality, hazard analysis quality, traceability (requires API key) |
 

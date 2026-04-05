@@ -1,0 +1,5 @@
+<testsuite name="no-vmodel-ids" tests="3" failures="0" time="0.6">
+  <testcase name="test_helper_function" time="0.2"/>
+  <testcase name="test_database_connection" time="0.3"/>
+  <testcase name="test_logging_output" time="0.1"/>
+</testsuite>

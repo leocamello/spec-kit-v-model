@@ -1,0 +1,10 @@
+<testsuite name="retries" tests="4" failures="0" time="2.0">
+  <testcase name="SCN-001-A1 Given valid sensor data (attempt 1)" time="0.5">
+    <failure message="Timeout on first try"/>
+  </testcase>
+  <testcase name="SCN-001-A1 Given valid sensor data (attempt 2)" time="0.5"/>
+  <testcase name="UTS-001-A1 Boundary at zero (attempt 1)" time="0.3">
+    <failure message="Flaky assertion"/>
+  </testcase>
+  <testcase name="UTS-001-A1 Boundary at zero (attempt 2)" time="0.2"/>
+</testsuite>

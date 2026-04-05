@@ -1,0 +1,11 @@
+<testsuite name="failures" tests="3" failures="3" time="0.9">
+  <testcase name="SCN-001-A1 Given valid sensor data" time="0.3">
+    <failure message="Timeout exceeded"/>
+  </testcase>
+  <testcase name="STS-001-A1 System processes input" time="0.3">
+    <error message="NullPointerException">java.lang.NullPointerException at Main.java:42</error>
+  </testcase>
+  <testcase name="UTS-001-A1 Boundary at zero" time="0.3">
+    <failure message="Expected 0, got -1"/>
+  </testcase>
+</testsuite>

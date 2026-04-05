@@ -1,0 +1,11 @@
+<testsuite name="skipped" tests="3" failures="0" skipped="3" time="0.0">
+  <testcase name="SCN-001-A1 Given valid sensor data" time="0.0">
+    <skipped message="CI environment not configured"/>
+  </testcase>
+  <testcase name="STS-001-A1 System processes input" time="0.0">
+    <skipped message="Requires hardware"/>
+  </testcase>
+  <testcase name="UTS-001-A1 Boundary at zero" time="0.0">
+    <skipped/>
+  </testcase>
+</testsuite>

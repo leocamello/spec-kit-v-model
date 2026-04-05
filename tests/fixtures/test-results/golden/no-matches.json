@@ -1,0 +1,42 @@
+{
+  "test_results": [],
+  "coverage": {},
+  "summary": {
+    "total": 0,
+    "passed": 0,
+    "failed": 0,
+    "skipped": 0,
+    "per_matrix": {
+      "A": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0
+      },
+      "B": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0
+      },
+      "C": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0
+      },
+      "D": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0
+      }
+    },
+    "unmatched_count": 3
+  },
+  "unmatched_tests": [
+    "test_helper_function",
+    "test_database_connection",
+    "test_logging_output"
+  ]
+}
