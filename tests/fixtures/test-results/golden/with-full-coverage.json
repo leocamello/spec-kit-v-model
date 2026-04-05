@@ -1,0 +1,80 @@
+{
+  "test_results": [
+    {
+      "id": "SCN-001-A1",
+      "matrix": "A",
+      "status": "passed",
+      "duration": 0.5,
+      "message": null
+    },
+    {
+      "id": "SCN-001-A2",
+      "matrix": "A",
+      "status": "passed",
+      "duration": 0.3,
+      "message": null
+    },
+    {
+      "id": "STS-001-A1",
+      "matrix": "B",
+      "status": "passed",
+      "duration": 0.4,
+      "message": null
+    },
+    {
+      "id": "UTS-001-A1",
+      "matrix": "D",
+      "status": "passed",
+      "duration": 0.2,
+      "message": null
+    }
+  ],
+  "coverage": {
+    "MOD-001": {
+      "stmt": 100.0,
+      "branch": 100.0,
+      "below_threshold": false,
+      "formatted": "100.0% stmt / 100.0% branch"
+    },
+    "MOD-002": {
+      "stmt": 100.0,
+      "branch": 100.0,
+      "below_threshold": false,
+      "formatted": "100.0% stmt / 100.0% branch"
+    }
+  },
+  "summary": {
+    "total": 4,
+    "passed": 4,
+    "failed": 0,
+    "skipped": 0,
+    "per_matrix": {
+      "A": {
+        "total": 2,
+        "passed": 2,
+        "failed": 0,
+        "skipped": 0
+      },
+      "B": {
+        "total": 1,
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0
+      },
+      "C": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0
+      },
+      "D": {
+        "total": 1,
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0
+      }
+    },
+    "unmatched_count": 0
+  },
+  "unmatched_tests": []
+}

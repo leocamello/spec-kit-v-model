@@ -1,0 +1,6 @@
+<testsuite name="extra-ids" tests="4" failures="0" time="1.0">
+  <testcase name="SCN-001-A1 Given valid sensor data" time="0.3"/>
+  <testcase name="SCN-999-A1 Scenario not in matrix" time="0.2"/>
+  <testcase name="UTS-001-A1 Boundary at zero" time="0.2"/>
+  <testcase name="UTS-999-A1 Test not in matrix" time="0.3"/>
+</testsuite>

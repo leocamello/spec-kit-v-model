@@ -99,7 +99,7 @@ def extract_coverage(cobertura_path):
     file_coverage = {}
 
     for package in root.findall(".//package"):
-        for cls in package.findall("class"):
+        for cls in package.findall(".//class"):
             filename = cls.get("filename", "")
             line_rate = float(cls.get("line-rate", "0"))
             branch_rate = float(cls.get("branch-rate", "0"))

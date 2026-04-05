@@ -1,0 +1,74 @@
+{
+  "test_results": [
+    {
+      "id": "SCN-001-A1",
+      "matrix": "A",
+      "status": "passed",
+      "duration": 0.5,
+      "message": null
+    },
+    {
+      "id": "SCN-001-A2",
+      "matrix": "A",
+      "status": "failed",
+      "duration": 0.3,
+      "message": "Expected status 200, got 500"
+    },
+    {
+      "id": "STS-001-A1",
+      "matrix": "B",
+      "status": "passed",
+      "duration": 0.4,
+      "message": null
+    },
+    {
+      "id": "UTS-001-A1",
+      "matrix": "D",
+      "status": "skipped",
+      "duration": 0.1,
+      "message": "Hardware not available"
+    },
+    {
+      "id": "UTS-002-A1",
+      "matrix": "D",
+      "status": "passed",
+      "duration": 0.2,
+      "message": null
+    }
+  ],
+  "coverage": {},
+  "summary": {
+    "total": 5,
+    "passed": 3,
+    "failed": 1,
+    "skipped": 1,
+    "per_matrix": {
+      "A": {
+        "total": 2,
+        "passed": 1,
+        "failed": 1,
+        "skipped": 0
+      },
+      "B": {
+        "total": 1,
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0
+      },
+      "C": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0
+      },
+      "D": {
+        "total": 2,
+        "passed": 1,
+        "failed": 0,
+        "skipped": 1
+      }
+    },
+    "unmatched_count": 0
+  },
+  "unmatched_tests": []
+}

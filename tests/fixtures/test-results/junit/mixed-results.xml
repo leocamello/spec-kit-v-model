@@ -1,0 +1,11 @@
+<testsuite name="mixed" tests="5" failures="1" time="2.1">
+  <testcase name="SCN-001-A1 Given valid sensor data" time="0.5"/>
+  <testcase name="SCN-001-A2 Given invalid data" time="0.3">
+    <failure message="Expected status 200, got 500">AssertionError: Expected status 200, got 500</failure>
+  </testcase>
+  <testcase name="STS-001-A1 System processes input" time="0.4"/>
+  <testcase name="UTS-001-A1 Boundary at zero" time="0.1">
+    <skipped message="Hardware not available"/>
+  </testcase>
+  <testcase name="UTS-002-A1 Parse empty input returns empty list" time="0.2"/>
+</testsuite>

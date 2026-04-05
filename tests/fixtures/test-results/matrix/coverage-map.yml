@@ -1,0 +1,5 @@
+mappings:
+  - mod_id: MOD-001
+    files: ["src/reader.py"]
+  - mod_id: MOD-002
+    files: ["src/writer.py"]
