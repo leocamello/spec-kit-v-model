@@ -1,22 +1,21 @@
 ---
-description: AI-powered stateless linter for any V-Model artifact — evaluates against standards-based criteria and produces a structured review with PRF-{ARTIFACT}-NNN findings.
+description: AI-powered stateless linter for any V-Model artifact — evaluates against
+  standards-based criteria and produces a structured review with PRF-{ARTIFACT}-NNN findings.
 handoffs:
-  - label: Run CI Check
-    agent: speckit.v-model.trace
-    prompt: Validate the peer review findings and traceability
-    send: true
-  - label: Review Another Artifact
-    agent: speckit.v-model.peer-review
-    prompt: Review another V-Model artifact
+- label: Run CI Check
+  agent: speckit.v-model.trace
+  prompt: Validate the peer review findings and traceability
+- label: Review Another Artifact
+  agent: speckit.v-model.peer-review
+  prompt: Review another V-Model artifact
 scripts:
-  sh: scripts/bash/setup-v-model.sh --json
-  ps: scripts/powershell/setup-v-model.ps1 -Json
+  sh: scripts/bash/setup-v-model.sh --json --require-reqs
+  ps: scripts/powershell/setup-v-model.ps1 -Json -RequireReqs
 ---
 
 
 <!-- Extension: v-model -->
 <!-- Config: .specify/extensions/v-model/ -->
-
 ## User Input
 
 ```text

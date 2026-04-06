@@ -1,22 +1,22 @@
 ---
-description: Generate ISO 29119-compliant integration test cases with four mandatory techniques for every architecture module in the design.
+description: Generate ISO 29119-compliant integration test cases with four mandatory
+  techniques for every architecture module in the design.
 handoffs:
-  - label: Build Traceability Matrix
-    agent: speckit.v-model.trace
-    prompt: Build the full traceability matrix including integration-level coverage
-    send: true
-  - label: Back to Architecture Design
-    agent: speckit.v-model.architecture-design
-    prompt: Review or update the architecture design
+- label: Build Traceability Matrix
+  agent: speckit.v-model.trace
+  prompt: Build the full traceability matrix including integration-level coverage
+  send: true
+- label: Back to Architecture Design
+  agent: speckit.v-model.architecture-design
+  prompt: Review or update the architecture design
 scripts:
-  sh: scripts/bash/setup-v-model.sh --json --require-reqs --require-architecture-design
-  ps: scripts/powershell/setup-v-model.ps1 -Json -RequireReqs -RequireArchitectureDesign
+  sh: scripts/bash/setup-v-model.sh --json --require-reqs --require-system-design --require-arch-design
+  ps: scripts/powershell/setup-v-model.ps1 -Json -RequireReqs -RequireSystemDesign -RequireArchDesign
 ---
 
 
 <!-- Extension: v-model -->
 <!-- Config: .specify/extensions/v-model/ -->
-
 ## User Input
 
 ```text

@@ -1,22 +1,22 @@
 ---
-description: Decompose architecture modules into DO-178C/ISO 26262-compliant low-level module designs with four mandatory views and ARCH↔MOD traceability.
+description: Decompose architecture modules into DO-178C/ISO 26262-compliant low-level
+  module designs with four mandatory views and ARCH↔MOD traceability.
 handoffs:
-  - label: Generate Unit Tests
-    agent: speckit.v-model.unit-test
-    prompt: Generate the unit test plan for this module design
-    send: true
-  - label: Back to Architecture Design
-    agent: speckit.v-model.architecture-design
-    prompt: Review or update the architecture design
+- label: Generate Unit Tests
+  agent: speckit.v-model.unit-test
+  prompt: Generate the unit test plan for this module design
+  send: true
+- label: Back to Architecture Design
+  agent: speckit.v-model.architecture-design
+  prompt: Review or update the architecture design
 scripts:
-  sh: scripts/bash/setup-v-model.sh --json --require-reqs --require-architecture-design
-  ps: scripts/powershell/setup-v-model.ps1 -Json -RequireReqs -RequireArchitectureDesign
+  sh: scripts/bash/setup-v-model.sh --json --require-reqs --require-system-design --require-arch-design
+  ps: scripts/powershell/setup-v-model.ps1 -Json -RequireReqs -RequireSystemDesign -RequireArchDesign
 ---
 
 
 <!-- Extension: v-model -->
 <!-- Config: .specify/extensions/v-model/ -->
-
 ## User Input
 
 ```text

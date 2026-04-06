@@ -1,13 +1,14 @@
 ---
-description: Generate an ISO 14971/ISO 26262-compliant Hazard Analysis (FMEA) with operational state awareness, traceable HAZ-NNN IDs, and progressive deepening.
+description: Generate an ISO 14971/ISO 26262-compliant Hazard Analysis (FMEA) with
+  operational state awareness, traceable HAZ-NNN IDs, and progressive deepening.
 handoffs:
-  - label: Run Hazard Coverage Validation
-    agent: speckit.v-model.trace
-    prompt: Build the full traceability matrix including Matrix H (Hazard Traceability)
-    send: true
-  - label: Back to System Design
-    agent: speckit.v-model.system-design
-    prompt: Review or update the system design
+- label: Run Hazard Coverage Validation
+  agent: speckit.v-model.trace
+  prompt: Build the full traceability matrix including Matrix H (Hazard Traceability)
+  send: true
+- label: Back to Requirements
+  agent: speckit.v-model.requirements
+  prompt: Review or update requirements
 scripts:
   sh: scripts/bash/setup-v-model.sh --json --require-reqs --require-system-design
   ps: scripts/powershell/setup-v-model.ps1 -Json -RequireReqs -RequireSystemDesign
@@ -16,7 +17,6 @@ scripts:
 
 <!-- Extension: v-model -->
 <!-- Config: .specify/extensions/v-model/ -->
-
 ## User Input
 
 ```text

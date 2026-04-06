@@ -1,22 +1,22 @@
 ---
-description: Generate ISO 29119-4-compliant white-box unit test cases with five mandatory techniques for every module in the design.
+description: Generate ISO 29119-4-compliant white-box unit test cases with five mandatory
+  techniques for every module in the design.
 handoffs:
-  - label: Build Traceability Matrix
-    agent: speckit.v-model.trace
-    prompt: Build the full traceability matrix including module-level coverage (Matrix D)
-    send: true
-  - label: Back to Module Design
-    agent: speckit.v-model.module-design
-    prompt: Review or update the module design
+- label: Build Traceability Matrix
+  agent: speckit.v-model.trace
+  prompt: Build the full traceability matrix including module-level coverage (Matrix D)
+  send: true
+- label: Back to Module Design
+  agent: speckit.v-model.module-design
+  prompt: Review or update the module design
 scripts:
-  sh: scripts/bash/setup-v-model.sh --json --require-reqs --require-module-design
-  ps: scripts/powershell/setup-v-model.ps1 -Json -RequireReqs -RequireModuleDesign
+  sh: scripts/bash/setup-v-model.sh --json --require-reqs --require-system-design --require-arch-design --require-module-design
+  ps: scripts/powershell/setup-v-model.ps1 -Json -RequireReqs -RequireSystemDesign -RequireArchDesign -RequireModuleDesign
 ---
 
 
 <!-- Extension: v-model -->
 <!-- Config: .specify/extensions/v-model/ -->
-
 ## User Input
 
 ```text

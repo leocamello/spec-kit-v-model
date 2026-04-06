@@ -1,22 +1,21 @@
 ---
-description: Ingest JUnit XML test results and optional Cobertura XML code coverage into the traceability matrix (100% deterministic, no AI).
+description: Ingest JUnit XML test results and optional Cobertura XML code coverage
+  into the traceability matrix (100% deterministic, no AI).
 handoffs:
-  - label: View Traceability Matrix
-    agent: speckit.v-model.trace
-    prompt: Build the full traceability matrix to see current coverage
-    send: true
-  - label: Run Impact Analysis
-    agent: speckit.v-model.impact-analysis
-    prompt: Analyze the impact of any failed test results on V-Model artifacts
+- label: Generate Audit Report
+  agent: speckit.v-model.audit-report
+  prompt: Build the release audit report from V-Model artifacts
+- label: View Traceability Matrix
+  agent: speckit.v-model.trace
+  prompt: Build the full traceability matrix to see current coverage
 scripts:
-  sh: scripts/bash/ingest-test-results.sh
-  ps: scripts/powershell/Ingest-Test-Results.ps1
+  sh: scripts/bash/setup-v-model.sh --json --require-reqs
+  ps: scripts/powershell/setup-v-model.ps1 -Json -RequireReqs
 ---
 
 
 <!-- Extension: v-model -->
 <!-- Config: .specify/extensions/v-model/ -->
-
 ## User Input
 
 ```text

@@ -1,22 +1,21 @@
 ---
-description: Run deterministic impact analysis to identify all V-Model artifacts affected by a change to one or more IDs.
+description: Run deterministic impact analysis to identify all V-Model artifacts
+  affected by a change to one or more IDs.
 handoffs:
-  - label: View Traceability Matrix
-    agent: speckit.v-model.trace
-    prompt: Build the full traceability matrix to see current coverage
-    send: true
-  - label: Run Peer Review
-    agent: speckit.v-model.peer-review
-    prompt: Review the affected artifacts identified by impact analysis
+- label: Run Peer Review
+  agent: speckit.v-model.peer-review
+  prompt: Review the affected artifacts identified by impact analysis
+- label: View Traceability Matrix
+  agent: speckit.v-model.trace
+  prompt: Build the full traceability matrix to see current coverage
 scripts:
-  sh: scripts/bash/impact-analysis.sh
-  ps: scripts/powershell/impact-analysis.ps1
+  sh: scripts/bash/setup-v-model.sh --json --require-reqs
+  ps: scripts/powershell/setup-v-model.ps1 -Json -RequireReqs
 ---
 
 
 <!-- Extension: v-model -->
 <!-- Config: .specify/extensions/v-model/ -->
-
 ## User Input
 
 ```text

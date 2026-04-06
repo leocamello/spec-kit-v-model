@@ -1,23 +1,21 @@
 ---
-description: Build a release audit report from V-Model artifacts with waiver cross-referencing and compliance gating (100% deterministic, no AI).
+description: Build a release audit report from V-Model artifacts with waiver
+  cross-referencing and compliance gating (100% deterministic, no AI).
 handoffs:
-  - label: View Traceability Matrix
-    agent: speckit.v-model.trace
-    prompt: Build the full traceability matrix to see current coverage
-    send: true
-  - label: Ingest Test Results
-    agent: speckit.v-model.test-results
-    prompt: Ingest CI test results before generating the audit report
-    send: true
+- label: Back to Test Results
+  agent: speckit.v-model.test-results
+  prompt: Ingest CI test results before generating the audit report
+- label: View Traceability Matrix
+  agent: speckit.v-model.trace
+  prompt: Build the full traceability matrix to see current coverage
 scripts:
-  sh: scripts/bash/build-audit-report.sh
-  ps: scripts/powershell/Build-Audit-Report.ps1
+  sh: scripts/bash/setup-v-model.sh --json --require-reqs
+  ps: scripts/powershell/setup-v-model.ps1 -Json -RequireReqs
 ---
 
 
 <!-- Extension: v-model -->
 <!-- Config: .specify/extensions/v-model/ -->
-
 ## User Input
 
 ```text
