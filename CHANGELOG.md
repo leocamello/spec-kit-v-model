@@ -5,124 +5,77 @@ All notable changes to the V-Model Extension Pack are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased] — audit-report (005e)
+## [0.5.0] — 2026-04-06
 
-### Added
-- `audit-report` command — 100% deterministic (no AI) release audit report builder that produces a point-in-time `release-audit-report.md` for regulatory submission
-  - Artifact inventory: discovers all 11 V-Model files, pins each to Git SHA + last-modified date, reports Present/Missing status
-  - Traceability matrix embedding: extracts and embeds all matrices (A–D + H) from `traceability-matrix.md` into the report
-  - Coverage analysis: computes forward/backward coverage per matrix, identifies gaps and orphans
-  - Hazard management summary: extracts HAZ-NNN entries with severity, likelihood, mitigation, and residual risk
-  - Anomaly detection: surfaces failed tests, skipped tests, and untested scenarios from the traceability matrix
-  - Waiver cross-referencing: reads `waivers.md` (WAV-NNN entries), classifies anomalies as Waived or BLOCKING, detects orphaned waivers referencing non-existent test IDs
-  - Compliance gating: ✅ RELEASE READY (0 anomalies, exit 0), ⚠️ RELEASE CANDIDATE (all waived, exit 0), ❌ NOT READY (unwaived failures, exit 1)
-  - Executive summary, signature block, and known anomalies sections
-  - `--json` flag for CI integration (structured JSON with metadata, inventory, coverage, anomalies, hazards, summary)
-  - CLI options: `--system-name`, `--version`, `--git-tag`, `--regulatory-context`, `--output`
-  - Exit codes: 0 = RELEASE READY/CANDIDATE, 1 = NOT READY, 2 = error (missing required artifacts)
-- `build-audit-report.sh` / `Build-Audit-Report.ps1` — Bash and PowerShell scripts (1:1 parity) implementing all 10 modules (MOD-001 through MOD-010)
-- 5 test fixture directories under `tests/fixtures/audit-report/`: clean (all pass), waived (skipped + waivers), blocking (failed test), orphaned-waiver, missing-required
-- 70 BATS tests (`build-audit-report.bats`): help/args, exit codes, all 5 scenarios, artifact inventory, hazard section, coverage analysis, anomaly rendering, JSON structure + scenarios, matrix embedding, signature block
-- 70 Pester tests (`Build-Audit-Report.Tests.ps1`): 1:1 parity with BATS
+### Added — New Commands
 
-### Changed
-- `extension.yml`: registered `speckit.v-model.audit-report` command (14th command)
-- Documentation updated: README (14 commands, audit-report in workflow + Features + Command Reference + Scripts table + testing counts), CHANGELOG
-- Total commands: 13 → 14; BATS tests: 269 → 339; Pester tests: 252 → 322
+- **`hazard-analysis`** — ISO 14971/26262 Failure Mode and Effects Analysis (FMEA) with `HAZ-NNN` hazard identifiers, operational state awareness, severity × likelihood risk matrix, mitigation traceability to REQ/SYS IDs, and progressive deepening (append-only at architecture level)
+  - `hazard-analysis-template.md` — FMEA table template with 10 columns
+  - `validate-hazard-coverage.sh` / `validate-hazard-coverage.ps1` — Three-dimensional deterministic validator: forward (SYS→HAZ), backward (HAZ→REQ/SYS), and operational state consistency checks with `--partial` and `--json` flags
+  - Matrix H (Hazard Traceability) in traceability matrix — HAZ → Mitigation → Verification linkage
+  - HAZ-NNN ID pattern in `id_validator.py`
+- **`impact-analysis`** — Deterministic change impact analysis that builds a dependency graph from all V-Model markdown artifacts and traverses it to identify suspect artifacts affected by a change
+  - `--downward` (default), `--upward`, and `--full` bidirectional traversal modes
+  - `--json` flag for CI integration (structured JSON with blast radius, suspect artifacts by level, re-validation order)
+  - Multi-ID support, <2s for 500+ IDs across 10+ artifact files
+  - `impact-analysis.sh` / `impact-analysis.ps1` — Bash and PowerShell scripts with awk-based graph parser and BFS traversal
+- **`peer-review`** — AI-powered stateless linter for any V-Model artifact, evaluating against standards-based criteria (INCOSE, IEEE 1016/42010, ISO 29119, ISO 14971, DO-178C) and producing `PRF-{ARTIFACT}-NNN` findings with severity classifications (Critical, Major, Minor, Observation)
+  - Stateless linting model: findings regenerated from scratch each run, like ESLint
+  - `peer-review-check.sh` / `Peer-Review-Check.ps1` — CI parser scripts with exit codes: 0 (clean), 1 (Critical/Major — blocks PR), 2 (Minor — warning)
+- **`test-results`** — 100% deterministic JUnit XML + Cobertura XML ingestor that updates the traceability matrix in-place, flipping `⬜ Untested` to `✅ Passed` / `❌ Failed` / `⏭️ Skipped` with Date, Commit SHA, and optional Coverage columns
+  - `parse_test_results.py` — stdlib-only Python helper (xml.etree.ElementTree) with 5 modules
+  - `ingest-test-results.sh` / `Ingest-Test-Results.ps1` — Bash and PowerShell wrappers (1:1 parity)
+  - Coverage mapping via `coverage-map.yml` or convention-based matching from `module-design.md`
+- **`audit-report`** — 100% deterministic release audit report builder that produces a point-in-time `release-audit-report.md` for regulatory submission
+  - Artifact inventory, traceability matrix embedding, coverage analysis, hazard management summary
+  - Anomaly detection with waiver cross-referencing via `waivers.md` (WAV-NNN entries)
+  - Compliance gating: ✅ RELEASE READY / ⚠️ RELEASE CANDIDATE / ❌ NOT READY
+  - `build-audit-report.sh` / `Build-Audit-Report.ps1` — Bash and PowerShell scripts (1:1 parity)
 
-## [Unreleased] — test-results (005d)
+### Added — Release Enhancements
 
-### Added
-- `test-results` command — 100% deterministic (no AI) JUnit XML + Cobertura XML ingestor that updates the traceability matrix in-place, flipping `⬜ Untested` to `✅ Passed` / `❌ Failed` / `⏭️ Skipped` with Date, Commit SHA, and optional Coverage columns
-  - JUnit XML parsing: extracts V-Model IDs (SCN/STS/ITS/UTS) from test case names via regex, handles retries (last occurrence wins), multi-suite support
-  - Cobertura XML parsing: maps code coverage to modules via `coverage-map.yml` or convention-based matching from `module-design.md`, adds `{stmt}% stmt / {branch}% branch` column to Matrix D with `⚠` threshold warnings
-  - In-place matrix update: modifies existing `traceability-matrix.md`, preserves unmatched rows and non-table content, adds Date + Commit columns on first run
-  - Re-run safe: subsequent runs overwrite previous status/date/commit values
-  - Exit codes: 0 = all passed, 1 = failures detected, 2 = no V-Model ID matches
-  - `--json` flag for CI integration (structured JSON with per-matrix counts, coverage data, matrix path)
-- `parse_test_results.py` — stdlib-only Python helper (xml.etree.ElementTree, json, re, sys, argparse) with 5 modules: extract_testcases, classify_results, extract_coverage, map_coverage_to_modules, match_ids
-- `ingest-test-results.sh` / `Ingest-Test-Results.ps1` — Bash and PowerShell wrappers (1:1 parity) that call the Python helper, update the matrix, and print summary
-- 23 test fixtures: 8 JUnit XML scenarios (all-pass, mixed, all-fail, all-skipped, no-matches, with-retries, multi-suite, extra-ids), 2 Cobertura XML (full/partial), 3 matrix fixtures, 10 golden JSON outputs
-- 61 BATS tests (`ingest-test-results.bats`): Python helper golden validation, exit codes, ID matching, retry dedup, summary counts, coverage mapping, wrapper help/args/exit/matrix/re-run/summary/JSON/coverage
-- 61 Pester tests (`Ingest-Test-Results.Tests.ps1`): 1:1 parity with BATS
-- Dogfooded V-Model artifacts for test-results feature (`specs/005d-test-results/`): 30 REQs, 44 ATPs, 50 SCNs, 7 SYS, 31 STPs, 45 STSs, 9 ARCH, 13 ITPs, 21 ITSs, 9 MODs, 27 UTPs, 53 UTSs, full traceability matrices
+- `validate-level.sh` / `Validate-Level.ps1` — Dispatch wrapper that invokes the correct validator for any V-Model level (acceptance → requirement-coverage, system-test → system-coverage, integration-test → architecture-coverage, unit-test → module-coverage, hazard-analysis → hazard-coverage) with `--json` and `--partial` flag support
+- Agent definitions (`.github/agents/`) for all 14 commands — previously only 3 existed (requirements, acceptance, trace); now all commands have full agent prompts
+- Sample CI workflow template (`examples/github-actions/v-model-validation.yml`) — configurable GitHub Actions workflow with conditional validators, GITHUB_STEP_SUMMARY, peer review check, and audit report generation
+- 56 V-Model specification documents promoted from Draft to Approved across specs/002–005e
 
-### Changed
-- `extension.yml`: registered `speckit.v-model.test-results` command (13th command)
-- Documentation updated: README (13 commands, test-results in workflow + Features + Command Reference + Scripts table + testing counts), CHANGELOG
-- Total commands: 12 → 13; BATS tests: 208 → 269; Pester tests: 191 → 252
+### Added — Test Infrastructure
 
-## [Unreleased] — peer-review (005c)
+- Hazard analysis fixtures: minimal (5 HAZ), complex (12 HAZ), gaps, golden/automotive-adas (15 HAZ, ISO 26262), golden/medical-device (12 HAZ, ISO 14971)
+- Impact analysis fixtures: linear, diamond, disconnected — with 17 golden JSON outputs
+- Peer review fixtures: clean, critical-major, minor-only, mixed-severity, observations-only
+- Test results fixtures: 8 JUnit XML scenarios, 2 Cobertura XML, 3 matrix fixtures, 10 golden JSON outputs
+- Audit report fixtures: clean, waived, blocking, orphaned-waiver, missing-required — with golden `.md` + `.json` outputs
+- Validate-level fixtures reusing existing minimal/gaps directories
+- Python structural validators: `hazard_validators.py`, `impact_validators.py`
+- DeepEval metric wrappers: `StructuralHazardAnalysisMetric`, `StructuralImpactAnalysisMetric`
 
-### Added
-- `peer-review` command — AI-powered stateless linter for any V-Model artifact, evaluating against standards-based criteria (INCOSE for requirements, IEEE 1016/42010 for design, ISO 29119/29119-4 for tests, ISO 14971 for hazard analysis, DO-178C for module design) and producing `PRF-{ARTIFACT}-NNN` findings with severity classifications (Critical, Major, Minor, Observation)
-  - 9 supported artifact types with type-specific review criteria
-  - Stateless linting model: no `Status` field — findings regenerated from scratch each run, like ESLint
-  - Advisory-only: PRF IDs do not participate in traceability chain or affect coverage metrics
-  - CI-hookable via companion parser scripts
-- `peer-review-template.md` — Output format template with header, summary table, and per-finding structure
-- `peer-review-check.sh` / `Peer-Review-Check.ps1` — Deterministic CI parser scripts that read AI-generated peer-review reports and return exit codes: 0 (clean), 1 (Critical/Major — blocks PR), 2 (Minor — warning)
-  - `--json` / `-Json` flag for structured output (severity counts, PRF heading cross-validation, summary match check)
-  - `--help` / `-Help` flag for usage information
-- 5 peer-review test fixture scenarios: clean (0 findings), critical-major (exit 1), minor-only (exit 2), mixed-severity (all 4 levels), observations-only (exit 0), each with `.md` report and `.json` golden output
-- 38 BATS tests (`peer-review-check.bats`): all fixture scenarios, severity counting, PRF cross-validation, metadata extraction, error handling, JSON structure
-- 38 Pester tests (`Peer-Review-Check.Tests.ps1`): 1:1 parity with BATS
-- Dogfooded V-Model artifacts for peer-review feature (`specs/005c-peer-review/`): 37 REQs, 74 ATPs, 6 SYS, 25 STPs, 10 ARCH, 25 ITPs, 16 MODs, 48 UTPs, full traceability matrices
+### Added — Dogfooded V-Model Artifacts
+
+- `specs/005a-hazard-analysis/` — full V-Model cycle for hazard-analysis command
+- `specs/005b-impact-analysis/` — full V-Model cycle for impact-analysis command
+- `specs/005c-peer-review/` — full V-Model cycle for peer-review command (37 REQs, 74 ATPs)
+- `specs/005d-test-results/` — full V-Model cycle for test-results command (30 REQs, 53 UTSs)
+- `specs/005e-audit-report/` — full V-Model cycle for audit-report command
 
 ### Changed
-- `extension.yml`: registered `speckit.v-model.peer-review` command (12th command), added `peer_review_findings: "PRF"` to `defaults.id_prefixes`
-- Documentation updated: README (12 commands, peer-review in workflow + Features + Command Reference + Scripts table + directory tree), CHANGELOG
-- Total commands: 11 → 12; BATS tests: 170 → 208; Pester tests: 153 → 191
 
-## [Unreleased] — impact-analysis (005b)
-
-### Added
-- `impact-analysis` command — Deterministic change impact analysis that builds a dependency graph from all V-Model markdown artifacts and traverses it to identify suspect artifacts affected by a change
-  - `--downward` mode: trace from requirements to tests/modules (default)
-  - `--upward` mode: trace from modules/tests back to requirements
-  - `--full` mode: bidirectional traversal combining both directions
-  - `--json` flag for CI integration (structured JSON output with blast radius, suspect artifacts by level, re-validation order)
-  - Multi-ID support: analyze impact of multiple changed IDs in a single run
-  - Performance: <2s for 500+ IDs across 10+ artifact files
-- `impact-analysis.sh` / `impact-analysis.ps1` — Bash and PowerShell scripts with awk-based graph parser, BFS traversal, and V-Model level classification
-- `commands/impact-analysis.md` — Command definition with usage examples, exit codes, and quality criteria
-- Impact-specific test fixtures: `linear/` (simple chain), `diamond/` (fan-out/fan-in), `disconnected/` (isolated subgraphs)
-- 17 golden JSON output files across 6 fixture sets × 3 traversal modes
-- Python structural validator (`impact_validators.py`): 8 validation functions (JSON structure, direction, changed IDs, suspect artifacts, blast radius consistency, revalidation order, no self-reference)
-- `StructuralImpactAnalysisMetric` DeepEval metric wrapper
-- 30 evaluation tests: 17 structural, 8 golden comparison, 5 graph property tests
-- 32 BATS tests (`impact-analysis.bats`): all fixtures, all modes, golden comparison, error handling, structural validation, performance
-- 14 Pester tests (`Impact-Analysis.Tests.ps1`): PowerShell parity
-- Dogfooded V-Model artifacts for impact-analysis feature (`specs/005b-impact-analysis/`)
-
-### Changed
-- `classify_id()` in both Bash and PowerShell now maps ALL compound prefixes (e.g., `SYS-DR`, `REQ-DR`) to their base V-Model level, not just `REQ-NF/IF/CN` and `ATP-NF/IF/CN`
-- Documentation updated: README (11 commands, impact-analysis in workflow + Features + Command Reference), compliance-guide (new Change Impact Analysis section, moved from Future to implemented), id-schema-guide (SYS-DR compound prefix, impact-analysis in Incremental Updates), usage-examples (expanded Example 3 with impact-first workflow), product-vision (marked as shipped), v-model-overview (impact-analysis reference), CONTRIBUTING (test counts + fixtures)
-- Total commands: 10 → 11; BATS tests: 117 → 153; Pester tests: 111 → 129; Structural evals: 60 → 89; LLM-as-judge evals: 42 (unchanged)
-
-## [Unreleased] — hazard-analysis (005a)
-
-### Added
-- `hazard-analysis` command — ISO 14971/26262 Failure Mode and Effects Analysis (FMEA) with `HAZ-NNN` hazard identifiers, operational state awareness, severity × likelihood risk matrix, mitigation traceability to REQ/SYS IDs, and progressive deepening (append-only at architecture level)
-- `hazard-analysis-template.md` — FMEA table template with 10 columns (HAZ ID, Component, Failure Mode, Operational State, Effect, Severity, Likelihood, Risk Level, Mitigation, Residual Risk)
-- `validate-hazard-coverage.sh` / `validate-hazard-coverage.ps1` — Three-dimensional deterministic validator: forward (SYS→HAZ), backward (HAZ→REQ/SYS), and operational state consistency checks with `--partial` and `--json` flags
-- Matrix H (Hazard Traceability) in traceability matrix — HAZ → Mitigation → Verification linkage
-- HAZ-NNN ID pattern in `id_validator.py`
-- Hazard analysis fixtures: minimal (5 HAZ), complex (12 HAZ, 3 states), gaps (3 HAZ, intentional coverage gaps), golden/automotive-adas (15 HAZ, ISO 26262, 5 states), golden/medical-device (12 HAZ, ISO 14971, 4 states)
-- Python structural validator (`hazard_validators.py`): FMEA row parsing, HAZ ID validation, severity/likelihood/risk scale checks, SYS coverage, mitigation reference validation
-- `StructuralHazardAnalysisMetric` DeepEval metric wrapper
-- 3 LLM-as-judge GEval metrics: FMEA completeness, severity assessment quality, operational state coverage
-- 9 structural + 6 LLM-as-judge evaluation tests
-- 26 BATS tests (`validate-hazard-coverage.bats`)
-- 20 Pester tests (`Validate-Hazard-Coverage.Tests.ps1`)
-- Dogfooded V-Model artifacts for hazard-analysis feature (`specs/005a-hazard-analysis/`)
-
-### Changed
 - `build-matrix.sh` / `build-matrix.ps1` extended with Matrix H generation block (auto-detected when hazard-analysis.md exists)
-- `trace.md` updated for five-matrix output (A + B + C + D + H)
-- Complex and golden system-design fixtures updated with Operational States sections
-- Documentation updated: README (10 commands, 13-step workflow, Matrix H), id-schema-guide (13 ID types), compliance-guide (Section 8: Hazard Analysis, Matrix H), v-model-overview (Hazard Analysis section), usage-examples, product-vision, CONTRIBUTING
-- Total commands: 9 → 10; BATS tests: 91 → 117; Pester tests: 91 → 111; Structural evals: 51 → 60; LLM-as-judge evals: 36 → 42
+- `trace` command updated for five-matrix output (A + B + C + D + H)
+- `classify_id()` in both Bash and PowerShell now maps ALL compound prefixes (e.g., `SYS-DR`, `REQ-DR`) to their base V-Model level
+- `extension.yml` updated with all 5 new commands (14 total) and `peer_review_findings: "PRF"` ID prefix
+- Documentation updated: README, compliance-guide, id-schema-guide, usage-examples, product-vision, v-model-overview, CONTRIBUTING
+
+### Stats
+
+- Commands: 9 → 14
+- Bash scripts: 12 → 16 (+ validate-level)
+- PowerShell scripts: 12 → 16 (+ Validate-Level)
+- BATS tests: 91 → 364
+- Pester tests: 91 → 322
+- Structural evals: 51 → 89
+- LLM-as-judge evals: 36 → 42
+- Agent definitions: 3 → 14
 
 ## [0.4.0] — 2026-02-22
 

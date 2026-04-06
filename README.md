@@ -49,7 +49,7 @@ specify extension add v-model
 ### Method 2: Install from GitHub release
 
 ```bash
-specify extension add v-model --from https://github.com/leocamello/spec-kit-v-model/archive/refs/tags/v0.4.0.zip
+specify extension add v-model --from https://github.com/leocamello/spec-kit-v-model/archive/refs/tags/v0.5.0.zip
 ```
 
 ### Method 3: Install from local directory (development)
@@ -393,8 +393,8 @@ GOOGLE_API_KEY=... pytest tests/evals/ -m eval -v
 
 | Layer | Tests | What it validates |
 |-------|-------|-------------------|
-| BATS | **339** | Bash script logic (setup, coverage, system coverage, architecture coverage, module coverage, hazard coverage, impact analysis, peer-review check, test-results ingestion, audit-report, matrix, diff, parity) |
-| Pester | 322 | PowerShell script parity |
+| BATS | **364** | Bash script logic (setup, coverage, system coverage, architecture coverage, module coverage, hazard coverage, impact analysis, peer-review check, test-results ingestion, audit-report, validate-level, matrix, diff, parity) |
+| Pester | 347 | PowerShell script parity |
 | Structural evals | 89 | ID format, template conformance, section completeness across all V-levels including hazard analysis and impact analysis |
 | LLM-as-judge evals | 42 | Requirements quality, BDD quality, design quality, hazard analysis quality, traceability (requires API key) |
 
