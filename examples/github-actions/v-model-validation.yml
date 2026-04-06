@@ -1,0 +1,341 @@
+# =============================================================================
+# V-Model Validation — Sample GitHub Actions Workflow
+# =============================================================================
+#
+# Copy this file into your repository at:
+#   .github/workflows/v-model-validation.yml
+#
+# This workflow validates your V-Model specification artifacts using the
+# spec-kit-v-model extension scripts. It is designed to handle partial V-Models:
+# if you only have requirements + acceptance (no system-design yet), the
+# workflow will validate what exists and skip the rest.
+#
+# Configure the env variables below to match your project layout and desired
+# extension version.
+#
+# For more information see:
+#   https://github.com/leocamello/spec-kit-v-model
+# =============================================================================
+
+name: V-Model Validation
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# ---------------------------------------------------------------------------
+# Configuration — edit these to match your project
+# ---------------------------------------------------------------------------
+env:
+  # Path to your V-Model artifacts directory (relative to repo root)
+  VMODEL_DIR: specs/v-model
+
+  # spec-kit-v-model release tag to install
+  SPECKIT_VMODEL_VERSION: v0.5.0
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: V-Model Validation
+    runs-on: ubuntu-latest
+
+    steps:
+      # -----------------------------------------------------------------------
+      # 1. Checkout your repository
+      # -----------------------------------------------------------------------
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      # -----------------------------------------------------------------------
+      # 2. Install the spec-kit-v-model extension from a GitHub release
+      #    Adjust the repository URL if you host a private fork.
+      # -----------------------------------------------------------------------
+      - name: Install spec-kit-v-model extension
+        run: |
+          INSTALL_DIR="$HOME/.spec-kit/extensions/v-model"
+          mkdir -p "$INSTALL_DIR"
+
+          echo "Downloading spec-kit-v-model $SPECKIT_VMODEL_VERSION ..."
+          curl -fsSL \
+            "https://github.com/leocamello/spec-kit-v-model/archive/refs/tags/${SPECKIT_VMODEL_VERSION}.tar.gz" \
+            -o v-model-extension.tar.gz
+
+          tar -xzf v-model-extension.tar.gz --strip-components=1 -C "$INSTALL_DIR"
+          rm v-model-extension.tar.gz
+
+          # Make all scripts executable
+          chmod +x "$INSTALL_DIR"/scripts/bash/*.sh
+
+          # Expose scripts directory for later steps
+          echo "VMODEL_SCRIPTS=$INSTALL_DIR/scripts/bash" >> "$GITHUB_ENV"
+
+          echo "✓ Installed spec-kit-v-model $SPECKIT_VMODEL_VERSION to $INSTALL_DIR"
+
+      # -----------------------------------------------------------------------
+      # 3. Detect which V-Model artifacts exist
+      #    This lets later steps skip validators for levels you haven't created.
+      # -----------------------------------------------------------------------
+      - name: Detect V-Model artifacts
+        id: detect
+        run: |
+          echo "=== Detecting V-Model artifacts in $VMODEL_DIR ==="
+
+          check_file() {
+            local name="$1" file="$2"
+            if [[ -f "$VMODEL_DIR/$file" ]]; then
+              echo "  ✓ $file"
+              echo "${name}=true" >> "$GITHUB_OUTPUT"
+            else
+              echo "  ✗ $file (not found — will skip)"
+              echo "${name}=false" >> "$GITHUB_OUTPUT"
+            fi
+          }
+
+          # Left side of the V (development specs)
+          check_file has_requirements       requirements.md
+          check_file has_acceptance_plan     acceptance-plan.md
+          check_file has_system_design       system-design.md
+          check_file has_system_test         system-test.md
+          check_file has_architecture_design architecture-design.md
+          check_file has_integration_test    integration-test.md
+          check_file has_module_design       module-design.md
+          check_file has_unit_test           unit-test.md
+
+          # Cross-cutting
+          check_file has_hazard_analysis     hazard-analysis.md
+          check_file has_traceability_matrix traceability-matrix.md
+
+          # Peer review reports (glob — there may be multiple)
+          if compgen -G "$VMODEL_DIR/peer-review-*.md" > /dev/null 2>&1; then
+            echo "  ✓ peer-review-*.md"
+            echo "has_peer_reviews=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "  ✗ peer-review-*.md (not found — will skip)"
+            echo "has_peer_reviews=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      # -----------------------------------------------------------------------
+      # 4. Requirement Coverage (REQ → ATP → SCN)
+      #    Requires: requirements.md, acceptance-plan.md
+      # -----------------------------------------------------------------------
+      - name: Validate requirement coverage
+        id: req_coverage
+        if: >-
+          steps.detect.outputs.has_requirements == 'true' &&
+          steps.detect.outputs.has_acceptance_plan == 'true'
+        run: |
+          echo "--- Validating REQ → ATP → SCN coverage ---"
+          if "$VMODEL_SCRIPTS/validate-requirement-coverage.sh" "$VMODEL_DIR"; then
+            echo "result=✅ Pass" >> "$GITHUB_OUTPUT"
+          else
+            echo "result=❌ Fail" >> "$GITHUB_OUTPUT"
+            exit 1
+          fi
+
+      # -----------------------------------------------------------------------
+      # 5. System Coverage (REQ → SYS → STP → STS)
+      #    Requires: requirements.md, system-design.md
+      #    Partial mode: runs forward-only if system-test.md is absent
+      # -----------------------------------------------------------------------
+      - name: Validate system coverage
+        id: sys_coverage
+        if: >-
+          steps.detect.outputs.has_requirements == 'true' &&
+          steps.detect.outputs.has_system_design == 'true'
+        run: |
+          echo "--- Validating REQ → SYS → STP → STS coverage ---"
+          if "$VMODEL_SCRIPTS/validate-system-coverage.sh" "$VMODEL_DIR"; then
+            echo "result=✅ Pass" >> "$GITHUB_OUTPUT"
+          else
+            echo "result=❌ Fail" >> "$GITHUB_OUTPUT"
+            exit 1
+          fi
+
+      # -----------------------------------------------------------------------
+      # 6. Architecture Coverage (SYS → ARCH → ITP → ITS)
+      #    Requires: system-design.md, architecture-design.md
+      #    Partial mode: runs forward-only if integration-test.md is absent
+      # -----------------------------------------------------------------------
+      - name: Validate architecture coverage
+        id: arch_coverage
+        if: >-
+          steps.detect.outputs.has_system_design == 'true' &&
+          steps.detect.outputs.has_architecture_design == 'true'
+        run: |
+          echo "--- Validating SYS → ARCH → ITP → ITS coverage ---"
+          if "$VMODEL_SCRIPTS/validate-architecture-coverage.sh" "$VMODEL_DIR"; then
+            echo "result=✅ Pass" >> "$GITHUB_OUTPUT"
+          else
+            echo "result=❌ Fail" >> "$GITHUB_OUTPUT"
+            exit 1
+          fi
+
+      # -----------------------------------------------------------------------
+      # 7. Module Coverage (ARCH → MOD → UTP → UTS)
+      #    Requires: architecture-design.md, module-design.md
+      #    Partial mode: runs forward-only if unit-test.md is absent
+      # -----------------------------------------------------------------------
+      - name: Validate module coverage
+        id: mod_coverage
+        if: >-
+          steps.detect.outputs.has_architecture_design == 'true' &&
+          steps.detect.outputs.has_module_design == 'true'
+        run: |
+          echo "--- Validating ARCH → MOD → UTP → UTS coverage ---"
+          if "$VMODEL_SCRIPTS/validate-module-coverage.sh" "$VMODEL_DIR"; then
+            echo "result=✅ Pass" >> "$GITHUB_OUTPUT"
+          else
+            echo "result=❌ Fail" >> "$GITHUB_OUTPUT"
+            exit 1
+          fi
+
+      # -----------------------------------------------------------------------
+      # 8. Hazard Coverage (HAZ → mitigation)
+      #    Requires: system-design.md, hazard-analysis.md
+      #    Runs with --partial if requirements.md is absent
+      # -----------------------------------------------------------------------
+      - name: Validate hazard coverage
+        id: haz_coverage
+        if: >-
+          steps.detect.outputs.has_system_design == 'true' &&
+          steps.detect.outputs.has_hazard_analysis == 'true'
+        run: |
+          echo "--- Validating HAZ → mitigation coverage ---"
+          PARTIAL_FLAG=""
+          if [[ "${{ steps.detect.outputs.has_requirements }}" != "true" ]]; then
+            PARTIAL_FLAG="--partial"
+          fi
+          if "$VMODEL_SCRIPTS/validate-hazard-coverage.sh" "$VMODEL_DIR" $PARTIAL_FLAG; then
+            echo "result=✅ Pass" >> "$GITHUB_OUTPUT"
+          else
+            echo "result=❌ Fail" >> "$GITHUB_OUTPUT"
+            exit 1
+          fi
+
+      # -----------------------------------------------------------------------
+      # 9. Build Traceability Matrix
+      #    Requires: requirements.md, acceptance-plan.md
+      # -----------------------------------------------------------------------
+      - name: Build traceability matrix
+        id: matrix
+        if: >-
+          steps.detect.outputs.has_requirements == 'true' &&
+          steps.detect.outputs.has_acceptance_plan == 'true'
+        run: |
+          echo "--- Building traceability matrix ---"
+          if "$VMODEL_SCRIPTS/build-matrix.sh" "$VMODEL_DIR" \
+              --output "$VMODEL_DIR/traceability-matrix-ci.md"; then
+            echo "result=✅ Built" >> "$GITHUB_OUTPUT"
+            echo "Traceability matrix written to $VMODEL_DIR/traceability-matrix-ci.md"
+          else
+            echo "result=❌ Fail" >> "$GITHUB_OUTPUT"
+            exit 1
+          fi
+
+      # -----------------------------------------------------------------------
+      # 10. Peer Review Check
+      #     Runs once per peer-review-*.md file found.
+      #     Exit code 1 = Critical/Major findings (blocks the PR).
+      #     Exit code 2 = Minor findings only (non-blocking warning).
+      # -----------------------------------------------------------------------
+      - name: Peer review check
+        id: peer_review
+        if: steps.detect.outputs.has_peer_reviews == 'true'
+        run: |
+          echo "--- Checking peer review reports ---"
+          OVERALL=0
+          for review in "$VMODEL_DIR"/peer-review-*.md; do
+            echo "Checking $(basename "$review") ..."
+            RC=0
+            "$VMODEL_SCRIPTS/peer-review-check.sh" "$review" || RC=$?
+            if [[ $RC -eq 1 ]]; then
+              echo "  ⛔ Critical/Major findings — blocks merge"
+              OVERALL=1
+            elif [[ $RC -eq 2 ]]; then
+              echo "  ⚠️  Minor findings only"
+              # Only escalate to minor if we haven't already hit a blocker
+              [[ $OVERALL -eq 0 ]] && OVERALL=2
+            else
+              echo "  ✓ Clean"
+            fi
+          done
+
+          if [[ $OVERALL -eq 1 ]]; then
+            echo "result=⛔ Blocked (Critical/Major)" >> "$GITHUB_OUTPUT"
+            exit 1
+          elif [[ $OVERALL -eq 2 ]]; then
+            echo "result=⚠️ Minor findings" >> "$GITHUB_OUTPUT"
+          else
+            echo "result=✅ Clean" >> "$GITHUB_OUTPUT"
+          fi
+
+      # -----------------------------------------------------------------------
+      # 11. Build Audit Report
+      #     Requires at minimum: requirements.md, traceability-matrix.md
+      #     Optional flags (--system-name, --version, --git-tag) can be added.
+      # -----------------------------------------------------------------------
+      - name: Build audit report
+        id: audit
+        if: >-
+          steps.detect.outputs.has_requirements == 'true' &&
+          steps.detect.outputs.has_traceability_matrix == 'true'
+        run: |
+          echo "--- Building release audit report ---"
+          if "$VMODEL_SCRIPTS/build-audit-report.sh" "$VMODEL_DIR" \
+              --output "$VMODEL_DIR/release-audit-report-ci.md"; then
+            echo "result=✅ Release ready" >> "$GITHUB_OUTPUT"
+          else
+            RC=$?
+            if [[ $RC -eq 1 ]]; then
+              echo "result=⚠️ Not ready (unwaived anomalies)" >> "$GITHUB_OUTPUT"
+              # Non-fatal — lets you see the report in the summary
+            else
+              echo "result=❌ Error" >> "$GITHUB_OUTPUT"
+              exit 1
+            fi
+          fi
+
+      # -----------------------------------------------------------------------
+      # 12. Job Summary — produces a nice markdown table in the PR / run page
+      # -----------------------------------------------------------------------
+      - name: Write job summary
+        if: always()
+        run: |
+          {
+            echo "## 🔍 V-Model Validation Summary"
+            echo ""
+            echo "| Check | Result |"
+            echo "|-------|--------|"
+
+            # Helper: print result or "⏭️ Skipped" if the step didn't run
+            row() {
+              local label="$1" result="$2"
+              echo "| $label | ${result:-⏭️ Skipped} |"
+            }
+
+            row "Requirement coverage (REQ → ATP → SCN)" \
+                "${{ steps.req_coverage.outputs.result }}"
+            row "System coverage (REQ → SYS → STP → STS)" \
+                "${{ steps.sys_coverage.outputs.result }}"
+            row "Architecture coverage (SYS → ARCH → ITP → ITS)" \
+                "${{ steps.arch_coverage.outputs.result }}"
+            row "Module coverage (ARCH → MOD → UTP → UTS)" \
+                "${{ steps.mod_coverage.outputs.result }}"
+            row "Hazard coverage (HAZ → mitigation)" \
+                "${{ steps.haz_coverage.outputs.result }}"
+            row "Traceability matrix" \
+                "${{ steps.matrix.outputs.result }}"
+            row "Peer review" \
+                "${{ steps.peer_review.outputs.result }}"
+            row "Audit report" \
+                "${{ steps.audit.outputs.result }}"
+
+            echo ""
+            echo "---"
+            echo ""
+            echo "📁 V-Model directory: \`$VMODEL_DIR\`"
+            echo "📦 Extension version: \`$SPECKIT_VMODEL_VERSION\`"
+          } >> "$GITHUB_STEP_SUMMARY"
