@@ -2,7 +2,7 @@
 
 **Feature Branch**: `feature/005c-peer-review`
 **Created**: 2025-07-18
-**Status**: Draft
+**Status**: Approved
 **Source**: `specs/005c-peer-review/v-model/requirements.md`
 
 ## Overview

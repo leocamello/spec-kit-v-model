@@ -2,7 +2,7 @@
 
 **Feature Branch**: `003-architecture-integration`  
 **Created**: 2026-02-21  
-**Status**: Draft  
+**Status**: Approved  
 **Input**: Extend the V-Model Extension Pack down one level — from System Design ↔ System Testing (v0.2.0) to Architecture Design ↔ Integration Testing (v0.3.0). The architecture design command decomposes system components into software modules using ISO/IEC/IEEE 42010 and Kruchten's 4+1 View Model (Logical, Process, Interface, Data Flow views). The integration test command generates ISO/IEC/IEEE 29119-4-compliant integration test cases targeting the seams between modules using four mandatory techniques (Interface Contract Testing, Data Flow Testing, Interface Fault Injection, Concurrency & Race Condition Testing). Safety-critical additions (ASIL Decomposition, Defensive Programming, Temporal Constraints, SIL/HIL Compatibility, Resource Contention) are included as optional sections activated by domain configuration.
 
 ## Governing Standards

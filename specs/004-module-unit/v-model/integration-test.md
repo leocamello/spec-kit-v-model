@@ -2,7 +2,7 @@
 
 **Feature Branch**: `004-module-unit-testing`
 **Created**: 2026-02-21
-**Status**: Draft
+**Status**: Approved
 **Source**: `specs/004-module-unit/v-model/architecture-design.md`
 
 ## Overview

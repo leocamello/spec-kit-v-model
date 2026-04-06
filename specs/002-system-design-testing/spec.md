@@ -2,7 +2,7 @@
 
 **Feature Branch**: `002-system-design-testing`  
 **Created**: 2026-02-20  
-**Status**: Draft  
+**Status**: Approved  
 **Input**: Extend the V-Model Extension Pack down one level — from Requirements ↔ Acceptance Testing (v0.1.0) to System Design ↔ System Testing (v0.2.0). The system design command generates an IEEE 1016-compliant Software Design Description organized into mandatory design views (Decomposition, Dependency, Interface, Data). The system test command generates an ISO/IEC/IEEE 29119-compliant test plan targeting the architectural views with rigorous techniques (Interface Contract Testing, Boundary Value Analysis, Fault Injection). Safety-critical additions (Freedom from Interference, MC/DC Coverage, WCET Analysis) are included as optional sections activated by domain configuration.
 
 ## Governing Standards

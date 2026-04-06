@@ -2,7 +2,7 @@
 
 **Feature Branch**: `002-system-design-testing`
 **Created**: 2026-02-20
-**Status**: Draft
+**Status**: Approved
 **Source**: `specs/002-system-design-testing/v-model/requirements.md`
 
 ## Overview

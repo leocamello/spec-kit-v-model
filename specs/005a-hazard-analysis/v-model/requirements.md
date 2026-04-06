@@ -2,7 +2,7 @@
 
 **Feature Branch**: `005a-hazard-analysis`
 **Created**: 2026-03-31
-**Status**: Draft
+**Status**: Approved
 **Source**: `specs/005a-hazard-analysis/spec.md`
 
 ## Overview

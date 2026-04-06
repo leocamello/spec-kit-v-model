@@ -2,7 +2,7 @@
 
 **Feature Branch**: `004-module-unit-testing`  
 **Created**: 2026-02-21  
-**Status**: Draft  
+**Status**: Approved  
 **Input**: Extend the V-Model Extension Pack down to the lowest implementation level — Module Design ↔ Unit Testing (v0.4.0). This is the bottom of the V-Model, where specification meets code. In DO-178C terms, Low-Level Requirements (Module Design) must be so detailed that writing the actual source code is merely a translation exercise requiring no further architectural or design decisions. The module design command translates architecture modules into highly detailed, implementable low-level designs using strict DO-178C and ISO 26262 Part 6 principles (Algorithmic pseudocode, State Machines, Data Structures, Error Handling) and introduces a Source File mapping to bridge specification to code. The unit test command generates ISO/IEC/IEEE 29119-4 white-box test plans employing Statement/Branch Coverage, Boundary Value Analysis, Strict Isolation (via a Dependency & Mock Registry), and State Transition Testing. Safety-critical toggles add MISRA C complexity constraints and MC/DC structural coverage. The commands handle `[CROSS-CUTTING]` modules (full decomposition required) and `[EXTERNAL]` modules (wrapper-only documentation, no deep pseudocode of 3rd-party internals) correctly.
 
 ## Governing Standards

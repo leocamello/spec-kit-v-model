@@ -2,7 +2,7 @@
 
 **Feature Branch**: `005a-hazard-analysis`
 **Created**: 2026-03-31
-**Status**: Draft
+**Status**: Approved
 **Input**: Add a Hazard Analysis command to the V-Model Extension Pack that generates an FMEA (Failure Mode and Effects Analysis) register with traceable `HAZ-NNN` IDs from existing requirements and system design artifacts. In safety-critical domains (medical devices, automotive, aerospace), you cannot just write requirements — you must prove you have analyzed what happens when the system fails. This command bridges the gap between requirements specification and risk management by generating a structured hazard register that links every identified hazard back to mitigating requirements (`REQ-NNN`) or system components (`SYS-NNN`). The command is AI-generated and script-validated, following the same paired-generation pattern as existing V-Model commands. A new traceability matrix (Matrix H — Hazard Traceability) extends the `trace` command to prove the chain: Hazard → Mitigation → Requirement → Test Case.
 
 ## Governing Standards
