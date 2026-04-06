@@ -1,14 +1,13 @@
 ---
-description: Generate a V-Model Requirements Specification with traceable REQ-NNN
-  IDs from a feature description or existing spec.md.
+description: Generate a V-Model Requirements Specification with traceable REQ-NNN IDs from a feature description or existing spec.md.
 handoffs:
-- label: Generate Acceptance Tests
-  agent: speckit.v-model.acceptance
-  prompt: Generate the acceptance test plan for these requirements
-  send: true
-- label: Back to Specify
-  agent: speckit.specify
-  prompt: Refine the feature specification
+  - label: Generate Acceptance Tests
+    agent: speckit.v-model.acceptance
+    prompt: Generate the acceptance test plan for these requirements
+    send: true
+  - label: Back to Specify
+    agent: speckit.specify
+    prompt: Refine the feature specification
 scripts:
   sh: scripts/bash/setup-v-model.sh --json
   ps: scripts/powershell/setup-v-model.ps1 -Json
@@ -17,6 +16,7 @@ scripts:
 
 <!-- Extension: v-model -->
 <!-- Config: .specify/extensions/v-model/ -->
+
 ## User Input
 
 ```text

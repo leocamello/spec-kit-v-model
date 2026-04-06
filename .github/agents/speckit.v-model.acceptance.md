@@ -1,14 +1,13 @@
 ---
-description: Generate a three-tier Acceptance Test Plan (Test Cases + BDD Scenarios)
-  with deterministic 100% coverage validation.
+description: Generate a three-tier Acceptance Test Plan (Test Cases + BDD Scenarios) with deterministic 100% coverage validation.
 handoffs:
-- label: Build Traceability Matrix
-  agent: speckit.v-model.trace
-  prompt: Build the traceability matrix for these requirements and tests
-  send: true
-- label: Back to Requirements
-  agent: speckit.v-model.requirements
-  prompt: Refine the requirements specification
+  - label: Build Traceability Matrix
+    agent: speckit.v-model.trace
+    prompt: Build the traceability matrix for these requirements and tests
+    send: true
+  - label: Back to Requirements
+    agent: speckit.v-model.requirements
+    prompt: Refine the requirements specification
 scripts:
   sh: scripts/bash/setup-v-model.sh --json --require-reqs
   ps: scripts/powershell/setup-v-model.ps1 -Json -RequireReqs
@@ -17,6 +16,7 @@ scripts:
 
 <!-- Extension: v-model -->
 <!-- Config: .specify/extensions/v-model/ -->
+
 ## User Input
 
 ```text
