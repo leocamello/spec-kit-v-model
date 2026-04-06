@@ -66,6 +66,10 @@ provides:
       file: "commands/test-results.md"
       description: "Ingest JUnit XML test results and optional Cobertura XML code coverage into the traceability matrix (100% deterministic, no AI)"
 
+    - name: "speckit.v-model.audit-report"
+      file: "commands/audit-report.md"
+      description: "Build a release audit report with waiver cross-referencing and compliance gating (100% deterministic, no AI)"
+
     - name: "speckit.v-model.trace"
       file: "commands/trace.md"
       description: "Build a regulatory-grade Traceability Matrix (Matrix A + B + C + D + H: REQ → ATP → SYS → STP → ARCH → ITP → MOD → UTP + HAZ → Mitigation → Verification)"
@@ -107,5 +111,6 @@ defaults:
     unit_test_scenarios: "UTS"
     hazards: "HAZ"
     peer_review_findings: "PRF"
+    waivers: "WAV"
   coverage_threshold: 100
   batch_size: 5

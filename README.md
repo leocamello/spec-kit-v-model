@@ -30,6 +30,7 @@ An extension for [GitHub Spec Kit](https://github.com/github/spec-kit) that enfo
 - **`/speckit.v-model.impact-analysis`** — Deterministic change impact analysis: trace a changed ID downward, upward, or both to identify all suspect artifacts and blast radius across V-Model levels
 - **`/speckit.v-model.peer-review`** — AI-powered stateless linter for any V-Model artifact: evaluates against standards-based criteria (INCOSE, IEEE 1016/42010, ISO 29119/14971) and produces `PRF-{ARTIFACT}-NNN` findings with CI exit codes (0=clean, 1=blocks, 2=warning)
 - **`/speckit.v-model.test-results`** — Ingest JUnit XML test results and optional Cobertura XML code coverage into the traceability matrix, flipping `⬜ Untested` to `✅ Passed` / `❌ Failed` / `⏭️ Skipped` with Date, Commit SHA, and Coverage columns (100% deterministic, no AI)
+- **`/speckit.v-model.audit-report`** — Build a point-in-time release audit report from V-Model artifacts: artifact inventory with git SHAs, traceability matrices, coverage analysis, hazard management summary, anomaly/waiver cross-referencing, and compliance gating (RELEASE READY / RELEASE CANDIDATE / NOT READY) — 100% deterministic, no AI
 - **`/speckit.v-model.trace`** — Build a regulatory-grade Traceability Matrix (Matrix A + B + C + D, plus Matrix H when hazard analysis exists)
 
 ## Installation
@@ -96,6 +97,10 @@ Step 13: /speckit.v-model.trace                →  Matrix A + B + C + D + H (fu
 # After CI — ingest test results into the traceability matrix:
 /speckit.v-model.test-results --input results.xml                          →  Update ⬜ Untested to ✅/❌/⏭️
 /speckit.v-model.test-results --input results.xml --coverage cobertura.xml →  + code coverage on Matrix D
+
+# Before release — build the audit report:
+/speckit.v-model.audit-report <vmodel-dir>                                 →  release-audit-report.md
+/speckit.v-model.audit-report <vmodel-dir> --json                          →  JSON for CI gating
 ```
 
 > **Progressive traceability:** The `/speckit.v-model.trace` command is run after each design↔test pair — so coverage gaps are caught at each V-level rather than discovered at the end. Matrix H (hazard traceability) is automatically included when `hazard-analysis.md` exists.
@@ -105,6 +110,8 @@ Step 13: /speckit.v-model.trace                →  Matrix A + B + C + D + H (fu
 > **Peer review:** Run `/speckit.v-model.peer-review` on any artifact at any time — it operates like ESLint for V-Model documents, catching structural and quality issues before the human reviewer sees them. Findings are stateless (regenerated each run) and advisory-only (not in the traceability chain).
 >
 > **Test results ingestion:** After CI completes, run `/speckit.v-model.test-results` to ingest JUnit XML results (and optional Cobertura XML coverage) into the traceability matrix — flipping `⬜ Untested` to `✅ Passed` / `❌ Failed` / `⏭️ Skipped` with audit metadata (Date + Commit SHA). This bridges "we planned to test it" → "we proved it works."
+>
+> **Release audit report:** Before submission, run `/speckit.v-model.audit-report` to produce a point-in-time `release-audit-report.md` — the single document you hand to the auditor. It inventories every artifact (pinned to Git SHAs), embeds traceability matrices, computes coverage, summarizes hazard mitigations, cross-references anomalies with waivers, and gates the release: ✅ RELEASE READY, ⚠️ RELEASE CANDIDATE (all anomalies waived), or ❌ NOT READY (unwaived failures).
 
 **Example — Feature 002: Custom ID Prefix Support**
 
@@ -154,6 +161,9 @@ Step 13: /speckit.v-model.trace                →  Matrix A + B + C + D + H (fu
 # 14. After CI — ingest test execution results into the matrix
 /speckit.v-model.test-results --input test-results.xml
 
+# 15. Before release — build the audit report
+/speckit.v-model.audit-report
+
 # After: continue with spec-kit core
 /speckit.plan
 /speckit.tasks
@@ -174,7 +184,8 @@ specs/{feature}/v-model/
 ├── module-design.md             →  MOD-NNN detailed modules
 ├── unit-test.md                 →  UTP/UTS unit test procedures
 ├── peer-review-{artifact}.md    →  PRF-NNN findings (stateless, advisory-only)
-└── traceability-matrix.md       →  Matrix A + B + C + D + H
+├── traceability-matrix.md       →  Matrix A + B + C + D + H
+└── release-audit-report.md      →  Point-in-time audit package
 ```
 
 ### Key Principle: Scripts Verify, AI Generates
@@ -194,6 +205,7 @@ calculations are performed by **deterministic scripts**:
 | Check peer-review findings | `peer-review-check.sh` | Deterministic — parse AI-generated review, exit 0/1/2 by severity |
 | Ingest test results into matrix | `ingest-test-results.sh` | Deterministic — parse JUnit XML + Cobertura XML, update matrix in-place |
 | Parse test results XML | `parse_test_results.py` | Deterministic — stdlib-only Python parser, JSON output |
+| Build release audit report | `build-audit-report.sh` | Deterministic — artifact inventory, coverage analysis, anomaly/waiver cross-reference, compliance gating |
 | Build traceability matrix | `build-matrix.sh` | Deterministic — audit-grade accuracy, up to 5 matrices (A–D + H) |
 | Detect requirement changes | `diff-requirements.sh` | Deterministic — git-based diff |
 
@@ -306,7 +318,17 @@ The companion `peer-review-check.sh` / `Peer-Review-Check.ps1` scripts parse the
 
 Uses deterministic scripts (no AI) to parse JUnit XML test results and update the traceability matrix in-place, flipping `⬜ Untested` to `✅ Passed` / `❌ Failed` / `⏭️ Skipped`. Each updated row includes Date and Commit SHA for audit trail. Optionally accepts Cobertura XML code coverage reports — when provided, Matrix D rows gain a Coverage column (`95.0% stmt / 88.0% branch`) with `⚠` warnings when below threshold. Supports `--json` for CI integration. Exit codes: 0 = all passed, 1 = failures detected, 2 = no V-Model ID matches.
 
-#### 13. Build Traceability Matrix (Step 3/6/9/12)
+#### 13. Build Release Audit Report (Deterministic)
+
+```bash
+/speckit.v-model.audit-report <vmodel-dir>
+/speckit.v-model.audit-report <vmodel-dir> --system-name "CBGMS" --version "2.1.0" --git-tag v2.1.0
+/speckit.v-model.audit-report <vmodel-dir> --json
+```
+
+Uses deterministic scripts (no AI) to build a point-in-time release audit report — the single document you hand to the auditor. Discovers all V-Model artifacts (pinned to Git SHAs and timestamps), embeds traceability matrices with coverage analysis, summarizes hazard mitigations, and cross-references anomalies with a `waivers.md` file. Compliance gating: **RELEASE READY** (0 anomalies, exit 0), **RELEASE CANDIDATE** (all anomalies waived, exit 0), or **NOT READY** (unwaived failures, exit 1). Orphaned waivers (referencing non-existent test IDs) are flagged but do not block. Supports `--json` for CI integration.
+
+#### 14. Build Traceability Matrix (Step 3/6/9/12)
 
 ```bash
 /speckit.v-model.trace
@@ -371,8 +393,8 @@ GOOGLE_API_KEY=... pytest tests/evals/ -m eval -v
 
 | Layer | Tests | What it validates |
 |-------|-------|-------------------|
-| BATS | **269** | Bash script logic (setup, coverage, system coverage, architecture coverage, module coverage, hazard coverage, impact analysis, peer-review check, test-results ingestion, matrix, diff, parity) |
-| Pester | 252 | PowerShell script parity |
+| BATS | **339** | Bash script logic (setup, coverage, system coverage, architecture coverage, module coverage, hazard coverage, impact analysis, peer-review check, test-results ingestion, audit-report, matrix, diff, parity) |
+| Pester | 322 | PowerShell script parity |
 | Structural evals | 89 | ID format, template conformance, section completeness across all V-levels including hazard analysis and impact analysis |
 | LLM-as-judge evals | 42 | Requirements quality, BDD quality, design quality, hazard analysis quality, traceability (requires API key) |
 
