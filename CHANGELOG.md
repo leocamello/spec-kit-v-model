@@ -69,10 +69,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Stats
 
 - Commands: 9 → 14
-- Bash scripts: 12 → 16 (+ validate-level)
-- PowerShell scripts: 12 → 16 (+ Validate-Level)
+- Bash scripts: 7 → 13 (+ validate-hazard-coverage, validate-level, impact-analysis, peer-review-check, ingest-test-results, build-audit-report)
+- PowerShell scripts: 7 → 13 (+ Validate-Hazard-Coverage, Validate-Level, Impact-Analysis, Peer-Review-Check, Ingest-Test-Results, Build-Audit-Report)
 - BATS tests: 91 → 364
-- Pester tests: 91 → 322
+- Pester tests: 91 → 347
 - Structural evals: 51 → 89
 - LLM-as-judge evals: 36 → 42
 - Agent definitions: 3 → 14

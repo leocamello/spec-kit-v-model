@@ -99,7 +99,7 @@ The V-Model Extension Pack enforces a strict separation of concerns:
 | **Quality evaluation** — assessing whether requirements are well-written and scenarios are comprehensive | LLM-as-judge (DeepEval + Gemini) | Qualitative assessment where human-like judgment adds value; clearly labeled as advisory, not deterministic |
 | **Audit trail** — proving who changed what and when | Git (cryptographic commit hashes) | Immutable, mathematically verifiable history; no separate ALM database required |
 
-This architecture means that when you present a traceability matrix to an auditor, the coverage numbers were computed by a script that can be inspected, tested (91 BATS tests, 91 Pester tests), and verified — not by an AI that might produce a different answer on the next run.
+This architecture means that when you present a traceability matrix to an auditor, the coverage numbers were computed by a script that can be inspected, tested (364 BATS tests, 347 Pester tests), and verified — not by an AI that might produce a different answer on the next run.
 
 The AI does what AI is good at: understanding context and generating structured content. The scripts do what scripts are good at: producing the same correct answer every time.
 
@@ -120,10 +120,13 @@ The MVP provides universal structural traceability — traceable IDs, bidirectio
 - **Pre-built Regulatory Template Packs** — Domain-specific templates for IEC 62304, ISO 26262, and DO-178C that pre-populate the required sections, terminology, and compliance language for each standard (e.g., automatically inserting ASIL-D or Class C specific verbiage into requirement templates).
 - ~~**Change Impact Analysis**~~ ✅ *Shipped in v0.5.0* — The `/speckit.v-model.impact-analysis` command builds a dependency graph from all V-Model artifacts and traverses it downward, upward, or both to identify all suspect artifacts affected by a change. Supports `--json` for CI integration.
 - ~~**Hazard Analysis Integration**~~ ✅ *Shipped in v0.5.0* — The `/speckit.v-model.hazard-analysis` command generates ISO 14971/26262 FMEA registers with operational state awareness, mitigation traceability, and Matrix H.
+- ~~**Peer Review**~~ ✅ *Shipped in v0.5.0* — The `/speckit.v-model.peer-review` command is an AI-powered stateless linter for any V-Model artifact, evaluating against standards-based criteria (INCOSE, IEEE 1016/42010, ISO 29119, ISO 14971, DO-178C) and producing `PRF-{ARTIFACT}-NNN` findings with severity classifications and CI exit codes.
+- ~~**Test Results Ingestion**~~ ✅ *Shipped in v0.5.0* — The `/speckit.v-model.test-results` command is a 100% deterministic JUnit XML + Cobertura XML ingestor that updates the traceability matrix in-place, flipping `⬜ Untested` to `✅ Passed` / `❌ Failed` / `⏭️ Skipped` with Date, Commit SHA, and optional Coverage columns.
+- ~~**Audit Report**~~ ✅ *Shipped in v0.5.0* — The `/speckit.v-model.audit-report` command is a 100% deterministic release audit report builder that produces a point-in-time `release-audit-report.md` with artifact inventory, traceability matrices, coverage analysis, hazard management summary, anomaly/waiver cross-referencing, and compliance gating.
 - **Bidirectional ALM Synchronization** — Two-way sync with enterprise ALM platforms (Jama Connect, IBM DOORS, Siemens Polarion), eliminating the risk of fragmented sources of truth between Git and the enterprise system of record.
 
 ### Quality Intelligence
-- **Compliance Report Generator** — Produce a single audit-ready report aggregating requirements coverage, test results, traceability completeness, and gap analysis into the format that assessors expect.
+- ~~**Compliance Report Generator**~~ ✅ *Partially shipped in v0.5.0* — The `/speckit.v-model.audit-report` command produces a release audit report aggregating artifact inventory, traceability matrices, coverage analysis, and compliance gating. Full report customization and assessor-specific formatting are planned for a future release.
 - **Trend Tracking** — Monitor requirement quality scores, coverage percentages, and traceability completeness over time to catch degradation before it becomes a finding.
 
 ---

@@ -51,7 +51,12 @@ spec-kit-v-model/
 │   ├── architecture-design.md
 │   ├── integration-test.md
 │   ├── module-design.md
-│   └── unit-test.md
+│   ├── unit-test.md
+│   ├── hazard-analysis.md
+│   ├── impact-analysis.md
+│   ├── peer-review.md
+│   ├── test-results.md
+│   └── audit-report.md
 ├── templates/              # Output file templates
 │   ├── requirements-template.md
 │   ├── acceptance-plan-template.md
@@ -61,7 +66,10 @@ spec-kit-v-model/
 │   ├── integration-test-template.md
 │   ├── module-design-template.md
 │   ├── unit-test-template.md
-│   └── traceability-matrix-template.md
+│   ├── traceability-matrix-template.md
+│   ├── hazard-analysis-template.md
+│   ├── peer-review-template.md
+│   └── audit-report-template.md
 ├── scripts/
 │   ├── bash/               # Helper scripts (Linux/macOS)
 │   │   ├── setup-v-model.sh
@@ -69,24 +77,38 @@ spec-kit-v-model/
 │   │   ├── validate-system-coverage.sh
 │   │   ├── validate-architecture-coverage.sh
 │   │   ├── validate-module-coverage.sh
+│   │   ├── validate-hazard-coverage.sh
+│   │   ├── validate-level.sh
 │   │   ├── build-matrix.sh
-│   │   └── diff-requirements.sh
-│   └── powershell/         # Helper scripts (Windows)
-│       ├── setup-v-model.ps1
-│       ├── validate-requirement-coverage.ps1
-│       ├── validate-system-coverage.ps1
-│       ├── validate-architecture-coverage.ps1
-│       ├── validate-module-coverage.ps1
-│       ├── build-matrix.ps1
-│       └── diff-requirements.ps1
+│   │   ├── diff-requirements.sh
+│   │   ├── impact-analysis.sh
+│   │   ├── peer-review-check.sh
+│   │   ├── ingest-test-results.sh
+│   │   └── build-audit-report.sh
+│   ├── powershell/         # Helper scripts (Windows)
+│   │   ├── setup-v-model.ps1
+│   │   ├── validate-requirement-coverage.ps1
+│   │   ├── validate-system-coverage.ps1
+│   │   ├── validate-architecture-coverage.ps1
+│   │   ├── validate-module-coverage.ps1
+│   │   ├── validate-hazard-coverage.ps1
+│   │   ├── Validate-Level.ps1
+│   │   ├── build-matrix.ps1
+│   │   ├── diff-requirements.ps1
+│   │   ├── impact-analysis.ps1
+│   │   ├── Peer-Review-Check.ps1
+│   │   ├── Ingest-Test-Results.ps1
+│   │   └── Build-Audit-Report.ps1
+│   └── python/             # Python helper scripts
+│       └── parse_test_results.py
 ├── tests/
-│   ├── bats/               # BATS-core bash unit tests (153 tests)
-│   ├── pester/             # Pester PowerShell unit tests (129 tests)
-│   ├── fixtures/           # Shared test data (4 scenarios + malformed + 2 golden examples)
+│   ├── bats/               # BATS-core bash unit tests (364 tests)
+│   ├── pester/             # Pester PowerShell unit tests (347 tests)
+│   ├── fixtures/           # Shared test data (4 scenarios + malformed + 2 golden examples + impact/peer-review/test-results/audit-report fixtures)
 │   ├── validators/         # Deterministic structural validators (Python)
 │   └── evals/              # DeepEval prompt evaluations
 │       ├── metrics/        # Custom eval metrics (structural + GEval)
-│       ├── test_*_eval.py  # Eval test cases (89 structural + 42 LLM)
+│       ├── test_*_eval.py  # Eval test cases (67 structural + 42 LLM)
 │       └── conftest.py     # Shared pytest fixtures
 ├── docs/                   # Additional documentation
 ├── extension.yml           # Extension manifest
@@ -191,7 +213,7 @@ Scripts handle all deterministic logic (counting, cross-referencing, matrix buil
 
 ### ID Schema
 
-The four-tier ID schema (plus the cross-cutting `HAZ-NNN` hazard prefix) is a core architectural decision. Any changes must preserve:
+The four-tier ID schema (plus the cross-cutting `HAZ-NNN` hazard prefix and the advisory `PRF-{ARTIFACT}-NNN` and `WAV-NNN` prefixes) is a core architectural decision. Any changes must preserve:
 
 - **Self-documenting lineage**: `SCN-001-A1` → `ATP-001-A` → `REQ-001`
 - **Category prefix support**: `REQ-NF-001`, `ATP-NF-001-A`, `SCN-NF-001-A1`
@@ -230,14 +252,14 @@ GOOGLE_API_KEY=... pytest tests/evals/ -m eval -v
 
 | Layer | Framework | Tests | What it validates |
 |-------|-----------|-------|-------------------|
-| **BATS** | bats-core | 153 | Bash script logic: setup, coverage validation, impact analysis, matrix building, diff detection |
-| **Pester** | Pester 5 | 129 | PowerShell script parity with Bash |
-| **Structural evals** | pytest + DeepEval | 89 | ID format/hierarchy, template conformance, BDD scenario completeness, impact analysis graph properties |
+| **BATS** | bats-core | 364 | Bash script logic: setup, coverage validation, impact analysis, matrix building, diff detection, peer review check, test result ingestion, audit report building |
+| **Pester** | Pester 5 | 347 | PowerShell script parity with Bash |
+| **Structural evals** | pytest + DeepEval | 67 | ID format/hierarchy, template conformance, BDD scenario completeness, impact analysis graph properties |
 | **LLM-as-judge evals** | pytest + DeepEval GEval | 42 | Requirements quality (IEEE 29148), BDD quality, traceability completeness |
 
 ### Test Fixtures
 
-Test fixtures live in `tests/fixtures/` with 4 scenario directories, a malformed set, 2 golden examples, golden impact outputs, and 3 impact-specific fixture sets. Each scenario directory contains V-Model fixture files (up to 9: `requirements.md`, `acceptance-plan.md`, `system-design.md`, `system-test.md`, `architecture-design.md`, `integration-test.md`, `module-design.md`, `unit-test.md`, and `hazard-analysis.md`).
+Test fixtures live in `tests/fixtures/` with 4 scenario directories, a malformed set, 2 golden examples, golden impact outputs, peer review fixtures, test results fixtures, audit report fixtures, and 3 impact-specific fixture sets. Each scenario directory contains V-Model fixture files (up to 9: `requirements.md`, `acceptance-plan.md`, `system-design.md`, `system-test.md`, `architecture-design.md`, `integration-test.md`, `module-design.md`, `unit-test.md`, and `hazard-analysis.md`).
 
 - **`minimal/`** — 3 REQs, full coverage (baseline happy path)
 - **`gaps/`** — Intentional coverage gap (REQ-NF-001 has no ATP)
@@ -247,9 +269,12 @@ Test fixtures live in `tests/fixtures/` with 4 scenario directories, a malformed
 - **`golden/medical-device/`** — IEC 62304 blood glucose monitor with expected outputs for all V-Model artifact types (reference quality)
 - **`golden/automotive-adas/`** — ISO 26262 emergency braking system with expected outputs for all V-Model artifact types (reference quality)
 - **`golden-impact/`** — Expected JSON outputs for impact analysis across all fixture sets and traversal modes
+- **`golden-peer-review/`** — Expected outputs for peer review across fixture sets and severity levels
 - **`impact/linear/`** — Simple chain REQ→SYS→ARCH→MOD (tests basic traversal)
 - **`impact/diamond/`** — Fan-out/fan-in topology with cross-cutting component
 - **`impact/disconnected/`** — Two isolated subgraphs (tests traversal boundary isolation)
+- **`test-results/`** — JUnit XML scenarios, Cobertura XML, matrix fixtures, and golden JSON outputs
+- **`audit-report/`** — Clean, waived, blocking, orphaned-waiver, and missing-required scenarios with golden outputs
 
 ### Adding Tests
 
