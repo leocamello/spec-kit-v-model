@@ -15,7 +15,7 @@ The V-Model Extension Pack provides **14 commands** organized into four categori
 | **Verification** | `trace`, `test-results`, `audit-report` |
 
 !!! tip "Recommended Execution Order"
-    Follow the [Proactive Workflow](../guide/index.md) for the intended order:
+    Follow the [Proactive Workflow](../guide/concepts.md) for the intended order:
     requirements → acceptance → trace → system-design → system-test → hazard-analysis → trace → architecture-design → integration-test → trace → module-design → unit-test → trace.
 
 ---

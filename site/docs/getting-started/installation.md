@@ -97,7 +97,7 @@ When a domain is set, V-Model commands generate **additional safety-critical sec
 
 !!! warning "Choosing a domain is a project-level decision"
 
-    The `v-model-config.yml` file should be committed to version control. Changing the domain mid-project will affect all subsequently generated artifacts. Use the [`/speckit.v-model.impact-analysis`](../reference/index.md) command to assess the blast radius of any configuration change.
+    The `v-model-config.yml` file should be committed to version control. Changing the domain mid-project will affect all subsequently generated artifacts. Use the [`/speckit.v-model.impact-analysis`](../reference/commands.md) command to assess the blast radius of any configuration change.
 
 ### Example: Automotive Project
 

@@ -181,9 +181,9 @@ You've completed **Level 1** of the V-Model (Requirements ↔ Acceptance Testing
 
 Explore the deeper levels:
 
-- **[Guides](../guide/index.md)** — Detailed walkthroughs for each V-Model level
-- **[Reference](../reference/index.md)** — Complete command reference and configuration options
+- **[Guides](../guide/concepts.md)** — Detailed walkthroughs for each V-Model level
+- **[Reference](../reference/commands.md)** — Complete command reference and configuration options
 
 !!! tip "Safety-critical project?"
 
-    If you're working under ISO 26262, DO-178C, or IEC 62304, configure your [regulatory domain](installation.md#domain-configuration) to unlock additional safety-critical sections at every level. Also explore the [`/speckit.v-model.hazard-analysis`](../reference/index.md) command for FMEA/risk analysis.
+    If you're working under ISO 26262, DO-178C, or IEC 62304, configure your [regulatory domain](installation.md#domain-configuration) to unlock additional safety-critical sections at every level. Also explore the [`/speckit.v-model.hazard-analysis`](../reference/commands.md) command for FMEA/risk analysis.

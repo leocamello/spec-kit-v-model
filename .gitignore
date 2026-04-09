@@ -33,6 +33,7 @@ Thumbs.db
 dist/
 build/
 *.egg-info/
+site/site/
 
 # Temporary files
 *.tmp

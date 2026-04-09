@@ -53,4 +53,4 @@ Before you begin, make sure you have the following installed:
 1. **[Installation](installation.md)** — Three ways to install, plus optional domain configuration for regulated industries.
 2. **[Your First V-Model Project](first-project.md)** — A hands-on tutorial covering Level 1 of the V-Model (Requirements ↔ Acceptance Testing).
 
-Once you've completed the first project tutorial, explore the deeper V-Model levels in the [Guides](../guide/index.md) section.
+Once you've completed the first project tutorial, explore the deeper V-Model levels in the [Guides](../guide/concepts.md) section.
