@@ -51,7 +51,7 @@ Generates the top-level requirements specification.
 - **Constraint Requirements** — `REQ-CN-NNN` entries
 
 !!! info "See Also"
-    [Command Reference — requirements](commands.md#speckitv-modelrequirements) · [ID Schema — REQ](id-schema.md#req-nnn--requirement)
+    [Command Reference — requirements](commands.md#speckitv-modelrequirements) · [ID Schema — REQ](id-schema.md#req-nnn-requirement)
 
 ---
 
@@ -80,7 +80,7 @@ Generates the IEEE 1016-compliant system design decomposition.
     The `Parent Requirements` column in the Decomposition View table is the authoritative inter-level link parsed by `build-matrix.sh` for Matrix B.
 
 !!! info "See Also"
-    [Command Reference — system-design](commands.md#speckitv-modelsystem-design) · [ID Schema — SYS](id-schema.md#sys-nnn--system-design-element)
+    [Command Reference — system-design](commands.md#speckitv-modelsystem-design) · [ID Schema — SYS](id-schema.md#sys-nnn-system-design-element)
 
 ---
 
@@ -109,7 +109,7 @@ Generates the IEEE 42010 / Kruchten 4+1 architecture decomposition.
     The `Parent System Components` column in the Logical View table is the authoritative inter-level link parsed by `build-matrix.sh` for Matrix C. `[CROSS-CUTTING]` modules use a tag instead of parent IDs.
 
 !!! info "See Also"
-    [Command Reference — architecture-design](commands.md#speckitv-modelarchitecture-design) · [ID Schema — ARCH](id-schema.md#arch-nnn--architecture-element)
+    [Command Reference — architecture-design](commands.md#speckitv-modelarchitecture-design) · [ID Schema — ARCH](id-schema.md#arch-nnn-architecture-element)
 
 ---
 
@@ -143,7 +143,7 @@ Generates detailed module designs at implementation-ready granularity.
     The `**Parent Architecture Modules:**` metadata line below each module heading is the authoritative inter-level link parsed by `build-matrix.sh` for Matrix D.
 
 !!! info "See Also"
-    [Command Reference — module-design](commands.md#speckitv-modelmodule-design) · [ID Schema — MOD](id-schema.md#mod-nnn--module-design)
+    [Command Reference — module-design](commands.md#speckitv-modelmodule-design) · [ID Schema — MOD](id-schema.md#mod-nnn-module-design)
 
 ---
 
@@ -171,7 +171,7 @@ Generates the three-tier Acceptance Test Plan.
     - BDD Scenarios (`SCN-NNN-A1`, `SCN-NNN-A2`, ...) in Given/When/Then format
 
 !!! info "See Also"
-    [Command Reference — acceptance](commands.md#speckitv-modelacceptance) · [ID Schema — ATP / SCN](id-schema.md#atp-nnn-x--acceptance-test-procedure)
+    [Command Reference — acceptance](commands.md#speckitv-modelacceptance) · [ID Schema — ATP / SCN](id-schema.md#atp-nnn-x-acceptance-test-procedure)
 
 ---
 
@@ -196,7 +196,7 @@ Generates ISO 29119-4 system test plans.
     - Test Steps (`STS-NNN-A1`, `STS-NNN-A2`, ...) in Given/When/Then format
 
 !!! info "See Also"
-    [Command Reference — system-test](commands.md#speckitv-modelsystem-test) · [ID Schema — STP / STS](id-schema.md#stp-nnn-x--system-test-procedure)
+    [Command Reference — system-test](commands.md#speckitv-modelsystem-test) · [ID Schema — STP / STS](id-schema.md#stp-nnn-x-system-test-procedure)
 
 ---
 
@@ -221,7 +221,7 @@ Generates ISO 29119-4 integration test plans.
     - Test Steps (`ITS-NNN-A1`, ...) in module-boundary BDD format
 
 !!! info "See Also"
-    [Command Reference — integration-test](commands.md#speckitv-modelintegration-test) · [ID Schema — ITP / ITS](id-schema.md#itp-nnn-x--integration-test-procedure)
+    [Command Reference — integration-test](commands.md#speckitv-modelintegration-test) · [ID Schema — ITP / ITS](id-schema.md#itp-nnn-x-integration-test-procedure)
 
 ---
 
@@ -250,7 +250,7 @@ Generates white-box unit test plans with strict isolation.
     Unit tests use Arrange/Act/Assert (not Given/When/Then) because they are white-box tests exercising internal logic, not behavioral BDD tests.
 
 !!! info "See Also"
-    [Command Reference — unit-test](commands.md#speckitv-modelunit-test) · [ID Schema — UTP / UTS](id-schema.md#utp-nnn-x--unit-test-procedure)
+    [Command Reference — unit-test](commands.md#speckitv-modelunit-test) · [ID Schema — UTP / UTS](id-schema.md#utp-nnn-x-unit-test-procedure)
 
 ---
 

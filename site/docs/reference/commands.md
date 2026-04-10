@@ -57,7 +57,7 @@ Generate a traceable requirements specification from user input or an existing `
 ```
 
 !!! info "See Also"
-    - [ID Schema — Level 1](id-schema.md#level-1-requirements--acceptance-testing)
+    - [ID Schema — Level 1](id-schema.md#level-1-requirements-acceptance-testing)
     - [Templates — requirements-template.md](templates.md#requirements-templatemd)
 
 ---
@@ -98,7 +98,7 @@ Generate an IEEE 1016-compliant system design decomposition.
 ```
 
 !!! info "See Also"
-    - [ID Schema — Level 2](id-schema.md#level-2-system-design--system-testing)
+    - [ID Schema — Level 2](id-schema.md#level-2-system-design-system-testing)
     - [Configuration — Domain extras](configuration.md#domain)
 
 ---
@@ -136,7 +136,7 @@ Generate an IEEE 42010 / Kruchten 4+1 architecture decomposition.
 | `[CROSS-CUTTING]` | Infrastructure module (logging, auth, config) — spans all system components |
 
 !!! info "See Also"
-    - [ID Schema — Level 3](id-schema.md#level-3-architecture-design--integration-testing)
+    - [ID Schema — Level 3](id-schema.md#level-3-architecture-design-integration-testing)
     - [Configuration — Domain extras](configuration.md#domain)
 
 ---
@@ -176,7 +176,7 @@ Generate detailed module designs with pseudocode, state machines, and data struc
 | `[DERIVED MODULE]` | Not from an ARCH element | Must still have full unit test coverage |
 
 !!! info "See Also"
-    - [ID Schema — Level 4](id-schema.md#level-4-module-design--unit-testing)
+    - [ID Schema — Level 4](id-schema.md#level-4-module-design-unit-testing)
     - [Configuration — Domain extras](configuration.md#domain)
 
 ---
@@ -215,7 +215,7 @@ REQ-003 → ATP-003-A, ATP-003-B, ATP-003-C
 ```
 
 !!! info "See Also"
-    - [ID Schema — Level 1](id-schema.md#level-1-requirements--acceptance-testing)
+    - [ID Schema — Level 1](id-schema.md#level-1-requirements-acceptance-testing)
     - [Scripts — validate-requirement-coverage](scripts.md#validate-requirement-coverageshps1)
 
 ---
@@ -247,7 +247,7 @@ Generate ISO 29119-4 compliant system test plans.
 - Load / Stress Testing
 
 !!! info "See Also"
-    - [ID Schema — Level 2](id-schema.md#level-2-system-design--system-testing)
+    - [ID Schema — Level 2](id-schema.md#level-2-system-design-system-testing)
     - [Scripts — validate-system-coverage](scripts.md#validate-system-coverageshps1)
     - [Configuration — Domain extras](configuration.md#domain)
 
@@ -282,7 +282,7 @@ Generate ISO 29119-4 integration test plans.
 | Concurrency & Race Condition Testing | Thread safety |
 
 !!! info "See Also"
-    - [ID Schema — Level 3](id-schema.md#level-3-architecture-design--integration-testing)
+    - [ID Schema — Level 3](id-schema.md#level-3-architecture-design-integration-testing)
     - [Scripts — validate-architecture-coverage](scripts.md#validate-architecture-coverageshps1)
     - [Configuration — Domain extras](configuration.md#domain)
 
@@ -321,7 +321,7 @@ Generate white-box unit test plans with strict isolation.
 **Strict isolation:** Every external dependency is listed in a **Dependency & Mock Registry** per test procedure.
 
 !!! info "See Also"
-    - [ID Schema — Level 4](id-schema.md#level-4-module-design--unit-testing)
+    - [ID Schema — Level 4](id-schema.md#level-4-module-design-unit-testing)
     - [Scripts — validate-module-coverage](scripts.md#validate-module-coverageshps1)
     - [Configuration — Domain extras](configuration.md#domain)
 
@@ -420,7 +420,7 @@ Deterministic change impact analysis across the entire V-Model graph.
     Impact analysis uses deterministic graph traversal scripts. The dependency graph is built from explicit ID references and `Parent *` fields in all V-Model markdown files.
 
 !!! info "See Also"
-    - [Scripts — impact-analysis](scripts.md#impact-analysisshps1)
+    - [Scripts — impact-analysis](scripts.md#impact-analysisshimpact-analysisps1)
 
 ---
 
@@ -479,7 +479,7 @@ AI-powered stateless linter for any V-Model artifact.
 
 !!! info "See Also"
     - [ID Schema — PRF](id-schema.md#peer-review-finding-prf-artifact-nnn)
-    - [Scripts — peer-review-check](scripts.md#peer-review-checkshps1)
+    - [Scripts — peer-review-check](scripts.md#peer-review-checkshpeer-review-checkps1)
 
 ---
 
@@ -529,7 +529,7 @@ Build a regulatory-grade traceability matrix using deterministic scripts.
 
 !!! info "See Also"
     - [ID Schema — Cross-Level Traceability](id-schema.md#cross-level-traceability-the-four-matrices)
-    - [Scripts — build-matrix](scripts.md#build-matrixshps1)
+    - [Scripts — build-matrix](scripts.md#build-matrixshbuild-matrixps1)
 
 ---
 

@@ -195,7 +195,7 @@ specs/{feature}/v-model/
 
     Install the extension and generate your first traceable specification in minutes.
 
-    [:octicons-arrow-right-24: Getting started](getting-started/)
+    [:octicons-arrow-right-24: Getting started](getting-started/index.md)
 
 -   :octicons-book-16:{ .lg .middle } **Read the Docs**
 
@@ -203,7 +203,7 @@ specs/{feature}/v-model/
 
     Learn the concepts, commands, and architecture behind the V-Model Extension Pack.
 
-    [:octicons-arrow-right-24: Concepts guide](guide/concepts)
+    [:octicons-arrow-right-24: Concepts guide](guide/concepts.md)
 
 -   :octicons-people-16:{ .lg .middle } **About & Philosophy**
 
