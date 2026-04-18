@@ -1,0 +1,37 @@
+# DO-178C — Software Considerations in Airborne Systems
+# Domain overlay manifest for aerospace safety-critical systems
+
+display_name: "DO-178C (Aerospace)"
+standard: "DO-178C / ED-12C"
+classification_system:
+  name: "DAL"
+  levels:
+    - "DAL E"
+    - "DAL D"
+    - "DAL C"
+    - "DAL B"
+    - "DAL A"
+
+# Commands with domain-specific overlay content.
+# Each entry maps to a file in this directory: {command-name}.md
+# Overlay content is APPENDED after base command instructions.
+#
+# Priority 1 — V-Model generative commands (design + test phases)
+overlay_commands:
+  - requirements          # §5.2.1, Table A-4 — derived requirements, bidirectional traceability, robustness requirements by DAL
+  - acceptance            # §6.4.2, Table A-7 — requirements-based testing, robustness testing, structural coverage by DAL (MC/DC for A, decision for B, statement for C)
+  - system-design         # §5.2.2 — partitioning, derived requirements from design, data/control coupling
+  - system-test           # §6.4, Table A-7/A-8 — requirements-based testing, structural coverage analysis by DAL
+  - architecture-design   # §5.2.2, Table A-5 — DAL-driven architecture verification, partitioning requirements
+  - integration-test      # §5.4, Table A-8 — integration process verification, interface testing by DAL
+  - module-design         # §5.2.3, Table A-6 — low-level requirements, coding standards, complexity limits
+  - unit-test             # §6.4.4, Table A-7 — structural coverage by DAL (MC/DC for A, decision for B, statement for C)
+  - hazard-analysis       # Failure condition classification (Catastrophic, Hazardous, Major, Minor, No Effect) via ARP 4761
+
+# Priority 2 — Supporting commands (reporting + analysis phases)
+overlay_supporting:
+  - trace                 # §6.3.4, Table A-9 — traceability analysis, bidirectional by DAL
+  - peer-review           # §6.3 — reviews and analyses, rigor varies by DAL (A: formal inspection, D: walkthrough)
+  - impact-analysis       # §7 — configuration management, change impact assessment
+  - audit-report          # §8 — quality assurance, §9 — certification liaison (SOI audits)
+  - test-results          # §6.4 — test execution evidence, §11 — test procedure/results data items by DAL

@@ -1,0 +1,37 @@
+# ISO 26262 — Road Vehicles: Functional Safety
+# Domain overlay manifest for automotive safety-critical systems
+
+display_name: "ISO 26262 (Automotive)"
+standard: "ISO 26262:2018"
+classification_system:
+  name: "ASIL"
+  levels:
+    - "QM"
+    - "ASIL A"
+    - "ASIL B"
+    - "ASIL C"
+    - "ASIL D"
+
+# Commands with domain-specific overlay content.
+# Each entry maps to a file in this directory: {command-name}.md
+# Overlay content is APPENDED after base command instructions.
+#
+# Priority 1 — V-Model generative commands (design + test phases)
+overlay_commands:
+  - requirements          # Part 6 §6.4 — ASIL allocation, derived safety requirements, safety mechanisms, fault detection
+  - acceptance            # Part 6 §6.9 — ASIL-dependent verification methods (Table 11), back-to-back testing
+  - system-design         # Part 6 §6.5 — FFI, restricted complexity, safety mechanisms allocation
+  - system-test           # Part 6 §6.9 + Table 11 — MC/DC, WCET, structural coverage by ASIL
+  - architecture-design   # Part 9 §5 — ASIL decomposition, Part 6 §6.5 — defensive programming, temporal constraints
+  - integration-test      # Part 6 §6.8 — SIL/HIL, resource contention, back-to-back testing
+  - module-design         # Part 6 §6.6 — MISRA C/C++, single entry/exit, complexity constraints
+  - unit-test             # Part 6 §6.7 — MC/DC coverage, variable-level fault injection
+  - hazard-analysis       # Part 3 §7 + Part 9 §7 — HARA, FMEA/FTA, ASIL severity classification
+
+# Priority 2 — Supporting commands (reporting + analysis phases)
+overlay_supporting:
+  - trace                 # Part 6 Cl.9, Part 8 — bidirectional traceability, ASIL-dependent coverage
+  - peer-review           # Part 6, Table 1 — review methods vary by ASIL (walkthrough → formal inspection)
+  - impact-analysis       # Part 8 §8 — change management, safety impact assessment
+  - audit-report          # Part 2 §6 — functional safety audit, confirmation measures
+  - test-results          # Part 6 §6.7 Table 12 — ASIL-dependent coverage metrics, Part 8 §9 — test documentation evidence
