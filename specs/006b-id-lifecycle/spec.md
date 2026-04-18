@@ -115,6 +115,103 @@ Introduce a formal **ID lifecycle model** with three new states (DEPRECATED, MOD
 
 8. **Lifecycle-aware diffing** — The `diff-requirements.sh` script is extended to detect lifecycle transitions (new deprecations, new suspects, resolved suspects) in addition to content additions and removals.
 
+### User Experience Guarantee: Less Noise, Not More
+
+The lifecycle model is designed to be **invisible during forward development** and **helpful during evolution**:
+
+- **Forward development (building from scratch):** If you never deprecate or modify an existing ID, you never see a lifecycle annotation. The commands work exactly as they do today — preserve and append. Zero new noise.
+
+- **Evolution (changing existing specs):** Today, when upstream artifacts change, downstream artifacts silently become stale. The user gets no signal, no help, and no guidance. The lifecycle model replaces this silence with clear, actionable markers that the commands manage automatically. The user reviews and approves — they don't write annotations by hand.
+
+- **Net effect:** The extension becomes safer to evolve. Teams that previously avoided changing requirements (because the downstream cleanup was manual and error-prone) can now evolve specifications with confidence that nothing is silently stale.
+
+### Operationalization: How It Works in Practice
+
+The lifecycle model is **command-driven, not manual**. The user never writes `[SUSPECT]` or `[DEPRECATED]` annotations by hand. The commands handle all state transitions; the user makes content decisions.
+
+#### The Detection Mechanism
+
+The `acceptance` command already implements the proven pattern for change detection (Step 3: "Detect Incremental Changes"). It uses `diff-requirements.sh` to compare the current `requirements.md` against its last committed version via `git show HEAD:`, classifying each parent REQ as `added`, `modified`, or `removed`.
+
+The lifecycle model **generalizes this diff-based detection to all generative commands**. Each lifecycle-aware command:
+
+1. Reads the parent artifact (e.g., `system-design.md` reads `requirements.md`)
+2. Reads its own existing output (e.g., `system-design.md` reads existing `system-design.md`)
+3. Compares parent IDs against traced parent links in the existing output
+4. Classifies each parent ID as: **unchanged**, **modified** (content changed), **deprecated** (has `[DEPRECATED]` annotation), or **added** (new, no existing child)
+5. Applies lifecycle rules: modified/deprecated parents → mark children as `[SUSPECT]`; added parents → generate new children; unchanged parents → preserve children as-is
+
+This comparison is performed by the LLM as part of the command's instruction flow — it is a natural extension of the existing "Load existing artifact" step, not a separate script. The LLM reads both files, understands the trace links, and detects mismatches. For the `acceptance` command specifically, the existing `diff-requirements.sh` script continues to serve as a deterministic accelerator alongside the LLM's comparison.
+
+#### Concrete Scenario: SYS-002 Needs Modification
+
+All V-cycle artifacts have been generated. During implementation, the team discovers that SYS-002 (Sensor Data Acquisition) needs to change its interface from polling to event-driven.
+
+**Step 1 — Modify the upstream artifact.**
+The engineer edits `system-design.md` directly, updating SYS-002's content (interface description, data flow). The ID `SYS-002` stays the same. This is a normal `git` edit.
+
+**Step 2 — Assess the blast radius (recommended).**
+The engineer runs `impact-analysis.sh --downward SYS-002` to see all downstream artifacts affected. Output:
+```
+Changed IDs: SYS-002
+Suspect Artifacts:
+  System Test:    STP-002-A, STP-002-B
+  Architecture:   ARCH-003
+  Integration:    ITP-003-A
+  Module:         MOD-005
+  Unit Test:      UTP-005-A, UTP-005-B
+```
+This tells the engineer which commands to re-run and in what order.
+
+**Step 3 — Re-run downstream commands, one level at a time.**
+
+The engineer re-runs `/speckit.v-model.system-test`. The command:
+- Reads `system-design.md` → detects SYS-002's content differs from what STP-002-A/B were testing
+- Marks STP-002-A as `[SUSPECT — Parent SYS-002 modified]`
+- Proposes updated test content that aligns with SYS-002's new interface
+- The engineer **reviews the proposal and approves** (or edits)
+- The suspect annotation is resolved: STP-002-A gets updated content, annotation removed
+
+The engineer then re-runs `/speckit.v-model.architecture-design`. Same process for ARCH-003. If ARCH-003's content changes, the engineer continues to `integration-test`, `module-design`, `unit-test` — each level resolving its suspects before feeding the next.
+
+**Step 4 — Verify resolution.**
+Once all downstream commands have been re-run, the engineer runs `impact-analysis.sh --downward SYS-002` again. If all suspects are resolved, the output shows zero suspect artifacts. The `trace` command confirms full coverage with no suspect items.
+
+#### Concrete Scenario: REQ-003 Is No Longer Needed
+
+Product decides to descope a feature. REQ-003 must be retired.
+
+**Step 1 — Deprecate in the upstream artifact.**
+The engineer re-runs `/speckit.v-model.requirements` with updated input (e.g., a modified `spec.md` that no longer includes the capability). The command:
+- Detects that REQ-003's parent capability is gone
+- Marks REQ-003 as `[DEPRECATED — Withdrawn: Feature descoped per product decision]`
+- Does NOT delete REQ-003 — it remains in `requirements.md` with the annotation
+
+**Step 2 — Cascade downstream.**
+The engineer re-runs `/speckit.v-model.acceptance`. The command:
+- Reads `requirements.md` → sees REQ-003 is `[DEPRECATED]`
+- Marks ATP-003-A, ATP-003-B, SCN-003-A as `[SUSPECT — Parent REQ-003 deprecated]`
+- Proposes deprecating all three (since the parent is withdrawn, not superseded)
+- The engineer reviews: "Yes, deprecate all three."
+- The command marks them as `[DEPRECATED — Withdrawn: Parent REQ-003 withdrawn]`
+
+The engineer continues through `system-design` → `system-test` → `architecture-design` → etc. At each level, the command detects the deprecated parent and proposes deprecation or re-parenting for the children. The engineer approves at each step.
+
+**Step 3 — Verify.**
+The `trace` command shows REQ-003 and its entire downstream chain as deprecated. Coverage metrics exclude deprecated items from denominators — the team's coverage percentage is unaffected by the retired requirement.
+
+#### Key Workflow Properties
+
+1. **One level at a time** — Each command resolves suspects at its own level. There is no single "cascade everything" button because each level requires human judgment about whether to re-parent, deprecate, or confirm.
+
+2. **Commands do the bookkeeping** — The user never writes lifecycle annotations manually. Commands detect, propose, and annotate. The user reviews and makes content decisions.
+
+3. **Impact analysis is the map** — Run it before cascading to know the full blast radius. Run it after to confirm all suspects are resolved.
+
+4. **Git is the audit trail** — Every lifecycle transition is a `git diff`. Deprecated items stay in the file with their annotation. Auditors can trace exactly when and why each change happened.
+
+5. **No new scripts required for detection** — The LLM performs the parent-child comparison as part of its existing instruction flow. The `diff-requirements.sh` script remains a useful accelerator for the `acceptance` command but is not required for the general lifecycle mechanism.
+
 ### The Lifecycle Rules Section (Added to All 10 Generative Commands)
 
 ```markdown
