@@ -1,5 +1,14 @@
 # V-Model Requirements Specification: Domain Overlay Architecture
 
+<!--
+  LIFECYCLE TAGS (inline in Description column when evolving):
+  - [DEPRECATED — Superseded by REQ-NNN]: Requirement replaced by a new one
+  - [DEPRECATED — Withdrawn: <reason>]: Requirement removed entirely
+  - Deprecated requirements stay in the table; they are never deleted.
+  - Modified requirements keep their original ID; downstream artifacts become [SUSPECT].
+-->
+
+
 **Feature Branch**: `feature/006a-domain-overlay`
 **Created**: 2025-07-19
 **Status**: Draft
@@ -97,7 +106,7 @@ This document formalizes the requirements for introducing a file-based domain ov
 
 ---
 
-**Total Requirements**: 33
+**Total Requirements**: 33 (33 active, 0 deprecated)
 **By Category**: Functional: 21 | Cross-Feature Lifecycle: 5 | Non-Functional: 2 | Constraint: 5
 **By Priority**: P1: 28 | P2: 5 | P3: 0
 **By Verification Method**: Test: 5 | Inspection: 28 | Analysis: 0 | Demonstration: 0

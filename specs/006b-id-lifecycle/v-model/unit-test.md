@@ -1,5 +1,16 @@
 # Unit Test Plan: 006b — ID Lifecycle Model
 
+<!--
+  LIFECYCLE TAGS (when evolving):
+  - [DEPRECATED — Superseded by UTP-NNN-X]: Test case replaced (parent MOD superseded)
+  - [DEPRECATED — Withdrawn: <reason>]: Test case removed (parent MOD withdrawn)
+  - [SUSPECT — Parent MOD-NNN {deprecated|modified}]: Parent module design changed;
+    resolve by re-parenting, deprecating, regenerating, or confirming active.
+  - Deprecated UTPs/UTSs stay in the document; they are never deleted.
+  - Coverage checks (MOD→UTP) exclude deprecated and [EXTERNAL] MOD items.
+-->
+
+
 **Feature Branch**: `feature/006b-id-lifecycle`
 **Created**: 2026-04-18
 **Status**: Draft
@@ -1074,11 +1085,11 @@ None — all 21 modules are non-external.
 | Total Modules (MOD) | 21 |
 | Modules tested | 21 |
 | Modules bypassed (`[EXTERNAL]`) | 0 |
-| Total Test Cases (UTP) | 33 |
+| Total Test Cases (UTP) | 33 (33 active, 0 deprecated, 0 suspect) |
 | Total Scenarios (UTS) | 107 |
-| Modules with ≥1 UTP | 21 / 21 (100%) |
+| Modules with ≥1 UTP | 21 / 21 (100%) (active items only) |
 | Test Cases with ≥1 UTS | 33 / 33 (100%) |
-| **Overall Coverage (MOD→UTP)** | **100%** |
+| **Overall Coverage (MOD→UTP)** | **100%** (active items only) |
 
 ### Technique Distribution
 

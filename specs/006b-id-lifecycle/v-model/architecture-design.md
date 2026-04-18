@@ -1,5 +1,17 @@
 # Architecture Design: 006b — ID Lifecycle Model
 
+<!--
+  LIFECYCLE TAGS (inline in Name or Description column when evolving):
+  - [DEPRECATED — Superseded by ARCH-NNN]: Module replaced
+  - [DEPRECATED — Withdrawn: <reason>]: Module removed entirely
+  - [SUSPECT — Parent SYS-NNN {deprecated|modified}]: Parent system component changed;
+    resolve by re-parenting, deprecating, or confirming active.
+  - [CROSS-CUTTING] modules are never deprecated via cascade — only by explicit decision.
+  - Deprecated modules stay in the table; they are never deleted.
+  - Coverage checks (SYS→ARCH) exclude deprecated SYS and deprecated ARCH items.
+-->
+
+
 **Feature Branch**: `feature/006b-id-lifecycle`
 **Created**: 2026-04-18
 **Status**: Draft
@@ -331,13 +343,13 @@ sequenceDiagram
 
 | Metric | Count |
 |--------|-------|
-| Total Architecture Modules (ARCH) | 17 |
+| Total Architecture Modules (ARCH) | 17 (17 active, 0 deprecated, 0 suspect) |
 | Cross-Cutting Modules | 0 |
-| Total Parent System Components Covered | 9 / 9 (100%) |
+| Total Parent System Components Covered | 9 / 9 (100%) (active items only) |
 | Modules per Type | Component: 15 \| Utility: 2 |
 | Interface Contracts Defined | 17 / 17 (100%) |
 | Mermaid Sequence Diagrams | 4 |
-| **Forward Coverage (SYS→ARCH)** | **100%** |
+| **Forward Coverage (SYS→ARCH)** | **100%** (active items only) |
 
 ## Derived Modules
 

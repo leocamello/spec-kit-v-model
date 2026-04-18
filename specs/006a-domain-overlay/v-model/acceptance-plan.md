@@ -1,5 +1,15 @@
 # Acceptance Test Plan: Domain Overlay Architecture
 
+<!--
+  LIFECYCLE TAGS (when evolving):
+  - [DEPRECATED — Superseded by ATP-NNN-X]: Test case replaced (parent REQ superseded)
+  - [DEPRECATED — Withdrawn: <reason>]: Test case removed (parent REQ withdrawn)
+  - [SUSPECT — Parent REQ-NNN {deprecated|modified}]: Parent requirement changed;
+    resolve by re-parenting, deprecating, regenerating, or confirming active.
+  - Deprecated ATPs/SCNs stay in the document; they are never deleted.
+-->
+
+
 **Feature Branch**: `feature/006a-domain-overlay`
 **Created**: 2025-07-19
 **Status**: Draft
@@ -668,12 +678,12 @@ This document defines the Acceptance Test Plan for the Domain Overlay Architectu
 
 | Metric | Count |
 |--------|-------|
-| Total Requirements (REQ) | 33 |
-| Total Test Cases (ATP) | 42 |
+| Total Requirements (REQ) | 33 (33 active, 0 deprecated) |
+| Total Test Cases (ATP) | 42 (42 active, 0 deprecated, 0 suspect) |
 | Total Scenarios (SCN) | 46 |
-| Requirements with ≥1 ATP | 33 / 33 (100%) |
+| Active Requirements with ≥1 ATP | 33 / 33 (100%) |
 | Test Cases with ≥1 SCN | 42 / 42 (100%) |
-| **Overall Coverage** | **100%** |
+| **Overall Coverage** | **100%** (active items only) |
 
 ## Uncovered Requirements
 

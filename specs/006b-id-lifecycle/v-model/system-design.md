@@ -1,5 +1,16 @@
 # System Design: 006b — ID Lifecycle Model
 
+<!--
+  LIFECYCLE TAGS (inline in Name or Description column when evolving):
+  - [DEPRECATED — Superseded by SYS-NNN]: Component replaced
+  - [DEPRECATED — Withdrawn: <reason>]: Component removed entirely
+  - [SUSPECT — Parent REQ-NNN {deprecated|modified}]: Parent requirement changed;
+    resolve by re-parenting, deprecating, or confirming active.
+  - Deprecated components stay in the table; they are never deleted.
+  - Coverage checks (REQ→SYS) exclude deprecated REQs and deprecated SYS items.
+-->
+
+
 **Feature Branch**: `feature/006b-id-lifecycle`
 **Created**: 2026-04-18
 **Status**: Draft
@@ -111,10 +122,10 @@ graph TD
 
 | Metric | Count |
 |--------|-------|
-| Total System Components (SYS) | 9 |
+| Total System Components (SYS) | 9 (9 active, 0 deprecated, 0 suspect) |
 | Total Parent Requirements Covered | 25 / 25 (100%) |
 | Components per Type | Module: 7 \| Utility: 2 |
-| **Forward Coverage (REQ→SYS)** | **100%** |
+| **Forward Coverage (REQ→SYS)** | **100%** (active items only) |
 
 ## Derived Requirements
 

@@ -1,5 +1,18 @@
 # Module Design: 006b — ID Lifecycle Model
 
+<!--
+  LIFECYCLE TAGS (when evolving):
+  - [DEPRECATED — Superseded by MOD-NNN]: Module replaced
+  - [DEPRECATED — Withdrawn: <reason>]: Module removed entirely
+  - [SUSPECT — Parent ARCH-NNN {deprecated|modified}]: Parent architecture module changed;
+    resolve by re-parenting, deprecating, or confirming active.
+  - [EXTERNAL] modules are never deprecated via cascade — only by explicit decision
+    (e.g., library version is end-of-life).
+  - Deprecated MODs stay in the document; they are never deleted.
+  - Coverage checks (ARCH→MOD) exclude deprecated ARCH and deprecated MOD items.
+-->
+
+
 **Feature Branch**: `feature/006b-id-lifecycle`
 **Created**: 2026-04-18
 **Status**: Draft
@@ -1090,14 +1103,14 @@ N/A — Stateless pure function.
 
 | Metric | Count |
 |--------|-------|
-| Total Module Designs (MOD) | 21 |
+| Total Module Designs (MOD) | 21 (21 active, 0 deprecated, 0 suspect) |
 | External Modules (`[EXTERNAL]`) | 0 |
 | Cross-Cutting Modules (`[CROSS-CUTTING]`) | 0 |
 | Stateful Modules | 0 |
 | Stateless Modules | 21 |
-| Total Parent Architecture Modules Covered | 17 / 17 (100%) |
+| Total Parent Architecture Modules Covered | 17 / 17 (100%) (active items only) |
 | Modules with Pseudocode | 21 / 21 (100%) |
-| **Forward Coverage (ARCH→MOD)** | **100%** |
+| **Forward Coverage (ARCH→MOD)** | **100%** (active items only) |
 
 ## Derived Modules
 
