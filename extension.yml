@@ -44,7 +44,7 @@ provides:
 
     - name: "speckit.v-model.module-design"
       file: "commands/module-design.md"
-      description: "Decompose architecture modules into DO-178C/ISO 26262-compliant low-level module designs with four mandatory views"
+      description: "Decompose architecture modules into low-level module designs with four mandatory views and ARCH↔MOD traceability"
 
     - name: "speckit.v-model.unit-test"
       file: "commands/unit-test.md"
@@ -52,7 +52,7 @@ provides:
 
     - name: "speckit.v-model.hazard-analysis"
       file: "commands/hazard-analysis.md"
-      description: "Generate an ISO 14971/ISO 26262-compliant Hazard Analysis (FMEA) with operational state awareness and traceable HAZ-NNN IDs"
+      description: "Generate a Hazard Analysis (FMEA) with operational state awareness, traceable HAZ-NNN IDs, and progressive deepening"
 
     - name: "speckit.v-model.impact-analysis"
       file: "commands/impact-analysis.md"
@@ -72,7 +72,7 @@ provides:
 
     - name: "speckit.v-model.trace"
       file: "commands/trace.md"
-      description: "Build a regulatory-grade Traceability Matrix (Matrix A + B + C + D + H: REQ → ATP → SYS → STP → ARCH → ITP → MOD → UTP + HAZ → Mitigation → Verification)"
+      description: "Build a Bidirectional Traceability Matrix (Matrix A + B + C + D + H) with coverage audit and gap detection"
 
   config:
     - name: "v-model-config.yml"
