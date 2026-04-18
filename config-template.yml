@@ -1,6 +1,13 @@
 # V-Model Extension Configuration
 # Copy this to v-model-config.yml and customize
 
+# Regulatory domain for safety-critical enrichment
+# When set, commands and templates load domain-specific overlay content
+# (severity scales, coverage techniques, coding standards, etc.)
+# When absent or empty, commands produce clean domain-agnostic output.
+# Valid values: iso_26262, do_178c, iec_62304
+# domain: ""
+
 # Directory where V-Model artifacts are stored (relative to specs/{feature}/)
 output_dir: "v-model"
 
