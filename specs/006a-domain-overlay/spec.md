@@ -68,6 +68,18 @@ A file-by-file audit of all 14 commands, 12 templates, and key metadata files re
 
 4. **Inconsistent patterns** — Templates use a clean HTML-comment gating pattern that works well. Commands use a verbal instruction pattern ("If `domain` is set... skip...") that is inconsistently applied and still leaks domain vocabulary into visible text. There is no single, reusable mechanism.
 
+### User Experience Guarantee: Reduction, Not Addition
+
+This feature is a **simplification**. It removes noise from the default experience rather than adding new complexity:
+
+- **Before (v0.5.0):** A non-regulated team runs `/speckit.v-model.system-design` and sees "Freedom from Interference (ISO 26262-6 §7.4.8)" and ASIL rating tables in the output. They don't know what ASIL means and shouldn't have to. An automotive team runs `/speckit.v-model.module-design` and sees "DO-178C Level A" aviation terminology mixed in with their ISO 26262 workflow.
+
+- **After (v0.6.0):** A non-regulated team runs the same command and sees clean, standards-based system design guidance with no safety jargon. An automotive team sets `domain: iso_26262` once and gets a workflow that speaks exclusively in ISO 26262 vocabulary — ASIL ratings, Freedom from Interference, MISRA-C — with no aviation or medical terminology leaking in.
+
+- **Zero-config default:** If a user never touches `v-model-config.yml`, everything works and no domain content appears. The extension presents a clean V-Model methodology based on universally applicable standards (IEEE 1016, ISO 29119, IEEE 42010, INCOSE).
+
+- **One-field activation:** Setting `domain: iso_26262` enriches every applicable command and template with automotive-specific content. One configuration change, consistent enrichment everywhere.
+
 ## Proposed Solution
 
 Introduce a **file-based domain overlay architecture** that cleanly separates base (domain-agnostic) content from domain-specific enrichment layers. The architecture follows an additive composition model: overlays ADD content after base commands/templates, never replacing them.
