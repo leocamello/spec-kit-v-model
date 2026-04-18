@@ -118,6 +118,16 @@ enabling the traceability chain: Hazard → Mitigation → Requirement → Test 
   - If no realistic failure mode exists: use "No identified failure mode" with
     Severity: Negligible and flag [HUMAN REVIEW REQUIRED]
   - When updating (progressive deepening): append only, never modify existing entries
+
+  LIFECYCLE TAGS (inline in Failure Mode or Component column when evolving):
+  - [DEPRECATED — Superseded by HAZ-NNN]: Hazard superseded (parent SYS replaced)
+  - [DEPRECATED — Withdrawn: <reason>]: Hazard removed (parent SYS withdrawn)
+  - [SUSPECT — Parent SYS-NNN {deprecated|modified}]: Parent system component changed;
+    re-evaluate hazard severity, mitigations, and residual risk.
+  - Mitigations referencing [DEPRECATED] REQ-NNN must be updated to reference
+    the superseding requirement or flagged as unmitigated.
+  - Deprecated HAZs stay in the table; they are never deleted.
+  - Coverage checks (SYS→HAZ) exclude deprecated SYS items.
 -->
 
 | HAZ ID | Component | Failure Mode | Operational State | Effect | Severity | Likelihood | Risk Level | Mitigation | Residual Risk |
@@ -154,8 +164,8 @@ enabling the traceability chain: Hazard → Mitigation → Requirement → Test 
 
 | Metric | Count |
 |--------|-------|
-| Total System Components (SYS) | [N] |
-| Components with ≥1 HAZ | [N] / [N] ([%]) |
+| Total System Components (SYS) | [N] ([N] active, [N] deprecated) |
+| Components with ≥1 HAZ | [N] / [N] ([%]) (active items only) |
 | Total Hazards (HAZ) | [N] |
 | System-level hazards | [N] |
 | Architecture-level hazards | [N] (progressive deepening) |

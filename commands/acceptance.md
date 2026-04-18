@@ -78,6 +78,18 @@ Parse the JSON output for:
 - **Unchanged REQs**: Do NOT touch their ATPs or SCNs. Preserve exactly as-is.
 - **Never renumber** existing IDs.
 
+**Lifecycle rules (suspect detection):**
+- If a parent REQ has been deprecated (`[DEPRECATED]` tag in `requirements.md`),
+  mark all linked ATPs and SCNs as `[SUSPECT — Parent REQ-NNN deprecated]`.
+  Use the deprecation type to determine resolution:
+  - `[DEPRECATED — Superseded by REQ-NNN]`: Re-parent ATPs/SCNs to the superseding REQ
+  - `[DEPRECATED — Withdrawn: <reason>]`: Deprecate the linked ATPs/SCNs
+- If a parent REQ has been modified (content changed, same ID), mark linked ATPs
+  and SCNs as `[SUSPECT — Parent REQ-NNN modified]`. Regenerate test logic to
+  match the updated requirement, then remove the SUSPECT tag.
+- **Confirm active**: If review determines the modification does not affect test
+  validity, remove the SUSPECT tag without regeneration.
+
 If no existing acceptance plan exists, generate from scratch for all REQs.
 
 ### 4. Generate Test Cases and Scenarios (Batched)

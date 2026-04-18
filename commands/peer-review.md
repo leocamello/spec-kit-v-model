@@ -81,16 +81,16 @@ For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\''m Groot
 
 2. **Load the artifact**: Read the target artifact file completely.
 
-3. **Count items**: Count the primary items in the artifact:
-   - `requirements.md`: Count `REQ-NNN` IDs (all categories)
-   - `acceptance-plan.md`: Count `ATP-NNN` IDs
-   - `system-design.md`: Count `SYS-NNN` IDs
-   - `system-test.md`: Count `STP-NNN` IDs
-   - `architecture-design.md`: Count `ARCH-NNN` IDs
-   - `integration-test.md`: Count `ITP-NNN` IDs
-   - `module-design.md`: Count `MOD-NNN` IDs
-   - `unit-test.md`: Count `UTP-NNN` IDs
-   - `hazard-analysis.md`: Count `HAZ-NNN` IDs
+3. **Count items**: Count the primary items in the artifact (exclude `[DEPRECATED]` items from active counts):
+   - `requirements.md`: Count `REQ-NNN` IDs (all categories) — separately count active and deprecated
+   - `acceptance-plan.md`: Count `ATP-NNN` IDs — separately count active and deprecated
+   - `system-design.md`: Count `SYS-NNN` IDs — separately count active and deprecated
+   - `system-test.md`: Count `STP-NNN` IDs — separately count active and deprecated
+   - `architecture-design.md`: Count `ARCH-NNN` IDs — separately count active and deprecated
+   - `integration-test.md`: Count `ITP-NNN` IDs — separately count active and deprecated
+   - `module-design.md`: Count `MOD-NNN` IDs — separately count active and deprecated
+   - `unit-test.md`: Count `UTP-NNN` IDs — separately count active and deprecated
+   - `hazard-analysis.md`: Count `HAZ-NNN` IDs — separately count active and deprecated
 
 ### 4. Evaluate Against Standards-Based Criteria
 
@@ -110,7 +110,7 @@ Check each requirement for:
 
 Check for:
 - **4 Mandatory Views**: Decomposition (§5.1), Dependency (§5.2), Interface (§5.3), Data Design (§5.4) — all present?
-- **REQ Traceability**: Does every SYS trace to at least 1 REQ?
+- **REQ Traceability**: Does every active (non-deprecated) SYS trace to at least 1 REQ?
 - **Interface Completeness**: Do all interfaces specify error handling/responses?
 - **Derived Requirements**: Are any SYS components not traceable to a REQ? If so, are they flagged as derived?
 
@@ -120,7 +120,7 @@ Check for:
 - **4+1 Views**: Logical, Process, Physical, Development, (+1 Scenarios) — all populated?
 - **Cross-Cutting Justification**: Are CROSS-CUTTING modules justified with rationale?
 - **Interface Definitions**: Complete for all ARCH modules?
-- **SYS Traceability**: Does every ARCH trace to at least 1 SYS?
+- **SYS Traceability**: Does every active (non-deprecated) ARCH trace to at least 1 SYS?
 
 #### 4.4 System Test (`system-test.md`) — ISO 29119
 
@@ -128,7 +128,7 @@ Check for:
 - **Named Techniques**: Are ISO 29119 techniques explicitly named (Equivalence Partitioning, Boundary Value Analysis, State Transition, Error Guessing)?
 - **No User-Journey Language**: Are test scenarios free of "As a user, I want..." language?
 - **Scenario Independence**: Can each test scenario execute independently (no shared state)?
-- **SYS Coverage**: Does every SYS have at least one STP?
+- **SYS Coverage**: Does every active (non-deprecated) SYS have at least one STP?
 
 #### 4.5 Integration Test (`integration-test.md`) — ISO 29119-4
 
@@ -136,7 +136,7 @@ Check for:
 - **CDCT Technique**: Is Consumer-Driven Contract Testing present?
 - **Fault Injection**: Are fault injection scenarios present?
 - **Interface Coverage**: Is every ARCH module's interface tested?
-- **ARCH Coverage**: Does every ARCH have at least one ITP?
+- **ARCH Coverage**: Does every active (non-deprecated) ARCH have at least one ITP?
 
 #### 4.6 Module Design (`module-design.md`) — DO-178C / ISO 26262
 
@@ -144,7 +144,7 @@ Check for:
 - **4 Mandatory Views**: Algorithmic/Logic, State Machine (if applicable), Internal Data Structures, Error Handling — present for each MOD?
 - **Algorithm Specifications**: Are algorithms described (pseudocode or prose)?
 - **Error Handling**: Is error handling explicitly defined for each MOD?
-- **ARCH Traceability**: Does every MOD trace to at least 1 ARCH?
+- **ARCH Traceability**: Does every active (non-deprecated) MOD trace to at least 1 ARCH?
 
 #### 4.7 Unit Test (`unit-test.md`) — ISO 29119-4
 
@@ -152,7 +152,7 @@ Check for:
 - **5 Techniques**: Statement Coverage, Branch Coverage, Boundary Value Analysis, Error Guessing, Equivalence Partitioning — are at least 3 present per MOD?
 - **Mock Registry**: Is a mock registry defined (if applicable)?
 - **Boundary Values**: Are boundary values explicit (not implicit)?
-- **MOD Coverage**: Does every MOD have at least one UTP?
+- **MOD Coverage**: Does every active, non-[EXTERNAL] MOD have at least one UTP?
 
 #### 4.8 Hazard Analysis (`hazard-analysis.md`) — ISO 14971 / ISO 26262
 
@@ -161,15 +161,27 @@ Check for:
 - **Mitigation Completeness**: Does every HAZ have at least one mitigation referencing REQ-NNN or SYS-NNN?
 - **Operational State Coverage**: Are failure modes analyzed across operational states?
 - **Residual Risk Assessment**: Is residual risk assessed for every hazard?
-- **SYS Coverage**: Does every SYS have at least one HAZ?
+- **SYS Coverage**: Does every active (non-deprecated) SYS have at least one HAZ?
 
 #### 4.9 Acceptance Plan (`acceptance-plan.md`) — ISO 29119
 
 Check for:
 - **BDD Format**: Are scenarios in proper Given/When/Then format?
 - **Measurable Validation**: Are validation conditions measurable (not "works correctly")?
-- **REQ Coverage**: Does every REQ have at least one ATP?
+- **REQ Coverage**: Does every active (non-deprecated) REQ have at least one ATP?
 - **Scenario Completeness**: Do all ATPs have at least one SCN?
+
+#### 4.10 Lifecycle Validation (All Artifact Types)
+
+Apply these checks to **every** artifact type reviewed, in addition to the type-specific criteria above:
+
+- **Deprecation syntax**: Every item marked `[DEPRECATED]` MUST include a valid reason:
+  - `[DEPRECATED — Superseded by {PREFIX}-NNN]` (replaced by a new item)
+  - `[DEPRECATED — Withdrawn: <reason>]` (removed entirely with justification)
+  - Items marked `[DEPRECATED]` without a valid reason → **Critical** finding: `PRF-{ARTIFACT}-NNN "Deprecation without reason — audit trail broken"`
+- **Unresolved suspects**: Every item tagged `[SUSPECT — Parent X-NNN {deprecated|modified}]` indicates an unresolved lifecycle review. Unresolved suspects → **Major** finding: `PRF-{ARTIFACT}-NNN "Unresolved suspect — lifecycle review required for {ID}"`
+- **Coverage exclusion**: When checking coverage criteria (e.g., "every REQ has at least one ATP", "every SYS has at least one STP"), **exclude deprecated items**. A `[DEPRECATED]` REQ with no ATP is NOT a coverage gap. Only active items count toward coverage.
+- **Orphaned deprecation chains**: If a parent item is `[DEPRECATED]` but its downstream children are still `Active` (no `[DEPRECATED]` or `[SUSPECT]` tag), flag as **Major** finding: `PRF-{ARTIFACT}-NNN "Deprecated parent {ID} has active children — cascade incomplete"`
 
 ### 5. Generate Findings
 
@@ -194,7 +206,7 @@ For each quality issue identified in Step 4:
 
 Write the peer review report to `{VMODEL_DIR}/peer-review-{artifact}.md` using the template structure:
 
-1. **Header**: Reviewer ("AI Peer Review (spec-kit V-Model)"), date (ISO 8601), artifact name, item count, governing standard.
+1. **Header**: Reviewer ("AI Peer Review (spec-kit V-Model)"), date (ISO 8601), artifact name, item count (active / deprecated / suspect), governing standard.
 
 2. **Summary table**: Counts for each severity (Critical, Major, Minor, Observation) and total.
 

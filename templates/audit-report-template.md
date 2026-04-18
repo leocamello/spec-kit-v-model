@@ -25,6 +25,18 @@
 
 [MATRIX_SECTIONS]
 
+## 3.1 Lifecycle Status Summary
+
+| Artifact | Active | Deprecated | Suspect | Total |
+|----------|--------|------------|---------|-------|
+[LIFECYCLE_ROWS]
+
+### Unresolved Suspects
+
+[UNRESOLVED_SUSPECTS_TABLE]
+
+<!-- If no unresolved suspects: "None — all lifecycle states resolved." -->
+
 ## 4. Coverage Analysis
 
 | Matrix | Forward Coverage | Backward Coverage | Gaps | Orphans |

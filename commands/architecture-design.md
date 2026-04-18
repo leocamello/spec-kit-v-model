@@ -69,7 +69,29 @@ For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\''m Groot
    - Identify the highest existing ARCH number to continue the sequence
    - New modules append after existing ones — **never renumber**
 
-### 3. Decompose System Components into Architecture Modules
+### 3. Lifecycle Rules (When Evolving Existing Artifacts)
+
+When an existing `architecture-design.md` is loaded (step 2.5), apply these
+rules before generating new content:
+
+1. **Never delete an ID** — mark as `[DEPRECATED]`
+2. **Deprecation types:**
+   - `[DEPRECATED — Superseded by ARCH-NNN]`: Replaced by a new module
+   - `[DEPRECATED — Withdrawn: <reason>]`: Removed entirely with justification
+3. **Suspect detection from parent SYS:** If a parent SYS (in `system-design.md`)
+   is deprecated or modified, mark each ARCH that traces to it as
+   `[SUSPECT — Parent SYS-NNN {deprecated|modified}]`.
+4. **Suspect resolution:** For each suspect ARCH:
+   - **Re-parent** to the superseding SYS (if component continues under a new ID)
+   - **Deprecate** (if the component is withdrawn — cascade to downstream MOD, ITP)
+   - **Confirm active** (if still valid despite the parent change — remove the SUSPECT tag)
+5. **Modified modules:** Update content in-place, preserve the original ARCH ID.
+   Downstream artifacts (MOD, ITP) tracing to this ARCH become suspect.
+
+If no existing `architecture-design.md` is found, skip this step entirely — all
+modules are new.
+
+### 4. Decompose System Components into Architecture Modules
 
 Follow the **strict translator constraint**: You are decomposing system components into architecture modules. You must NOT invent capabilities not present in `system-design.md`.
 
@@ -108,9 +130,9 @@ For each architecture module identified during decomposition:
 - Reject "black box" descriptions: every `ARCH-NNN` MUST have an explicit interface contract (inputs, outputs, exceptions) in the Interface View
 - If a module description is too vague to derive contracts, emit a warning and refine
 
-### 4. Build the Four Architecture Views
+### 5. Build the Four Architecture Views
 
-#### 4.1 Logical View — Component Breakdown (IEEE 42010 / Kruchten 4+1)
+#### 5.1 Logical View — Component Breakdown (IEEE 42010 / Kruchten 4+1)
 
 The primary view. Fill the Logical View table from the template with all ARCH modules:
 
@@ -123,7 +145,7 @@ The primary view. Fill the Logical View table from the template with all ARCH mo
 - Cross-cutting modules appear in the same table with `[CROSS-CUTTING]` tag and rationale
 - No ARCH module may have an empty Parent System Components field (unless `[CROSS-CUTTING]`)
 
-#### 4.2 Process View — Dynamic Behavior (Kruchten 4+1)
+#### 5.2 Process View — Dynamic Behavior (Kruchten 4+1)
 
 Document runtime module interactions using Mermaid sequence diagrams:
 
@@ -138,7 +160,7 @@ Document runtime module interactions using Mermaid sequence diagrams:
 - Feed from the system design's Dependency View for inter-component relationships
 - This view directly feeds **concurrency testing** in the integration test phase
 
-#### 4.3 Interface View — Strict API Contracts (Kruchten 4+1)
+#### 5.3 Interface View — Strict API Contracts (Kruchten 4+1)
 
 For **every** ARCH-NNN module, define explicit interface contracts:
 
@@ -155,7 +177,7 @@ For **every** ARCH-NNN module, define explicit interface contracts:
 - Input/output contracts directly drive **Interface Contract Testing**
 - Cross-cutting modules MUST also have contracts defined here
 
-#### 4.4 Data Flow View — Data Transformation Chains (Kruchten 4+1)
+#### 5.4 Data Flow View — Data Transformation Chains (Kruchten 4+1)
 
 Trace data through architecture modules:
 
@@ -168,7 +190,7 @@ Trace data through architecture modules:
 - Each flow traces input → transformation → output with intermediate formats
 - Data flows directly drive **Data Flow Testing** in the integration test phase
 
-### 5. Safety-Critical Sections (Conditional)
+### 6. Safety-Critical Sections (Conditional)
 
 **Only generate these sections if `v-model-config.yml` has `domain` set.**
 
@@ -196,7 +218,7 @@ Trace data through architecture modules:
 - Watchdog timers, execution order dependencies, deadlock prevention
 - Maximum execution time per module, scheduling constraints
 
-### 6. Coverage Gate
+### 7. Coverage Gate
 
 Run `validate-architecture-coverage.sh` (or reference its logic) for forward coverage:
 
@@ -206,7 +228,7 @@ Run `validate-architecture-coverage.sh` (or reference its logic) for forward cov
 
 Note: backward coverage (ARCH→ITP) will be validated after integration test generation.
 
-### 7. Write Output
+### 8. Write Output
 
 Write the complete architecture design document to `{VMODEL_DIR}/architecture-design.md` using the template structure. Include:
 
@@ -221,7 +243,7 @@ Write the complete architecture design document to `{VMODEL_DIR}/architecture-de
 9. **Coverage Summary**: Module count, forward coverage percentage
 10. **Derived Modules**: List of flagged items requiring human resolution
 
-### 8. Report Completion
+### 9. Report Completion
 
 Display a summary:
 - Total architecture modules generated (by type: Component/Service/Library/Utility/Adapter)

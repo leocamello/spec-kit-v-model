@@ -56,7 +56,30 @@ For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\''m Groot
    - Identify the highest existing REQ number to continue the sequence.
    - New requirements append after existing ones — **never renumber**.
 
-### 3. Generate Requirements
+### 3. Lifecycle Rules (When Evolving Existing Artifacts)
+
+When an existing `requirements.md` is loaded (step 2.3), apply these rules
+before generating new content:
+
+1. **Never delete an ID** — mark as `[DEPRECATED]`
+2. **Deprecation types:**
+   - `[DEPRECATED — Superseded by REQ-NNN]`: Replaced by a new requirement
+   - `[DEPRECATED — Withdrawn: <reason>]`: Removed entirely with justification
+3. **Modified requirements:** When source material (`spec.md`) changes the intent
+   of an existing requirement, update its content in-place and preserve the
+   original REQ ID. Downstream artifacts (ATPs, SYS, HAZ) tracing to this REQ
+   become `[SUSPECT]` and must be resolved in their respective commands.
+4. **Removed source material:** If content from `spec.md` that justified a
+   requirement is removed or contradicted, deprecate the corresponding REQ using
+   the appropriate deprecation type.
+5. **Traceability preservation:** Deprecated REQs remain in the document with
+   their original ID and full content history. The `[DEPRECATED]` tag and reason
+   provide an audit trail.
+
+If no existing `requirements.md` is found, skip this step entirely — all
+requirements are new.
+
+### 4. Generate Requirements
 
 Follow the **strict translator constraint**: You are extracting and formalizing requirements from the source material. You must NOT invent, infer, or add features not present in the source.
 
@@ -76,7 +99,7 @@ For each requirement identified in the source material:
 
 5. **Specify verification method**: Test, Inspection, Analysis, or Demonstration.
 
-### 4. Validate Requirements Quality (IEEE 29148 / INCOSE)
+### 5. Validate Requirements Quality (IEEE 29148 / INCOSE)
 
 Every requirement MUST satisfy **all 8 criteria** before it is included in the output. If a requirement fails any criterion, rewrite it until it passes. These criteria are non-negotiable.
 
@@ -150,7 +173,7 @@ The requirement traces back to a **real business, user, or safety need**. If you
 
 **Check**: The strict translator constraint inherently enforces this — you are forbidden from inventing requirements not in the source. If a requirement feels extraneous, verify it appears in the source material. If it doesn't, remove it.
 
-### 5. Write Output
+### 6. Write Output
 
 Write the complete requirements document to `{VMODEL_DIR}/requirements.md` using the template structure. Include:
 
@@ -162,7 +185,7 @@ Write the complete requirements document to `{VMODEL_DIR}/requirements.md` using
 6. **Glossary**: Domain-specific terms used in requirements
 7. **Summary metrics**: Total count, by priority, by verification method
 
-### 6. Report Completion
+### 7. Report Completion
 
 Display a summary:
 - Total requirements generated (broken down by category)

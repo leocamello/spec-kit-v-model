@@ -66,7 +66,7 @@ For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\''m Groot
    - Requirements serve as the source of risk control measures
 
 5. **Load architecture design** (if `AVAILABLE_DOCS` contains `"architecture-design.md"`):
-   - Read `architecture-design.md` for progressive deepening (Step 4)
+   - Read `architecture-design.md` for progressive deepening (Step 5)
    - Extract `ARCH-NNN` identifiers and interface contracts
    - Architecture-level failure modes supplement system-level analysis
 
@@ -82,11 +82,35 @@ For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\''m Groot
    - New hazard entries append after existing ones — **never renumber**
    - This enables progressive deepening across multiple invocations
 
-### 3. Generate Hazard Register (FMEA)
+### 3. Lifecycle Rules (When Evolving Existing Artifacts)
+
+When an existing `hazard-analysis.md` is loaded (step 2.7), apply these rules
+before generating new content:
+
+1. **Never delete an ID** — mark as `[DEPRECATED]`
+2. **Deprecation types:**
+   - `[DEPRECATED — Superseded by HAZ-NNN]`: Replaced by a new hazard entry
+   - `[DEPRECATED — Withdrawn: <reason>]`: Removed entirely with justification
+3. **Suspect detection from parent SYS:** If a parent SYS (in `system-design.md`)
+   is deprecated or modified, mark each HAZ that traces to it as
+   `[SUSPECT — Parent SYS-NNN {deprecated|modified}]`.
+4. **Suspect detection from mitigation REQ:** If a REQ referenced as a mitigation
+   in a HAZ entry is deprecated, mark that HAZ as
+   `[SUSPECT — Mitigation REQ-NNN deprecated]`.
+5. **Suspect resolution:** For each suspect HAZ:
+   - **Re-parent** to the superseding SYS/REQ (if the component/mitigation continues)
+   - **Deprecate** (if the component is withdrawn and the hazard no longer applies)
+   - **Confirm active** (if still valid despite the parent change — remove the SUSPECT tag)
+6. **Modified hazards:** Update content in-place, preserve the original HAZ ID.
+
+If no existing `hazard-analysis.md` is found, skip this step entirely — all
+hazards are new.
+
+### 4. Generate Hazard Register (FMEA)
 
 For each `SYS-NNN` component in the system design, brainstorm potential failure modes and analyze each across operational states.
 
-#### 3.1 Failure Mode Identification
+#### 4.1 Failure Mode Identification
 
 For each component, consider:
 - **Function failures**: What if this component does not perform its function?
@@ -94,7 +118,7 @@ For each component, consider:
 - **Value failures**: What if this component produces incorrect output (too high, too low, wrong type)?
 - **Interface failures**: What if this component's inputs are corrupted, missing, or out of range?
 
-#### 3.2 Operational State Analysis
+#### 4.2 Operational State Analysis
 
 For each identified failure mode, evaluate severity across EVERY relevant operational state:
 - A failure mode may have DIFFERENT severity in DIFFERENT states
@@ -106,7 +130,7 @@ Example: A temperature sensor failure on a medical infusion pump:
 - `HAZ-002`: Sensor failure during PRIMING → Severity: Minor (pump can be stopped manually)
 - `HAZ-003`: Sensor failure during INFUSING → Severity: Catastrophic (incorrect dosage delivery)
 
-#### 3.3 FMEA Entry Generation
+#### 4.3 FMEA Entry Generation
 
 For each hazard entry, populate ALL 8 mandatory fields:
 
@@ -121,7 +145,7 @@ For each hazard entry, populate ALL 8 mandatory fields:
 9. **Mitigation**: Risk control measure — MUST reference at least one `REQ-NNN` or `SYS-NNN`
 10. **Residual Risk**: Risk level after mitigation is applied
 
-#### 3.4 Full SYS Coverage Rule
+#### 4.4 Full SYS Coverage Rule
 
 Every `SYS-NNN` in the system design MUST have at least one `HAZ-NNN` entry. If no realistic failure mode can be identified for a component:
 - Generate a single entry with:
@@ -130,7 +154,7 @@ Every `SYS-NNN` in the system design MUST have at least one `HAZ-NNN` entry. If 
   - Risk Level: Acceptable
   - Add a note: `[HUMAN REVIEW REQUIRED: Confirm no failure modes exist for this component]`
 
-#### 3.5 Severity Classification
+#### 4.5 Severity Classification
 
 **General-Purpose (no domain configured):**
 
@@ -162,7 +186,7 @@ Every `SYS-NNN` in the system design MUST have at least one `HAZ-NNN` entry. If 
 | Minor | D | Slight reduction in safety margins |
 | No Effect | E | No effect on operational capability |
 
-#### 3.6 Risk Matrix
+#### 4.6 Risk Matrix
 
 Use the standard severity × likelihood risk matrix:
 
@@ -174,7 +198,7 @@ Use the standard severity × likelihood risk matrix:
 | **Minor** | Undesirable | Tolerable | Tolerable | Acceptable | Acceptable |
 | **Negligible** | Tolerable | Acceptable | Acceptable | Acceptable | Acceptable |
 
-### 4. Progressive Deepening (Architecture-Level)
+### 5. Progressive Deepening (Architecture-Level)
 
 **Only execute this step if `architecture-design.md` exists.**
 
@@ -195,7 +219,7 @@ After generating system-level hazards, analyze architecture-level failure modes:
    - Add a note at the end of the hazard register: "No additional architecture-level hazards identified."
 5. **CRITICAL**: Never modify existing `HAZ-NNN` entries — append only
 
-### 5. Write Output
+### 6. Write Output
 
 Write the complete hazard analysis to `{VMODEL_DIR}/hazard-analysis.md` using the template structure. Include:
 
@@ -207,7 +231,7 @@ Write the complete hazard analysis to `{VMODEL_DIR}/hazard-analysis.md` using th
 6. **Progressive Deepening Notes**: Architecture-level additions (if applicable)
 7. **Coverage Summary**: SYS coverage stats, hazard count by severity, state distribution
 
-### 6. Report Completion
+### 7. Report Completion
 
 Display a summary:
 - Total hazards generated (HAZ count)
