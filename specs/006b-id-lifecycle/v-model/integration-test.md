@@ -1,5 +1,16 @@
 # Integration Test Plan: 006b — ID Lifecycle Model
 
+<!--
+  LIFECYCLE TAGS (when evolving):
+  - [DEPRECATED — Superseded by ITP-NNN-X]: Test case replaced (parent ARCH superseded)
+  - [DEPRECATED — Withdrawn: <reason>]: Test case removed (parent ARCH withdrawn)
+  - [SUSPECT — Parent ARCH-NNN {deprecated|modified}]: Parent architecture module changed;
+    resolve by re-parenting, deprecating, regenerating, or confirming active.
+  - Deprecated ITPs/ITSs stay in the document; they are never deleted.
+  - Coverage checks (ARCH→ITP) exclude deprecated ARCH and deprecated ITP items.
+-->
+
+
 **Feature Branch**: `feature/006b-id-lifecycle`
 **Created**: 2026-04-18
 **Status**: Draft
@@ -484,12 +495,12 @@ Note: Concurrency & Race Condition Testing is not applicable — all 4 interacti
 
 | Metric | Count |
 |--------|-------|
-| Total Architecture Modules (ARCH) | 17 |
-| Total Test Cases (ITP) | 30 |
+| Total Architecture Modules (ARCH) | 17 (17 active, 0 deprecated) |
+| Total Test Cases (ITP) | 30 (30 active, 0 deprecated, 0 suspect) |
 | Total Scenarios (ITS) | 31 |
-| Modules with ≥1 ITP | 17 / 17 (100%) |
+| Modules with ≥1 ITP | 17 / 17 (100%) (active items only) |
 | Test Cases with ≥1 ITS | 30 / 30 (100%) |
-| **Overall Coverage (ARCH→ITP)** | **100%** |
+| **Overall Coverage (ARCH→ITP)** | **100%** (active items only) |
 
 ### Technique Distribution
 

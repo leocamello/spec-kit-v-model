@@ -1,5 +1,16 @@
 # Integration Test Plan: Domain Overlay Architecture
 
+<!--
+  LIFECYCLE TAGS (when evolving):
+  - [DEPRECATED — Superseded by ITP-NNN-X]: Test case replaced (parent ARCH superseded)
+  - [DEPRECATED — Withdrawn: <reason>]: Test case removed (parent ARCH withdrawn)
+  - [SUSPECT — Parent ARCH-NNN {deprecated|modified}]: Parent architecture module changed;
+    resolve by re-parenting, deprecating, regenerating, or confirming active.
+  - Deprecated ITPs/ITSs stay in the document; they are never deleted.
+  - Coverage checks (ARCH→ITP) exclude deprecated ARCH and deprecated ITP items.
+-->
+
+
 **Feature Branch**: `feature/006a-domain-overlay`
 **Created**: 2025-07-19
 **Status**: Draft
@@ -648,12 +659,12 @@ Each test case MUST identify its technique by name and anchor to a specific arch
 
 | Metric | Count |
 |--------|-------|
-| Total Architecture Modules (ARCH) | 18 |
-| Total Test Cases (ITP) | 41 |
+| Total Architecture Modules (ARCH) | 18 (18 active, 0 deprecated) |
+| Total Test Cases (ITP) | 41 (41 active, 0 deprecated, 0 suspect) |
 | Total Scenarios (ITS) | 47 |
-| Modules with ≥1 ITP | 18 / 18 (100%) |
+| Modules with ≥1 ITP | 18 / 18 (100%) (active items only) |
 | Test Cases with ≥1 ITS | 41 / 41 (100%) |
-| **Overall Coverage (ARCH→ITP)** | **100%** |
+| **Overall Coverage (ARCH→ITP)** | **100%** (active items only) |
 
 ### Technique Distribution
 

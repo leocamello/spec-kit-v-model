@@ -1,5 +1,16 @@
 # System Test Plan: Domain Overlay Architecture
 
+<!--
+  LIFECYCLE TAGS (when evolving):
+  - [DEPRECATED — Superseded by STP-NNN-X]: Test case replaced (parent SYS superseded)
+  - [DEPRECATED — Withdrawn: <reason>]: Test case removed (parent SYS withdrawn)
+  - [SUSPECT — Parent SYS-NNN {deprecated|modified}]: Parent system component changed;
+    resolve by re-parenting, deprecating, regenerating, or confirming active.
+  - Deprecated STPs/STSs stay in the document; they are never deleted.
+  - Coverage checks (SYS→STP) exclude deprecated SYS and deprecated STP items.
+-->
+
+
 **Feature Branch**: `feature/006a-domain-overlay`
 **Created**: 2025-07-19
 **Status**: Draft
@@ -533,12 +544,12 @@ Each test case MUST identify its technique by name:
 
 | Metric | Count |
 |--------|-------|
-| Total System Components (SYS) | 9 |
-| Total Test Cases (STP) | 32 |
+| Total System Components (SYS) | 9 (9 active, 0 deprecated) |
+| Total Test Cases (STP) | 32 (32 active, 0 deprecated, 0 suspect) |
 | Total Scenarios (STS) | 49 |
-| Components with ≥1 STP | 9 / 9 (100%) |
+| Components with ≥1 STP | 9 / 9 (100%) (active items only) |
 | Test Cases with ≥1 STS | 32 / 32 (100%) |
-| **Overall Coverage (SYS→STP)** | **100%** |
+| **Overall Coverage (SYS→STP)** | **100%** (active items only) |
 
 ### Technique Distribution
 

@@ -1,5 +1,17 @@
 # Architecture Design: Domain Overlay Architecture
 
+<!--
+  LIFECYCLE TAGS (inline in Name or Description column when evolving):
+  - [DEPRECATED — Superseded by ARCH-NNN]: Module replaced
+  - [DEPRECATED — Withdrawn: <reason>]: Module removed entirely
+  - [SUSPECT — Parent SYS-NNN {deprecated|modified}]: Parent system component changed;
+    resolve by re-parenting, deprecating, or confirming active.
+  - [CROSS-CUTTING] modules are never deprecated via cascade — only by explicit decision.
+  - Deprecated modules stay in the table; they are never deleted.
+  - Coverage checks (SYS→ARCH) exclude deprecated SYS and deprecated ARCH items.
+-->
+
+
 **Feature Branch**: `feature/006a-domain-overlay`
 **Created**: 2025-07-19
 **Status**: Draft
@@ -385,13 +397,13 @@ sequenceDiagram
 
 | Metric | Count |
 |--------|-------|
-| Total Architecture Modules (ARCH) | 18 |
+| Total Architecture Modules (ARCH) | 18 (18 active, 0 deprecated, 0 suspect) |
 | Cross-Cutting Modules | 0 |
-| Total Parent System Components Covered | 9 / 9 (100%) |
+| Total Parent System Components Covered | 9 / 9 (100%) (active items only) |
 | Modules per Type | Component: 14 \| Utility: 3 \| Library: 1 \| Service: 0 \| Adapter: 0 |
 | Interface Contracts Defined | 18 / 18 (100%) |
 | Mermaid Sequence Diagrams | 5 |
-| **Forward Coverage (SYS→ARCH)** | **100%** |
+| **Forward Coverage (SYS→ARCH)** | **100%** (active items only) |
 
 ### System Component Coverage Matrix
 
