@@ -1,0 +1,25 @@
+# ISO 26262 — Road Vehicles: Functional Safety
+# Domain overlay manifest for automotive safety-critical systems
+
+display_name: "ISO 26262 (Automotive)"
+standard: "ISO 26262:2018"
+classification_system:
+  name: "ASIL"
+  levels:
+    - "QM"
+    - "ASIL A"
+    - "ASIL B"
+    - "ASIL C"
+    - "ASIL D"
+
+# Commands with domain-specific overlay content.
+# Each entry maps to a file in this directory: {command-name}.md
+# Overlay content is APPENDED after base command instructions.
+overlay_commands:
+  - system-design        # FFI, restricted complexity
+  - system-test          # MC/DC, WCET analysis
+  - architecture-design  # ASIL decomposition, defensive programming, temporal constraints
+  - integration-test     # SIL/HIL, resource contention
+  - module-design        # Complexity constraints, memory management, single entry/exit
+  - unit-test            # MC/DC coverage, variable-level fault injection
+  - hazard-analysis      # ASIL severity classification, ISO 14971 alignment

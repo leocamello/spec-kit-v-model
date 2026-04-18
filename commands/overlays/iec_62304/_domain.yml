@@ -1,0 +1,23 @@
+# IEC 62304 — Medical Device Software Lifecycle Processes
+# Domain overlay manifest for medical device safety-critical systems
+
+display_name: "IEC 62304 (Medical)"
+standard: "IEC 62304:2006/AMD1:2015"
+classification_system:
+  name: "Safety Class"
+  levels:
+    - "Class A"
+    - "Class B"
+    - "Class C"
+
+# Commands with domain-specific overlay content.
+# Each entry maps to a file in this directory: {command-name}.md
+# Overlay content is APPENDED after base command instructions.
+overlay_commands:
+  - system-design        # FFI, restricted complexity
+  - system-test          # MC/DC, WCET analysis
+  - architecture-design  # Safety class decomposition, defensive programming, temporal constraints
+  - integration-test     # SIL/HIL, resource contention
+  - module-design        # Complexity constraints, memory management, single entry/exit
+  - unit-test            # MC/DC coverage, variable-level fault injection
+  - hazard-analysis      # IEC 62304 safety classification (Class A–C)
