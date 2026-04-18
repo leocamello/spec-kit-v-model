@@ -1,16 +1,5 @@
 # Architecture Design: 006b — ID Lifecycle Model
 
-<!--
-  LIFECYCLE TAGS (inline in Name or Description column when evolving):
-  - [DEPRECATED — Superseded by ARCH-NNN]: Module replaced
-  - [DEPRECATED — Withdrawn: <reason>]: Module removed entirely
-  - [SUSPECT — Parent SYS-NNN {deprecated|modified}]: Parent system component changed;
-    resolve by re-parenting, deprecating, or confirming active.
-  - [CROSS-CUTTING] modules are never deprecated via cascade — only by explicit decision.
-  - Deprecated modules stay in the table; they are never deleted.
-  - Coverage checks (SYS→ARCH) exclude deprecated SYS and deprecated ARCH items.
--->
-
 
 **Feature Branch**: `feature/006b-id-lifecycle`
 **Created**: 2026-04-18

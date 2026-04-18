@@ -1,14 +1,5 @@
 # Acceptance Test Plan: 006b — ID Lifecycle Model
 
-<!--
-  LIFECYCLE TAGS (when evolving):
-  - [DEPRECATED — Superseded by ATP-NNN-X]: Test case replaced (parent REQ superseded)
-  - [DEPRECATED — Withdrawn: <reason>]: Test case removed (parent REQ withdrawn)
-  - [SUSPECT — Parent REQ-NNN {deprecated|modified}]: Parent requirement changed;
-    resolve by re-parenting, deprecating, regenerating, or confirming active.
-  - Deprecated ATPs/SCNs stay in the document; they are never deleted.
--->
-
 
 **Feature Branch**: `feature/006b-id-lifecycle`
 **Created**: 2026-04-18

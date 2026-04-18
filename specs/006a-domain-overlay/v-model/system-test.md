@@ -1,15 +1,5 @@
 # System Test Plan: Domain Overlay Architecture
 
-<!--
-  LIFECYCLE TAGS (when evolving):
-  - [DEPRECATED — Superseded by STP-NNN-X]: Test case replaced (parent SYS superseded)
-  - [DEPRECATED — Withdrawn: <reason>]: Test case removed (parent SYS withdrawn)
-  - [SUSPECT — Parent SYS-NNN {deprecated|modified}]: Parent system component changed;
-    resolve by re-parenting, deprecating, regenerating, or confirming active.
-  - Deprecated STPs/STSs stay in the document; they are never deleted.
-  - Coverage checks (SYS→STP) exclude deprecated SYS and deprecated STP items.
--->
-
 
 **Feature Branch**: `feature/006a-domain-overlay`
 **Created**: 2025-07-19

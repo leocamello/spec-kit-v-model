@@ -1,13 +1,5 @@
 # V-Model Requirements Specification: Domain Overlay Architecture
 
-<!--
-  LIFECYCLE TAGS (inline in Description column when evolving):
-  - [DEPRECATED — Superseded by REQ-NNN]: Requirement replaced by a new one
-  - [DEPRECATED — Withdrawn: <reason>]: Requirement removed entirely
-  - Deprecated requirements stay in the table; they are never deleted.
-  - Modified requirements keep their original ID; downstream artifacts become [SUSPECT].
--->
-
 
 **Feature Branch**: `feature/006a-domain-overlay`
 **Created**: 2025-07-19

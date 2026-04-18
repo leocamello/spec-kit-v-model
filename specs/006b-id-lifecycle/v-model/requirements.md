@@ -1,13 +1,5 @@
 # V-Model Requirements Specification: 006b — ID Lifecycle Model
 
-<!--
-  LIFECYCLE TAGS (inline in Description column when evolving):
-  - [DEPRECATED — Superseded by REQ-NNN]: Requirement replaced by a new one
-  - [DEPRECATED — Withdrawn: <reason>]: Requirement removed entirely
-  - Deprecated requirements stay in the table; they are never deleted.
-  - Modified requirements keep their original ID; downstream artifacts become [SUSPECT].
--->
-
 
 **Feature Branch**: `feature/006b-id-lifecycle`
 **Created**: 2026-04-18

@@ -1,15 +1,5 @@
 # System Design: Domain Overlay Architecture
 
-<!--
-  LIFECYCLE TAGS (inline in Name or Description column when evolving):
-  - [DEPRECATED — Superseded by SYS-NNN]: Component replaced
-  - [DEPRECATED — Withdrawn: <reason>]: Component removed entirely
-  - [SUSPECT — Parent REQ-NNN {deprecated|modified}]: Parent requirement changed;
-    resolve by re-parenting, deprecating, or confirming active.
-  - Deprecated components stay in the table; they are never deleted.
-  - Coverage checks (REQ→SYS) exclude deprecated REQs and deprecated SYS items.
--->
-
 
 **Feature Branch**: `feature/006a-domain-overlay`
 **Created**: 2025-07-19

@@ -1,15 +1,5 @@
 # Unit Test Plan: Domain Overlay Architecture
 
-<!--
-  LIFECYCLE TAGS (when evolving):
-  - [DEPRECATED — Superseded by UTP-NNN-X]: Test case replaced (parent MOD superseded)
-  - [DEPRECATED — Withdrawn: <reason>]: Test case removed (parent MOD withdrawn)
-  - [SUSPECT — Parent MOD-NNN {deprecated|modified}]: Parent module design changed;
-    resolve by re-parenting, deprecating, regenerating, or confirming active.
-  - Deprecated UTPs/UTSs stay in the document; they are never deleted.
-  - Coverage checks (MOD→UTP) exclude deprecated and [EXTERNAL] MOD items.
--->
-
 
 **Feature Branch**: `feature/006a-domain-overlay`
 **Created**: 2025-07-19

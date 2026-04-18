@@ -1,17 +1,5 @@
 # Module Design: Domain Overlay Architecture
 
-<!--
-  LIFECYCLE TAGS (when evolving):
-  - [DEPRECATED — Superseded by MOD-NNN]: Module replaced
-  - [DEPRECATED — Withdrawn: <reason>]: Module removed entirely
-  - [SUSPECT — Parent ARCH-NNN {deprecated|modified}]: Parent architecture module changed;
-    resolve by re-parenting, deprecating, or confirming active.
-  - [EXTERNAL] modules are never deprecated via cascade — only by explicit decision
-    (e.g., library version is end-of-life).
-  - Deprecated MODs stay in the document; they are never deleted.
-  - Coverage checks (ARCH→MOD) exclude deprecated ARCH and deprecated MOD items.
--->
-
 
 **Feature Branch**: `feature/006a-domain-overlay`
 **Created**: 2025-07-19

@@ -1,15 +1,5 @@
 # Integration Test Plan: 006b — ID Lifecycle Model
 
-<!--
-  LIFECYCLE TAGS (when evolving):
-  - [DEPRECATED — Superseded by ITP-NNN-X]: Test case replaced (parent ARCH superseded)
-  - [DEPRECATED — Withdrawn: <reason>]: Test case removed (parent ARCH withdrawn)
-  - [SUSPECT — Parent ARCH-NNN {deprecated|modified}]: Parent architecture module changed;
-    resolve by re-parenting, deprecating, regenerating, or confirming active.
-  - Deprecated ITPs/ITSs stay in the document; they are never deleted.
-  - Coverage checks (ARCH→ITP) exclude deprecated ARCH and deprecated ITP items.
--->
-
 
 **Feature Branch**: `feature/006b-id-lifecycle`
 **Created**: 2026-04-18

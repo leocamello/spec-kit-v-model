@@ -1,15 +1,5 @@
 # System Test Plan: 006b — ID Lifecycle Model
 
-<!--
-  LIFECYCLE TAGS (when evolving):
-  - [DEPRECATED — Superseded by STP-NNN-X]: Test case replaced (parent SYS superseded)
-  - [DEPRECATED — Withdrawn: <reason>]: Test case removed (parent SYS withdrawn)
-  - [SUSPECT — Parent SYS-NNN {deprecated|modified}]: Parent system component changed;
-    resolve by re-parenting, deprecating, regenerating, or confirming active.
-  - Deprecated STPs/STSs stay in the document; they are never deleted.
-  - Coverage checks (SYS→STP) exclude deprecated SYS and deprecated STP items.
--->
-
 
 **Feature Branch**: `feature/006b-id-lifecycle`
 **Created**: 2026-04-18
