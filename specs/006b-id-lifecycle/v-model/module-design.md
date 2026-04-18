@@ -1,5 +1,6 @@
 # Module Design: 006b — ID Lifecycle Model
 
+
 **Feature Branch**: `feature/006b-id-lifecycle`
 **Created**: 2026-04-18
 **Status**: Draft
@@ -1090,14 +1091,14 @@ N/A — Stateless pure function.
 
 | Metric | Count |
 |--------|-------|
-| Total Module Designs (MOD) | 21 |
+| Total Module Designs (MOD) | 21 (21 active, 0 deprecated, 0 suspect) |
 | External Modules (`[EXTERNAL]`) | 0 |
 | Cross-Cutting Modules (`[CROSS-CUTTING]`) | 0 |
 | Stateful Modules | 0 |
 | Stateless Modules | 21 |
-| Total Parent Architecture Modules Covered | 17 / 17 (100%) |
+| Total Parent Architecture Modules Covered | 17 / 17 (100%) (active items only) |
 | Modules with Pseudocode | 21 / 21 (100%) |
-| **Forward Coverage (ARCH→MOD)** | **100%** |
+| **Forward Coverage (ARCH→MOD)** | **100%** (active items only) |
 
 ## Derived Modules
 

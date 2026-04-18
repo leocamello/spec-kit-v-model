@@ -1,5 +1,6 @@
 # Acceptance Test Plan: 006b — ID Lifecycle Model
 
+
 **Feature Branch**: `feature/006b-id-lifecycle`
 **Created**: 2026-04-18
 **Status**: Draft
@@ -528,12 +529,12 @@ This document defines the Acceptance Test Plan for the ID Lifecycle Model featur
 
 | Metric | Count |
 |--------|-------|
-| Total Requirements (REQ) | 25 |
-| Total Test Cases (ATP) | 37 |
+| Total Requirements (REQ) | 25 (25 active, 0 deprecated) |
+| Total Test Cases (ATP) | 37 (37 active, 0 deprecated, 0 suspect) |
 | Total Scenarios (SCN) | 37 |
-| Requirements with ≥1 ATP | 25 / 25 (100%) |
+| Active Requirements with ≥1 ATP | 25 / 25 (100%) |
 | Test Cases with ≥1 SCN | 37 / 37 (100%) |
-| **Overall Coverage** | **100%** |
+| **Overall Coverage** | **100%** (active items only) |
 
 ## Uncovered Requirements
 

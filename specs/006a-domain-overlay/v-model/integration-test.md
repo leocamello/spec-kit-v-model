@@ -1,5 +1,6 @@
 # Integration Test Plan: Domain Overlay Architecture
 
+
 **Feature Branch**: `feature/006a-domain-overlay`
 **Created**: 2025-07-19
 **Status**: Draft
@@ -648,12 +649,12 @@ Each test case MUST identify its technique by name and anchor to a specific arch
 
 | Metric | Count |
 |--------|-------|
-| Total Architecture Modules (ARCH) | 18 |
-| Total Test Cases (ITP) | 41 |
+| Total Architecture Modules (ARCH) | 18 (18 active, 0 deprecated) |
+| Total Test Cases (ITP) | 41 (41 active, 0 deprecated, 0 suspect) |
 | Total Scenarios (ITS) | 47 |
-| Modules with ≥1 ITP | 18 / 18 (100%) |
+| Modules with ≥1 ITP | 18 / 18 (100%) (active items only) |
 | Test Cases with ≥1 ITS | 41 / 41 (100%) |
-| **Overall Coverage (ARCH→ITP)** | **100%** |
+| **Overall Coverage (ARCH→ITP)** | **100%** (active items only) |
 
 ### Technique Distribution
 

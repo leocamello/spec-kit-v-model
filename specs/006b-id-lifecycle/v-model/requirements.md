@@ -1,5 +1,6 @@
 # V-Model Requirements Specification: 006b — ID Lifecycle Model
 
+
 **Feature Branch**: `feature/006b-id-lifecycle`
 **Created**: 2026-04-18
 **Status**: Draft
@@ -80,6 +81,6 @@ This specification formalizes requirements for the ID Lifecycle Model — extend
 
 ---
 
-**Total Requirements**: 25
+**Total Requirements**: 25 (25 active, 0 deprecated)
 **By Priority**: P1: 17 | P2: 8 | P3: 0
 **By Verification Method**: Test: 13 | Inspection: 12 | Analysis: 0 | Demonstration: 0

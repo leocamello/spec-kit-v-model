@@ -1,5 +1,6 @@
 # System Design: Domain Overlay Architecture
 
+
 **Feature Branch**: `feature/006a-domain-overlay`
 **Created**: 2025-07-19
 **Status**: Draft
@@ -110,10 +111,10 @@ graph TD
 
 | Metric | Count |
 |--------|-------|
-| Total System Components (SYS) | 9 |
+| Total System Components (SYS) | 9 (9 active, 0 deprecated, 0 suspect) |
 | Total Parent Requirements Covered | 33 / 33 (100%) |
 | Components per Type | Subsystem: 5 \| Module: 3 \| Service: 0 \| Library: 0 \| Utility: 0 |
-| **Forward Coverage (REQ→SYS)** | **100%** |
+| **Forward Coverage (REQ→SYS)** | **100%** (active items only) |
 
 ### Requirement Coverage Matrix
 

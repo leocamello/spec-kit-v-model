@@ -1,5 +1,6 @@
 # System Test Plan: 006b — ID Lifecycle Model
 
+
 **Feature Branch**: `feature/006b-id-lifecycle`
 **Created**: 2026-04-18
 **Status**: Draft
@@ -414,12 +415,12 @@ Each test case identifies its technique by name:
 
 | Metric | Count |
 |--------|-------|
-| Total System Components (SYS) | 9 |
-| Total Test Cases (STP) | 27 |
+| Total System Components (SYS) | 9 (9 active, 0 deprecated) |
+| Total Test Cases (STP) | 27 (27 active, 0 deprecated, 0 suspect) |
 | Total Scenarios (STS) | 34 |
-| Components with ≥1 STP | 9 / 9 (100%) |
+| Components with ≥1 STP | 9 / 9 (100%) (active items only) |
 | Test Cases with ≥1 STS | 27 / 27 (100%) |
-| **Overall Coverage (SYS→STP)** | **100%** |
+| **Overall Coverage (SYS→STP)** | **100%** (active items only) |
 
 **Technique Distribution**: Interface Contract Testing: 19 | Boundary Value Analysis: 6 | Fault Injection: 2 | Total: 27
 

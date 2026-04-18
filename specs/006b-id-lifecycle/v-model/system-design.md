@@ -1,5 +1,6 @@
 # System Design: 006b — ID Lifecycle Model
 
+
 **Feature Branch**: `feature/006b-id-lifecycle`
 **Created**: 2026-04-18
 **Status**: Draft
@@ -111,10 +112,10 @@ graph TD
 
 | Metric | Count |
 |--------|-------|
-| Total System Components (SYS) | 9 |
+| Total System Components (SYS) | 9 (9 active, 0 deprecated, 0 suspect) |
 | Total Parent Requirements Covered | 25 / 25 (100%) |
 | Components per Type | Module: 7 \| Utility: 2 |
-| **Forward Coverage (REQ→SYS)** | **100%** |
+| **Forward Coverage (REQ→SYS)** | **100%** (active items only) |
 
 ## Derived Requirements
 

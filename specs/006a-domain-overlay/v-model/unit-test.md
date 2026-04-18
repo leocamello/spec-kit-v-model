@@ -1,5 +1,6 @@
 # Unit Test Plan: Domain Overlay Architecture
 
+
 **Feature Branch**: `feature/006a-domain-overlay`
 **Created**: 2025-07-19
 **Status**: Draft
@@ -2050,11 +2051,11 @@ None — all 30 modules are internal, non-`[EXTERNAL]`. No modules bypassed.
 | Total Modules (MOD) | 30 |
 | Modules tested | 30 |
 | Modules bypassed ([EXTERNAL]) | 0 |
-| Total Test Cases (UTP) | 62 |
+| Total Test Cases (UTP) | 62 (62 active, 0 deprecated, 0 suspect) |
 | Total Scenarios (UTS) | 207 |
-| Modules with ≥1 UTP | 30 / 30 (100%) |
+| Modules with ≥1 UTP | 30 / 30 (100%) (active items only) |
 | Test Cases with ≥1 UTS | 58 / 58 (100%) |
-| **Overall Coverage (MOD→UTP)** | **100%** |
+| **Overall Coverage (MOD→UTP)** | **100%** (active items only) |
 
 ### Technique Distribution
 

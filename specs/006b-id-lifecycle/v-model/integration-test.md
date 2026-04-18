@@ -1,5 +1,6 @@
 # Integration Test Plan: 006b — ID Lifecycle Model
 
+
 **Feature Branch**: `feature/006b-id-lifecycle`
 **Created**: 2026-04-18
 **Status**: Draft
@@ -484,12 +485,12 @@ Note: Concurrency & Race Condition Testing is not applicable — all 4 interacti
 
 | Metric | Count |
 |--------|-------|
-| Total Architecture Modules (ARCH) | 17 |
-| Total Test Cases (ITP) | 30 |
+| Total Architecture Modules (ARCH) | 17 (17 active, 0 deprecated) |
+| Total Test Cases (ITP) | 30 (30 active, 0 deprecated, 0 suspect) |
 | Total Scenarios (ITS) | 31 |
-| Modules with ≥1 ITP | 17 / 17 (100%) |
+| Modules with ≥1 ITP | 17 / 17 (100%) (active items only) |
 | Test Cases with ≥1 ITS | 30 / 30 (100%) |
-| **Overall Coverage (ARCH→ITP)** | **100%** |
+| **Overall Coverage (ARCH→ITP)** | **100%** (active items only) |
 
 ### Technique Distribution
 

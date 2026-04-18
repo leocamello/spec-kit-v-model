@@ -1,5 +1,6 @@
 # Module Design: Domain Overlay Architecture
 
+
 **Feature Branch**: `feature/006a-domain-overlay`
 **Created**: 2025-07-19
 **Status**: Draft
@@ -2099,14 +2100,14 @@ N/A — Stateless
 
 | Metric | Count |
 |--------|-------|
-| Total Module Designs (MOD) | 30 |
+| Total Module Designs (MOD) | 30 (30 active, 0 deprecated, 0 suspect) |
 | External Modules (`[EXTERNAL]`) | 0 |
 | Cross-Cutting Modules (`[CROSS-CUTTING]`) | 0 |
 | Stateful Modules | 0 |
 | Stateless Modules | 30 |
-| Total Parent Architecture Modules Covered | 18 / 18 (100%) |
+| Total Parent Architecture Modules Covered | 18 / 18 (100%) (active items only) |
 | Modules with Pseudocode | 30 / 30 (100%) |
-| **Forward Coverage (ARCH→MOD)** | **100%** |
+| **Forward Coverage (ARCH→MOD)** | **100%** (active items only) |
 
 ### Architecture Module Coverage Matrix
 
