@@ -13,11 +13,23 @@ classification_system:
 # Commands with domain-specific overlay content.
 # Each entry maps to a file in this directory: {command-name}.md
 # Overlay content is APPENDED after base command instructions.
+#
+# Priority 1 — V-Model generative commands (design + test phases)
 overlay_commands:
-  - system-design        # FFI, restricted complexity
-  - system-test          # MC/DC, WCET analysis
-  - architecture-design  # Safety class decomposition, defensive programming, temporal constraints
-  - integration-test     # SIL/HIL, resource contention
-  - module-design        # Complexity constraints, memory management, single entry/exit
-  - unit-test            # MC/DC coverage, variable-level fault injection
-  - hazard-analysis      # IEC 62304 safety classification (Class A–C)
+  - requirements          # §5.2 — software requirements linked to system requirements, risk analysis input, safety class-dependent rigor
+  - acceptance            # §5.7 — software system testing, safety class-dependent test completeness, regression after changes
+  - system-design         # §5.3 — software item identification, risk control measures in architecture
+  - system-test           # §5.7 — system testing per safety class, requirements coverage verification
+  - architecture-design   # §5.3 — architecture with safety class considerations, interface documentation
+  - integration-test      # §5.6 — integration testing per safety class, interface verification
+  - module-design         # §5.4 — detailed design per safety class, coding standards
+  - unit-test             # §5.5 — unit verification per safety class, code review requirements
+  - hazard-analysis       # §7 + ISO 14971 — software risk management, safety classification (Class A–C)
+
+# Priority 2 — Supporting commands (reporting + analysis phases)
+overlay_supporting:
+  - trace                 # §5.7, §8 — traceability and configuration management per safety class
+  - peer-review           # §5.x verification activities — review rigor varies by safety class
+  - impact-analysis       # §6 — software maintenance, §8 — change management per safety class
+  - audit-report          # §8 — CM audit, §9 — problem resolution tracking
+  - test-results          # §5.5/§5.6/§5.7 — test result documentation per safety class, regression evidence
