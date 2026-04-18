@@ -44,7 +44,25 @@ Parse the JSON output for:
 
 For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\''m Groot' (or double-quote if possible: "I'm Groot").
 
-### 2. Load Context
+### 2. Domain Configuration
+
+Load `v-model-config.yml` (if it exists at the repository root).
+
+**If `domain` is set** (e.g., `iso_26262`, `do_178c`, `iec_62304`):
+1. Read the command overlay: `commands/overlays/{domain}/acceptance.md`
+   - If it exists: note its domain-specific guidance for test case generation — acceptance criteria rigor, structural coverage expectations, and validation methods required by the domain standard
+   - If it does not exist: this domain does not extend this command — proceed with base only
+2. Read the template overlay: `templates/overlays/{domain}/acceptance-plan-template.md`
+   - If it exists: its output sections will be appended after the base template's output — additional sections, mandatory fields, or compliance-specific headings
+   - If it does not exist: use the base template only
+3. Where the base command has a domain-variant section (marked with "If a domain overlay is loaded, prefer its content"), use the overlay's version instead of the base default (e.g., domain-specific acceptance criteria replace generic criteria)
+
+**If `domain` is empty or absent:**
+- Proceed with the base command only
+- Do NOT include any safety-critical or domain-specific sections
+- Use generic best-practice terminology throughout
+
+### 3. Load Context
 
 1. **Load the template**: Read `templates/acceptance-plan-template.md` from the extension directory.
 2. **Read requirements**: Parse `requirements.md` (`REQUIREMENTS` path) to extract all `REQ-NNN` items (all categories: REQ-, REQ-NF-, REQ-IF-, REQ-CN-).
@@ -53,7 +71,7 @@ For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\''m Groot
    - Identify which REQs already have test cases.
    - Identify the existing ATP/SCN IDs to avoid duplicates.
 
-### 3. Detect Incremental Changes (If Updating)
+### 4. Detect Incremental Changes (If Updating)
 
 If an existing `acceptance-plan.md` is found, run the diff script to detect what changed:
 
@@ -92,15 +110,15 @@ Parse the JSON output for:
 
 If no existing acceptance plan exists, generate from scratch for all REQs.
 
-### 4. Generate Test Cases and Scenarios (Batched)
+### 5. Generate Test Cases and Scenarios (Batched)
 
 Process requirements in **batches of 5** to prevent output token bloat and quality degradation. After each batch, append the results to `acceptance-plan.md`.
 
 For **each requirement** in the current batch:
 
-#### 4a. Generate Test Cases (`ATP-NNN-X`)
+#### 5a. Generate Test Cases (`ATP-NNN-X`)
 
-Create one or more test cases that together fully validate the requirement. Every test case MUST satisfy **all 4 quality criteria** defined in §5a.
+Create one or more test cases that together fully validate the requirement. Every test case MUST satisfy **all 4 quality criteria** defined in §6a.
 
 - **ID format**: `ATP-{NNN}-{X}` where `NNN` matches the REQ number and `X` is a letter (A, B, C, ...).
 - At minimum, generate:
@@ -108,15 +126,15 @@ Create one or more test cases that together fully validate the requirement. Ever
   - **Error/edge case** (`-B`, `-C`, ...): Boundary conditions, invalid inputs, failure modes.
 - Each test case includes: ID, linked REQ, description, validation condition, and expected result.
 
-#### 4b. Generate User Scenarios (`SCN-NNN-X#`)
+#### 5b. Generate User Scenarios (`SCN-NNN-X#`)
 
-For each test case, generate one or more **BDD-style executable scenarios**. Every scenario MUST satisfy **all 4 quality criteria** defined in §5b.
+For each test case, generate one or more **BDD-style executable scenarios**. Every scenario MUST satisfy **all 4 quality criteria** defined in §6b.
 
 - **ID format**: `SCN-{NNN}-{X}{#}` where `NNN-X` matches the parent ATP and `#` is a number (1, 2, 3, ...).
 - Use strict **Given/When/Then** format.
 - Scenarios must be **concrete, declarative, and executable**.
 
-#### 4c. Output Structure Per Requirement
+#### 5c. Output Structure Per Requirement
 
 ```markdown
 ### Requirement Validation: REQ-{NNN} ({Short Description})
@@ -149,9 +167,9 @@ For each test case, generate one or more **BDD-style executable scenarios**. Eve
   * **Then** {expected error handling behavior}
 ```
 
-### 5. Quality Criteria (Mandatory)
+### 6. Quality Criteria (Mandatory — IEEE 1012 / ISO 25010)
 
-#### 5a. Test Case Quality Criteria (ATP Tier)
+#### 6a. Test Case Quality Criteria (ATP Tier)
 
 Every test case MUST satisfy ALL 4 criteria. If a test case fails any criterion, rewrite it before including it.
 
@@ -182,7 +200,7 @@ The test MUST have a **definitive, observable pass/fail state**. "It works" or "
 
 **Check**: Can a tester (human or automated) objectively determine pass vs. fail with no judgment calls? If not, rewrite.
 
-#### 5b. Scenario Quality Criteria (SCN Tier / BDD)
+#### 6b. Scenario Quality Criteria (SCN Tier / BDD)
 
 Every scenario MUST satisfy ALL 4 criteria. These prevent the AI from writing brittle, untestable automation scripts.
 
@@ -224,7 +242,30 @@ The outcome MUST be something the system can actually verify — a database stat
 
 **Check**: Can an automated test assert on this outcome with zero human judgment? If not, rewrite with a concrete, observable condition.
 
-### 6. Validate Coverage (Deterministic)
+#### 6c. Validation Completeness (IEEE 1012:2016 V&V)
+
+IEEE 1012:2016 establishes that acceptance testing is a **validation** activity (not just verification) — it confirms the system fulfills its intended use and stakeholder needs, not merely that it conforms to specifications. Apply these V&V principles:
+
+1. **Entry criteria**: Before generating acceptance tests, confirm that requirements.md is baselined and approved. If requirements are still in draft, flag this as a validation risk.
+2. **Validation vs. verification distinction**: Acceptance tests validate that the system meets stakeholder needs (the right system), not just that it implements the specification correctly (the system right). At least one SCN per REQ should test from the stakeholder's perspective.
+3. **V&V traceability**: Every ATP must trace to its parent REQ (already enforced by ID schema), AND the test approach must be appropriate for the requirement type — functional requirements need behavioral validation, non-functional requirements need measurement-based validation.
+4. **Exit criteria**: Acceptance testing is complete when (a) 100% of active requirements have ATP coverage, (b) all ATP quality criteria are met, and (c) no unresolved [SUSPECT] items remain.
+
+#### 6d. Quality-in-Use Coverage (ISO/IEC 25010:2023)
+
+For acceptance testing, verify that the test plan adequately covers **quality-in-use** characteristics where the source requirements imply them. This is NOT a mandate to test every characteristic — only those relevant to the feature:
+
+| Quality-in-Use Characteristic | When to Include | Example SCN Focus |
+|---|---|---|
+| **Effectiveness** | Feature has task completion goals | Verify user achieves intended outcome |
+| **Efficiency** | Feature has time/effort constraints | Verify task completion within time bounds |
+| **Satisfaction** | Feature has explicit UX requirements | Verify user experience meets criteria |
+| **Freedom from Risk** | Feature has safety or financial risk implications | Verify harm prevention and risk mitigation |
+| **Context Coverage** | Feature must work across environments or user populations | Verify behavior across specified contexts |
+
+**If a domain overlay is loaded**, additional acceptance criteria specific to the domain standard are applied (e.g., ASIL-dependent verification methods for ISO 26262, structural coverage by DAL for DO-178C). These supplement, not replace, the base quality criteria.
+
+### 7. Validate Coverage (Deterministic)
 
 After generating all batches, run the coverage validation script:
 
@@ -249,7 +290,7 @@ Parse the JSON output for:
 - Repeat until `has_gaps` is false (maximum 3 iterations).
 - If coverage < 100% after 3 iterations: Report the remaining gaps to the user and flag them in the document with `[COVERAGE GAP: missing ATP/SCN]`.
 
-### 7. Write Coverage Summary
+### 8. Write Coverage Summary
 
 Append a coverage summary section to the end of `acceptance-plan.md`:
 
@@ -271,7 +312,7 @@ Append a coverage summary section to the end of `acceptance-plan.md`:
 **Validated by**: `validate-requirement-coverage.sh` (deterministic)
 ```
 
-### 8. Report Completion
+### 9. Report Completion
 
 Display a summary:
 - Total ATPs and SCNs generated
@@ -303,3 +344,17 @@ The ID encodes its full lineage — no separate mapping needed:
 - After each batch, write/append results to `acceptance-plan.md`
 - If there are remaining requirements, prompt: "Batch {N} complete ({processed}/{total} requirements). Type 'continue' to process the next batch."
 - The coverage validation runs only after ALL batches are complete
+
+---
+
+## Governing Standards
+
+This command is governed by the following standards for acceptance test design and validation:
+
+| Standard | Scope | How Used |
+|---|---|---|
+| **IEEE 1012:2016** | System, software, and hardware V&V | Primary V&V framework: entry/exit criteria, validation vs. verification distinction, V&V traceability (Step 6c) |
+| **ISO/IEC 25010:2023** | Systems and software quality models | Quality-in-use characteristics for acceptance criteria coverage (Step 6d) |
+| **ISO/IEC/IEEE 29119-4:2021** | Test design techniques | BDD scenario structure, test case design patterns (Step 5) |
+
+> **Note:** If a domain overlay is loaded (Step 2), additional domain-specific standards are applied alongside these base standards (e.g., ISO 26262 Part 6 §6.9 Table 11 for automotive ASIL-dependent verification methods, DO-178C §6.4.2 Table A-7 for aerospace structural coverage by DAL, IEC 62304 §5.7 for medical device safety class–dependent test completeness).
