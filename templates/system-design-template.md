@@ -32,6 +32,14 @@
   - Non-functional requirements (REQ-NF-NNN) map to cross-cutting components
   - Do NOT create SYS-NNN for capabilities not in requirements.md
   - Flag derived requirements with [DERIVED REQUIREMENT: description] instead
+
+  LIFECYCLE TAGS (inline in Name or Description column when evolving):
+  - [DEPRECATED — Superseded by SYS-NNN]: Component replaced
+  - [DEPRECATED — Withdrawn: <reason>]: Component removed entirely
+  - [SUSPECT — Parent REQ-NNN {deprecated|modified}]: Parent requirement changed;
+    resolve by re-parenting, deprecating, or confirming active.
+  - Deprecated components stay in the table; they are never deleted.
+  - Coverage checks (REQ→SYS) exclude deprecated REQs and deprecated SYS items.
 -->
 
 | SYS ID | Name | Description | Parent Requirements | Type |
@@ -39,6 +47,7 @@
 | SYS-001 | [Component Name] | [What it does] | REQ-001, REQ-002 | Subsystem |
 | SYS-002 | [Component Name] | [What it does] | REQ-003 | Module |
 | SYS-003 | [Component Name] | [What it does] | REQ-NF-001 | Service |
+| SYS-004 | [DEPRECATED — Superseded by SYS-001] [Component Name] | [Original description] | REQ-002 | Subsystem |
 
 ## Dependency View (IEEE 1016 §5.2)
 
@@ -130,8 +139,8 @@
 
 | Metric | Count |
 |--------|-------|
-| Total System Components (SYS) | [N] |
-| Total Parent Requirements Covered | [N] / [N] ([%]) |
+| Total System Components (SYS) | [N] ([N] active, [N] deprecated, [N] suspect) |
+| Total Parent Requirements Covered | [N] / [N] ([%]) (active items only) |
 | Components per Type | Subsystem: [N] \| Module: [N] \| Service: [N] \| Library: [N] |
 | **Forward Coverage (REQ→SYS)** | **[%]** |
 

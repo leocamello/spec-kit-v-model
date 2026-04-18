@@ -34,6 +34,15 @@
   - Infrastructure/utility modules use [CROSS-CUTTING] tag with rationale instead of SYS parent
   - Do NOT create ARCH-NNN for capabilities not in system-design.md (flag as [DERIVED MODULE])
   - Every ARCH-NNN MUST have an interface contract in the Interface View (no black boxes)
+
+  LIFECYCLE TAGS (inline in Name or Description column when evolving):
+  - [DEPRECATED — Superseded by ARCH-NNN]: Module replaced
+  - [DEPRECATED — Withdrawn: <reason>]: Module removed entirely
+  - [SUSPECT — Parent SYS-NNN {deprecated|modified}]: Parent system component changed;
+    resolve by re-parenting, deprecating, or confirming active.
+  - [CROSS-CUTTING] modules are never deprecated via cascade — only by explicit decision.
+  - Deprecated modules stay in the table; they are never deleted.
+  - Coverage checks (SYS→ARCH) exclude deprecated SYS and deprecated ARCH items.
 -->
 
 | ARCH ID | Name | Description | Parent System Components | Type |
@@ -157,9 +166,9 @@ sequenceDiagram
 
 | Metric | Count |
 |--------|-------|
-| Total Architecture Modules (ARCH) | [N] |
+| Total Architecture Modules (ARCH) | [N] ([N] active, [N] deprecated, [N] suspect) |
 | Cross-Cutting Modules | [N] |
-| Total Parent System Components Covered | [N] / [N] ([%]) |
+| Total Parent System Components Covered | [N] / [N] ([%]) (active items only) |
 | Modules per Type | Component: [N] \| Service: [N] \| Library: [N] \| Utility: [N] |
 | **Forward Coverage (SYS→ARCH)** | **[%]** |
 

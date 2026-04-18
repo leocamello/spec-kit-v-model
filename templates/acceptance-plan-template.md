@@ -30,6 +30,13 @@ more executable User Scenarios (SCN) in BDD format (Given/When/Then).
   - Do NOT renumber existing IDs when updating
   - Do NOT alter existing ATPs/SCNs unless their parent REQ was modified
   - Append new items; update modified items in-place by ID
+
+  LIFECYCLE TAGS (when evolving):
+  - [DEPRECATED — Superseded by ATP-NNN-X]: Test case replaced (parent REQ superseded)
+  - [DEPRECATED — Withdrawn: <reason>]: Test case removed (parent REQ withdrawn)
+  - [SUSPECT — Parent REQ-NNN {deprecated|modified}]: Parent requirement changed;
+    resolve by re-parenting, deprecating, regenerating, or confirming active.
+  - Deprecated ATPs/SCNs stay in the document; they are never deleted.
 -->
 
 ### Requirement Validation: REQ-001 ([Brief Title])
@@ -75,18 +82,19 @@ more executable User Scenarios (SCN) in BDD format (Given/When/Then).
 
 | Metric | Count |
 |--------|-------|
-| Total Requirements (REQ) | [N] |
-| Total Test Cases (ATP) | [N] |
+| Total Requirements (REQ) | [N] ([N] active, [N] deprecated) |
+| Total Test Cases (ATP) | [N] ([N] active, [N] deprecated, [N] suspect) |
 | Total Scenarios (SCN) | [N] |
-| Requirements with ≥1 ATP | [N] / [N] ([%]) |
+| Active Requirements with ≥1 ATP | [N] / [N] ([%]) |
 | Test Cases with ≥1 SCN | [N] / [N] ([%]) |
-| **Overall Coverage** | **[%]** |
+| **Overall Coverage** | **[%]** (active items only) |
 
 ## Uncovered Requirements
 
 <!--
   This section is populated by the validation gate script.
   If coverage is 100%, this section should read "None — full coverage achieved."
+  Only active (non-deprecated) REQ-NNN IDs without any ATP are listed.
 -->
 
 [List of REQ-NNN IDs without any ATP, or "None — full coverage achieved."]

@@ -37,6 +37,16 @@
   - [DERIVED MODULE: description] for functions not traceable to any ARCH-NNN
   - Do NOT renumber existing IDs when updating
   - Append new items; update modified items in-place by ID
+
+  LIFECYCLE TAGS (when evolving):
+  - [DEPRECATED — Superseded by MOD-NNN]: Module replaced
+  - [DEPRECATED — Withdrawn: <reason>]: Module removed entirely
+  - [SUSPECT — Parent ARCH-NNN {deprecated|modified}]: Parent architecture module changed;
+    resolve by re-parenting, deprecating, or confirming active.
+  - [EXTERNAL] modules are never deprecated via cascade — only by explicit decision
+    (e.g., library version is end-of-life).
+  - Deprecated MODs stay in the document; they are never deleted.
+  - Coverage checks (ARCH→MOD) exclude deprecated ARCH and deprecated MOD items.
 -->
 
 ### Module: MOD-001 ([Module Name])
@@ -176,12 +186,12 @@ stateDiagram-v2
 
 | Metric | Count |
 |--------|-------|
-| Total Module Designs (MOD) | [N] |
+| Total Module Designs (MOD) | [N] ([N] active, [N] deprecated, [N] suspect) |
 | External Modules (`[EXTERNAL]`) | [N] |
 | Cross-Cutting Modules (`[CROSS-CUTTING]`) | [N] |
 | Stateful Modules | [N] |
 | Stateless Modules | [N] |
-| Total Parent Architecture Modules Covered | [N] / [N] ([%]) |
+| Total Parent Architecture Modules Covered | [N] / [N] ([%]) (active items only) |
 | Modules with Pseudocode | [N] / [N] ([%]) |
 | **Forward Coverage (ARCH→MOD)** | **[%]** |
 

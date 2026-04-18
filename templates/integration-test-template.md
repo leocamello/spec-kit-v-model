@@ -48,6 +48,14 @@ Each test case MUST identify its technique by name and anchor to a specific arch
   - Do NOT renumber existing IDs when updating
   - Append new items; update modified items in-place by ID
 
+  LIFECYCLE TAGS (when evolving):
+  - [DEPRECATED — Superseded by ITP-NNN-X]: Test case replaced (parent ARCH superseded)
+  - [DEPRECATED — Withdrawn: <reason>]: Test case removed (parent ARCH withdrawn)
+  - [SUSPECT — Parent ARCH-NNN {deprecated|modified}]: Parent architecture module changed;
+    resolve by re-parenting, deprecating, regenerating, or confirming active.
+  - Deprecated ITPs/ITSs stay in the document; they are never deleted.
+  - Coverage checks (ARCH→ITP) exclude deprecated ARCH and deprecated ITP items.
+
   PROHIBITED phrases in ITS (belong in acceptance scenarios):
   - "the user clicks", "the user sees", "the user navigates"
   - "the user enters", "the user selects", "the user receives"
@@ -150,10 +158,10 @@ Each test case MUST identify its technique by name and anchor to a specific arch
 
 | Metric | Count |
 |--------|-------|
-| Total Architecture Modules (ARCH) | [N] |
+| Total Architecture Modules (ARCH) | [N] ([N] active, [N] deprecated) |
 | Total Test Cases (ITP) | [N] |
 | Total Scenarios (ITS) | [N] |
-| Modules with ≥1 ITP | [N] / [N] ([%]) |
+| Modules with ≥1 ITP | [N] / [N] ([%]) (active items only) |
 | Test Cases with ≥1 ITS | [N] / [N] ([%]) |
 | **Overall Coverage (ARCH→ITP)** | **[%]** |
 

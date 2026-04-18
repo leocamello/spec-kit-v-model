@@ -44,6 +44,14 @@ Each test case MUST identify its technique by name:
   - Prohibited phrases in STS: "the user clicks", "the user sees", "the user navigates"
   - Do NOT renumber existing IDs when updating
   - Append new items; update modified items in-place by ID
+
+  LIFECYCLE TAGS (when evolving):
+  - [DEPRECATED — Superseded by STP-NNN-X]: Test case replaced (parent SYS superseded)
+  - [DEPRECATED — Withdrawn: <reason>]: Test case removed (parent SYS withdrawn)
+  - [SUSPECT — Parent SYS-NNN {deprecated|modified}]: Parent system component changed;
+    resolve by re-parenting, deprecating, regenerating, or confirming active.
+  - Deprecated STPs/STSs stay in the document; they are never deleted.
+  - Coverage checks (SYS→STP) exclude deprecated SYS and deprecated STP items.
 -->
 
 ### Component Verification: SYS-001 ([Component Name])
@@ -122,10 +130,10 @@ Each test case MUST identify its technique by name:
 
 | Metric | Count |
 |--------|-------|
-| Total System Components (SYS) | [N] |
+| Total System Components (SYS) | [N] ([N] active, [N] deprecated) |
 | Total Test Cases (STP) | [N] |
 | Total Scenarios (STS) | [N] |
-| Components with ≥1 STP | [N] / [N] ([%]) |
+| Components with ≥1 STP | [N] / [N] ([%]) (active items only) |
 | Test Cases with ≥1 STS | [N] / [N] ([%]) |
 | **Overall Coverage (SYS→STP)** | **[%]** |
 

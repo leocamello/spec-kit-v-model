@@ -63,8 +63,12 @@ The script produces an **Impact Analysis Report** containing:
 
 1. **Changed IDs** — The IDs specified by the user with their V-Model level
 2. **Suspect Artifacts** — All affected IDs organized by V-Model level
-3. **Blast Radius** — Statistics showing the count of affected artifacts per level
-4. **Re-validation Order** — Ordered list of artifacts that should be re-validated
+3. **Lifecycle State Detection** — Any `[DEPRECATED]`, `[SUSPECT]`, or `[MODIFIED]` tags found on the changed IDs or their downstream dependents. The report distinguishes between:
+   - **Already deprecated** — the changed ID carries a `[DEPRECATED — Superseded by X-NNN]` or `[DEPRECATED — Withdrawn: <reason>]` tag; downstream artifacts inheriting from it should also be deprecated or re-parented
+   - **Already suspect** — the changed ID or a dependent carries a `[SUSPECT — Parent X-NNN {deprecated|modified}]` tag indicating an unresolved lifecycle review
+   - **Newly impacted** — artifacts that are not yet tagged but trace to a changed ID; these are candidates for `[SUSPECT]` tagging in their respective V-Model commands
+4. **Blast Radius** — Statistics showing the count of affected artifacts per level, broken down by lifecycle state (active, deprecated, suspect)
+5. **Re-validation Order** — Ordered list of artifacts that should be re-validated, excluding fully deprecated chains (all downstream artifacts already deprecated)
 
 ### Traversal Modes
 
@@ -80,6 +84,26 @@ The script produces an **Impact Analysis Report** containing:
 |------|---------|
 | 0 | Analysis completed successfully |
 | 1 | Error (invalid args, no artifacts, no valid IDs) |
+
+### Lifecycle-Aware Analysis
+
+The impact analysis script detects lifecycle tags when traversing the dependency graph:
+
+- When a **changed ID** is already `[DEPRECATED]`, the report notes that its downstream chain should already be deprecated or re-parented. Any downstream artifacts that are still `Active` are flagged as **"unresolved deprecation cascade"**.
+- When a **changed ID** is `[MODIFIED]` (content updated in-place), all direct downstream dependents are listed as candidates for `[SUSPECT]` tagging.
+- When a **downstream artifact** already carries a `[SUSPECT]` tag, the report notes it as **"pre-existing suspect"** and includes the original suspect reason.
+- The **JSON output** (`--json`) includes a `lifecycle` object:
+  ```json
+  {
+    "lifecycle": {
+      "deprecated_changed": ["REQ-003"],
+      "suspect_found": ["SYS-005", "ARCH-007"],
+      "unresolved_cascades": [
+        {"source": "REQ-003", "active_dependents": ["ATP-003-A", "SYS-005"]}
+      ]
+    }
+  }
+  ```
 
 ## Quality Criteria
 

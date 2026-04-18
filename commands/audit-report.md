@@ -67,9 +67,59 @@ scripts/powershell/Build-Audit-Report.ps1 -VModelDir specs/<feature>/v-model -Js
 
 | Code | Meaning |
 |------|---------|
-| 0 | ✅ RELEASE READY (no anomalies) or ✅ RELEASE CANDIDATE (all anomalies waived) |
-| 1 | ❌ NOT READY (unwaived anomalies detected — blocks CI pipeline) |
+| 0 | ✅ RELEASE READY (no anomalies, no unresolved suspects) or ✅ RELEASE CANDIDATE (all anomalies and suspects waived) |
+| 1 | ❌ NOT READY (unwaived anomalies or unresolved suspect items detected — blocks CI pipeline) |
 | 2 | Error — required artifacts missing (requirements.md or traceability-matrix.md) |
+
+## Lifecycle Status Reporting
+
+The audit report includes a **Lifecycle Status Summary** section (§3.1) that provides a per-artifact breakdown of lifecycle states:
+
+```markdown
+## 3.1 Lifecycle Status Summary
+
+| Artifact | Active | Deprecated | Suspect | Total |
+|----------|--------|------------|---------|-------|
+| Requirements (REQ) | 42 | 3 | 0 | 45 |
+| Acceptance Tests (ATP) | 38 | 3 | 2 | 43 |
+| System Components (SYS) | 18 | 1 | 1 | 20 |
+| System Tests (STP) | 16 | 1 | 1 | 18 |
+| Architecture Modules (ARCH) | 12 | 0 | 1 | 13 |
+| Integration Tests (ITP) | 10 | 0 | 1 | 11 |
+| Module Designs (MOD) | 8 | 0 | 0 | 8 |
+| Unit Tests (UTP) | 15 | 0 | 0 | 15 |
+| Hazards (HAZ) | 6 | 0 | 0 | 6 |
+
+### Unresolved Suspects
+
+| ID | Suspect Reason | Artifact |
+|----|---------------|----------|
+| SYS-005 | Parent REQ-003 deprecated | system-design.md |
+| ATP-003-A | Parent REQ-003 deprecated | acceptance-plan.md |
+```
+
+### Compliance Gating on Suspects
+
+Unresolved `[SUSPECT]` items block the release (exit code 1) because they indicate that a change has propagated through the V-Model without verification. Resolution options:
+
+1. **Re-parent** the suspect item to a new active parent
+2. **Deprecate** the suspect item (if the parent was withdrawn)
+3. **Confirm active** (remove the SUSPECT tag after manual review)
+4. **Waive** (see waiver format below)
+
+### Lifecycle Waiver Format
+
+When a suspect item requires temporary acceptance (e.g., manual re-validation completed outside the V-Model tool chain):
+
+```markdown
+### WAV-NNN
+
+**Artifact**: SYS-005 [SUSPECT — Parent REQ-003 deprecated]
+**Type**: Lifecycle Review
+**Justification**: SYS-005 re-parented to REQ-007; manual test verification complete
+**Approved By**: Engineering Lead
+**Compensating Control**: Test case coverage re-validated in acceptance-plan.md
+```
 
 ## Waiver Convention
 

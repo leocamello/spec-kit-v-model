@@ -214,6 +214,18 @@ Matrix updated: specs/005d-test-results/v-model/traceability-matrix.md
 - **Partial ingestion** — only rows matching scenario IDs in the JUnit XML are updated; unmatched rows keep `⬜ Untested`
 - **Re-runnable** — subsequent ingestions overwrite previous statuses, dates, and commits with the latest values
 - **Coverage threshold** — when `--coverage` is provided and a module's coverage falls below `coverage_threshold` from `extension.yml`, the Coverage column is flagged with `⚠`
+- **Deprecated scenario handling** — when a scenario ID's parent artifact (ATP, STP, ITP, or MOD) is marked `[DEPRECATED]` in the corresponding V-Model artifact, the test result is **skipped** (not ingested into the matrix). Skipped scenarios are reported in the summary:
+  - Human-readable: `⏭️ 3 scenarios skipped (deprecated parent artifacts)`
+  - JSON output includes a `skipped_deprecated` array:
+    ```json
+    {
+      "skipped_deprecated": [
+        {"id": "SCN-003-A1", "reason": "Parent ATP-003-A is [DEPRECATED — Superseded by ATP-015-A]"},
+        {"id": "STS-005-B1", "reason": "Parent STP-005-B is [DEPRECATED — Withdrawn: component removed]"}
+      ]
+    }
+    ```
+  - Deprecated scenarios do not count toward pass/fail/skip totals and do not affect the exit code
 
 ## Quality Criteria
 

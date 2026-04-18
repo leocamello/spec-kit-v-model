@@ -60,6 +60,14 @@ Each test case MUST identify its technique by name and anchor to a specific modu
   - Do NOT renumber existing IDs when updating
   - Append new items; update modified items in-place by ID
 
+  LIFECYCLE TAGS (when evolving):
+  - [DEPRECATED — Superseded by UTP-NNN-X]: Test case replaced (parent MOD superseded)
+  - [DEPRECATED — Withdrawn: <reason>]: Test case removed (parent MOD withdrawn)
+  - [SUSPECT — Parent MOD-NNN {deprecated|modified}]: Parent module design changed;
+    resolve by re-parenting, deprecating, regenerating, or confirming active.
+  - Deprecated UTPs/UTSs stay in the document; they are never deleted.
+  - Coverage checks (MOD→UTP) exclude deprecated and [EXTERNAL] MOD items.
+
   PROHIBITED phrases in UTS (belong in acceptance scenarios):
   - "the user clicks", "the user sees", "the user navigates"
   - "the user enters", "the user selects", "the user receives"
@@ -251,12 +259,12 @@ Decision: `if (A and B or C)`
 
 | Metric | Count |
 |--------|-------|
-| Total Modules (MOD) | [N] |
+| Total Modules (MOD) | [N] ([N] active, [N] deprecated) |
 | Modules tested | [N] (excludes [EXTERNAL]) |
 | Modules bypassed ([EXTERNAL]) | [N] |
 | Total Test Cases (UTP) | [N] |
 | Total Scenarios (UTS) | [N] |
-| Modules with ≥1 UTP | [N] / [N] ([%]) |
+| Modules with ≥1 UTP | [N] / [N] ([%]) (active, non-[EXTERNAL] items only) |
 | Test Cases with ≥1 UTS | [N] / [N] ([%]) |
 | **Overall Coverage (MOD→UTP)** | **[%]** |
 

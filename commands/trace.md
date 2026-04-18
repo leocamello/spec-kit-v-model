@@ -175,6 +175,14 @@ ORPHANS (Backward Traceability Failures):
 
 DEPRECATION CANDIDATES:
   • [DEPRECATED] ATP-005-A: Parent REQ-005 was removed — awaiting user confirmation
+
+SUSPECT ITEMS (Lifecycle Review Required):
+  • [SUSPECT] SYS-003: Parent REQ-003 deprecated — Superseded by REQ-015
+  • [SUSPECT] STP-003-A: Parent SYS-003 is suspect (cascade)
+  • [SUSPECT] ARCH-007: Parent SYS-004 modified — content changed
+
+DEPRECATED CHAINS (Fully Resolved):
+  • REQ-002 [DEPRECATED] → ATP-002-A [DEPRECATED] → SCN-002-A1 [DEPRECATED]
 ```
 
 #### Section 3: The Traceability Matrices
@@ -264,6 +272,12 @@ Based on the analysis:
 
 - **If Matrix D shows UTP pending (unit-test.md absent)**:
   "ℹ️ Module designs found but unit test plan not yet generated. Run `/speckit.v-model.unit-test` to generate unit tests, then re-run `/speckit.v-model.trace` to complete Matrix D."
+
+- **If suspect items exist**:
+  "⚠️ {N} suspect items found requiring lifecycle review. Suspect items trace to a parent that was deprecated or modified. Run the corresponding V-Model command for each affected layer to resolve suspects (re-parent, deprecate, or confirm active). Then re-run `/speckit.v-model.trace` to verify resolution."
+
+- **If deprecated chains are incomplete**:
+  "⚠️ {N} deprecated items have downstream artifacts that are not yet deprecated or re-parented. Review the Deprecated Chains in the Exception Report and run the downstream commands to cascade the deprecation. Then re-run `/speckit.v-model.trace`."
 
 ## Operating Constraints
 

@@ -20,6 +20,12 @@
   - Priority: P1 (Critical), P2 (Important), P3 (Nice-to-have)
   - Rationale: Why this requirement exists
   - Verification Method: How this will be validated (Test, Inspection, Analysis, Demonstration)
+
+  LIFECYCLE TAGS (inline in Description column when evolving):
+  - [DEPRECATED — Superseded by REQ-NNN]: Requirement replaced by a new one
+  - [DEPRECATED — Withdrawn: <reason>]: Requirement removed entirely
+  - Deprecated requirements stay in the table; they are never deleted.
+  - Modified requirements keep their original ID; downstream artifacts become [SUSPECT].
 -->
 
 | ID | Description | Priority | Rationale | Verification Method |
@@ -27,6 +33,7 @@
 | REQ-001 | The system SHALL [capability] | P1 | [Why needed] | Test |
 | REQ-002 | The system MUST [capability] | P1 | [Why needed] | Test |
 | REQ-003 | The system SHOULD [capability] | P2 | [Why needed] | Demonstration |
+| REQ-004 | [DEPRECATED — Superseded by REQ-001] ~~The system SHALL [old capability]~~ | P1 | [Original rationale] | Test |
 
 ### Non-Functional Requirements
 
@@ -64,6 +71,6 @@
 
 ---
 
-**Total Requirements**: [N]
+**Total Requirements**: [N] ([N] active, [N] deprecated)
 **By Priority**: P1: [N] | P2: [N] | P3: [N]
 **By Verification Method**: Test: [N] | Inspection: [N] | Analysis: [N] | Demonstration: [N]
