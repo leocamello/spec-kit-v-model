@@ -27,7 +27,7 @@ Each test case identifies its technique by name:
 
 ### Component Verification: SYS-001 (Hazard Analysis Command)
 
-**Parent Requirements**: REQ-001, REQ-002, REQ-003, REQ-004, REQ-005, REQ-006, REQ-007, REQ-008, REQ-009, REQ-010, REQ-011, REQ-012, REQ-013, REQ-014, REQ-015, REQ-016, REQ-032, REQ-034, REQ-NF-002, REQ-IF-003, REQ-CN-001
+**Parent Requirements**: REQ-001, REQ-002, REQ-003, REQ-004, REQ-005, REQ-006, REQ-007, REQ-008, REQ-009, REQ-010, REQ-011, REQ-012, REQ-013, REQ-014, REQ-015, REQ-016, REQ-032, REQ-034, REQ-038, REQ-039, REQ-040, REQ-NF-002, REQ-IF-003
 
 #### Test Case: STP-001-A (FMEA Output Structure Conformance)
 
@@ -110,21 +110,21 @@ Each test case identifies its technique by name:
   * **When** the Hazard Analysis Command processes all components
   * **Then** every `SYS-NNN` from `SYS-001` through `SYS-009` appears in at least one `HAZ-NNN` entry's Component column, and `SYS-009` has a "No identified failure mode" entry with Severity "Negligible" flagged for human review
 
-#### Test Case: STP-001-G (Domain-Specific Severity Scales)
+#### Test Case: STP-001-G (Domain Overlay Severity Scales)
 
 **Technique**: Equivalence Partitioning
-**Target View**: Decomposition View — Conditional safety-critical behavior
-**Description**: Verifies that domain-specific severity scales are activated by configuration and that general-purpose FMEA is produced when no domain is configured.
+**Target View**: Decomposition View — Domain overlay loading behavior
+**Description**: Verifies that domain-specific severity scales are loaded from overlays when `v-model-config.yml` specifies a `domain` value, and that general-purpose FMEA is produced when no domain is configured.
 
 * **System Scenario: STS-001-G1**
-  * **Given** a `v-model-config.yml` with `domain: iso_26262`
+  * **Given** a `v-model-config.yml` with `domain: iso_26262` and an overlay file at `commands/overlays/iso_26262/hazard-analysis.md`
   * **When** the Hazard Analysis Command generates the hazard register
-  * **Then** the severity classifications use ASIL ratings (ASIL A through ASIL D) as defined by ISO 26262
+  * **Then** the severity classifications use the ASIL scale (S0–S3, QM–D) from the iso_26262 overlay
 
 * **System Scenario: STS-001-G2**
   * **Given** no `v-model-config.yml` file exists in the repository root
   * **When** the Hazard Analysis Command generates the hazard register
-  * **Then** the severity classifications use general-purpose labels (Negligible, Minor, Moderate, Critical, Catastrophic) without any ASIL, SIL, or DO-178C failure condition classification, and operational state analysis is still applied
+  * **Then** the severity classifications use the base general-purpose scale (Negligible, Minor, Moderate, Critical, Catastrophic) without loading any domain overlay, and operational state analysis is still applied
 
 #### Test Case: STP-001-H (Strict Translator Constraint)
 
@@ -400,7 +400,7 @@ Each test case identifies its technique by name:
 | Total Test Cases (STP) | 23 |
 | Total Scenarios (STS) | 35 |
 | Components with ≥1 STP | 9 / 9 (100%) |
-| Test Cases with ≥1 STS | 22 / 22 (100%) |
+| Test Cases with ≥1 STS | 23 / 23 (100%) |
 | **Overall Coverage (SYS→STP)** | **100%** |
 
 ### Technique Distribution

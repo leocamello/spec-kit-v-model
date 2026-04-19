@@ -17,8 +17,8 @@
 | **REQ-007** | When `architecture-design.md` exists in the project, the command SHALL also analyze architecture-level failure modes including interface mismatches between `ARCH-NNN` modules, protocol failures, and data format incompatibilities. | ATP-007-A | ARCH-level hazards generated when architecture exists | SCN-007-A1 | ⬜ Untested |
 | | | ATP-007-B | No ARCH hazards without architecture-design.md | SCN-007-B1 | ⬜ Untested |
 | **REQ-008** | When a previous `hazard-analysis.md` exists, the command SHALL preserve all existing `HAZ-NNN` entries unmodified and append new entries with sequential numbering continuing from the last existing `HAZ-NNN` ID. | ATP-008-A | Existing entries unchanged, new entries appended | SCN-008-A1 | ⬜ Untested |
-| **REQ-009** | When no safety-critical domain is configured in `v-model-config.yml`, the command SHALL produce a general-purpose FMEA without domain-specific severity scales (no ASIL rating, no SIL level, no DO-178C failure condition classification). Operational state analysis SHALL still apply. | ATP-009-A | No ASIL/SIL scales without config | SCN-009-A1 | ⬜ Untested |
-| | | ATP-009-A | No ASIL/SIL scales without config | SCN-009-A2 | ⬜ Untested |
+| **REQ-009** | When no `domain` is set in `v-model-config.yml` (or no config file exists), the command SHALL produce a general-purpose FMEA using the base severity scale without loading any domain overlay. Operational state analysis SHALL still apply. | ATP-009-A | No domain overlay scales without config | SCN-009-A1 | ⬜ Untested |
+| | | ATP-009-A | No domain overlay scales without config | SCN-009-A2 | ⬜ Untested |
 | **REQ-010** | The command SHALL follow the strict translator constraint: when deriving hazards from `requirements.md` and `system-design.md`, the AI SHALL NOT invent system capabilities, components, or operational states not present in the source artifacts. | ATP-010-A | No invented components or states | SCN-010-A1 | ⬜ Untested |
 | **REQ-011** | The command SHALL fail with a clear error message ("hazard-analysis requires both requirements.md and system-design.md. Run /speckit.v-model.system-design first.") when `system-design.md` does not exist in the V-Model directory. | ATP-011-A | Clear error message when system-design.md absent | SCN-011-A1 | ⬜ Untested |
 | **REQ-012** | When `system-design.md` defines no explicit operational states, the command SHALL use a single implicit state "NORMAL" and emit a validation warning ("No operational states defined in system-design.md — using implicit NORMAL state"). | ATP-012-A | Uses NORMAL state when none defined | SCN-012-A1 | ⬜ Untested |
@@ -53,8 +53,15 @@
 | **REQ-035** | The `extension.yml` SHALL register the new `speckit.v-model.hazard-analysis` command with its file path and description. | ATP-035-A | Command registered in extension.yml | SCN-035-A1 | ⬜ Untested |
 | **REQ-036** | The `extension.yml` `defaults.id_prefixes` section SHALL include `hazards: "HAZ"`. | ATP-036-A | defaults.id_prefixes includes hazards | SCN-036-A1 | ⬜ Untested |
 | **REQ-037** | The `extension.yml` SHALL update the `trace` command description to mention Matrix H alongside existing matrices A–D. | ATP-037-A | Trace command description mentions Matrix H | SCN-037-A1 | ⬜ Untested |
-| **REQ-CN-001** | Domain-specific severity scales (ASIL for ISO 26262, SIL for IEC 61508, failure condition for DO-178C) SHALL be activated only by the `safety_critical` configuration in `v-model-config.yml`, not by the hazard-analysis command itself. | ATP-CN-001-A | Domain scales activated by config only | SCN-CN-001-A1 | ⬜ Untested |
-| | | ATP-CN-001-A | Domain scales activated by config only | SCN-CN-001-A2 | ⬜ Untested |
+| **REQ-038** | When `v-model-config.yml` specifies a `domain` value, the command SHALL load the corresponding domain overlay from `commands/overlays/{domain}/hazard-analysis.md` and use the overlay's severity scale in preference to the base general-purpose scale. | ATP-038-A | Overlay loaded when domain is set | SCN-038-A1 | ⬜ Untested |
+| | | ATP-038-A | Overlay loaded when domain is set | SCN-038-A2 | ⬜ Untested |
+| | | ATP-038-B | Graceful fallback when overlay missing | SCN-038-B1 | ⬜ Untested |
+| **REQ-039** | The command description and goal SHALL use generic FMEA framing without referencing specific safety standards. Domain-specific framing SHALL be provided only by loaded overlays. | ATP-039-A | Command text uses generic framing | SCN-039-A1 | ⬜ Untested |
+| | | ATP-039-A | Command text uses generic framing | SCN-039-A2 | ⬜ Untested |
+| **REQ-040** | An IEC 62304 domain overlay SHALL provide a Safety Class A/B/C severity scale with ISO 14971 integration guidance. | ATP-040-A | IEC 62304 overlay provides Safety Class scale | SCN-040-A1 | ⬜ Untested |
+| | | ATP-040-A | IEC 62304 overlay provides Safety Class scale | SCN-040-A2 | ⬜ Untested |
+| **REQ-CN-001** | [DEPRECATED — Superseded by REQ-038] Domain-specific severity scales SHALL be activated only by the `safety_critical` configuration in `v-model-config.yml`. | ATP-CN-001-A | [DEPRECATED — Superseded by ATP-038-A] | SCN-CN-001-A1 | ⬜ Deprecated |
+| | | ATP-CN-001-A | [DEPRECATED — Superseded by ATP-038-A] | SCN-CN-001-A2 | ⬜ Deprecated |
 | **REQ-CN-002** | Matrix H SHALL be a new, separate traceability matrix using the letter "H" (mnemonic for Hazard), not merged into existing matrices A–D and not using the next alphabetical letter "E". | ATP-CN-002-A | Matrix uses letter H, not E | SCN-CN-002-A1 | ⬜ Untested |
 | **REQ-CN-003** | The extension SHALL maintain backward compatibility: projects without `hazard-analysis.md` SHALL continue to produce the same v0.4.0 output (Matrices A–D only, no Matrix H, no warning or error). | ATP-CN-003-A | No Matrix H without hazard-analysis.md | SCN-CN-003-A1 | ⬜ Untested |
 | **REQ-CN-004** | The `validate-hazard-coverage.sh` and `Validate-HazardCoverage.ps1` scripts SHALL produce identical JSON output and identical exit codes when given the same inputs. | ATP-CN-004-A | Bash and PS1 produce identical results | SCN-CN-004-A1 | ⬜ Untested |
@@ -69,11 +76,11 @@
 
 | Metric | Value |
 |--------|-------|
-| **Total Requirements** | 47 |
-| **Total Test Cases (ATP)** | 54 |
-| **Total Scenarios (SCN)** | 57 |
-| **REQ → ATP Coverage** | 47/47 (100%) |
-| **ATP → SCN Coverage** | 54/54 (100%) |
+| **Total Requirements** | 50 (1 deprecated) |
+| **Total Test Cases (ATP)** | 58 (1 deprecated) |
+| **Total Scenarios (SCN)** | 64 (2 deprecated) |
+| **REQ → ATP Coverage** | 50/50 (100%) |
+| **ATP → SCN Coverage** | 58/58 (100%) |
 
 ## Matrix B — Verification (Architectural View)
 
@@ -406,19 +413,11 @@
 | **REQ-035** | SYS-009 | Extension Manifest Update | STP-009-A | Interface Contract Testing | STS-009-A1 | ⬜ Untested |
 | **REQ-036** | SYS-009 | Extension Manifest Update | STP-009-A | Interface Contract Testing | STS-009-A1 | ⬜ Untested |
 | **REQ-037** | SYS-009 | Extension Manifest Update | STP-009-A | Interface Contract Testing | STS-009-A1 | ⬜ Untested |
-| **REQ-CN-001** | SYS-001 | Hazard Analysis Command | STP-001-A | Interface Contract Testing | STS-001-A1 | ⬜ Untested |
-| | SYS-001 | Hazard Analysis Command | STP-001-A | Interface Contract Testing | STS-001-A2 | ⬜ Untested |
-| | SYS-001 | Hazard Analysis Command | STP-001-B | Equivalence Partitioning | STS-001-B1 | ⬜ Untested |
-| | SYS-001 | Hazard Analysis Command | STP-001-B | Equivalence Partitioning | STS-001-B2 | ⬜ Untested |
-| | SYS-001 | Hazard Analysis Command | STP-001-C | Interface Contract Testing | STS-001-C1 | ⬜ Untested |
-| | SYS-001 | Hazard Analysis Command | STP-001-D | Boundary Value Analysis | STS-001-D1 | ⬜ Untested |
-| | SYS-001 | Hazard Analysis Command | STP-001-D | Boundary Value Analysis | STS-001-D2 | ⬜ Untested |
-| | SYS-001 | Hazard Analysis Command | STP-001-E | Fault Injection | STS-001-E1 | ⬜ Untested |
-| | SYS-001 | Hazard Analysis Command | STP-001-F | Boundary Value Analysis | STS-001-F1 | ⬜ Untested |
-| | SYS-001 | Hazard Analysis Command | STP-001-G | Equivalence Partitioning | STS-001-G1 | ⬜ Untested |
+| **REQ-038** | SYS-001 | Hazard Analysis Command | STP-001-G | Equivalence Partitioning | STS-001-G1 | ⬜ Untested |
 | | SYS-001 | Hazard Analysis Command | STP-001-G | Equivalence Partitioning | STS-001-G2 | ⬜ Untested |
-| | SYS-001 | Hazard Analysis Command | STP-001-H | Interface Contract Testing | STS-001-H1 | ⬜ Untested |
-| | SYS-001 | Hazard Analysis Command | STP-001-I | Boundary Value Analysis | STS-001-I1 | ⬜ Untested |
+| **REQ-039** | SYS-001 | Hazard Analysis Command | STP-001-A | Interface Contract Testing | STS-001-A1 | ⬜ Untested |
+| **REQ-040** | SYS-001 | Hazard Analysis Command | STP-001-A | Interface Contract Testing | STS-001-A1 | ⬜ Untested |
+| **REQ-CN-001** | [DEPRECATED — Superseded by REQ-038] | — | — | — | — | ⬜ Deprecated |
 | **REQ-CN-002** | SYS-005 | Matrix Builder Script Extension (Bash) | STP-005-A | Interface Contract Testing | STS-005-A1 | ⬜ Untested |
 | | SYS-005 | Matrix Builder Script Extension (Bash) | STP-005-A | Interface Contract Testing | STS-005-A2 | ⬜ Untested |
 | | SYS-005 | Matrix Builder Script Extension (Bash) | STP-005-B | Fault Injection | STS-005-B1 | ⬜ Untested |
@@ -525,15 +524,15 @@
 | **Total System Components (SYS)** | 9 |
 | **Total System Test Cases (STP)** | 23 |
 | **Total System Scenarios (STS)** | 35 |
-| **REQ → SYS Coverage** | 47/47 (100%) |
+| **REQ → SYS Coverage** | 49/49 active (100%) + 1 deprecated (REQ-CN-001) |
 | **SYS → STP Coverage** | 9/9 (100%) |
 
 ## Matrix C — Integration Verification (Module Boundary View)
 
 | System Component (SYS) | Parent REQs | Architecture Module (ARCH) | Module Name | Test Case ID (ITP) | Technique | Scenario ID (ITS) | Status |
 |------------------------|-------------|---------------------------|-------------|--------------------|-----------|--------------------|--------|
-| SYS-001 (REQ-001, REQ-002, REQ-003, REQ-004, REQ-005, REQ-006, REQ-007, REQ-008, REQ-009, REQ-010, REQ-011, REQ-012, REQ-013, REQ-014, REQ-015, REQ-016, REQ-032, REQ-034, REQ-NF-002, REQ-IF-003, REQ-CN-001) | REQ-001, REQ-002, REQ-003, REQ-004, REQ-005, REQ-006, REQ-007, REQ-008, REQ-009, REQ-010, REQ-011, REQ-012, REQ-013, REQ-014, REQ-015, REQ-016, REQ-032, REQ-034, REQ-NF-002, REQ-IF-003, REQ-CN-001 | ARCH-001 | Hazard Analysis Command Definition | ITP-001-A | Interface Contract Testing | ITS-001-A1 | ⬜ Untested |
-| SYS-001 (REQ-001, REQ-002, REQ-003, REQ-004, REQ-005, REQ-006, REQ-007, REQ-008, REQ-009, REQ-010, REQ-011, REQ-012, REQ-013, REQ-014, REQ-015, REQ-016, REQ-032, REQ-034, REQ-NF-002, REQ-IF-003, REQ-CN-001) | REQ-001, REQ-002, REQ-003, REQ-004, REQ-005, REQ-006, REQ-007, REQ-008, REQ-009, REQ-010, REQ-011, REQ-012, REQ-013, REQ-014, REQ-015, REQ-016, REQ-032, REQ-034, REQ-NF-002, REQ-IF-003, REQ-CN-001 | ARCH-001 | Hazard Analysis Command Definition | ITP-001-B | Interface Fault Injection | ITS-001-B1 | ⬜ Untested |
+| SYS-001 (REQ-001, REQ-002, REQ-003, REQ-004, REQ-005, REQ-006, REQ-007, REQ-008, REQ-009, REQ-010, REQ-011, REQ-012, REQ-013, REQ-014, REQ-015, REQ-016, REQ-032, REQ-034, REQ-038, REQ-039, REQ-040, REQ-NF-002, REQ-IF-003) | REQ-001, REQ-002, REQ-003, REQ-004, REQ-005, REQ-006, REQ-007, REQ-008, REQ-009, REQ-010, REQ-011, REQ-012, REQ-013, REQ-014, REQ-015, REQ-016, REQ-032, REQ-034, REQ-038, REQ-039, REQ-040, REQ-NF-002, REQ-IF-003 | ARCH-001 | Hazard Analysis Command Definition | ITP-001-A | Interface Contract Testing | ITS-001-A1 | ⬜ Untested |
+| SYS-001 (REQ-001, REQ-002, REQ-003, REQ-004, REQ-005, REQ-006, REQ-007, REQ-008, REQ-009, REQ-010, REQ-011, REQ-012, REQ-013, REQ-014, REQ-015, REQ-016, REQ-032, REQ-034, REQ-038, REQ-039, REQ-040, REQ-NF-002, REQ-IF-003) | REQ-001, REQ-002, REQ-003, REQ-004, REQ-005, REQ-006, REQ-007, REQ-008, REQ-009, REQ-010, REQ-011, REQ-012, REQ-013, REQ-014, REQ-015, REQ-016, REQ-032, REQ-034, REQ-038, REQ-039, REQ-040, REQ-NF-002, REQ-IF-003 | ARCH-001 | Hazard Analysis Command Definition | ITP-001-B | Interface Fault Injection | ITS-001-B1 | ⬜ Untested |
 | SYS-002 (REQ-017, REQ-018) | REQ-017, REQ-018 | ARCH-002 | Hazard Analysis Template | ITP-002-A | Interface Contract Testing | ITS-002-A1 | ⬜ Untested |
 | SYS-003 (REQ-019, REQ-020, REQ-021, REQ-022, REQ-023, REQ-024, REQ-025, REQ-NF-001, REQ-NF-002, REQ-NF-003, REQ-IF-001, REQ-IF-002, REQ-CN-004) | REQ-019, REQ-020, REQ-021, REQ-022, REQ-023, REQ-024, REQ-025, REQ-NF-001, REQ-NF-002, REQ-NF-003, REQ-IF-001, REQ-IF-002, REQ-CN-004 | ARCH-003 | Forward Coverage Validator | ITP-003-A | Interface Contract Testing | ITS-003-A1 | ⬜ Untested |
 | SYS-003 (REQ-019, REQ-020, REQ-021, REQ-022, REQ-023, REQ-024, REQ-025, REQ-NF-001, REQ-NF-002, REQ-NF-003, REQ-IF-001, REQ-IF-002, REQ-CN-004) | REQ-019, REQ-020, REQ-021, REQ-022, REQ-023, REQ-024, REQ-025, REQ-NF-001, REQ-NF-002, REQ-NF-003, REQ-IF-001, REQ-IF-002, REQ-CN-004 | ARCH-003 | Forward Coverage Validator | ITP-003-B | Interface Fault Injection | ITS-003-B1 | ⬜ Untested |
@@ -654,4 +653,4 @@ None — all integration tests trace to modules.
 
 - **Matrix generated by**: `build-matrix.sh` (deterministic regex parser)
 - **Source documents**: `requirements.md`, `acceptance-plan.md`, `system-design.md`, `system-test.md`, `architecture-design.md`, `integration-test.md`, `module-design.md`, `unit-test.md`
-- **Last validated**: 2026-03-31
+- **Last validated**: 2026-04-19 (partial — Matrix A updated for overlay evolution)

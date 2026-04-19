@@ -58,7 +58,11 @@ if (-not (Test-Path $SystemTest)) {
 $reqContent = (Get-Content -Raw $Requirements) ?? ''
 $designContent = (Get-Content -Raw $SystemDesign) ?? ''
 
-$reqIds = @([regex]::Matches($reqContent, 'REQ-([A-Z]+-)?[0-9]{3}') |
+# REQ IDs from requirements.md (exclude deprecated requirements)
+# Filter: skip lines where [DEPRECATED starts a table cell (| [DEPRECATED), but
+# keep lines that mention DEPRECATED inside backtick-quoted examples.
+$activeReqContent = ($reqContent -split "`n" | Where-Object { $_ -notmatch '\| \[DEPRECATED' }) -join "`n"
+$reqIds = @([regex]::Matches($activeReqContent, 'REQ-([A-Z]+-)?[0-9]{3}') |
     ForEach-Object { $_.Value } | Sort-Object -Unique)
 $sysIds = @([regex]::Matches($designContent, 'SYS-[0-9]{3}') |
     ForEach-Object { $_.Value } | Sort-Object -Unique)

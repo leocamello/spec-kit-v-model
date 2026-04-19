@@ -1,5 +1,5 @@
 ---
-description: Generate an ISO 14971/ISO 26262-compliant Hazard Analysis (FMEA) with operational state awareness, traceable HAZ-NNN IDs, and progressive deepening.
+description: Generate a Hazard Analysis (FMEA) with operational state awareness, traceable HAZ-NNN IDs, and progressive deepening.
 handoffs:
   - label: Run Hazard Coverage Validation
     agent: speckit.v-model.trace
@@ -23,7 +23,7 @@ You **MUST** consider the user input before proceeding (if not empty).
 
 ## Goal
 
-Generate an **ISO 14971 / ISO 26262-compliant Hazard Analysis** (Failure Mode and Effects Analysis — FMEA) where **every system component** (`SYS-NNN`) from `system-design.md` is assessed for potential failure modes across operational states defined in the system design. Each hazard receives a unique `HAZ-NNN` identifier and is linked back to risk control measures (`REQ-NNN` / `SYS-NNN`), creating a traceable chain: Hazard → Mitigation → Requirement/Component → Test Case.
+Generate a **Hazard Analysis** (Failure Mode and Effects Analysis — FMEA) where **every system component** (`SYS-NNN`) from `system-design.md` is assessed for potential failure modes across operational states defined in the system design. Each hazard receives a unique `HAZ-NNN` identifier and is linked back to risk control measures (`REQ-NNN` / `SYS-NNN`), creating a traceable chain: Hazard → Mitigation → Requirement/Component → Test Case.
 
 The output follows the FMEA register format with operational state awareness: the same failure mode (e.g., sensor corruption) may appear as multiple `HAZ-NNN` entries with different severity classifications depending on whether the system is in IDLE, ACTIVE, or EMERGENCY state.
 
@@ -70,17 +70,26 @@ For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\''m Groot
    - Extract `ARCH-NNN` identifiers and interface contracts
    - Architecture-level failure modes supplement system-level analysis
 
-6. **Load v-model-config.yml** (if it exists at the repository root):
-   - If `domain` is set to `iso_26262`: Use ASIL severity classification (ASIL A through ASIL D + QM)
-   - If `domain` is set to `do_178c`: Use DO-178C failure condition classification (Catastrophic, Hazardous, Major, Minor, No Effect)
-   - If `domain` is set to `iec_62304`: Use IEC 62304 safety classification (Class A, B, C)
-   - If absent or `domain` is empty: Use general-purpose severity scale (Catastrophic, Critical, Serious, Minor, Negligible)
-
-7. **Load existing hazard analysis** (if `AVAILABLE_DOCS` contains `"hazard-analysis.md"`):
+6. **Load existing hazard analysis** (if `AVAILABLE_DOCS` contains `"hazard-analysis.md"`):
    - Read the existing `hazard-analysis.md` to preserve existing HAZ IDs and content
    - Identify the highest existing HAZ number to continue the sequence
    - New hazard entries append after existing ones — **never renumber**
    - This enables progressive deepening across multiple invocations
+
+### 2a. Domain Configuration
+
+Load `v-model-config.yml` (if it exists at the repository root).
+
+**If `domain` is set** (e.g., `iso_26262`, `do_178c`, `iec_62304`):
+1. Read the command overlay: `commands/overlays/{domain}/hazard-analysis.md`
+   - If it exists: note the domain-specific severity scale, risk classification methodology, and regulatory context for hazard assessment
+   - If it does not exist: this domain does not extend this command — proceed with base only
+2. Where the base command has a domain-variant section (marked with "If a domain overlay is loaded, prefer its content"), use the overlay's version instead of the base default
+
+**If `domain` is empty or absent:**
+- Proceed with the base command only
+- Use the general-purpose severity scale (Section 4.5)
+- Do NOT include any safety-critical or domain-specific severity classifications
 
 ### 3. Lifecycle Rules (When Evolving Existing Artifacts)
 
@@ -156,7 +165,9 @@ Every `SYS-NNN` in the system design MUST have at least one `HAZ-NNN` entry. If 
 
 #### 4.5 Severity Classification
 
-**General-Purpose (no domain configured):**
+**If a domain overlay is loaded** (Step 2a), use the severity scale defined in the overlay instead of the general-purpose scale below.
+
+**General-Purpose (default — no domain configured):**
 
 | Severity | Definition |
 |----------|-----------|
@@ -165,26 +176,6 @@ Every `SYS-NNN` in the system design MUST have at least one `HAZ-NNN` entry. If 
 | Serious | Moderate injury or significant degradation; medical attention needed |
 | Minor | Slight injury or minor degradation; first aid sufficient |
 | Negligible | No injury; cosmetic or inconvenience-level impact |
-
-**ISO 26262 (domain: iso_26262):**
-
-| Severity | ASIL Rating | Definition |
-|----------|-------------|-----------|
-| S3 | ASIL D | Life-threatening (survival uncertain) |
-| S3 | ASIL C | Life-threatening (survival probable) |
-| S2 | ASIL B | Severe injuries |
-| S1 | ASIL A | Light injuries |
-| S0 | QM | No injuries |
-
-**DO-178C (domain: do_178c):**
-
-| Failure Condition | DAL | Definition |
-|-------------------|-----|-----------|
-| Catastrophic | A | Prevents continued safe flight and landing |
-| Hazardous | B | Large reduction in safety margins |
-| Major | C | Significant reduction in safety margins |
-| Minor | D | Slight reduction in safety margins |
-| No Effect | E | No effect on operational capability |
 
 #### 4.6 Risk Matrix
 

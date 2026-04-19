@@ -161,19 +161,19 @@ This document defines the Acceptance Test Plan for the Hazard Analysis (FMEA) fe
 
 ### Requirement Validation: REQ-009 (General-Purpose FMEA Without Domain Config)
 
-#### Test Case: ATP-009-A (No ASIL/SIL scales without config)
+#### Test Case: ATP-009-A (No domain overlay scales without config)
 **Linked Requirement:** REQ-009
-**Description:** Verify general-purpose FMEA is produced when no safety-critical domain is configured.
-**Validation Condition:** Output contains severity/likelihood ratings but no domain-specific scales (ASIL, SIL, DO-178C levels).
-**Expected Result:** Generic severity scale (e.g., Catastrophic/Critical/Major/Minor/Negligible) used without ASIL or SIL annotations.
+**Description:** Verify general-purpose FMEA is produced when no `domain` is set in `v-model-config.yml`.
+**Validation Condition:** Output contains severity/likelihood ratings using the base general-purpose scale; no domain overlay is loaded.
+**Expected Result:** Generic severity scale (e.g., Catastrophic/Critical/Major/Minor/Negligible) used without ASIL, SIL, or DAL annotations.
 
 * **User Scenario: SCN-009-A1**
-  * **Given** a project with `requirements.md` and `system-design.md` but no `v-model-config.yml` or `safety_critical` configuration
+  * **Given** a project with `requirements.md` and `system-design.md` but no `v-model-config.yml` (or config with no `domain` field)
   * **When** `/speckit.v-model.hazard-analysis` runs
-  * **Then** the hazard register uses a general-purpose severity scale without ASIL, SIL, or DO-178C failure condition classifications
+  * **Then** the hazard register uses the base general-purpose severity scale without domain-specific annotations
 
 * **User Scenario: SCN-009-A2**
-  * **Given** a project without safety-critical domain configuration
+  * **Given** a project without `domain` configuration
   * **When** `/speckit.v-model.hazard-analysis` runs
   * **Then** operational state analysis is still performed (Operational State column is populated)
 
@@ -749,23 +749,23 @@ This document defines the Acceptance Test Plan for the Hazard Analysis (FMEA) fe
 
 ---
 
-### Requirement Validation: REQ-CN-001 (Domain Config Gating)
+### Requirement Validation: REQ-CN-001 (Domain Config Gating) — [SUSPECT — Parent REQ-CN-001 deprecated]
 
-#### Test Case: ATP-CN-001-A (Domain scales activated by config only)
-**Linked Requirement:** REQ-CN-001
-**Description:** Verify domain-specific severity scales require v-model-config.yml configuration.
-**Validation Condition:** ASIL/SIL/DO-178C scales appear only when safety_critical config is present.
-**Expected Result:** Without config: generic severity. With config: domain-specific scales.
+#### Test Case: ATP-CN-001-A [DEPRECATED — Superseded by ATP-038-A]
+**Linked Requirement:** REQ-CN-001 [DEPRECATED — Superseded by REQ-038]
+**Description:** ~~Verify domain-specific severity scales require v-model-config.yml configuration.~~ Superseded by ATP-038-A which tests overlay-based domain loading.
+**Validation Condition:** ~~ASIL/SIL/DO-178C scales appear only when safety_critical config is present.~~
+**Expected Result:** ~~Without config: generic severity. With config: domain-specific scales.~~
 
-* **User Scenario: SCN-CN-001-A1**
-  * **Given** a project without `v-model-config.yml`
-  * **When** `/speckit.v-model.hazard-analysis` runs
-  * **Then** the hazard register uses a generic severity scale (Catastrophic/Critical/Major/Minor/Negligible) without ASIL or SIL annotations
+* **User Scenario: SCN-CN-001-A1** [DEPRECATED — Superseded by SCN-038-A1]
+  * ~~**Given** a project without `v-model-config.yml`~~
+  * ~~**When** `/speckit.v-model.hazard-analysis` runs~~
+  * ~~**Then** the hazard register uses a generic severity scale (Catastrophic/Critical/Major/Minor/Negligible) without ASIL or SIL annotations~~
 
-* **User Scenario: SCN-CN-001-A2**
-  * **Given** a project with `v-model-config.yml` containing `safety_critical: { domain: "iso-26262" }`
-  * **When** `/speckit.v-model.hazard-analysis` runs
-  * **Then** the hazard register includes ASIL ratings (ASIL-QM through ASIL-D) in the severity classification
+* **User Scenario: SCN-CN-001-A2** [DEPRECATED — Superseded by SCN-038-A2]
+  * ~~**Given** a project with `v-model-config.yml` containing `safety_critical: { domain: "iso-26262" }`~~
+  * ~~**When** `/speckit.v-model.hazard-analysis` runs~~
+  * ~~**Then** the hazard register includes ASIL ratings (ASIL-QM through ASIL-D) in the severity classification~~
 
 ---
 
@@ -814,16 +814,88 @@ This document defines the Acceptance Test Plan for the Hazard Analysis (FMEA) fe
 
 ---
 
+### Requirement Validation: REQ-038 (Domain Overlay Loading)
+
+#### Test Case: ATP-038-A (Overlay loaded when domain is set)
+**Linked Requirement:** REQ-038
+**Description:** Verify the command loads the domain overlay and uses its severity scale when `v-model-config.yml` specifies a `domain` value.
+**Validation Condition:** Domain overlay file is read and its severity scale appears in the hazard register output.
+**Expected Result:** Domain-specific severity scale (e.g., ASIL for iso_26262) is used instead of the base general-purpose scale.
+
+* **User Scenario: SCN-038-A1**
+  * **Given** a project with `v-model-config.yml` containing `domain: iso_26262` and an overlay file at `commands/overlays/iso_26262/hazard-analysis.md`
+  * **When** `/speckit.v-model.hazard-analysis` runs
+  * **Then** the hazard register uses the ASIL severity scale (S0–S3, QM–D) from the overlay instead of the base general-purpose scale
+
+* **User Scenario: SCN-038-A2**
+  * **Given** a project with `v-model-config.yml` containing `domain: do_178c` and an overlay file at `commands/overlays/do_178c/hazard-analysis.md`
+  * **When** `/speckit.v-model.hazard-analysis` runs
+  * **Then** the hazard register uses DAL failure condition classification (A–E) from the overlay
+
+#### Test Case: ATP-038-B (Graceful fallback when overlay missing)
+**Linked Requirement:** REQ-038
+**Description:** Verify the command falls back to base severity scale when a domain is set but no overlay file exists for that domain.
+**Validation Condition:** Command does not error; base general-purpose scale is used.
+**Expected Result:** Hazard register produced with generic severity scale and no error.
+
+* **User Scenario: SCN-038-B1**
+  * **Given** a project with `v-model-config.yml` containing `domain: custom_domain` but no overlay at `commands/overlays/custom_domain/hazard-analysis.md`
+  * **When** `/speckit.v-model.hazard-analysis` runs
+  * **Then** the command proceeds with the base general-purpose severity scale without error
+
+---
+
+### Requirement Validation: REQ-039 (Generic FMEA Framing)
+
+#### Test Case: ATP-039-A (Command text uses generic framing)
+**Linked Requirement:** REQ-039
+**Description:** Verify the command description and goal use generic FMEA framing without referencing specific safety standards.
+**Validation Condition:** The command file `commands/hazard-analysis.md` description and goal do not contain "ISO 14971", "ISO 26262", or "DO-178C".
+**Expected Result:** Description and goal reference "Failure Mode and Effects Analysis" or equivalent generic terminology.
+
+* **User Scenario: SCN-039-A1**
+  * **Given** the command file `commands/hazard-analysis.md`
+  * **When** inspecting the `description` field and Goal section
+  * **Then** neither contain the strings "ISO 14971", "ISO 26262", or "DO-178C"
+
+* **User Scenario: SCN-039-A2**
+  * **Given** the iso_26262 overlay at `commands/overlays/iso_26262/hazard-analysis.md`
+  * **When** inspecting the overlay content
+  * **Then** the overlay contains domain-specific references to HARA methodology and ASIL ratings per ISO 26262 Part 3
+
+---
+
+### Requirement Validation: REQ-040 (IEC 62304 Domain Overlay)
+
+#### Test Case: ATP-040-A (IEC 62304 overlay provides Safety Class scale)
+**Linked Requirement:** REQ-040
+**Description:** Verify the IEC 62304 overlay exists and provides a Safety Class A/B/C severity scale with ISO 14971 integration guidance.
+**Validation Condition:** Overlay file exists at `commands/overlays/iec_62304/hazard-analysis.md` with the expected content.
+**Expected Result:** Overlay contains Safety Class A, B, C definitions and references ISO 14971 integration.
+
+* **User Scenario: SCN-040-A1**
+  * **Given** the overlay file `commands/overlays/iec_62304/hazard-analysis.md`
+  * **When** inspecting its contents
+  * **Then** the file defines Safety Class A (no injury possible), Safety Class B (non-serious injury possible), and Safety Class C (death or serious injury possible)
+
+* **User Scenario: SCN-040-A2**
+  * **Given** the overlay file `commands/overlays/iec_62304/hazard-analysis.md`
+  * **When** inspecting its ISO 14971 integration section
+  * **Then** the file references ISO 14971 §5.4–§7 for hazard identification and risk estimation methodology
+
+---
+
 ## Coverage Summary
 
 | Metric | Count |
 |--------|-------|
-| Total Requirements (REQ) | 47 |
-| Total Test Cases (ATP) | 53 |
-| Total Scenarios (SCN) | 56 |
+| Total Requirements (REQ) | 50 (1 deprecated) |
+| Total Test Cases (ATP) | 58 (1 deprecated) |
+| Total Scenarios (SCN) | 64 (2 deprecated) |
 | REQ → ATP Coverage | 100% |
 | ATP → SCN Coverage | 100% |
 
-**Validation Status**: ✅ Full Coverage
+**Validation Status**: ✅ Full Coverage (deprecated items excluded from active counts)
 **Generated**: 2026-03-31
+**Last Evolved**: 2026-04-19
 **Validated by**: `/speckit.v-model.acceptance` command execution (pending `validate-requirement-coverage.sh` confirmation)

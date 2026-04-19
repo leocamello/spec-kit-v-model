@@ -50,8 +50,10 @@ if [[ ! -f "$ACCEPTANCE" ]]; then
 fi
 
 # Extract all IDs using regex
-# REQ IDs: REQ-NNN, REQ-NF-NNN, REQ-IF-NNN, REQ-CN-NNN
-req_ids=($(grep -oE 'REQ-([A-Z]+-)?[0-9]{3}' "$REQUIREMENTS" | sort -u))
+# REQ IDs: REQ-NNN, REQ-NF-NNN, REQ-IF-NNN, REQ-CN-NNN (exclude deprecated)
+# Filter: skip lines where [DEPRECATED starts a table cell (| [DEPRECATED), but
+# keep lines that mention DEPRECATED inside backtick-quoted examples.
+req_ids=($(grep -v '| \[DEPRECATED' "$REQUIREMENTS" | grep -oE 'REQ-([A-Z]+-)?[0-9]{3}' | sort -u))
 
 # ATP IDs: ATP-NNN-X or ATP-{CAT}-NNN-X (with optional category prefix)
 atp_ids=($(grep -oE 'ATP-([A-Z]+-)?[0-9]{3}-[A-Z]' "$ACCEPTANCE" | sort -u))
