@@ -25,7 +25,7 @@ Document the allocation of IEC 62304 safety classes from parent system component
 
 ## Defensive Coding Requirements per Safety Class
 
-Document defensive coding strategies based on safety class assignment. IEC 62304 §5.4 requires that software unit design includes appropriate error handling.
+Document defensive coding strategies based on safety class assignment. IEC 62304 §5.3 requires that the software architecture addresses error handling and defensive techniques at module boundaries.
 
 | Module | Safety Class | Invalid Input | Detection Method | Recovery Action |
 |--------|-------------|---------------|------------------|-----------------|

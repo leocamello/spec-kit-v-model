@@ -3,9 +3,9 @@
 > This overlay is loaded when `v-model-config.yml` sets `domain: iso_26262`.
 > It provides domain-specific safety-critical integration test sections for the base `integration-test` command.
 
-## SIL/HIL Compatibility (ISO 26262-8 §9)
+## SIL/HIL Compatibility (ISO 26262 Part 6 §6.8)
 
-Document which integration test scenarios can execute in Software-in-the-Loop (SIL) vs. Hardware-in-the-Loop (HIL) environments. ISO 26262-8 §9 defines requirements for the use of software tools and test environments in safety-critical verification.
+Document which integration test scenarios can execute in Software-in-the-Loop (SIL) vs. Hardware-in-the-Loop (HIL) environments. ISO 26262 Part 6 §6.8 defines requirements for software integration and integration testing in safety-critical verification.
 
 | Test ID | ASIL Rating | Environment | Hardware Dependencies | Stubbed Components | Adaptation Notes |
 |---------|-------------|-------------|----------------------|--------------------|--------------------|

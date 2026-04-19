@@ -41,3 +41,23 @@ Verify resource usage against safety budgets. ISO 26262-6 §9.4.4 requires testi
 - Heap usage limits required where dynamic allocation is permitted (discouraged for ASIL C–D)
 - ASIL D components: recommend static WCET analysis + measurement confirmation
 - Document measurement conditions (CPU load, interrupt frequency, temperature)
+
+## Back-to-Back Testing (ISO 26262 Part 6 §6.9, Table 11)
+
+Document back-to-back testing strategy for ASIL C and ASIL D components. ISO 26262 Part 6 §6.9 Table 11 recommends back-to-back testing as a verification method, comparing results from two independent implementations or from a model and its implementation.
+
+| Component | ASIL Rating | Reference Implementation | Test Implementation | Comparison Method | Tolerance |
+|-----------|-------------|-------------------------|--------------------|--------------------|-----------|
+| SYS-NNN | ASIL [C/D] | [Model / Simulation / Independent impl.] | [Target code under test] | [Automated comparison / Manual review] | [Acceptable deviation bounds] |
+
+**ASIL-dependent Requirements (per Table 11)**:
+- **ASIL D**: Back-to-back testing highly recommended (++) — compare target implementation against an independent reference (model-based or dissimilar implementation)
+- **ASIL C**: Back-to-back testing recommended (+) — compare against model or simulation where practical
+- **ASIL A–B**: Back-to-back testing optional — may be used as supplementary evidence
+
+**Rules**:
+- Back-to-back test pairs must use independent implementations (model vs. code, or two dissimilar implementations)
+- Define acceptable tolerance bounds for numerical comparisons (floating-point precision, timing jitter)
+- Document the qualification of the reference implementation (model accuracy, version, validation status)
+- Back-to-back discrepancies must be analyzed — each discrepancy is either a test issue, a model error, or a code defect
+- Results complement structural coverage evidence — back-to-back testing does not replace MC/DC or branch coverage requirements

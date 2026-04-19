@@ -1,4 +1,7 @@
-# DO-178C — Hazard Analysis Command Overlay
+# Hazard Analysis — DO-178C Domain Overlay
+
+> This overlay is loaded when `v-model-config.yml` sets `domain: do_178c`.
+> It provides domain-specific safety-critical hazard analysis sections for the base `hazard-analysis` command.
 
 ## Preferred Severity Scale
 

@@ -44,3 +44,21 @@ Verify resource usage against safety budgets. DO-178C §6.3.4 requires verificat
 - Resource budgets must be traceable to timing requirements in the system design
 - DAL A: both static analysis and measurement confirmation required
 - DAL B–C: measurement confirmation sufficient with justified analysis
+
+## Requirements-Based Testing and Table A-8 Verification (DO-178C §6.4, Table A-7/A-8)
+
+In addition to structural coverage, DO-178C requires requirements-based testing. Table A-7 defines software verification objectives, and Table A-8 defines integration process verification objectives. Both apply to system-level testing.
+
+| Objective Category | DAL A | DAL B | DAL C | DAL D |
+|--------------------|-------|-------|-------|-------|
+| Test cases based on requirements (Table A-7) | ✓ | ✓ | ✓ | ✓ |
+| Test cases based on robustness (Table A-7) | ✓ | ✓ | ✓ | — |
+| Test coverage of requirements (Table A-7) | ✓ | ✓ | ✓ | ✓ |
+| Integration test results correct (Table A-8) | ✓ | ✓ | ✓ | ✓ |
+| Integration test coverage of requirements (Table A-8) | ✓ | ✓ | ✓ | — |
+
+**Rules**:
+- Every system test must trace to at least one high-level requirement
+- DAL A–B: both requirements-based and robustness test cases required
+- Coverage shortfalls against Table A-7/A-8 objectives require Problem Reports
+- Test results must be documented as verification evidence (DO-178C §11 data items)

@@ -34,3 +34,25 @@ Flag any components with complexity metrics that exceed safety thresholds. ISO 2
 - ASIL B components: cyclomatic complexity ≤ 25, nesting depth ≤ 6
 - ASIL A components: recommended limits, not mandatory
 - Components exceeding thresholds must document justification or refactoring plan
+
+## Safety Mechanisms Allocation (ISO 26262 Part 6 §6.5)
+
+Document the allocation of safety mechanisms to system components. ISO 26262 Part 6 §6.5 requires that safety mechanisms are defined for each safety-relevant component to detect, prevent, or mitigate faults.
+
+| Component | ASIL Rating | Safety Mechanism | Mechanism Type | Fault Addressed | Diagnostic Coverage |
+|-----------|-------------|------------------|---------------|-----------------|---------------------|
+| SYS-NNN | ASIL [A–D] | [Mechanism name] | Detection / Prevention / Mitigation | [What fault is handled] | [Low / Medium / High per Part 5 Table D.5] |
+
+**Safety Mechanism Types**:
+- **Detection**: Identifies a fault condition at runtime (e.g., watchdog timer, CRC check, voter logic, plausibility check)
+- **Prevention**: Prevents a fault from occurring or propagating (e.g., input range validation, write protection, redundancy)
+- **Mitigation**: Reduces the consequence of a fault (e.g., graceful degradation, safe state transition, limp-home mode)
+
+**Rules**:
+- Every ASIL B–D component must have at least one assigned safety mechanism
+- ASIL D components: high diagnostic coverage required — multiple independent detection mechanisms recommended
+- ASIL C components: medium-to-high diagnostic coverage — detection mechanisms required for single-point faults
+- ASIL B components: basic detection mechanisms required
+- Each safety mechanism must specify the fault reaction time (time from fault detection to safe state)
+- Safety mechanisms become verification targets in system test and integration test
+- Document the independence between the safety mechanism and the component it monitors

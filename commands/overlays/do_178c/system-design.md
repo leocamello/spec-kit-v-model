@@ -32,3 +32,32 @@ Flag components with structural complexity that may impede verification at the a
 - DAL C components: cyclomatic complexity ≤ 30 (statement coverage required)
 - Components exceeding thresholds must document justification or refactoring plan
 - High-complexity components increase structural coverage testing burden
+
+## Partitioning and Derived Design Requirements (DO-178C §5.2.2)
+
+Document how the system design addresses partitioning requirements and identifies derived requirements that arise from design decisions. DO-178C §5.2.2 requires that the software design process captures partitioning boundaries and any requirements not directly traceable to system requirements.
+
+| Component | DAL | Partition Boundary | Protection Mechanism | Derived Requirements |
+|-----------|-----|--------------------|---------------------|---------------------|
+| SYS-NNN | DAL [A–E] | [Partition boundary description] | [ARINC 653 / MMU / Temporal isolation] | [Any new requirements arising from design] |
+
+**Rules**:
+- Every partition boundary must be documented with its protection mechanism
+- Derived requirements from design decisions must be flagged `[DERIVED]` and communicated to the system safety assessment process
+- DAL A–B: robust partitioning (ARINC 653 or equivalent) required for mixed-DAL components
+- DAL C: partitioning analysis required; physical isolation recommended but not mandatory
+
+## Data and Control Coupling Analysis (DO-178C §5.2.2)
+
+Analyze data coupling (shared data between components) and control coupling (execution dependencies between components). DO-178C §5.2.2 requires that coupling between software components is documented and verified.
+
+| Component Pair | DAL | Coupling Type | Shared Resource | Direction | Verification Method |
+|----------------|-----|---------------|-----------------|-----------|---------------------|
+| SYS-NNN ↔ SYS-NNN | DAL [A–E] | Data / Control | [What is shared] | [Uni / Bi] | [Analysis, test, review] |
+
+**Rules**:
+- DAL A: all data and control coupling must be verified through analysis and test
+- DAL B: coupling analysis required; critical couplings must be tested
+- DAL C: coupling documented; verification proportional to safety impact
+- Unintended coupling (e.g., global variables, shared memory without partition protection) must be identified and eliminated or justified
+- Coupling analysis feeds into integration test planning (§5.4)

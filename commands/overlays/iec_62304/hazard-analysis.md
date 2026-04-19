@@ -1,4 +1,7 @@
-# IEC 62304 — Hazard Analysis Command Overlay
+# Hazard Analysis — IEC 62304 Domain Overlay
+
+> This overlay is loaded when `v-model-config.yml` sets `domain: iec_62304`.
+> It provides domain-specific safety-critical hazard analysis sections for the base `hazard-analysis` command.
 
 ## Preferred Severity Scale
 

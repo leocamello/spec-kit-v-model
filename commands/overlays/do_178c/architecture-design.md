@@ -60,3 +60,42 @@ Document timing budgets, execution order, and scheduling constraints. DO-178C §
 - Frame overrun detection mandatory for all partitioned architectures
 - Execution order dependencies must align with the data flow and process views
 - Document worst-case interrupt latency for interrupt-driven modules
+
+## Architecture Verification Objectives (DO-178C Table A-5)
+
+Verify that the architecture design satisfies the applicable objectives from DO-178C Table A-5 based on the DAL assignment. Table A-5 defines verification objectives for the outputs of the software design process.
+
+| Objective | DAL A | DAL B | DAL C | DAL D |
+|-----------|-------|-------|-------|-------|
+| Low-level requirements comply with high-level requirements | ✓ | ✓ | ✓ | ✓ |
+| Low-level requirements are accurate and consistent | ✓ | ✓ | ✓ | ✓ |
+| Low-level requirements are compatible with target computer | ✓ | ✓ | ✓ | — |
+| Low-level requirements are verifiable | ✓ | ✓ | ✓ | ✓ |
+| Low-level requirements conform to standards | ✓ | ✓ | ✓ | — |
+| Low-level requirements are traceable to high-level requirements | ✓ | ✓ | ✓ | ✓ |
+| Algorithms are accurate | ✓ | ✓ | — | — |
+| Software architecture is compatible with high-level requirements | ✓ | ✓ | ✓ | ✓ |
+| Software architecture is consistent | ✓ | ✓ | ✓ | — |
+| Software architecture is compatible with target computer | ✓ | ✓ | ✓ | — |
+| Software architecture is verifiable | ✓ | ✓ | ✓ | — |
+| Software partitioning integrity is confirmed | ✓ | ✓ | ✓ | — |
+
+**Rules**:
+- DAL A–B: all Table A-5 objectives must be satisfied with independence (reviewer ≠ developer)
+- DAL C: most objectives apply; independence recommended but not mandatory
+- DAL D: reduced set of objectives applies
+- Each module in the architecture must be traceable to verification evidence demonstrating these objectives
+
+## Data and Control Coupling at Architecture Level (DO-178C §5.2.2)
+
+Document the data and control coupling between architecture modules. DO-178C §5.2.2 requires coupling analysis to verify that the architecture correctly implements the intended data flow and control flow.
+
+| Module Pair | DAL | Coupling Type | Shared Resource | Protection | Verified |
+|-------------|-----|---------------|-----------------|------------|----------|
+| ARCH-NNN ↔ ARCH-NNN | DAL [A–E] | Data / Control | [Shared variable, message, signal] | [Partition / Validated port / None] | ✅ / ❌ |
+
+**Rules**:
+- DAL A–B: all coupling must be through defined interfaces; no uncontrolled shared data
+- DAL C: coupling through defined interfaces recommended; deviations documented
+- Coupling analysis must be consistent with the partitioning analysis (§5.2.2) and FFI demonstration
+- Unintended coupling paths must be identified as potential common-mode failure sources
