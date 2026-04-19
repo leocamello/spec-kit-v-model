@@ -94,7 +94,9 @@ if ($hasRequirements -or (-not $Partial)) {
     foreach ($sys in $sysIds) { $validIds[$sys] = $true }
     if ($hasRequirements) {
         $requirements = Get-Content -Path $requirementsPath -Raw
-        $reqIds = @([regex]::Matches($requirements, 'REQ-(?:[A-Z]+-)?[0-9]{3}') | ForEach-Object { $_.Value } | Sort-Object -Unique)
+        # Exclude deprecated requirements (lines where [DEPRECATED starts a table cell)
+        $activeReqContent = ($requirements -split "`n" | Where-Object { $_ -notmatch '\| \[DEPRECATED' }) -join "`n"
+        $reqIds = @([regex]::Matches($activeReqContent, 'REQ-(?:[A-Z]+-)?[0-9]{3}') | ForEach-Object { $_.Value } | Sort-Object -Unique)
         foreach ($req in $reqIds) { $validIds[$req] = $true }
     }
 

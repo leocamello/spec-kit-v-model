@@ -65,8 +65,10 @@ fi
 
 # ---- Pass 1: Extract IDs ----
 
-# REQ IDs from requirements.md
-req_ids=($(grep -oE 'REQ-([A-Z]+-)?[0-9]{3}' "$REQUIREMENTS" | sort -u))
+# REQ IDs from requirements.md (exclude deprecated requirements)
+# Filter: skip lines where [DEPRECATED starts a table cell (| [DEPRECATED), but
+# keep lines that mention DEPRECATED inside backtick-quoted examples.
+req_ids=($(grep -v '| \[DEPRECATED' "$REQUIREMENTS" | grep -oE 'REQ-([A-Z]+-)?[0-9]{3}' | sort -u))
 
 # SYS IDs from system-design.md
 sys_ids=($(grep -oE 'SYS-[0-9]{3}' "$SYSTEM_DESIGN" | sort -u))

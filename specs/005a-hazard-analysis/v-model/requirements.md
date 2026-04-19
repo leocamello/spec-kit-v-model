@@ -7,7 +7,7 @@
 
 ## Overview
 
-This document formalizes the requirements for adding a Hazard Analysis (FMEA) command to the V-Model Extension Pack. The command generates a structured hazard register with traceable `HAZ-NNN` IDs from existing `requirements.md` and `system-design.md` artifacts, following ISO 14971, ISO 26262, and ARP 4761 risk management standards. Hazards are analyzed across operational states defined in the system design, producing different severity classifications for the same failure mode depending on system context. A deterministic validation script (`validate-hazard-coverage.sh` / `.ps1`) enforces bidirectional coverage (SYS→HAZ forward, HAZ→REQ/SYS backward) and operational state consistency. The `trace` command is extended with Matrix H (Hazard Traceability) proving the chain HAZ → Mitigation → Verification. Progressive deepening appends architecture-level failure modes when `architecture-design.md` exists, preserving all existing entries. All requirements are atomized from the feature specification using the strict translator constraint.
+This document formalizes the requirements for adding a Hazard Analysis (FMEA) command to the V-Model Extension Pack. The command generates a structured hazard register with traceable `HAZ-NNN` IDs from existing `requirements.md` and `system-design.md` artifacts using systematic failure mode analysis. Hazards are analyzed across operational states defined in the system design, producing different severity classifications for the same failure mode depending on system context. Domain-specific severity scales (e.g., ASIL, DAL, Safety Class) are delivered via overlay files loaded when `v-model-config.yml` specifies a `domain` value; the base command uses a general-purpose severity scale. A deterministic validation script (`validate-hazard-coverage.sh` / `.ps1`) enforces bidirectional coverage (SYS→HAZ forward, HAZ→REQ/SYS backward) and operational state consistency. The `trace` command is extended with Matrix H (Hazard Traceability) proving the chain HAZ → Mitigation → Verification. Progressive deepening appends architecture-level failure modes when `architecture-design.md` exists, preserving all existing entries. All requirements are atomized from the feature specification using the strict translator constraint.
 
 ## Requirements
 
@@ -23,7 +23,7 @@ This document formalizes the requirements for adding a Hazard Analysis (FMEA) co
 | REQ-006 | Every hazard mitigation field SHALL reference at least one `REQ-NNN` or `SYS-NNN` identifier, creating a traceable link from risk to control measure. | P1 | US1 Scenario 3, FR-006: ISO 14971 §7.1 requires that every identified risk has a documented risk control measure traceable to implementation. | Test |
 | REQ-007 | When `architecture-design.md` exists in the project, the command SHALL also analyze architecture-level failure modes including interface mismatches between `ARCH-NNN` modules, protocol failures, and data format incompatibilities. | P2 | US4, FR-007: Architecture-level failure modes (e.g., API contract mismatches between modules) are a distinct category of hazards not visible at the SYS level. | Test |
 | REQ-008 | When a previous `hazard-analysis.md` exists, the command SHALL preserve all existing `HAZ-NNN` entries unmodified and append new entries with sequential numbering continuing from the last existing `HAZ-NNN` ID. | P2 | US4, FR-008, SC-007: Progressive deepening ensures the hazard register grows richer as design detail increases, without losing earlier analysis or breaking existing traceability links. | Test |
-| REQ-009 | When no safety-critical domain is configured in `v-model-config.yml`, the command SHALL produce a general-purpose FMEA without domain-specific severity scales (no ASIL rating, no SIL level, no DO-178C failure condition classification). Operational state analysis SHALL still apply. | P1 | FR-009, Edge case 4: The hazard-analysis command must be usable for non-regulated projects that still benefit from risk analysis. | Test |
+| REQ-009 | When no `domain` is set in `v-model-config.yml` (or no config file exists), the command SHALL produce a general-purpose FMEA using the base severity scale without loading any domain overlay. Operational state analysis SHALL still apply. | P1 | FR-009, Edge case 4: The hazard-analysis command must be usable for non-regulated projects that still benefit from risk analysis. | Test |
 | REQ-010 | The command SHALL follow the strict translator constraint: when deriving hazards from `requirements.md` and `system-design.md`, the AI SHALL NOT invent system capabilities, components, or operational states not present in the source artifacts. | P1 | FR-010, Constitution P5: Prevents AI hallucination of system features not defined in the specification. | Test |
 | REQ-011 | The command SHALL fail with a clear error message ("hazard-analysis requires both requirements.md and system-design.md. Run /speckit.v-model.system-design first.") when `system-design.md` does not exist in the V-Model directory. | P1 | Edge case 3: Missing prerequisites must produce actionable error messages, not malformed output. | Test |
 | REQ-012 | When `system-design.md` defines no explicit operational states, the command SHALL use a single implicit state "NORMAL" and emit a validation warning ("No operational states defined in system-design.md — using implicit NORMAL state"). | P1 | Edge case 1: The command must not fail when operational states are undefined; it degrades gracefully. | Test |
@@ -52,6 +52,9 @@ This document formalizes the requirements for adding a Hazard Analysis (FMEA) co
 | REQ-035 | The `extension.yml` SHALL register the new `speckit.v-model.hazard-analysis` command with its file path and description. | P1 | FR-029: All commands must be registered in the extension manifest for spec-kit discovery. | Inspection |
 | REQ-036 | The `extension.yml` `defaults.id_prefixes` section SHALL include `hazards: "HAZ"`. | P1 | FR-030: The new ID prefix must be declared in the extension configuration. | Inspection |
 | REQ-037 | The `extension.yml` SHALL update the `trace` command description to mention Matrix H alongside existing matrices A–D. | P1 | FR-031: The trace command documentation must reflect its expanded capability. | Inspection |
+| REQ-038 | When `v-model-config.yml` specifies a `domain` value (e.g., `iso_26262`, `do_178c`, `iec_62304`), the command SHALL load the corresponding domain overlay from `commands/overlays/{domain}/hazard-analysis.md` and use the overlay's severity scale in preference to the base general-purpose scale. | P1 | FR-032, Assumption 5: Domain-specific severity scales are delivered via overlay files, enabling the base command to remain domain-agnostic while supporting regulated industries. | Test |
+| REQ-039 | The command description and goal SHALL use generic FMEA framing (e.g., "Failure Mode and Effects Analysis") without referencing specific safety standards (ISO 14971, ISO 26262, DO-178C) in command text. Domain-specific framing SHALL be provided only by loaded overlays. | P1 | FR-033: Generic framing ensures the command is usable across all industries; domain specificity is an overlay concern. | Inspection |
+| REQ-040 | An IEC 62304 domain overlay (`commands/overlays/iec_62304/hazard-analysis.md`) SHALL provide a Safety Class A/B/C severity scale with ISO 14971 integration guidance, resolving the previously missing severity table for that domain. | P1 | FR-034: IEC 62304 was the only supported domain without a severity table; the overlay completes domain parity. | Inspection |
 
 ### Non-Functional Requirements
 
@@ -73,7 +76,7 @@ This document formalizes the requirements for adding a Hazard Analysis (FMEA) co
 
 | ID | Description | Priority | Rationale | Verification Method |
 |----|-------------|----------|-----------|---------------------|
-| REQ-CN-001 | Domain-specific severity scales (ASIL for ISO 26262, SIL for IEC 61508, failure condition for DO-178C) SHALL be activated only by the `safety_critical` configuration in `v-model-config.yml`, not by the hazard-analysis command itself. | P1 | Assumption 5: Domain configuration is a project-level setting, not a per-command flag. | Inspection |
+| REQ-CN-001 | [DEPRECATED — Superseded by REQ-038] Domain-specific severity scales (ASIL for ISO 26262, SIL for IEC 61508, failure condition for DO-178C) SHALL be activated only by the `safety_critical` configuration in `v-model-config.yml`, not by the hazard-analysis command itself. | P1 | Assumption 5: Domain configuration is a project-level setting, not a per-command flag. | Inspection |
 | REQ-CN-002 | Matrix H SHALL be a new, separate traceability matrix using the letter "H" (mnemonic for Hazard), not merged into existing matrices A–D and not using the next alphabetical letter "E". | P1 | Design decision: Matrix H was chosen for instant recognizability over alphabetical sequence. | Inspection |
 | REQ-CN-003 | The extension SHALL maintain backward compatibility: projects without `hazard-analysis.md` SHALL continue to produce the same v0.4.0 output (Matrices A–D only, no Matrix H, no warning or error). | P1 | Assumption 7: Existing users must not be affected by the new hazard-analysis capability. | Test |
 | REQ-CN-004 | The `validate-hazard-coverage.sh` and `Validate-HazardCoverage.ps1` scripts SHALL produce identical JSON output and identical exit codes when given the same inputs. | P3 | US5, FR-020: Cross-platform parity is a constitutional requirement (Constitution P7). | Test |
@@ -84,7 +87,7 @@ This document formalizes the requirements for adding a Hazard Analysis (FMEA) co
 - Operational states are expected to be defined in `system-design.md`. If not present, the implicit "NORMAL" state is used with a validation warning.
 - The hazard analysis is AI-generated but script-validated — the AI produces the FMEA content, and deterministic scripts enforce coverage and consistency.
 - Progressive deepening (architecture-level) is additive only — it never modifies or removes existing `HAZ-NNN` entries.
-- Domain-specific severity scales are activated by project-level configuration, not by the command.
+- Domain-specific severity scales (ASIL, SIL, DO-178C levels) are delivered via domain overlay files loaded from `commands/overlays/{domain}/hazard-analysis.md` when `v-model-config.yml` specifies a `domain` value. The base command uses preference-based indirection: "if overlay loaded, use overlay scale; otherwise use general-purpose scale."
 - Matrix H is a new, separate matrix (not merged into A–D) using the mnemonic "H" for Hazard.
 - The `trace` command already supports progressive matrix building (only including matrices for which artifacts exist) — Matrix H follows this same pattern.
 - FMEA generation does not require the batching mechanism used for acceptance scenarios, because hazard entries are shorter and more uniform.
@@ -96,7 +99,7 @@ This document formalizes the requirements for adding a Hazard Analysis (FMEA) co
 - **`architecture-design.md`** *(optional)*: When present, enables architecture-level progressive deepening with `ARCH-NNN` failure modes
 - **`acceptance-plan.md`** *(optional)*: When present, enables Matrix H to show verification chain (HAZ → REQ → ATP)
 - **`system-test.md`** *(optional)*: When present, enables Matrix H to show verification chain (HAZ → SYS → STP)
-- **`v-model-config.yml`** *(optional)*: When present with `safety_critical` settings, activates domain-specific severity scales
+- **`v-model-config.yml`** *(optional)*: When present with a `domain` value, activates domain-specific severity scales via overlay loading from `commands/overlays/{domain}/hazard-analysis.md`
 
 ## Glossary
 
@@ -114,6 +117,6 @@ This document formalizes the requirements for adding a Hazard Analysis (FMEA) co
 
 ---
 
-**Total Requirements**: 47
-**By Priority**: P1: 39 | P2: 5 | P3: 3
-**By Verification Method**: Test: 32 | Inspection: 14 | Analysis: 1 | Demonstration: 0
+**Total Requirements**: 50 (1 deprecated)
+**By Priority**: P1: 42 | P2: 5 | P3: 3
+**By Verification Method**: Test: 33 | Inspection: 16 | Analysis: 1 | Demonstration: 0

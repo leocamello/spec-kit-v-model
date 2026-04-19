@@ -182,6 +182,12 @@ All scripts delivered in this feature (`validate-hazard-coverage.sh`, build-matr
 - **FR-030**: `extension.yml` defaults SHALL include `hazards: "HAZ"` in `id_prefixes`
 - **FR-031**: `extension.yml` SHALL update the `trace` command description to mention Matrix H
 
+### Domain Overlay Support
+
+- **FR-032**: The command SHALL load a domain overlay from `commands/overlays/{domain}/hazard-analysis.md` when `v-model-config.yml` specifies a `domain` value, and use the overlay's severity scale in preference to the base general-purpose scale
+- **FR-033**: The command description and goal SHALL use generic FMEA framing without referencing specific safety standards (ISO 14971, ISO 26262) — domain-specific framing is provided only by loaded overlays
+- **FR-034**: An IEC 62304 domain overlay SHALL provide a Safety Class A/B/C severity scale with ISO 14971 integration guidance, resolving the previously missing severity table for that domain
+
 ### Key Entities
 
 | Entity | ID Pattern | Source |
@@ -210,7 +216,7 @@ All scripts delivered in this feature (`validate-hazard-coverage.sh`, build-matr
 2. Operational states are defined in the System Design document. If not explicitly defined, a single implicit "NORMAL" state is used.
 3. The hazard analysis is AI-generated but script-validated — the AI produces the FMEA content, and deterministic scripts enforce coverage and consistency.
 4. Progressive deepening (architecture-level) is additive only — it never modifies or removes existing entries.
-5. Domain-specific severity scales (ASIL, SIL, DO-178C levels) are activated by the safety-critical configuration in `v-model-config.yml`, not by the command itself.
+5. Domain-specific severity scales (ASIL, SIL, DO-178C levels) are delivered via domain overlay files loaded from `commands/overlays/{domain}/hazard-analysis.md` when `v-model-config.yml` specifies a domain. The base command uses preference-based indirection: "if overlay loaded, use overlay scale; otherwise use general-purpose scale."
 6. Matrix H is a new, separate matrix (not merged into existing matrices A–D) using the mnemonic "H" for Hazard.
 7. The `trace` command already supports progressive matrix building (only including matrices for which artifacts exist) — Matrix H follows this same pattern.
 8. FMEA generation does not require batching (unlike acceptance scenarios with 5-scenario batches) because hazard entries are shorter and more uniform.

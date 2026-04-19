@@ -303,9 +303,8 @@ TEMPLATE hazard_analysis_template:
 
     CONDITIONAL SECTION "Domain-Specific Severity Scales":
         IF domain configured:
-            ASIL scale for iso_26262
-            SIL scale for iec_61508
-            DAL/failure condition for do_178c
+            Load severity scale from domain overlay
+            (e.g., ASIL for iso_26262, Safety Class for iec_62304, DAL for do_178c)
 ```
 
 #### State Machine View
@@ -939,7 +938,7 @@ N/A — Stateless
 // 1. Command registration
 commands:
     speckit.v-model.hazard-analysis:
-        description: "Generate ISO 14971/ISO 26262-compliant hazard analysis (FMEA) with operational states and traceable mitigations"
+        description: "Generate FMEA-based hazard analysis with operational states, traceable mitigations, and domain overlay support"
         file: "commands/hazard-analysis.md"
 
 // 2. ID prefix registration

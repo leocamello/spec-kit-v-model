@@ -131,9 +131,9 @@ None — module is self-contained
   * **Assert**: Returns 1 entry: `HAZ-001` with failure_mode="No identified failure mode", severity="Negligible", flagged for human review
 
 * **Unit Scenario: UTS-003-A3**
-  * **Arrange**: Set `domain = "iso_26262"`, single component with single failure mode
+  * **Arrange**: Set `domain = "iso_26262"`, load overlay from `commands/overlays/iso_26262/hazard-analysis.md`, single component with single failure mode
   * **Act**: Call `classify_severity(failure_mode, state, "iso_26262")`
-  * **Assert**: Returns ASIL rating (e.g., "ASIL B") instead of general-purpose label
+  * **Assert**: Returns severity from the domain overlay scale (e.g., ASIL rating) instead of the base general-purpose label
 
 #### Test Case: UTP-003-B (HAZ ID Sequential Numbering)
 

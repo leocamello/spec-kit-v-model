@@ -47,8 +47,11 @@ if (-not (Test-Path $Acceptance)) {
 $reqContent = Get-Content -Raw $Requirements
 $accContent = Get-Content -Raw $Acceptance
 
-# REQ IDs: REQ-NNN, REQ-NF-NNN, REQ-IF-NNN, REQ-CN-NNN
-$reqIds = [regex]::Matches($reqContent, 'REQ-([A-Z]+-)?[0-9]{3}') |
+# REQ IDs: REQ-NNN, REQ-NF-NNN, REQ-IF-NNN, REQ-CN-NNN (exclude deprecated)
+# Filter: skip lines where [DEPRECATED starts a table cell (| [DEPRECATED), but
+# keep lines that mention DEPRECATED inside backtick-quoted examples.
+$activeReqContent = ($reqContent -split "`n" | Where-Object { $_ -notmatch '\| \[DEPRECATED' }) -join "`n"
+$reqIds = [regex]::Matches($activeReqContent, 'REQ-([A-Z]+-)?[0-9]{3}') |
     ForEach-Object { $_.Value } | Sort-Object -Unique
 
 # ATP IDs: ATP-{CAT?-}NNN-X (with optional category prefix)

@@ -4,7 +4,7 @@
 **Created**: [DATE]
 **Status**: Draft
 **Source**: `specs/[###-feature-name]/v-model/system-design.md`
-**Standard**: ISO 14971 (Medical) / ISO 26262 (Automotive) / General-Purpose FMEA
+**Standard**: General-Purpose FMEA (domain overlay may apply)
 
 ## Overview
 
@@ -30,6 +30,11 @@ enabling the traceability chain: Hazard → Mitigation → Requirement → Test 
 
 ### Severity Scale
 
+<!--
+  Use the general-purpose severity scale below as the default.
+  If a domain overlay is loaded, use the overlay's severity scale instead.
+-->
+
 | Level | Definition |
 |-------|-----------|
 | Catastrophic | Death or permanent injury; complete system destruction |
@@ -37,32 +42,6 @@ enabling the traceability chain: Hazard → Mitigation → Requirement → Test 
 | Serious | Moderate injury or significant degradation; medical attention needed |
 | Minor | Slight injury or minor degradation; first aid sufficient |
 | Negligible | No injury; cosmetic or inconvenience-level impact |
-
-<!-- DOMAIN-SPECIFIC SCALES: Replace the above with domain scale when configured -->
-
-<!--
-### ISO 26262 ASIL Classification
-
-| Severity | ASIL | Definition |
-|----------|------|-----------|
-| S3 | ASIL D | Life-threatening (survival uncertain) |
-| S3 | ASIL C | Life-threatening (survival probable) |
-| S2 | ASIL B | Severe injuries |
-| S1 | ASIL A | Light injuries |
-| S0 | QM | No injuries |
--->
-
-<!--
-### DO-178C Failure Conditions
-
-| Failure Condition | DAL | Definition |
-|-------------------|-----|-----------|
-| Catastrophic | A | Prevents continued safe flight and landing |
-| Hazardous | B | Large reduction in safety margins |
-| Major | C | Significant reduction in safety margins |
-| Minor | D | Slight reduction in safety margins |
-| No Effect | E | No effect on operational capability |
--->
 
 ### Likelihood Scale
 

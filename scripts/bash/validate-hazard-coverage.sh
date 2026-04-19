@@ -111,7 +111,8 @@ if [[ -f "$REQUIREMENTS" ]] || ! $PARTIAL_MODE; then
         valid_ids["$sys"]=1
     done
     if [[ -f "$REQUIREMENTS" ]]; then
-        req_ids=($(grep -oE 'REQ-([A-Z]+-)?[0-9]{3}' "$REQUIREMENTS" | sort -u))
+        # Exclude deprecated requirements (lines where [DEPRECATED starts a table cell)
+        req_ids=($(grep -v '| \[DEPRECATED' "$REQUIREMENTS" | grep -oE 'REQ-([A-Z]+-)?[0-9]{3}' | sort -u))
         for req in "${req_ids[@]}"; do
             valid_ids["$req"]=1
         done

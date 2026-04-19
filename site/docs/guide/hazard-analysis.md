@@ -1,6 +1,6 @@
 ---
 title: Hazard Analysis (FMEA)
-description: Generate ISO 14971/26262-compliant hazard analysis with operational state awareness, severity matrices, and mitigation traceability across the V-Model.
+description: Generate FMEA-based hazard analysis with operational state awareness, severity matrices, and mitigation traceability across the V-Model. Domain-specific severity scales (ASIL, DAL, Safety Class) available via overlays.
 ---
 
 # Hazard Analysis (FMEA)
@@ -11,17 +11,19 @@ Hazard analysis is a **cross-cutting concern** — it operates alongside the V-M
 
 ## Standards Context
 
-### ISO 14971 — Medical Risk Management
+The hazard analysis command uses generic FMEA framing by default. When a `domain` is configured in `v-model-config.yml`, domain-specific severity scales and methodology are loaded from overlay files.
 
-Requires systematic identification of hazards, estimation of associated risks, evaluation of risk acceptability, and control of risks.
+### Domain Overlays Available
 
-### ISO 26262 Part 9 — Automotive HARA
-
-Requires Hazard Analysis and Risk Assessment (HARA) at the concept and system levels.
+| Domain | Standard | Overlay Provides |
+|--------|----------|-----------------|
+| `iso_26262` | ISO 26262 Part 9 (Automotive HARA) | ASIL A–D severity scale, HARA methodology |
+| `do_178c` | ARP 4761 (Aerospace FHA) | DAL A–E failure conditions |
+| `iec_62304` | IEC 62304 + ISO 14971 (Medical) | Safety Class A/B/C, risk management integration |
 
 !!! warning "Operational State Awareness"
 
-    Both standards require hazards to be contextualized by **operational state** — the same failure mode may have dramatically different severity depending on the system's current mode of operation (IDLE, ACTIVE, EMERGENCY, etc.).
+    All domain standards require hazards to be contextualized by **operational state** — the same failure mode may have dramatically different severity depending on the system's current mode of operation (IDLE, ACTIVE, EMERGENCY, etc.).
 
 ---
 
@@ -29,7 +31,7 @@ Requires Hazard Analysis and Risk Assessment (HARA) at the concept and system le
 
 ### `/speckit.v-model.hazard-analysis`
 
-Generates an ISO 14971/ISO 26262-compliant Hazard Analysis (FMEA register) where every system component is assessed for failure modes across all operational states.
+Generates a Hazard Analysis (FMEA register) where every system component is assessed for failure modes across all operational states, with traceable HAZ-NNN IDs and progressive deepening.
 
 ```bash
 /speckit.v-model.hazard-analysis
