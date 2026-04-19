@@ -50,18 +50,29 @@ For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\''m Groot
 
 3. **Load spec.md** (if `AVAILABLE_DOCS` contains `"spec.md"`): Read for supplementary domain context (user stories, acceptance scenarios, edge cases). This provides architectural insight but does NOT override requirements.
 
-4. **Load v-model-config.yml** (if it exists at the repository root):
-   - If `domain` is set to `iso_26262`, `do_178c`, or `iec_62304`: Enable safety-critical sections (FFI, Restricted Complexity)
-   - If absent or `domain` is empty: Skip safety-critical sections entirely
-
-5. **Load existing system design** (if `AVAILABLE_DOCS` contains `"system-design.md"`):
+4. **Load existing system design** (if `AVAILABLE_DOCS` contains `"system-design.md"`):
    - Read the existing `system-design.md` to preserve existing SYS IDs and content
    - Identify the highest existing SYS number to continue the sequence
    - New components append after existing ones — **never renumber**
 
+### 2a. Domain Configuration
+
+Load `v-model-config.yml` (if it exists at the repository root).
+
+**If `domain` is set** (e.g., `iso_26262`, `do_178c`, `iec_62304`):
+1. Read the command overlay: `commands/overlays/{domain}/system-design.md`
+   - If it exists: note the safety-critical design sections (e.g., FFI analysis, restricted complexity assessment, safety integrity allocation)
+   - If it does not exist: this domain does not extend this command — proceed with base only
+2. Where the base command has a domain-variant section (marked with "If a domain overlay is loaded, prefer its content"), use the overlay's version instead of the base default
+
+**If `domain` is empty or absent:**
+- Proceed with the base command only
+- Use generic best-practice terminology throughout
+- Do NOT include any safety-critical or domain-specific regulatory references
+
 ### 3. Lifecycle Rules (When Evolving Existing Artifacts)
 
-When an existing `system-design.md` is loaded (step 2.5), apply these rules
+When an existing `system-design.md` is loaded (step 2.4), apply these rules
 before generating new content:
 
 1. **Never delete an ID** — mark as `[DEPRECATED]`
@@ -160,22 +171,11 @@ Document data structures and protection:
 - This view directly feeds **Boundary Value Analysis** in the system test phase
 - Include data lifecycle (creation, update, deletion, retention)
 
-### 5.5 Safety-Critical Sections (Conditional)
+### 5.5 Safety-Critical Design Sections (Conditional)
 
-**Only generate these sections if `v-model-config.yml` has `domain` set.**
+**If a domain overlay is loaded (Step 2a), include the overlay's safety-critical design sections here.** The overlay provides domain-specific content such as freedom from interference analysis, restricted complexity assessment, or safety integrity allocation — with the appropriate standard references and table structures for the configured domain.
 
-#### Freedom from Interference (ISO 26262-6 §7.4.8)
-
-| Component | ASIL Rating | Isolation Mechanism | Verification Method |
-
-- Document how components of different ASIL ratings are isolated
-- Cover memory partitioning, time-slicing, and communication protection
-
-#### Restricted Complexity (ISO 26262-6 §7.4.9)
-
-| Component | Complexity Metric | Value | Threshold | Status |
-
-- Flag any components with cyclomatic complexity, nesting depth, or coupling metrics that exceed safety thresholds
+If no domain overlay is loaded, skip this section entirely.
 
 ### 6. Derived Requirement Detection
 
@@ -201,7 +201,7 @@ Write the complete system design document to `{VMODEL_DIR}/system-design.md` usi
 5. **Dependency View**: Inter-component relationships and failure propagation
 6. **Interface View**: External and internal interfaces with contracts
 7. **Data Design View**: Data structures, storage, and protection
-8. **Safety-Critical Sections**: FFI and Restricted Complexity (if domain configured)
+8. **Safety-Critical Sections**: Domain-specific design sections (if overlay loaded in Step 2a)
 9. **Coverage Summary**: Component count, forward coverage percentage
 10. **Derived Requirements**: List of flagged items requiring human resolution
 11. **Glossary**: Domain-specific terms
@@ -214,7 +214,7 @@ Display a summary:
 - Dependency relationships identified
 - External vs internal interface count
 - Derived requirements flagged (count and brief descriptions)
-- Safety-critical sections included (yes/no, which domain)
+- Safety-critical sections included (yes/no, overlay loaded yes/no)
 - Path to the generated file
 - Next step: Recommend running `/speckit.v-model.system-test` to generate the paired test plan
 

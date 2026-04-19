@@ -136,16 +136,19 @@ Each test case MUST identify its technique by name and anchor to a specific arch
 | ITP-001-A | [Dependency] | [Mock type: stub/fake/spy] | [Why this approach] |
 | ITP-001-B | [Dependency] | [Mock type] | [Why this approach] |
 
-<!-- SAFETY-CRITICAL SECTION: Only include when v-model-config.yml domain is set -->
+<!-- SAFETY-CRITICAL SECTION: Only include when a domain overlay is loaded (Step 2a) -->
 
 <!--
-## SIL/HIL Compatibility (ISO 26262 + DO-178C)
+> **Note:** If a domain overlay is loaded, use the overlay's version of this section.
+> The tables below show the generic structure; domain overlays provide domain-specific column headers and content.
+
+## SIL/HIL Compatibility
 
 | Test Case | SIL/HIL Target | Environment | Adaptation Notes |
 |-----------|---------------|-------------|-----------------|
 | ITP-NNN-X | SIL / HIL | [Environment name] | [How to adapt for target] |
 
-## Resource Contention (ISO 26262 + DO-178C)
+## Resource Contention
 
 | Test Case | Shared Resource | Contention Scenario | Expected Behavior |
 |-----------|----------------|--------------------|--------------------|

@@ -117,16 +117,19 @@
 |--------|-----------|---------|-------------------|-----------------------|-----------|
 | [Name] | SYS-001 | [Type] | [Method] | [Method] | [Policy] |
 
-<!-- SAFETY-CRITICAL SECTION: Only include when v-model-config.yml domain is set -->
+<!-- SAFETY-CRITICAL SECTION: Only include when a domain overlay is loaded (Step 2a) -->
 
 <!--
-## Freedom from Interference (ISO 26262-6 §7.4.8)
+> **Note:** If a domain overlay is loaded, use the overlay's version of this section.
+> The tables below show the generic structure; domain overlays provide domain-specific column headers and content.
 
-| Component | ASIL Rating | Isolation Mechanism | Verification Method |
-|-----------|-------------|--------------------|--------------------|
-| SYS-NNN | ASIL [A-D] | [Memory partition / Time-slice / etc.] | [How verified] |
+## Freedom from Interference
 
-## Restricted Complexity (ISO 26262-6 §7.4.9)
+| Component | Safety Integrity Level | Isolation Mechanism | Verification Method |
+|-----------|----------------------|--------------------|--------------------|
+| SYS-NNN | [Level] | [Memory partition / Time-slice / etc.] | [How verified] |
+
+## Restricted Complexity
 
 | Component | Complexity Metric | Value | Threshold | Status |
 |-----------|------------------|-------|-----------|--------|
