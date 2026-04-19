@@ -794,9 +794,16 @@ DATE=$(date -u +"%Y-%m-%d")
         HAS_UNIT_TEST=false
         if [[ -f "$UNIT_TEST" ]]; then
             HAS_UNIT_TEST=true
-            utp_regex='Test Case: (UTP-[0-9]{3}-[A-Z])[[:space:]]*\(([^)]+)\)'
+            # Support two UTP heading formats:
+            #   #### UTP-001-A — Description          (001 format)
+            #   #### Test Case: UTP-001-A (Description)  (006a/006b format)
+            utp_regex_dash='^#{1,4}[[:space:]]+(UTP-[0-9]{3}-[A-Z])[[:space:]]*[—–-][[:space:]]*(.+)'
+            utp_regex_tc='^#{1,4}[[:space:]]+Test Case:[[:space:]]*(UTP-[0-9]{3}-[A-Z])[[:space:]]*\(([^)]+)\)'
             while IFS= read -r line; do
-                if [[ "$line" =~ $utp_regex ]]; then
+                if [[ "$line" =~ $utp_regex_dash ]]; then
+                    utp_id="${BASH_REMATCH[1]}"
+                    utp_descriptions["$utp_id"]="${BASH_REMATCH[2]}"
+                elif [[ "$line" =~ $utp_regex_tc ]]; then
                     utp_id="${BASH_REMATCH[1]}"
                     utp_descriptions["$utp_id"]="${BASH_REMATCH[2]}"
                 fi
@@ -804,7 +811,7 @@ DATE=$(date -u +"%Y-%m-%d")
 
             current_utp=""
             while IFS= read -r line; do
-                if [[ "$line" =~ Test\ Case:\ (UTP-[0-9]{3}-[A-Z]) ]]; then
+                if [[ "$line" =~ ^#{1,4}[[:space:]]+(UTP-[0-9]{3}-[A-Z]) || "$line" =~ ^#{1,4}[[:space:]]+Test\ Case:[[:space:]]*(UTP-[0-9]{3}-[A-Z]) ]]; then
                     current_utp="${BASH_REMATCH[1]}"
                 elif [[ -n "$current_utp" && "$line" =~ ^\*\*Technique\*\*:[[:space:]]*(.+) ]]; then
                     utp_techniques["$current_utp"]=$(echo "${BASH_REMATCH[1]}" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')

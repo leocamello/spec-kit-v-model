@@ -41,7 +41,25 @@ The script returns JSON with these keys:
 
 For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\''m Groot' (or double-quote if possible: "I'm Groot").
 
-### 2. Load Context
+### 2. Domain Configuration
+
+Load `v-model-config.yml` (if it exists at the repository root).
+
+**If `domain` is set** (e.g., `iso_26262`, `do_178c`, `iec_62304`):
+1. Read the command overlay: `commands/overlays/{domain}/requirements.md`
+   - If it exists: note its additional sections and preferences
+   - If it does not exist: this domain does not extend this command — proceed with base only
+2. Read the template overlay: `templates/overlays/{domain}/requirements-template.md`
+   - If it exists: its output sections will be appended after the base template's output
+   - If it does not exist: use the base template only
+3. Where the base command has a domain-variant section (marked with "If a domain overlay is loaded, prefer its content"), use the overlay's version instead of the base default
+
+**If `domain` is empty or absent:**
+- Proceed with the base command only
+- Do NOT include any safety-critical or domain-specific sections
+- Use generic best-practice terminology throughout
+
+### 3. Load Context
 
 1. **Load the template**: Read `templates/requirements-template.md` from the extension directory to understand the required output structure.
 
@@ -56,7 +74,7 @@ For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\''m Groot
    - Identify the highest existing REQ number to continue the sequence.
    - New requirements append after existing ones — **never renumber**.
 
-### 3. Lifecycle Rules (When Evolving Existing Artifacts)
+### 4. Lifecycle Rules (When Evolving Existing Artifacts)
 
 When an existing `requirements.md` is loaded (step 2.3), apply these rules
 before generating new content:
@@ -79,7 +97,7 @@ before generating new content:
 If no existing `requirements.md` is found, skip this step entirely — all
 requirements are new.
 
-### 4. Generate Requirements
+### 5. Generate Requirements
 
 Follow the **strict translator constraint**: You are extracting and formalizing requirements from the source material. You must NOT invent, infer, or add features not present in the source.
 
@@ -91,7 +109,7 @@ For each requirement identified in the source material:
    - **Interface**: `REQ-IF-NNN` (e.g., REQ-IF-001)
    - **Constraint**: `REQ-CN-NNN` (e.g., REQ-CN-001)
 
-2. **Write a requirement description** that satisfies ALL 8 quality criteria (see §4).
+2. **Write a requirement description** that satisfies ALL 8 quality criteria (see §6).
 
 3. **Assign priority**: P1 (Critical), P2 (Important), P3 (Nice-to-have).
 
@@ -99,7 +117,7 @@ For each requirement identified in the source material:
 
 5. **Specify verification method**: Test, Inspection, Analysis, or Demonstration.
 
-### 5. Validate Requirements Quality (IEEE 29148 / INCOSE)
+### 6. Validate Requirements Quality (IEEE 29148 / INCOSE / ISO 25010)
 
 Every requirement MUST satisfy **all 8 criteria** before it is included in the output. If a requirement fails any criterion, rewrite it until it passes. These criteria are non-negotiable.
 
@@ -173,7 +191,29 @@ The requirement traces back to a **real business, user, or safety need**. If you
 
 **Check**: The strict translator constraint inherently enforces this — you are forbidden from inventing requirements not in the source. If a requirement feels extraneous, verify it appears in the source material. If it doesn't, remove it.
 
-### 6. Write Output
+#### Quality Characteristics Coverage (ISO/IEC 25010:2023)
+
+After validating all 8 criteria above, verify that the specification adequately covers the relevant quality characteristics from the ISO/IEC 25010:2023 quality model. This is NOT a mandate to create requirements for every characteristic — only those that the source material implies or explicitly mentions should be formalized as REQ-NF-NNN items.
+
+For each characteristic below, check whether the source material implies requirements that should be captured:
+
+| Quality Characteristic | Check | Example REQ-NF |
+|---|---|---|
+| **Functional Suitability** | Does the feature need accuracy, completeness, or appropriateness guarantees? | "The calculation shall be accurate to ±0.1%" |
+| **Reliability** | Does the feature need availability, fault tolerance, or recoverability guarantees? | "The service shall maintain 99.9% uptime" |
+| **Performance Efficiency** | Does the feature have time behavior, resource utilization, or capacity constraints? | "Response time shall not exceed 200ms at P99" |
+| **Compatibility** | Does the feature need to coexist with or interoperate with other systems? | "The API shall support JSON and XML formats" |
+| **Interaction Capability** | Does the feature have usability, accessibility, or learnability needs? | "The workflow shall be completable in ≤3 steps" |
+| **Security** | Does the feature need confidentiality, integrity, or authenticity guarantees? | "All data at rest shall be encrypted with AES-256" |
+| **Maintainability** | Does the feature have modularity, reusability, or testability constraints? | "Code coverage shall exceed 80% at unit level" |
+| **Flexibility** | Does the feature need adaptability, scalability, or installability properties? | "The system shall support horizontal scaling to 10K users" |
+| **Safety** | Does the feature have harm prevention or risk mitigation needs? | "The system shall fail to a safe state within 100ms" |
+
+This checklist supplements the source material review — if the source mentions performance concerns, a corresponding REQ-NF should exist. Do NOT invent requirements the source does not justify. The strict translator constraint still applies.
+
+**If a domain overlay is loaded**, additional quality characteristics or domain-specific quality criteria may be specified in the overlay (e.g., ASIL allocation for ISO 26262, DAL-dependent rigor for DO-178C). Apply those alongside this general taxonomy.
+
+### 7. Write Output
 
 Write the complete requirements document to `{VMODEL_DIR}/requirements.md` using the template structure. Include:
 
@@ -185,7 +225,7 @@ Write the complete requirements document to `{VMODEL_DIR}/requirements.md` using
 6. **Glossary**: Domain-specific terms used in requirements
 7. **Summary metrics**: Total count, by priority, by verification method
 
-### 7. Report Completion
+### 8. Report Completion
 
 Display a summary:
 - Total requirements generated (broken down by category)
@@ -234,3 +274,17 @@ The following words are **banned** from requirement descriptions. If the source 
 | secure | specific security measures (e.g., "TLS 1.2+ encryption") |
 | reliable | specific availability or MTBF targets |
 | flexible | specific extensibility or configuration points |
+
+---
+
+## Governing Standards
+
+This command is governed by the following standards for requirements engineering best practices:
+
+| Standard | Scope | How Used |
+|---|---|---|
+| **IEEE 29148:2018** | Requirements engineering processes | Primary framework for requirement types, quality criteria, and traceability |
+| **ISO/IEC 25010:2023** | Systems and software quality models | Quality characteristics taxonomy for non-functional requirements (Step 6) |
+| **INCOSE Guide for Writing Requirements** | Requirement authoring best practices | 8-criterion quality validation checklist (Step 6) |
+
+> **Note:** If a domain overlay is loaded (Step 2), additional domain-specific standards are applied alongside these base standards (e.g., ISO 26262 Part 6 §6.4 for automotive ASIL allocation, DO-178C §5.2.1 Table A-4 for aerospace derived requirements, IEC 62304 §5.2 for medical device risk analysis input).
