@@ -1,7 +1,7 @@
 # Traceability Matrix
 
-**Generated**: 2026-02-21
-**Source**: `specs/003-architecture-integration/v-model/`
+**Generated**: 2026-04-19
+**Source**: `specs/003-architecture-integration/v-model//`
 
 ## Matrix A — Validation (User View)
 
@@ -36,9 +36,9 @@
 | **REQ-019** | Integration test scenarios (`ITS-NNN-X#`) SHALL use Given/When/Then BDD structure with **technical, module-boundary-oriented language** (e.g., "Given Module A sends a malformed payload to Module B, When Module B receives the payload, Then Module B rejects it with error code INVALID_SCHEMA and does not propagate the error downstream"), distinct from user-centric acceptance language and system-level test language. | ATP-019-A | Scenarios Use Technical Module-Boundary Language | SCN-019-A1 | ⬜ Untested |
 | | | ATP-019-B | Scenarios Do Not Use User-Centric Language | SCN-019-B1 | ⬜ Untested |
 | **REQ-020** | The integration test command SHALL NOT generate tests for internal module logic or user-journey scenarios — only tests that verify the boundaries and handshakes between modules. | ATP-020-A | Only Boundary Tests Generated | SCN-020-A1 | ⬜ Untested |
-| **REQ-021** | When the project is configured for a safety-critical domain (ISO 26262, DO-178C, IEC 62304), the architecture design output SHALL include additional sections: **ASIL Decomposition** (safety integrity allocation per module, e.g., SYS ASIL-D → ARCH-001 ASIL-D + ARCH-002 ASIL-A), **Defensive Programming** (how invalid inputs from one module are caught before corrupting the next), and **Temporal & Execution Constraints** (watchdog timers, execution order, deadlock prevention). | ATP-021-A | Safety Sections Present When Configured | SCN-021-A1 | ⬜ Untested |
+| **REQ-021** | [DEPRECATED — Superseded by REQ-050] When the project is configured for a safety-critical domain (ISO 26262, DO-178C, IEC 62304), the architecture design output SHALL include additional sections: **ASIL Decomposition** (safety integrity allocation per module, e.g., SYS ASIL-D → ARCH-001 ASIL-D + ARCH-002 ASIL-A), **Defensive Programming** (how invalid inputs from one module are caught before corrupting the next), and **Temporal & Execution Constraints** (watchdog timers, execution order, deadlock prevention). | ATP-021-A | Safety Sections Present When Configured | SCN-021-A1 | ⬜ Untested |
 | | | ATP-021-B | Safety Sections Absent When Not Configured | SCN-021-B1 | ⬜ Untested |
-| **REQ-022** | When the project is configured for a safety-critical domain, the integration test output SHALL include additional sections: **SIL/HIL Compatibility** (scenarios executable in Software/Hardware-in-the-Loop environments) and **Resource Contention** (proving modules don't exhaust shared resources during interaction). | ATP-022-A | Safety Test Sections Present When Configured | SCN-022-A1 | ⬜ Untested |
+| **REQ-022** | [DEPRECATED — Superseded by REQ-051] When the project is configured for a safety-critical domain, the integration test output SHALL include additional sections: **SIL/HIL Compatibility** (scenarios executable in Software/Hardware-in-the-Loop environments) and **Resource Contention** (proving modules don't exhaust shared resources during interaction). | ATP-022-A | Safety Test Sections Present When Configured | SCN-022-A1 | ⬜ Untested |
 | | | ATP-022-B | Safety Test Sections Absent When Not Configured | SCN-022-B1 | ⬜ Untested |
 | **REQ-023** | The integration test command SHALL invoke `validate-architecture-coverage.sh` as a post-generation coverage gate and include the validation result (pass/fail with coverage summary) in its output. | ATP-023-A | Validation Invoked and Result Included | SCN-023-A1 | ⬜ Untested |
 | | | ATP-023-B | Coverage Failure Reported | SCN-023-B1 | ⬜ Untested |
@@ -80,7 +80,19 @@
 | **REQ-048** | The `validate-architecture-coverage.sh` script SHALL support partial execution: if `integration-test.md` is omitted or not found, the script SHALL validate only forward coverage (`SYS → ARCH`) and bypass backward coverage and orphan checks for integration artifacts, exiting with code 0 if forward coverage is complete. | ATP-048-A | Forward-Only Validation When integration-test.md Absent | SCN-048-A1 | ⬜ Untested |
 | | | ATP-048-B | Full Validation When All Files Present | SCN-048-B1 | ⬜ Untested |
 | **REQ-049** | The `integration-test-template.md` SHALL include a **"Test Harness & Mocking Strategy"** section where each `ITP-NNN-X` test case explicitly defines which external interfaces, hardware dependencies, or unresolved module dependencies are stubbed or mocked during execution of its `ITS-NNN-X#` scenarios. | ATP-049-A | Template Includes Test Harness Section | SCN-049-A1 | ⬜ Untested |
-| **REQ-CN-001** | Safety-critical sections (ASIL Decomposition, Defensive Programming, Temporal & Execution Constraints, SIL/HIL Compatibility, Resource Contention) SHALL be omitted by default and only included when the project's `v-model-config.yml` explicitly enables a regulated domain (ISO 26262, DO-178C, or IEC 62304). | ATP-CN-001-A | No Safety Sections Without Config | SCN-CN-001-A1 | ⬜ Untested |
+| **REQ-050** | When `v-model-config.yml` specifies a `domain` value (e.g., `iso_26262`, `do_178c`, `iec_62304`), the `/speckit.v-model.architecture-design` command SHALL load the corresponding domain overlay from `commands/overlays/{domain}/architecture-design.md` and include the overlay's safety-critical architecture sections (e.g., ASIL decomposition, defensive programming, temporal constraints) in `architecture-design.md` in preference to the base command's generic guidance. | ATP-050-A | Overlay loaded when domain is set | SCN-050-A1 | ⬜ Untested |
+| | | ATP-050-B | Overlay not loaded when domain is absent | SCN-050-B1 | ⬜ Untested |
+| **REQ-051** | When `v-model-config.yml` specifies a `domain` value (e.g., `iso_26262`, `do_178c`, `iec_62304`), the `/speckit.v-model.integration-test` command SHALL load the corresponding domain overlay from `commands/overlays/{domain}/integration-test.md` and include the overlay's safety-critical test sections (e.g., SIL/HIL compatibility, resource contention) in `integration-test.md` in preference to the base command's generic guidance. | ATP-051-A | Overlay loaded when domain is set | SCN-051-A1 | ⬜ Untested |
+| | | ATP-051-B | Overlay not loaded when domain is absent | SCN-051-B1 | ⬜ Untested |
+| **REQ-052** | The `/speckit.v-model.architecture-design` command description and goal SHALL use generic architecture framing (e.g., "ISO/IEC/IEEE 42010 architecture description") without referencing specific safety standards (ISO 26262, DO-178C) in the base command text. Domain-specific architecture guidance SHALL be provided only by loaded overlays. | ATP-052-A | Base text uses generic architecture framing | SCN-052-A1 | ⬜ Untested |
+| | | ATP-052-B | Domain-specific guidance only via overlay | SCN-052-B1 | ⬜ Untested |
+| **REQ-053** | The `/speckit.v-model.integration-test` command description and goal SHALL use generic testing framing (e.g., "ISO 29119 integration test design") without referencing specific safety standards (ISO 26262, DO-178C) in the base command text. Domain-specific test guidance SHALL be provided only by loaded overlays. | ATP-053-A | Base text uses generic testing framing | SCN-053-A1 | ⬜ Untested |
+| | | ATP-053-B | Domain-specific guidance only via overlay | SCN-053-B1 | ⬜ Untested |
+| **REQ-054** | When no `domain` is set in `v-model-config.yml` (or no config file exists), the architecture-design and integration-test commands SHALL produce general-purpose output without loading any domain overlay. Safety-critical sections SHALL be omitted entirely. | ATP-054-A | General-purpose output without domain config | SCN-054-A1 | ⬜ Untested |
+| | | ATP-054-B | General-purpose output when config exists without domain | SCN-054-B1 | ⬜ Untested |
+| **REQ-055** | All generative commands in this feature SHALL support domain overlay loading via the assembly protocol: when `domain` is configured, the system SHALL load domain-specific guidance from `commands/overlays/{domain}/{command}.md` and template overlays from `templates/overlays/{domain}/{template}.md`, applying overlay content alongside the base command. | ATP-055-A | All generative commands support overlay loading | SCN-055-A1 | ⬜ Untested |
+| | | ATP-055-B | Commands work gracefully without overlay files | SCN-055-B1 | ⬜ Untested |
+| **REQ-CN-001** | [DEPRECATED — Superseded by REQ-054] Safety-critical sections (ASIL Decomposition, Defensive Programming, Temporal & Execution Constraints, SIL/HIL Compatibility, Resource Contention) SHALL be omitted by default and only included when the project's `v-model-config.yml` explicitly enables a regulated domain (ISO 26262, DO-178C, or IEC 62304). | ATP-CN-001-A | No Safety Sections Without Config | SCN-CN-001-A1 | ⬜ Untested |
 | | | ATP-CN-001-B | Sections Present Only When Explicitly Enabled | SCN-CN-001-B1 | ⬜ Untested |
 | **REQ-CN-002** | The extension version in `extension.yml` SHALL be bumped to `0.3.0` and SHALL register exactly 7 commands (5 existing + 2 new) and 1 hook. | ATP-CN-002-A | Version Bumped to 0.3.0 with Correct Command Count | SCN-CN-002-A1 | ⬜ Untested |
 | **REQ-CN-003** | The extension SHALL provide `validate-architecture-coverage.ps1` (PowerShell) with identical behavior, output format, and exit codes as the Bash script, passing the same test fixture suite. | ATP-CN-003-A | Identical Behavior and Output | SCN-CN-003-A1 | ⬜ Untested |
@@ -93,16 +105,18 @@
 | **REQ-NF-003** | The `validate-architecture-coverage.sh` script SHALL accept gaps in `ARCH-NNN` numbering (e.g., ARCH-001, ARCH-003 without ARCH-002) without reporting false-positive errors. | ATP-NF-003-A | Gaps Accepted Without False Positives | SCN-NF-003-A1 | ⬜ Untested |
 | **REQ-NF-004** | All v0.3.0 commands and scripts SHALL preserve backward compatibility: existing `system-design.md`, `system-test.md`, `requirements.md`, `acceptance-plan.md`, and `traceability-matrix.md` files SHALL NOT be modified by any v0.3.0 operation. | ATP-NF-004-A | Existing v0.2.0 Files Unchanged | SCN-NF-004-A1 | ⬜ Untested |
 | **REQ-NF-005** | (Internal QA gate — not user-facing) The extension's CI evaluation suite SHALL validate that `/speckit.v-model.architecture-design` and `/speckit.v-model.integration-test` command outputs meet or exceed the quality thresholds established for v0.2.0 artifacts. The evaluation suite SHALL additionally verify the syntactic validity of generated Mermaid diagrams in the Process View — broken Mermaid syntax is a structural failure. | ATP-NF-005-A | Evaluation Suite Validates Output Quality and Mermaid Syntax | SCN-NF-005-A1 | ⬜ Untested |
+| **REQ-NF-006** | Commands SHALL be domain-agnostic in their base form; adding a new regulated domain SHALL require only adding overlay files with no modification to base commands or templates. | ATP-NF-006-A | New domain works with overlay files only | SCN-NF-006-A1 | ⬜ Untested |
+| | | ATP-NF-006-B | Base commands unchanged after domain addition | SCN-NF-006-B1 | ⬜ Untested |
 
 ### Matrix A Coverage
 
 | Metric | Value |
 |--------|-------|
-| **Total Requirements** | 61 |
-| **Total Test Cases (ATP)** | 86 |
-| **Total Scenarios (SCN)** | 86 |
-| **REQ → ATP Coverage** | 61/61 (100%) |
-| **ATP → SCN Coverage** | 86/86 (100%) |
+| **Total Requirements** | 68 |
+| **Total Test Cases (ATP)** | 100 |
+| **Total Scenarios (SCN)** | 100 |
+| **REQ → ATP Coverage** | 68/68 (100%) |
+| **ATP → SCN Coverage** | 100/100 (100%) |
 
 ## Matrix B — Verification (Architectural View)
 
@@ -578,6 +592,12 @@
 | | SYS-005 | Integration Test Template | STP-005-A | Interface Contract Testing | STS-005-A1 | ⬜ Untested |
 | | SYS-005 | Integration Test Template | STP-005-A | Interface Contract Testing | STS-005-A2 | ⬜ Untested |
 | | SYS-005 | Integration Test Template | STP-005-B | Boundary Value Analysis | STS-005-B1 | ⬜ Untested |
+| **REQ-050** | ❌ MISSING | — | — | — | — | ⬜ Untested |
+| **REQ-051** | ❌ MISSING | — | — | — | — | ⬜ Untested |
+| **REQ-052** | ❌ MISSING | — | — | — | — | ⬜ Untested |
+| **REQ-053** | ❌ MISSING | — | — | — | — | ⬜ Untested |
+| **REQ-054** | ❌ MISSING | — | — | — | — | ⬜ Untested |
+| **REQ-055** | ❌ MISSING | — | — | — | — | ⬜ Untested |
 | **REQ-CN-001** | SYS-001 | Architecture Design Command | STP-001-A | Interface Contract Testing | STS-001-A1 | ⬜ Untested |
 | | SYS-001 | Architecture Design Command | STP-001-A | Interface Contract Testing | STS-001-A2 | ⬜ Untested |
 | | SYS-001 | Architecture Design Command | STP-001-A | Interface Contract Testing | STS-001-A3 | ⬜ Untested |
@@ -704,6 +724,7 @@
 | | SYS-012 | CI Evaluation Suite Extension | STP-012-A | Fault Injection | STS-012-A3 | ⬜ Untested |
 | | SYS-012 | CI Evaluation Suite Extension | STP-012-B | Boundary Value Analysis | STS-012-B1 | ⬜ Untested |
 | | SYS-012 | CI Evaluation Suite Extension | STP-012-B | Boundary Value Analysis | STS-012-B2 | ⬜ Untested |
+| **REQ-NF-006** | ❌ MISSING | — | — | — | — | ⬜ Untested |
 
 ### Matrix B Coverage
 
@@ -712,10 +733,8 @@
 | **Total System Components (SYS)** | 12 |
 | **Total System Test Cases (STP)** | 27 |
 | **Total System Scenarios (STS)** | 64 |
-| **REQ → SYS Coverage** | 61/61 (100%) |
+| **REQ → SYS Coverage** | 61/68 (89%) |
 | **SYS → STP Coverage** | 12/12 (100%) |
-
-## Gap Analysis
 
 ### Uncovered Requirements (REQ without ATP)
 
@@ -727,7 +746,13 @@ None — all tests trace to requirements.
 
 ### Uncovered Requirements — System Level (REQ without SYS)
 
-None — full coverage.
+- REQ-050
+- REQ-051
+- REQ-052
+- REQ-053
+- REQ-054
+- REQ-055
+- REQ-NF-006
 
 ### Orphaned System Test Cases (STP without valid SYS)
 
@@ -736,5 +761,5 @@ None — all system tests trace to components.
 ## Audit Notes
 
 - **Matrix generated by**: `build-matrix.sh` (deterministic regex parser)
-- **Source documents**: `requirements.md`, `acceptance-plan.md`, `system-design.md`, `system-test.md`
-- **Last validated**: 2026-02-21
+- **Source documents**: `requirements.md`, `acceptance-plan.md`, `system-design.md`, `system-test.md`, `unit-test.md`
+- **Last validated**: 2026-04-19

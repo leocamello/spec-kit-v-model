@@ -1,7 +1,7 @@
 # Traceability Matrix
 
-**Generated**: 2026-02-20
-**Source**: `specs/002-system-design-testing/v-model/`
+**Generated**: 2026-04-19
+**Source**: `specs/002-system-design-testing/v-model//`
 
 ## Matrix A — Validation (User View)
 
@@ -52,11 +52,29 @@
 | | | ATP-032-B | Hallucinated Component Absent | SCN-032-B1 | ⬜ Untested |
 | **REQ-033** | The `/speckit.v-model.system-test` command SHALL follow the strict translator constraint: when deriving from `system-design.md`, the AI SHALL NOT invent test cases for components or interfaces not present in the design. | ATP-033-A | No Invented Test Cases | SCN-033-A1 | ⬜ Untested |
 | **REQ-034** | When the system design process identifies a necessary technical capability not present in `requirements.md` (a Derived Requirement), the command SHALL flag it as `[DERIVED REQUIREMENT: description]` in the output instead of silently adding a `SYS-NNN` component. | ATP-034-A | Flag Displayed Instead of Silent Addition | SCN-034-A1 | ⬜ Untested |
-| **REQ-035** | When the project's `v-model-config.yml` explicitly enables a regulated domain (e.g., `iso_26262`, `do_178c`), the `/speckit.v-model.system-design` command SHALL generate **Freedom from Interference (FFI)** analysis and **Restricted Complexity** assessment sections in `system-design.md` for each `SYS-NNN` component. | ATP-035-A | Sections Generated When Regulated Domain Enabled | SCN-035-A1 | ⬜ Untested |
+| **REQ-035** | [DEPRECATED — Superseded by REQ-038] When the project's `v-model-config.yml` explicitly enables a regulated domain (e.g., `iso_26262`, `do_178c`), the `/speckit.v-model.system-design` command SHALL generate **Freedom from Interference (FFI)** analysis and **Restricted Complexity** assessment sections in `system-design.md` for each `SYS-NNN` component. | ATP-035-A | Sections Generated When Regulated Domain Enabled | SCN-035-A1 | ⬜ Untested |
 | | | ATP-035-B | Sections Absent When Domain Not Configured | SCN-035-B1 | ⬜ Untested |
-| **REQ-036** | When the project's `v-model-config.yml` explicitly enables a regulated domain (e.g., `do_178c`, `iso_26262`), the `/speckit.v-model.system-test` command SHALL generate **Modified Condition/Decision Coverage (MC/DC)** test obligations and **Worst-Case Execution Time (WCET)** verification scenarios in `system-test.md` for each `STP-NNN-X` test case where applicable. | ATP-036-A | Sections Generated When Regulated Domain Enabled | SCN-036-A1 | ⬜ Untested |
+| **REQ-036** | [DEPRECATED — Superseded by REQ-039] When the project's `v-model-config.yml` explicitly enables a regulated domain (e.g., `do_178c`, `iso_26262`), the `/speckit.v-model.system-test` command SHALL generate **Modified Condition/Decision Coverage (MC/DC)** test obligations and **Worst-Case Execution Time (WCET)** verification scenarios in `system-test.md` for each `STP-NNN-X` test case where applicable. | ATP-036-A | Sections Generated When Regulated Domain Enabled | SCN-036-A1 | ⬜ Untested |
 | | | ATP-036-B | Sections Absent When Domain Not Configured | SCN-036-B1 | ⬜ Untested |
-| **REQ-CN-001** | Safety-critical sections (Freedom from Interference, Restricted Complexity, MC/DC Coverage, WCET Analysis) SHALL be omitted by default and only included when the project's `v-model-config.yml` explicitly enables a regulated domain (ISO 26262, DO-178C, or IEC 62304). | ATP-CN-001-A | No Safety Sections Without Config | SCN-CN-001-A1 | ⬜ Untested |
+| **REQ-037** | *(v0.2.1 patch)* The `validate-system-coverage.sh` script SHALL support **partial validation**: when `system-test.md` is absent, the script SHALL validate forward coverage (`REQ→SYS`) only, gracefully bypass `SYS→STP→STS` backward coverage checks, and exit with code 0 if forward coverage is complete. The output SHALL clearly indicate partial validation mode. | ATP-037-A | Forward-Only Validation When system-test.md Absent | SCN-037-A1 | ⬜ Untested |
+| | | ATP-037-B | Partial Mode Reports Forward Gaps | SCN-037-B1 | ⬜ Untested |
+| **REQ-038** | When `v-model-config.yml` specifies a `domain` value (e.g., `iso_26262`, `do_178c`, `iec_62304`), the `/speckit.v-model.system-design` command SHALL load the corresponding domain overlay from `commands/overlays/{domain}/system-design.md` and include the overlay's safety-critical design sections (e.g., FFI analysis, restricted complexity, safety integrity allocation) in `system-design.md` in preference to the base command's generic guidance. | ATP-038-A | Overlay loaded when domain is set | SCN-038-A1 | ⬜ Untested |
+| | | ATP-038-A | Overlay loaded when domain is set | SCN-038-A2 | ⬜ Untested |
+| | | ATP-038-B | Graceful fallback when overlay missing | SCN-038-B1 | ⬜ Untested |
+| **REQ-039** | When `v-model-config.yml` specifies a `domain` value (e.g., `iso_26262`, `do_178c`, `iec_62304`), the `/speckit.v-model.system-test` command SHALL load the corresponding domain overlay from `commands/overlays/{domain}/system-test.md` and include the overlay's safety-critical test sections (e.g., structural coverage obligations, WCET verification) in `system-test.md` in preference to the base command's generic guidance. | ATP-039-A | Overlay loaded when domain is set | SCN-039-A1 | ⬜ Untested |
+| | | ATP-039-A | Overlay loaded when domain is set | SCN-039-A2 | ⬜ Untested |
+| | | ATP-039-B | Graceful fallback when overlay missing | SCN-039-B1 | ⬜ Untested |
+| **REQ-040** | The `/speckit.v-model.system-design` command description and goal SHALL use generic design framing (e.g., "IEEE 1016 design description") without referencing specific safety standards (ISO 26262, DO-178C) in the base command text. Domain-specific design guidance SHALL be provided only by loaded overlays. | ATP-040-A | Command text uses generic framing | SCN-040-A1 | ⬜ Untested |
+| | | ATP-040-A | Command text uses generic framing | SCN-040-A2 | ⬜ Untested |
+| | | ATP-040-B | Domain-specific guidance only from overlays | SCN-040-B1 | ⬜ Untested |
+| **REQ-041** | The `/speckit.v-model.system-test` command description and goal SHALL use generic testing framing (e.g., "ISO 29119 test design") without referencing specific safety standards (DO-178C, ISO 26262) in the base command text. Domain-specific test guidance SHALL be provided only by loaded overlays. | ATP-041-A | Command text uses generic framing | SCN-041-A1 | ⬜ Untested |
+| | | ATP-041-A | Command text uses generic framing | SCN-041-A2 | ⬜ Untested |
+| | | ATP-041-B | Domain-specific guidance only from overlays | SCN-041-B1 | ⬜ Untested |
+| **REQ-042** | When no `domain` is set in `v-model-config.yml` (or no config file exists), the system-design and system-test commands SHALL produce general-purpose output without loading any domain overlay. Safety-critical sections SHALL be omitted entirely. | ATP-042-A | No overlays loaded when domain absent | SCN-042-A1 | ⬜ Untested |
+| | | ATP-042-B | Config exists but domain field absent | SCN-042-B1 | ⬜ Untested |
+| **REQ-043** | All generative commands in this feature SHALL support domain overlay loading via the assembly protocol: when `domain` is configured, the system SHALL load domain-specific guidance from `commands/overlays/{domain}/{command}.md` and template overlays from `templates/overlays/{domain}/{template}.md`, applying overlay content alongside the base command. | ATP-043-A | All generative commands support overlay loading | SCN-043-A1 | ⬜ Untested |
+| | | ATP-043-B | Assembly protocol graceful when overlay directory missing | SCN-043-B1 | ⬜ Untested |
+| **REQ-CN-001** | [DEPRECATED — Superseded by REQ-042] Safety-critical sections (Freedom from Interference, Restricted Complexity, MC/DC Coverage, WCET Analysis) SHALL be omitted by default and only included when the project's `v-model-config.yml` explicitly enables a regulated domain (ISO 26262, DO-178C, or IEC 62304). | ATP-CN-001-A | No Safety Sections Without Config | SCN-CN-001-A1 | ⬜ Untested |
 | | | ATP-CN-001-B | Sections Present Only When Explicitly Enabled | SCN-CN-001-B1 | ⬜ Untested |
 | **REQ-CN-002** | The extension version in `extension.yml` SHALL be bumped to `0.2.0` and SHALL register exactly 5 commands (3 existing + 2 new) and 1 hook. | ATP-CN-002-A | Version Bumped to 0.2.0 with Correct Command Count | SCN-CN-002-A1 | ⬜ Untested |
 | **REQ-CN-003** | The extension SHALL provide `validate-system-coverage.ps1` (PowerShell) with identical behavior, output format, and exit codes as the Bash script, passing the same test fixture suite. | ATP-CN-003-A | Identical Behavior and Output | SCN-CN-003-A1 | ⬜ Untested |
@@ -69,19 +87,19 @@
 | **REQ-NF-003** | The `validate-system-coverage.sh` script SHALL accept gaps in `SYS-NNN` numbering (e.g., SYS-001, SYS-003 without SYS-002) without reporting false-positive errors. | ATP-NF-003-A | Gaps Accepted Without False Positives | SCN-NF-003-A1 | ⬜ Untested |
 | **REQ-NF-004** | All v0.2.0 commands and scripts SHALL preserve backward compatibility: existing `requirements.md`, `acceptance-plan.md`, and `traceability-matrix.md` files SHALL NOT be modified by any v0.2.0 operation. | ATP-NF-004-A | Existing v0.1.0 Files Unchanged | SCN-NF-004-A1 | ⬜ Untested |
 | **REQ-NF-005** | (Internal QA gate — not user-facing) The extension's CI evaluation suite SHALL validate that `/speckit.v-model.system-design` and `/speckit.v-model.system-test` command outputs meet or exceed the quality thresholds established for v0.1.0 artifacts. End users do not interact with the evaluation framework; this requirement ensures prompt quality through automated regression testing in the development pipeline. | ATP-NF-005-A | Evaluation Suite Validates Command Output Quality | SCN-NF-005-A1 | ⬜ Untested |
+| **REQ-NF-006** | Commands SHALL be domain-agnostic in their base form; adding a new regulated domain SHALL require only adding overlay files with no modification to base commands or templates. | ATP-NF-006-A | New domain requires only overlay files | SCN-NF-006-A1 | ⬜ Untested |
+| | | ATP-NF-006-B | Base commands unchanged after adding domain | SCN-NF-006-B1 | ⬜ Untested |
 
 ### Matrix A Coverage
 
 | Metric | Value |
 |--------|-------|
-| **Total Requirements** | 48 |
-| **Total Test Cases (ATP)** | 62 |
-| **Total Scenarios (SCN)** | 62 |
-| **REQ → ATP Coverage** | 48/48 (100%) |
-| **ATP → SCN Coverage** | 62/62 (100%) |
+| **Total Requirements** | 56 |
+| **Total Test Cases (ATP)** | 78 |
+| **Total Scenarios (SCN)** | 82 |
+| **REQ → ATP Coverage** | 56/56 (100%) |
+| **ATP → SCN Coverage** | 78/78 (100%) |
 
-
-## Gap Analysis
 
 ### Uncovered Requirements (REQ without ATP)
 
@@ -94,5 +112,5 @@ None — all tests trace to requirements.
 ## Audit Notes
 
 - **Matrix generated by**: `build-matrix.sh` (deterministic regex parser)
-- **Source documents**: `requirements.md`, `acceptance-plan.md`
-- **Last validated**: 2026-02-20
+- **Source documents**: `requirements.md`, `acceptance-plan.md`, `unit-test.md`
+- **Last validated**: 2026-04-19
