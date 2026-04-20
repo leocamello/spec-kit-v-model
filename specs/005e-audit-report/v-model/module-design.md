@@ -270,3 +270,73 @@ FUNCTION cross_reference(anomalies, waiver_map):
   "summary": {"total_requirements": 0, "total_tests": 0, "passed": 0, "failed": 0, "skipped": 0, "total_hazards": 0}
 }
 ```
+
+### Module: MOD-011 (dispatch_pipeline)
+
+**Parent Architecture Modules**: ARCH-010
+
+**Target Source File(s)**: `scripts/bash/build-audit-report.sh`, `scripts/powershell/Build-Audit-Report.ps1`
+
+**Inputs**: Raw process arguments (`$@` in Bash; `$args` in PowerShell)
+
+**Outputs**: Exit code — 0 (RELEASE READY / RELEASE CANDIDATE), 1 (NOT READY), 2 (argument or artifact error)
+
+**Pseudocode**:
+```pseudocode
+FUNCTION dispatch_pipeline(raw_args):
+    // Step 1: Parse and validate arguments (delegates to MOD-001 / ARCH-001)
+    config = parse_cli_args(raw_args)
+    IF config == null OR config.exit_code == 2:
+        EXIT 2
+
+    // Step 2: Discover V-Model artifacts and Git metadata (ARCH-002)
+    artifacts = discover_artifacts(config.vmodel_dir)
+
+    // Step 3: Parse traceability matrices (ARCH-003)
+    matrices = parse_matrix_file(config.vmodel_dir + "/traceability-matrix.md")
+    coverage = compute_coverage_metrics(matrices)
+
+    // Step 4: Parse hazard analysis if present (ARCH-004)
+    hazards = parse_hazards(config.vmodel_dir + "/hazard-analysis.md")
+
+    // Step 5: Scan for anomalies in matrix rows (ARCH-005)
+    anomalies = scan_anomalies(matrices)
+
+    // Step 6: Parse waivers if present (ARCH-006)
+    waiver_map = parse_waivers(config.vmodel_dir + "/waivers.md")
+
+    // Step 7: Cross-reference anomalies with waivers (ARCH-007)
+    result = cross_reference(anomalies, waiver_map)
+    // result.exit_code = 0 (no blocking) or 1 (blocking anomalies present)
+
+    // Step 8: Render Markdown report (ARCH-008)
+    render_report(artifacts, matrices, coverage, hazards, result, config)
+
+    // Step 9: Serialize JSON output if --json flag active (ARCH-009)
+    IF config.json_flag == true:
+        render_json(artifacts, matrices, coverage, hazards, result, config)
+
+    // Step 10: Propagate compliance exit code to caller
+    EXIT result.exit_code
+```
+
+**Error Handling**: Propagates exit code 2 from `parse_cli_args` on argument validation failure. Propagates exit code 2 from `render_report` on output file write failure. All other sub-components signal errors via their return values, which are forwarded to the renderer; the dispatch function itself does not swallow errors.
+
+---
+
+## Coverage Summary
+
+| Metric | Count |
+|--------|-------|
+| Total Module Designs (MOD) | 11 (11 active, 0 deprecated, 0 suspect) |
+| External Modules (`[EXTERNAL]`) | 0 |
+| Cross-Cutting Modules (`[CROSS-CUTTING]`) | 0 |
+| Stateful Modules | 0 |
+| Stateless Modules | 11 |
+| Total Parent Architecture Modules Covered | 10 / 10 (100%) |
+| Modules with Pseudocode | 11 / 11 (100%) |
+| **Forward Coverage (ARCH→MOD)** | **100%** |
+
+## Derived Modules
+
+None — all modules trace to existing architecture modules.
