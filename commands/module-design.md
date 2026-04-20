@@ -1,5 +1,5 @@
 ---
-description: Decompose architecture modules into DO-178C/ISO 26262-compliant low-level module designs with four mandatory views and ARCH↔MOD traceability.
+description: Decompose architecture modules into low-level module designs with four mandatory views and ARCH↔MOD traceability.
 handoffs:
   - label: Generate Unit Tests
     agent: speckit.v-model.unit-test
@@ -23,7 +23,7 @@ You **MUST** consider the user input before proceeding (if not empty).
 
 ## Goal
 
-Decompose a V-Model Architecture Design (`architecture-design.md`) into a DO-178C/ISO 26262-compliant Module Design where **every architecture module** (`ARCH-NNN`) maps to at least one low-level module specification (`MOD-NNN`). Each module is documented with four mandatory views detailed enough that writing the actual source code is merely a translation exercise — no further architectural or design decisions required.
+Decompose a V-Model Architecture Design (`architecture-design.md`) into a Module Design where **every architecture module** (`ARCH-NNN`) maps to at least one low-level module specification (`MOD-NNN`). Each module is documented with four mandatory views detailed enough that writing the actual source code is merely a translation exercise — no further architectural or design decisions required.
 
 CRITICAL DISTINCTION: Module Design is NOT architecture. It does NOT describe module boundaries, interfaces, or data flows between modules — those are documented in `architecture-design.md`. Module Design describes the **internal logic, state, data structures, and error handling** of each individual module.
 

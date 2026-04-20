@@ -71,9 +71,9 @@ For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\''m Groot
    | `system-test.md` | STP | ISO 29119 |
    | `architecture-design.md` | ARCH | IEEE 42010 / Kruchten 4+1 |
    | `integration-test.md` | ITP | ISO 29119-4 |
-   | `module-design.md` | MOD | DO-178C / ISO 26262 |
+   | `module-design.md` | MOD | Low-Level Design Best Practices |
    | `unit-test.md` | UTP | ISO 29119-4 |
-   | `hazard-analysis.md` | HAZ | ISO 14971 / ISO 26262 |
+   | `hazard-analysis.md` | HAZ | FMEA Best Practices (ISO 14971) |
 
 ### 3. Load Context
 
@@ -138,7 +138,7 @@ Check for:
 - **Interface Coverage**: Is every ARCH module's interface tested?
 - **ARCH Coverage**: Does every active (non-deprecated) ARCH have at least one ITP?
 
-#### 4.6 Module Design (`module-design.md`) — DO-178C / ISO 26262
+#### 4.6 Module Design (`module-design.md`) — Low-Level Design
 
 Check for:
 - **4 Mandatory Views**: Algorithmic/Logic, State Machine (if applicable), Internal Data Structures, Error Handling — present for each MOD?
@@ -154,7 +154,7 @@ Check for:
 - **Boundary Values**: Are boundary values explicit (not implicit)?
 - **MOD Coverage**: Does every active, non-[EXTERNAL] MOD have at least one UTP?
 
-#### 4.8 Hazard Analysis (`hazard-analysis.md`) — ISO 14971 / ISO 26262
+#### 4.8 Hazard Analysis (`hazard-analysis.md`) — FMEA (ISO 14971)
 
 Check for:
 - **Severity Justification**: Are severity classifications reasonable given the failure mode?

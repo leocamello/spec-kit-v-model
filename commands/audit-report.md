@@ -38,7 +38,7 @@ scripts/bash/build-audit-report.sh specs/<feature>/v-model \
   --system-name "CBGMS" \
   --version "2.1.0" \
   --git-tag "v2.1.0" \
-  --regulatory-context "IEC 62304 Class C, ISO 14971"
+  --regulatory-context "Your Applicable Standard Here"
 
 # Custom output path
 scripts/bash/build-audit-report.sh specs/<feature>/v-model --output /tmp/audit-report.md
@@ -57,7 +57,7 @@ scripts/powershell/Build-Audit-Report.ps1 -VModelDir specs/<feature>/v-model `
   -SystemName "CBGMS" `
   -Version "2.1.0" `
   -GitTag "v2.1.0" `
-  -RegulatoryContext "IEC 62304 Class C, ISO 14971"
+  -RegulatoryContext "Your Applicable Standard Here"
 
 # JSON output
 scripts/powershell/Build-Audit-Report.ps1 -VModelDir specs/<feature>/v-model -Json
