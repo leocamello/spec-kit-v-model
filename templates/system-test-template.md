@@ -106,16 +106,19 @@ Each test case MUST identify its technique by name:
 
 [Continue for all system components...]
 
-<!-- SAFETY-CRITICAL SECTION: Only include when v-model-config.yml domain is set -->
+<!-- SAFETY-CRITICAL SECTION: Only include when a domain overlay is loaded (Step 2a) -->
 
 <!--
-## Structural Coverage (DO-178C §6.4.4.2 / ISO 26262-6 §9.4.5)
+> **Note:** If a domain overlay is loaded, use the overlay's version of this section.
+> The tables below show the generic structure; domain overlays provide domain-specific column headers and content.
+
+## Structural Coverage
 
 | Component | Coverage Target | Technique | Rationale |
 |-----------|----------------|-----------|-----------|
-| SYS-NNN | MC/DC 100% | Modified Condition/Decision Coverage | [ASIL/DAL level] |
+| SYS-NNN | [target] | [Coverage technique] | [Safety level justification] |
 
-## Resource Usage Testing (DO-178C §6.3.4 / ISO 26262-6 §9.4.4)
+## Resource Usage Testing
 
 | Component | Resource | Measurement | Threshold | Verification Method |
 |-----------|----------|-------------|-----------|---------------------|

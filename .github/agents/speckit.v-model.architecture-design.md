@@ -1,14 +1,13 @@
 ---
-description: Decompose system components into IEEE 42010/Kruchten 4+1 architecture
-  modules with four mandatory views and many-to-many SYS↔ARCH traceability.
+description: Decompose system components into IEEE 42010/Kruchten 4+1 architecture modules with four mandatory views and many-to-many SYS↔ARCH traceability.
 handoffs:
-- label: Generate Integration Tests
-  agent: speckit.v-model.integration-test
-  prompt: Generate the integration test plan for this architecture design
-  send: true
-- label: Back to System Design
-  agent: speckit.v-model.system-design
-  prompt: Review or update the system design
+  - label: Generate Integration Tests
+    agent: speckit.v-model.integration-test
+    prompt: Generate the integration test plan for this architecture design
+    send: true
+  - label: Back to System Design
+    agent: speckit.v-model.system-design
+    prompt: Review or update the system design
 scripts:
   sh: scripts/bash/setup-v-model.sh --json --require-reqs --require-system-design
   ps: scripts/powershell/setup-v-model.ps1 -Json -RequireReqs -RequireSystemDesign
@@ -17,6 +16,7 @@ scripts:
 
 <!-- Extension: v-model -->
 <!-- Config: .specify/extensions/v-model/ -->
+
 ## User Input
 
 ```text
@@ -64,16 +64,49 @@ For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\''m Groot
 
 3. **Load requirements**: Read `requirements.md` from the `REQUIREMENTS` path for supplementary domain context. This provides insight into the problem domain but does NOT override system design.
 
-4. **Load v-model-config.yml** (if it exists at the repository root):
-   - If `domain` is set to `iso_26262`, `do_178c`, or `iec_62304`: Enable safety-critical sections (ASIL Decomposition, Defensive Programming, Temporal Constraints)
-   - If absent or `domain` is empty: Skip safety-critical sections entirely
-
-5. **Load existing architecture design** (if `AVAILABLE_DOCS` contains `"architecture-design.md"`):
+4. **Load existing architecture design** (if `AVAILABLE_DOCS` contains `"architecture-design.md"`):
    - Read the existing `architecture-design.md` to preserve existing ARCH IDs and content
    - Identify the highest existing ARCH number to continue the sequence
    - New modules append after existing ones — **never renumber**
 
-### 3. Decompose System Components into Architecture Modules
+### 2a. Domain Configuration
+
+Load `v-model-config.yml` (if it exists at the repository root).
+
+**If `domain` is set** (e.g., `iso_26262`, `do_178c`, `iec_62304`):
+1. Read the command overlay: `commands/overlays/{domain}/architecture-design.md`
+   - If it exists: note the safety-critical architecture sections (e.g., safety integrity decomposition, defensive programming requirements, temporal constraints)
+   - If it does not exist: this domain does not extend this command — proceed with base only
+2. Where the base command has a domain-variant section (marked with "If a domain overlay is loaded, prefer its content"), use the overlay's version instead of the base default
+
+**If `domain` is empty or absent:**
+- Proceed with the base command only
+- Use generic best-practice terminology throughout
+- Do NOT include any safety-critical or domain-specific regulatory references
+
+### 3. Lifecycle Rules (When Evolving Existing Artifacts)
+
+When an existing `architecture-design.md` is loaded (step 2.4), apply these
+rules before generating new content:
+
+1. **Never delete an ID** — mark as `[DEPRECATED]`
+2. **Deprecation types:**
+   - `[DEPRECATED — Superseded by ARCH-NNN]`: Replaced by a new module
+   - `[DEPRECATED — Withdrawn: <reason>]`: Removed entirely with justification
+3. **Suspect detection from parent SYS:** If a parent SYS (in `system-design.md`)
+   is deprecated or modified, mark each ARCH that traces to it as
+   `[SUSPECT — Parent SYS-NNN {deprecated|modified}]`.
+4. **Suspect resolution:** For each suspect ARCH:
+   - **Re-parent** to the superseding SYS (if component continues under a new ID)
+   - **Deprecate** (if the component is withdrawn — cascade to downstream MOD, ITP)
+   - **Confirm active** (if still valid despite the parent change — remove the SUSPECT tag)
+5. **Modified modules:** Update content in-place, preserve the original ARCH ID.
+   Downstream artifacts (MOD, ITP) tracing to this ARCH become suspect.
+
+If no existing `architecture-design.md` is found, skip this step entirely — all
+modules are new.
+
+### 4. Decompose System Components into Architecture Modules
 
 Follow the **strict translator constraint**: You are decomposing system components into architecture modules. You must NOT invent capabilities not present in `system-design.md`.
 
@@ -112,9 +145,9 @@ For each architecture module identified during decomposition:
 - Reject "black box" descriptions: every `ARCH-NNN` MUST have an explicit interface contract (inputs, outputs, exceptions) in the Interface View
 - If a module description is too vague to derive contracts, emit a warning and refine
 
-### 4. Build the Four Architecture Views
+### 5. Build the Four Architecture Views
 
-#### 4.1 Logical View — Component Breakdown (IEEE 42010 / Kruchten 4+1)
+#### 5.1 Logical View — Component Breakdown (IEEE 42010 / Kruchten 4+1)
 
 The primary view. Fill the Logical View table from the template with all ARCH modules:
 
@@ -127,7 +160,7 @@ The primary view. Fill the Logical View table from the template with all ARCH mo
 - Cross-cutting modules appear in the same table with `[CROSS-CUTTING]` tag and rationale
 - No ARCH module may have an empty Parent System Components field (unless `[CROSS-CUTTING]`)
 
-#### 4.2 Process View — Dynamic Behavior (Kruchten 4+1)
+#### 5.2 Process View — Dynamic Behavior (Kruchten 4+1)
 
 Document runtime module interactions using Mermaid sequence diagrams:
 
@@ -142,7 +175,7 @@ Document runtime module interactions using Mermaid sequence diagrams:
 - Feed from the system design's Dependency View for inter-component relationships
 - This view directly feeds **concurrency testing** in the integration test phase
 
-#### 4.3 Interface View — Strict API Contracts (Kruchten 4+1)
+#### 5.3 Interface View — Strict API Contracts (Kruchten 4+1)
 
 For **every** ARCH-NNN module, define explicit interface contracts:
 
@@ -159,7 +192,7 @@ For **every** ARCH-NNN module, define explicit interface contracts:
 - Input/output contracts directly drive **Interface Contract Testing**
 - Cross-cutting modules MUST also have contracts defined here
 
-#### 4.4 Data Flow View — Data Transformation Chains (Kruchten 4+1)
+#### 5.4 Data Flow View — Data Transformation Chains (Kruchten 4+1)
 
 Trace data through architecture modules:
 
@@ -172,35 +205,13 @@ Trace data through architecture modules:
 - Each flow traces input → transformation → output with intermediate formats
 - Data flows directly drive **Data Flow Testing** in the integration test phase
 
-### 5. Safety-Critical Sections (Conditional)
+### 6. Safety-Critical Architecture Sections (Conditional)
 
-**Only generate these sections if `v-model-config.yml` has `domain` set.**
+**If a domain overlay is loaded (Step 2a), include the overlay's safety-critical architecture sections here.** The overlay provides domain-specific content such as safety integrity decomposition, defensive programming requirements, and temporal/execution constraints — with the appropriate standard references and table structures for the configured domain.
 
-#### ASIL Decomposition (ISO 26262-9 §5)
+If no domain overlay is loaded, skip this section entirely.
 
-| Parent Component | Parent ASIL | Child Module | Child ASIL | Independence Argument |
-|-----------------|-------------|-------------|------------|----------------------|
-
-- Document parent SYS ASIL → child ARCH ASIL allocation
-- Cover independence arguments for ASIL decomposition
-
-#### Defensive Programming (ISO 26262-6 §7.4.2 / DO-178C §6.3.3)
-
-| Module | Invalid Input | Detection Method | Recovery Action |
-|--------|--------------|-----------------|-----------------|
-
-- Document how invalid inputs from one module are caught by another
-- Cover input validation, range checks, and assertion strategies
-
-#### Temporal & Execution Constraints (DO-178C §6.3.4)
-
-| Module | Constraint Type | Value | Enforcement Mechanism |
-|--------|----------------|-------|----------------------|
-
-- Watchdog timers, execution order dependencies, deadlock prevention
-- Maximum execution time per module, scheduling constraints
-
-### 6. Coverage Gate
+### 7. Coverage Gate
 
 Run `validate-architecture-coverage.sh` (or reference its logic) for forward coverage:
 
@@ -210,7 +221,7 @@ Run `validate-architecture-coverage.sh` (or reference its logic) for forward cov
 
 Note: backward coverage (ARCH→ITP) will be validated after integration test generation.
 
-### 7. Write Output
+### 8. Write Output
 
 Write the complete architecture design document to `{VMODEL_DIR}/architecture-design.md` using the template structure. Include:
 
@@ -221,11 +232,11 @@ Write the complete architecture design document to `{VMODEL_DIR}/architecture-de
 5. **Process View**: Mermaid sequence diagrams for critical interactions
 6. **Interface View**: Strict API contracts for every ARCH module
 7. **Data Flow View**: Data transformation chains through modules
-8. **Safety-Critical Sections**: ASIL, Defensive Programming, Temporal Constraints (if domain configured)
+8. **Safety-Critical Sections**: Domain-specific architecture sections (if overlay loaded in Step 2a)
 9. **Coverage Summary**: Module count, forward coverage percentage
 10. **Derived Modules**: List of flagged items requiring human resolution
 
-### 8. Report Completion
+### 9. Report Completion
 
 Display a summary:
 - Total architecture modules generated (by type: Component/Service/Library/Utility/Adapter)
@@ -234,7 +245,7 @@ Display a summary:
 - Interface contracts defined: N/N ARCH modules (must be 100%)
 - Mermaid diagrams generated (count)
 - Derived modules flagged (count and brief descriptions)
-- Safety-critical sections included (yes/no, which domain)
+- Safety-critical sections included (yes/no, overlay loaded yes/no)
 - Path to the generated file
 - Next step: Recommend running `/speckit.v-model.integration-test` to generate the paired test plan
 

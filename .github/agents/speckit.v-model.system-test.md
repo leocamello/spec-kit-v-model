@@ -1,14 +1,13 @@
 ---
-description: Generate ISO 29119-compliant system test cases with named techniques
-  for every system component in the design.
+description: Generate ISO 29119-compliant system test cases with named techniques for every system component in the design.
 handoffs:
-- label: Build Traceability Matrix
-  agent: speckit.v-model.trace
-  prompt: Build the full traceability matrix including system-level coverage
-  send: true
-- label: Back to System Design
-  agent: speckit.v-model.system-design
-  prompt: Review or update the system design
+  - label: Build Traceability Matrix
+    agent: speckit.v-model.trace
+    prompt: Build the full traceability matrix including system-level coverage
+    send: true
+  - label: Back to System Design
+    agent: speckit.v-model.system-design
+    prompt: Review or update the system design
 scripts:
   sh: scripts/bash/setup-v-model.sh --json --require-reqs --require-system-design
   ps: scripts/powershell/setup-v-model.ps1 -Json -RequireReqs -RequireSystemDesign
@@ -17,6 +16,7 @@ scripts:
 
 <!-- Extension: v-model -->
 <!-- Config: .specify/extensions/v-model/ -->
+
 ## User Input
 
 ```text
@@ -59,20 +59,52 @@ For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\''m Groot
 
 3. **Load requirements**: Read `requirements.md` from the `REQUIREMENTS` path for context on what each requirement demands. This helps generate meaningful test conditions.
 
-4. **Load v-model-config.yml** (if it exists at the repository root):
-   - If `domain` is set to `iso_26262`, `do_178c`, or `iec_62304`: Enable safety-critical test sections (MC/DC, WCET)
-   - If absent or `domain` is empty: Skip safety-critical test sections entirely
-
-5. **Load existing system tests** (if `AVAILABLE_DOCS` contains `"system-test.md"`):
+4. **Load existing system tests** (if `AVAILABLE_DOCS` contains `"system-test.md"`):
    - Read the existing `system-test.md` to preserve existing STP/STS IDs and content
    - Identify the highest existing STP number to continue the sequence
    - New test cases append after existing ones — **never renumber**
 
-### 3. Generate System Test Cases
+### 2a. Domain Configuration
+
+Load `v-model-config.yml` (if it exists at the repository root).
+
+**If `domain` is set** (e.g., `iso_26262`, `do_178c`, `iec_62304`):
+1. Read the command overlay: `commands/overlays/{domain}/system-test.md`
+   - If it exists: note the safety-critical test sections (e.g., structural coverage targets, resource usage verification)
+   - If it does not exist: this domain does not extend this command — proceed with base only
+2. Where the base command has a domain-variant section (marked with "If a domain overlay is loaded, prefer its content"), use the overlay's version instead of the base default
+
+**If `domain` is empty or absent:**
+- Proceed with the base command only
+- Use generic best-practice terminology throughout
+- Do NOT include any safety-critical or domain-specific regulatory references
+
+### 3. Lifecycle Rules (When Evolving Existing Artifacts)
+
+When an existing `system-test.md` is loaded (step 2.4), apply these rules
+before generating new content:
+
+1. **Never delete an ID** — mark as `[DEPRECATED]`
+2. **Deprecation types:**
+   - `[DEPRECATED — Superseded by STP-NNN]`: Replaced by a new test case
+   - `[DEPRECATED — Withdrawn: <reason>]`: Removed entirely with justification
+3. **Suspect detection from parent SYS:** If a parent SYS (in `system-design.md`)
+   is deprecated or modified, mark each STP/STS that traces to it as
+   `[SUSPECT — Parent SYS-NNN {deprecated|modified}]`.
+4. **Suspect resolution:** For each suspect STP/STS:
+   - **Re-parent** to the superseding SYS (if component continues under a new ID)
+   - **Deprecate** (if the component is withdrawn)
+   - **Confirm active** (if still valid despite the parent change — remove the SUSPECT tag)
+5. **Modified test cases:** Update content in-place, preserve the original STP/STS ID.
+
+If no existing `system-test.md` is found, skip this step entirely — all
+test cases are new.
+
+### 4. Generate System Test Cases
 
 For each `SYS-NNN` component in the Decomposition View, generate one or more test cases using the appropriate ISO 29119 technique based on which design view the component primarily targets.
 
-#### 3.1 Technique Selection
+#### 4.1 Technique Selection
 
 Each test case MUST name its ISO 29119 technique explicitly. Select based on the design view being verified:
 
@@ -88,7 +120,7 @@ Each test case MUST name its ISO 29119 technique explicitly. Select based on the
 - Components appearing in multiple views should have test cases from each view
 - A single SYS may have Interface Contract + Boundary Value + Fault Injection test cases
 
-#### 3.2 Interface Contract Testing
+#### 4.2 Interface Contract Testing
 
 For components with entries in the Interface View:
 
@@ -105,7 +137,7 @@ For components with entries in the Interface View:
 
 **CRITICAL DISTINCTION**: External and internal interface tests are SEPARATE test cases. Auditors expect this distinction to be explicit.
 
-#### 3.3 Boundary Value Analysis
+#### 4.3 Boundary Value Analysis
 
 For components with entries in the Data Design View:
 
@@ -114,7 +146,7 @@ For components with entries in the Data Design View:
 3. Test **empty/null** conditions where applicable
 4. Test **maximum capacity**: largest expected dataset size
 
-#### 3.4 Fault Injection / Negative Testing
+#### 4.4 Fault Injection / Negative Testing
 
 For components with entries in the Dependency View:
 
@@ -123,11 +155,11 @@ For components with entries in the Dependency View:
 3. Verify isolation: failure in one component does NOT cascade to unrelated components
 4. Verify degradation: system remains operational with reduced capability
 
-### 4. Generate System Test Scenarios (BDD)
+### 5. Generate System Test Scenarios (BDD)
 
 For each test case (`STP-NNN-X`), generate one or more executable scenarios (`STS-NNN-X#`) in Given/When/Then format.
 
-#### 4.1 Technical Language Mandate
+#### 5.1 Technical Language Mandate
 
 System test scenarios MUST use **technical, component-oriented language**. They verify architectural behavior, not user journeys.
 
@@ -165,7 +197,7 @@ When the export API receives a GET request to /api/reports/export?format=csv
 Then the service returns a 200 response with Content-Type: text/csv within 3 seconds
 ```
 
-#### 4.2 Scenario Quality Criteria
+#### 5.2 Scenario Quality Criteria
 
 Every STS scenario must satisfy:
 1. **Technical precision**: References specific components, APIs, data formats, or error codes
@@ -173,28 +205,13 @@ Every STS scenario must satisfy:
 3. **Isolation**: Tests one component behavior per scenario (not end-to-end user flows)
 4. **Reproducibility**: Given conditions are specific enough to reproduce deterministically
 
-### 5. Safety-Critical Test Sections (Conditional)
+### 6. Safety-Critical Test Sections (Conditional)
 
-**Only generate these sections if `v-model-config.yml` has `domain` set.**
+**If a domain overlay is loaded (Step 2a), include the overlay's safety-critical test sections here.** The overlay provides domain-specific content such as structural coverage targets (e.g., MC/DC requirements per safety level), resource usage verification (e.g., WCET thresholds), and other domain-mandated test criteria — with the appropriate standard references and table structures for the configured domain.
 
-#### 5.1 Structural Coverage (DO-178C §6.4.4.2 / ISO 26262-6 §9.4.5)
+If no domain overlay is loaded, skip this section entirely.
 
-| Component | Coverage Target | Technique | Rationale |
-|-----------|----------------|-----------|-----------|
-
-- Specify MC/DC (Modified Condition/Decision Coverage) targets per component
-- Map to the ASIL/DAL level from the system design's FFI section
-
-#### 5.2 Resource Usage Testing (DO-178C §6.3.4 / ISO 26262-6 §9.4.4)
-
-| Component | Resource | Measurement | Threshold | Verification Method |
-|-----------|----------|-------------|-----------|---------------------|
-
-- WCET (Worst Case Execution Time) per critical component
-- Maximum stack depth
-- Heap usage limits
-
-### 6. Write Output
+### 7. Write Output
 
 Write the complete system test plan to `{VMODEL_DIR}/system-test.md` using the template structure. Include:
 
@@ -203,18 +220,18 @@ Write the complete system test plan to `{VMODEL_DIR}/system-test.md` using the t
 3. **ID Schema**: Document the STP-NNN-X → SYS-NNN relationship encoding
 4. **ISO 29119 Techniques**: Reference section listing applied techniques
 5. **System Tests**: All STP test cases with STS scenarios, organized by SYS component
-6. **Safety-Critical Sections**: MC/DC and WCET (if domain configured)
+6. **Safety-Critical Sections**: Domain-specific test sections (if overlay loaded in Step 2a)
 7. **Coverage Summary**: Component count, test case count, scenario count, coverage percentage
 8. **Uncovered Components**: List of SYS without STP (should be empty)
 
-### 7. Report Completion
+### 8. Report Completion
 
 Display a summary:
 - Total test cases (STP) and scenarios (STS) generated
 - Coverage: X/Y SYS components covered (must be 100% or flagged)
 - Technique distribution: Interface Contract [N], Boundary Value [N], Fault Injection [N], Equivalence Partitioning [N]
 - Language compliance: Confirm zero user-journey phrases in STS scenarios
-- Safety-critical sections included (yes/no, which domain)
+- Safety-critical sections included (yes/no, overlay loaded yes/no)
 - Path to the generated file
 - Next step: Recommend running `/speckit.v-model.trace` to build the full traceability matrix
 

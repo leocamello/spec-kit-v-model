@@ -1,22 +1,22 @@
 ---
-description: Generate ISO 29119-compliant integration test cases with four mandatory
-  techniques for every architecture module in the design.
+description: Generate ISO 29119-compliant integration test cases with four mandatory techniques for every architecture module in the design.
 handoffs:
-- label: Build Traceability Matrix
-  agent: speckit.v-model.trace
-  prompt: Build the full traceability matrix including integration-level coverage
-  send: true
-- label: Back to Architecture Design
-  agent: speckit.v-model.architecture-design
-  prompt: Review or update the architecture design
+  - label: Build Traceability Matrix
+    agent: speckit.v-model.trace
+    prompt: Build the full traceability matrix including integration-level coverage
+    send: true
+  - label: Back to Architecture Design
+    agent: speckit.v-model.architecture-design
+    prompt: Review or update the architecture design
 scripts:
-  sh: scripts/bash/setup-v-model.sh --json --require-reqs --require-system-design --require-arch-design
-  ps: scripts/powershell/setup-v-model.ps1 -Json -RequireReqs -RequireSystemDesign -RequireArchDesign
+  sh: scripts/bash/setup-v-model.sh --json --require-reqs --require-architecture-design
+  ps: scripts/powershell/setup-v-model.ps1 -Json -RequireReqs -RequireArchitectureDesign
 ---
 
 
 <!-- Extension: v-model -->
 <!-- Config: .specify/extensions/v-model/ -->
+
 ## User Input
 
 ```text
@@ -61,20 +61,52 @@ For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\''m Groot
 
 3. **Load requirements**: Read `requirements.md` from the `REQUIREMENTS` path for supplementary domain context.
 
-4. **Load v-model-config.yml** (if it exists at the repository root):
-   - If `domain` is set to `iso_26262`, `do_178c`, or `iec_62304`: Enable safety-critical test sections (SIL/HIL, Resource Contention)
-   - If absent or `domain` is empty: Skip safety-critical test sections entirely
-
-5. **Load existing integration tests** (if `AVAILABLE_DOCS` contains `"integration-test.md"`):
+4. **Load existing integration tests** (if `AVAILABLE_DOCS` contains `"integration-test.md"`):
    - Read the existing `integration-test.md` to preserve existing ITP/ITS IDs and content
    - Identify the highest existing ITP number to continue the sequence
    - New test cases append after existing ones — **never renumber**
 
-### 3. Generate Integration Test Cases
+### 2a. Domain Configuration
+
+Load `v-model-config.yml` (if it exists at the repository root).
+
+**If `domain` is set** (e.g., `iso_26262`, `do_178c`, `iec_62304`):
+1. Read the command overlay: `commands/overlays/{domain}/integration-test.md`
+   - If it exists: note the safety-critical integration test sections (e.g., SIL/HIL compatibility, resource contention verification)
+   - If it does not exist: this domain does not extend this command — proceed with base only
+2. Where the base command has a domain-variant section (marked with "If a domain overlay is loaded, prefer its content"), use the overlay's version instead of the base default
+
+**If `domain` is empty or absent:**
+- Proceed with the base command only
+- Use generic best-practice terminology throughout
+- Do NOT include any safety-critical or domain-specific regulatory references
+
+### 3. Lifecycle Rules (When Evolving Existing Artifacts)
+
+When an existing `integration-test.md` is loaded (step 2.4), apply these rules
+before generating new content:
+
+1. **Never delete an ID** — mark as `[DEPRECATED]`
+2. **Deprecation types:**
+   - `[DEPRECATED — Superseded by ITP-NNN]`: Replaced by a new test case
+   - `[DEPRECATED — Withdrawn: <reason>]`: Removed entirely with justification
+3. **Suspect detection from parent ARCH:** If a parent ARCH (in
+   `architecture-design.md`) is deprecated or modified, mark each ITP/ITS that
+   traces to it as `[SUSPECT — Parent ARCH-NNN {deprecated|modified}]`.
+4. **Suspect resolution:** For each suspect ITP/ITS:
+   - **Re-parent** to the superseding ARCH (if module continues under a new ID)
+   - **Deprecate** (if the architecture module is withdrawn)
+   - **Confirm active** (if still valid despite the parent change — remove the SUSPECT tag)
+5. **Modified test cases:** Update content in-place, preserve the original ITP/ITS ID.
+
+If no existing `integration-test.md` is found, skip this step entirely — all
+test cases are new.
+
+### 4. Generate Integration Test Cases
 
 For each `ARCH-NNN` module in the Logical View, generate one or more test cases using the appropriate ISO 29119 technique based on which architecture view the module's boundaries target.
 
-#### 3.1 Technique Selection
+#### 4.1 Technique Selection
 
 Each test case MUST name its ISO 29119 technique explicitly. Select based on the architecture view being verified:
 
@@ -92,7 +124,7 @@ Each test case MUST name its ISO 29119 technique explicitly. Select based on the
 - Modules with concurrency interactions get Concurrency Testing
 - `[CROSS-CUTTING]` modules get tested too — their interfaces are used by many consumers
 
-#### 3.2 Interface Contract Testing
+#### 4.2 Interface Contract Testing
 
 For each ARCH↔ARCH interface defined in the Interface View:
 
@@ -101,7 +133,7 @@ For each ARCH↔ARCH interface defined in the Interface View:
 3. **Contract violation**: Provider returns unexpected format → consumer detects and handles
 4. **Missing fields**: Optional vs required field handling across module boundaries
 
-#### 3.3 Data Flow Testing
+#### 4.3 Data Flow Testing
 
 For each data transformation chain in the Data Flow View:
 
@@ -110,7 +142,7 @@ For each data transformation chain in the Data Flow View:
 3. **Invalid data propagation**: Bad data injected at stage 1 → verify detection point in the chain
 4. **Empty/null data**: Verify chain handles empty inputs without corruption
 
-#### 3.4 Interface Fault Injection
+#### 4.4 Interface Fault Injection
 
 For each ARCH module's error contracts from the Interface View:
 
@@ -120,7 +152,7 @@ For each ARCH module's error contracts from the Interface View:
 4. **Error propagation**: Verify failure in one module does NOT cascade to unrelated modules
 5. **Graceful degradation**: System remains operational with reduced capability
 
-#### 3.5 Concurrency & Race Condition Testing
+#### 4.5 Concurrency & Race Condition Testing
 
 For each concurrent interaction in the Process View:
 
@@ -129,11 +161,11 @@ For each concurrent interaction in the Process View:
 3. **Deadlock avoidance**: Circular dependency scenarios → no deadlock
 4. **Resource starvation**: High-throughput scenario → fair resource allocation
 
-### 4. Generate Integration Test Scenarios (BDD)
+### 5. Generate Integration Test Scenarios (BDD)
 
 For each test case (`ITP-NNN-X`), generate one or more executable scenarios (`ITS-NNN-X#`) in Given/When/Then format.
 
-#### 4.1 Module-Boundary Language Mandate
+#### 5.1 Module-Boundary Language Mandate
 
 Integration test scenarios MUST use **module-boundary, interface-oriented language**. They verify interactions between modules, not internal logic or user journeys.
 
@@ -174,7 +206,7 @@ When ARCH-003 sends a parsed event payload to ARCH-005 (Event Emitter)
 Then ARCH-005 publishes the event with the exact schema defined in the Interface View contract
 ```
 
-#### 4.2 Scenario Quality Criteria
+#### 5.2 Scenario Quality Criteria
 
 Every ITS scenario must satisfy:
 1. **Boundary precision**: References specific ARCH-NNN module pairs and their interface contracts
@@ -182,27 +214,13 @@ Every ITS scenario must satisfy:
 3. **Interface focus**: Tests the SEAM between modules, not internal logic
 4. **Reproducibility**: Given conditions specify exact module states and inputs
 
-### 5. Safety-Critical Test Sections (Conditional)
+### 6. Safety-Critical Integration Test Sections (Conditional)
 
-**Only generate these sections if `v-model-config.yml` has `domain` set.**
+**If a domain overlay is loaded (Step 2a), include the overlay's safety-critical integration test sections here.** The overlay provides domain-specific content such as SIL/HIL compatibility requirements, resource contention verification, and other domain-mandated integration test criteria — with the appropriate standard references and table structures for the configured domain.
 
-#### 5.1 SIL/HIL Compatibility (ISO 26262-8 §9 / DO-178C §6.4)
+If no domain overlay is loaded, skip this section entirely.
 
-| Test ID | Environment | Hardware Dependencies | Stubbed Components |
-|---------|------------|----------------------|-------------------|
-
-- Scenarios executable in Software-in-the-Loop / Hardware-in-the-Loop environments
-- Document which physical interfaces are stubbed
-
-#### 5.2 Resource Contention (ISO 26262-6 §7.4.11 / DO-178C §6.3.3)
-
-| Module Pair | Shared Resource | Contention Scenario | Expected Resolution |
-|-------------|----------------|--------------------|--------------------|
-
-- Prove modules don't exhaust shared resources during interaction
-- Memory, CPU, bus bandwidth, IO channels
-
-### 6. Write Output
+### 7. Write Output
 
 Write the complete integration test plan to `{VMODEL_DIR}/integration-test.md` using the template structure. Include:
 
@@ -212,23 +230,23 @@ Write the complete integration test plan to `{VMODEL_DIR}/integration-test.md` u
 4. **ISO 29119 Techniques**: Reference section listing applied techniques
 5. **Integration Tests**: All ITP test cases with ITS scenarios, organized by ARCH module — each ITP names its technique and target architecture view
 6. **Test Harness & Mocking Strategy**: Mock/stub definitions per test case
-7. **Safety-Critical Sections**: SIL/HIL and Resource Contention (if domain configured)
+7. **Safety-Critical Sections**: Domain-specific integration test sections (if overlay loaded in Step 2a)
 8. **Coverage Summary**: Module count, test case count, scenario count, coverage percentage
 9. **Technique Distribution**: Interface Contract [N], Data Flow [N], Fault Injection [N], Concurrency [N]
 10. **Uncovered Modules**: List of ARCH without ITP (should be empty)
 
-### 7. Report Completion
+### 8. Report Completion
 
 Display a summary:
 - Total test cases (ITP) and scenarios (ITS) generated
 - Coverage: X/Y ARCH modules covered (must be 100% or flagged)
 - Technique distribution: Interface Contract [N], Data Flow [N], Fault Injection [N], Concurrency [N]
 - Language compliance: Confirm zero user-journey phrases AND zero internal-logic phrases in ITS scenarios
-- Safety-critical sections included (yes/no, which domain)
+- Safety-critical sections included (yes/no, overlay loaded yes/no)
 - Path to the generated file
 - Next step: Recommend running `/speckit.v-model.trace` to build the full traceability matrix
 
-### 8. Test Harness & Mocking Strategy
+### 9. Test Harness & Mocking Strategy
 
 After writing the test plan, include a "Test Harness & Mocking Strategy" section that describes:
 1. Which modules need mocks/stubs for integration testing

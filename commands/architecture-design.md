@@ -60,18 +60,29 @@ For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\''m Groot
 
 3. **Load requirements**: Read `requirements.md` from the `REQUIREMENTS` path for supplementary domain context. This provides insight into the problem domain but does NOT override system design.
 
-4. **Load v-model-config.yml** (if it exists at the repository root):
-   - If `domain` is set to `iso_26262`, `do_178c`, or `iec_62304`: Enable safety-critical sections (ASIL Decomposition, Defensive Programming, Temporal Constraints)
-   - If absent or `domain` is empty: Skip safety-critical sections entirely
-
-5. **Load existing architecture design** (if `AVAILABLE_DOCS` contains `"architecture-design.md"`):
+4. **Load existing architecture design** (if `AVAILABLE_DOCS` contains `"architecture-design.md"`):
    - Read the existing `architecture-design.md` to preserve existing ARCH IDs and content
    - Identify the highest existing ARCH number to continue the sequence
    - New modules append after existing ones — **never renumber**
 
+### 2a. Domain Configuration
+
+Load `v-model-config.yml` (if it exists at the repository root).
+
+**If `domain` is set** (e.g., `iso_26262`, `do_178c`, `iec_62304`):
+1. Read the command overlay: `commands/overlays/{domain}/architecture-design.md`
+   - If it exists: note the safety-critical architecture sections (e.g., safety integrity decomposition, defensive programming requirements, temporal constraints)
+   - If it does not exist: this domain does not extend this command — proceed with base only
+2. Where the base command has a domain-variant section (marked with "If a domain overlay is loaded, prefer its content"), use the overlay's version instead of the base default
+
+**If `domain` is empty or absent:**
+- Proceed with the base command only
+- Use generic best-practice terminology throughout
+- Do NOT include any safety-critical or domain-specific regulatory references
+
 ### 3. Lifecycle Rules (When Evolving Existing Artifacts)
 
-When an existing `architecture-design.md` is loaded (step 2.5), apply these
+When an existing `architecture-design.md` is loaded (step 2.4), apply these
 rules before generating new content:
 
 1. **Never delete an ID** — mark as `[DEPRECATED]`
@@ -190,33 +201,11 @@ Trace data through architecture modules:
 - Each flow traces input → transformation → output with intermediate formats
 - Data flows directly drive **Data Flow Testing** in the integration test phase
 
-### 6. Safety-Critical Sections (Conditional)
+### 6. Safety-Critical Architecture Sections (Conditional)
 
-**Only generate these sections if `v-model-config.yml` has `domain` set.**
+**If a domain overlay is loaded (Step 2a), include the overlay's safety-critical architecture sections here.** The overlay provides domain-specific content such as safety integrity decomposition, defensive programming requirements, and temporal/execution constraints — with the appropriate standard references and table structures for the configured domain.
 
-#### ASIL Decomposition (ISO 26262-9 §5)
-
-| Parent Component | Parent ASIL | Child Module | Child ASIL | Independence Argument |
-|-----------------|-------------|-------------|------------|----------------------|
-
-- Document parent SYS ASIL → child ARCH ASIL allocation
-- Cover independence arguments for ASIL decomposition
-
-#### Defensive Programming (ISO 26262-6 §7.4.2 / DO-178C §6.3.3)
-
-| Module | Invalid Input | Detection Method | Recovery Action |
-|--------|--------------|-----------------|-----------------|
-
-- Document how invalid inputs from one module are caught by another
-- Cover input validation, range checks, and assertion strategies
-
-#### Temporal & Execution Constraints (DO-178C §6.3.4)
-
-| Module | Constraint Type | Value | Enforcement Mechanism |
-|--------|----------------|-------|----------------------|
-
-- Watchdog timers, execution order dependencies, deadlock prevention
-- Maximum execution time per module, scheduling constraints
+If no domain overlay is loaded, skip this section entirely.
 
 ### 7. Coverage Gate
 
@@ -239,7 +228,7 @@ Write the complete architecture design document to `{VMODEL_DIR}/architecture-de
 5. **Process View**: Mermaid sequence diagrams for critical interactions
 6. **Interface View**: Strict API contracts for every ARCH module
 7. **Data Flow View**: Data transformation chains through modules
-8. **Safety-Critical Sections**: ASIL, Defensive Programming, Temporal Constraints (if domain configured)
+8. **Safety-Critical Sections**: Domain-specific architecture sections (if overlay loaded in Step 2a)
 9. **Coverage Summary**: Module count, forward coverage percentage
 10. **Derived Modules**: List of flagged items requiring human resolution
 
@@ -252,7 +241,7 @@ Display a summary:
 - Interface contracts defined: N/N ARCH modules (must be 100%)
 - Mermaid diagrams generated (count)
 - Derived modules flagged (count and brief descriptions)
-- Safety-critical sections included (yes/no, which domain)
+- Safety-critical sections included (yes/no, overlay loaded yes/no)
 - Path to the generated file
 - Next step: Recommend running `/speckit.v-model.integration-test` to generate the paired test plan
 

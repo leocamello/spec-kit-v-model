@@ -387,51 +387,51 @@ This document defines the Acceptance Test Plan for the Architecture Design ↔ I
 
 ---
 
-### Requirement Validation: REQ-021 (Safety-Critical Architecture Sections)
+### Requirement Validation: REQ-021 (Safety-Critical Architecture Sections) — [SUSPECT — Parent REQ-021 deprecated]
 
-#### Test Case: ATP-021-A (Safety Sections Present When Configured)
-
-**Linked Requirement:** REQ-021
-**Description:** Verify the architecture design includes ASIL Decomposition, Defensive Programming, and Temporal & Execution Constraints when a safety-critical domain is configured.
-
-* **User Scenario: SCN-021-A1**
-  * **Given** a `v-model-config.yml` exists with `domain: iso_26262` `And` a `system-design.md` exists with `SYS-NNN` components
-  * **When** the user invokes `/speckit.v-model.architecture-design`
-  * **Then** the `architecture-design.md` contains an "ASIL Decomposition" section with safety integrity allocation per module `And` a "Defensive Programming" section `And` a "Temporal & Execution Constraints" section
-
-#### Test Case: ATP-021-B (Safety Sections Absent When Not Configured)
+#### Test Case: ATP-021-A (Safety Sections Present When Configured) [DEPRECATED — Superseded by ATP-050-A]
 
 **Linked Requirement:** REQ-021
-**Description:** Verify safety-critical architecture sections are omitted when no regulated domain is configured.
+**Description:** ~~Verify the architecture design includes ASIL Decomposition, Defensive Programming, and Temporal & Execution Constraints when a safety-critical domain is configured.~~
 
-* **User Scenario: SCN-021-B1**
-  * **Given** no `v-model-config.yml` exists `Or` the file does not contain a `domain` field
-  * **When** the user invokes `/speckit.v-model.architecture-design`
-  * **Then** the `architecture-design.md` does not contain ASIL Decomposition, Defensive Programming, or Temporal & Execution Constraints sections
+* **User Scenario: SCN-021-A1** [DEPRECATED — Superseded by SCN-050-A1]
+  * **Given** ~~a `v-model-config.yml` exists with `domain: iso_26262` `And` a `system-design.md` exists with `SYS-NNN` components~~
+  * **When** ~~the user invokes `/speckit.v-model.architecture-design`~~
+  * **Then** ~~the `architecture-design.md` contains an "ASIL Decomposition" section with safety integrity allocation per module `And` a "Defensive Programming" section `And` a "Temporal & Execution Constraints" section~~
+
+#### Test Case: ATP-021-B (Safety Sections Absent When Not Configured) [DEPRECATED — Superseded by ATP-050-A]
+
+**Linked Requirement:** REQ-021
+**Description:** ~~Verify safety-critical architecture sections are omitted when no regulated domain is configured.~~
+
+* **User Scenario: SCN-021-B1** [DEPRECATED — Superseded by SCN-050-A1]
+  * **Given** ~~no `v-model-config.yml` exists `Or` the file does not contain a `domain` field~~
+  * **When** ~~the user invokes `/speckit.v-model.architecture-design`~~
+  * **Then** ~~the `architecture-design.md` does not contain ASIL Decomposition, Defensive Programming, or Temporal & Execution Constraints sections~~
 
 ---
 
-### Requirement Validation: REQ-022 (Safety-Critical Integration Test Sections)
+### Requirement Validation: REQ-022 (Safety-Critical Integration Test Sections) — [SUSPECT — Parent REQ-022 deprecated]
 
-#### Test Case: ATP-022-A (Safety Test Sections Present When Configured)
-
-**Linked Requirement:** REQ-022
-**Description:** Verify the integration test includes SIL/HIL Compatibility and Resource Contention sections when a safety-critical domain is configured.
-
-* **User Scenario: SCN-022-A1**
-  * **Given** a `v-model-config.yml` exists with `domain: do_178c` `And` an `architecture-design.md` exists
-  * **When** the user invokes `/speckit.v-model.integration-test`
-  * **Then** the `integration-test.md` contains a "SIL/HIL Compatibility" section with scenarios executable in loop environments `And` a "Resource Contention" section
-
-#### Test Case: ATP-022-B (Safety Test Sections Absent When Not Configured)
+#### Test Case: ATP-022-A (Safety Test Sections Present When Configured) [DEPRECATED — Superseded by ATP-051-A]
 
 **Linked Requirement:** REQ-022
-**Description:** Verify safety-critical integration test sections are omitted when no regulated domain is configured.
+**Description:** ~~Verify the integration test includes SIL/HIL Compatibility and Resource Contention sections when a safety-critical domain is configured.~~
 
-* **User Scenario: SCN-022-B1**
-  * **Given** no `v-model-config.yml` exists `Or` the file does not contain a `domain` field
-  * **When** the user invokes `/speckit.v-model.integration-test`
-  * **Then** the `integration-test.md` does not contain SIL/HIL Compatibility or Resource Contention sections
+* **User Scenario: SCN-022-A1** [DEPRECATED — Superseded by SCN-051-A1]
+  * **Given** ~~a `v-model-config.yml` exists with `domain: do_178c` `And` an `architecture-design.md` exists~~
+  * **When** ~~the user invokes `/speckit.v-model.integration-test`~~
+  * **Then** ~~the `integration-test.md` contains a "SIL/HIL Compatibility" section with scenarios executable in loop environments `And` a "Resource Contention" section~~
+
+#### Test Case: ATP-022-B (Safety Test Sections Absent When Not Configured) [DEPRECATED — Superseded by ATP-051-A]
+
+**Linked Requirement:** REQ-022
+**Description:** ~~Verify safety-critical integration test sections are omitted when no regulated domain is configured.~~
+
+* **User Scenario: SCN-022-B1** [DEPRECATED — Superseded by SCN-051-A1]
+  * **Given** ~~no `v-model-config.yml` exists `Or` the file does not contain a `domain` field~~
+  * **When** ~~the user invokes `/speckit.v-model.integration-test`~~
+  * **Then** ~~the `integration-test.md` does not contain SIL/HIL Compatibility or Resource Contention sections~~
 
 ---
 
@@ -1069,27 +1069,27 @@ This document defines the Acceptance Test Plan for the Architecture Design ↔ I
 
 ---
 
-### Requirement Validation: REQ-CN-001 (Safety-Critical Sections Omitted by Default)
+### Requirement Validation: REQ-CN-001 (Safety-Critical Sections Omitted by Default) — [SUSPECT — Parent REQ-CN-001 deprecated]
 
-#### Test Case: ATP-CN-001-A (No Safety Sections Without Config)
-
-**Linked Requirement:** REQ-CN-001
-**Description:** Verify safety-critical sections are omitted when no regulated domain is configured.
-
-* **User Scenario: SCN-CN-001-A1**
-  * **Given** no `v-model-config.yml` exists `Or` the file does not contain a `domain` field
-  * **When** the user invokes `/speckit.v-model.architecture-design` and `/speckit.v-model.integration-test`
-  * **Then** neither `architecture-design.md` nor `integration-test.md` contains sections for ASIL Decomposition, Defensive Programming, Temporal & Execution Constraints, SIL/HIL Compatibility, or Resource Contention
-
-#### Test Case: ATP-CN-001-B (Sections Present Only When Explicitly Enabled)
+#### Test Case: ATP-CN-001-A (No Safety Sections Without Config) [DEPRECATED — Superseded by ATP-054-A]
 
 **Linked Requirement:** REQ-CN-001
-**Description:** Verify sections appear only when a specific regulated domain is configured.
+**Description:** ~~Verify safety-critical sections are omitted when no regulated domain is configured.~~
 
-* **User Scenario: SCN-CN-001-B1**
-  * **Given** a `v-model-config.yml` exists with `domain: iso_26262`
-  * **When** the user invokes `/speckit.v-model.architecture-design`
-  * **Then** the `architecture-design.md` contains ASIL Decomposition, Defensive Programming, and Temporal & Execution Constraints sections `And` these sections are populated with module-specific analysis
+* **User Scenario: SCN-CN-001-A1** [DEPRECATED — Superseded by SCN-054-A1]
+  * **Given** ~~no `v-model-config.yml` exists `Or` the file does not contain a `domain` field~~
+  * **When** ~~the user invokes `/speckit.v-model.architecture-design` and `/speckit.v-model.integration-test`~~
+  * **Then** ~~neither `architecture-design.md` nor `integration-test.md` contains sections for ASIL Decomposition, Defensive Programming, Temporal & Execution Constraints, SIL/HIL Compatibility, or Resource Contention~~
+
+#### Test Case: ATP-CN-001-B (Sections Present Only When Explicitly Enabled) [DEPRECATED — Superseded by ATP-054-A]
+
+**Linked Requirement:** REQ-CN-001
+**Description:** ~~Verify sections appear only when a specific regulated domain is configured.~~
+
+* **User Scenario: SCN-CN-001-B1** [DEPRECATED — Superseded by SCN-054-A1]
+  * **Given** ~~a `v-model-config.yml` exists with `domain: iso_26262`~~
+  * **When** ~~the user invokes `/speckit.v-model.architecture-design`~~
+  * **Then** ~~the `architecture-design.md` contains ASIL Decomposition, Defensive Programming, and Temporal & Execution Constraints sections `And` these sections are populated with module-specific analysis~~
 
 ---
 
@@ -1121,18 +1121,215 @@ This document defines the Acceptance Test Plan for the Architecture Design ↔ I
 
 ---
 
+### Requirement Validation: REQ-050 (Architecture Design Overlay Loading)
+
+#### Test Case: ATP-050-A (Overlay loaded when domain is set)
+
+**Linked Requirement:** REQ-050
+**Description:** Verify the command loads the domain overlay and uses its safety-critical architecture sections when `v-model-config.yml` specifies a `domain` value.
+**Validation Condition:** Domain overlay file is read and domain-specific architecture sections appear in the output.
+**Expected Result:** Domain-specific architecture sections (e.g., ASIL Decomposition for iso_26262) appear in architecture-design.md.
+
+* **User Scenario: SCN-050-A1**
+  * **Given** a project with `v-model-config.yml` containing `domain: iso_26262` and an overlay at `commands/overlays/iso_26262/architecture-design.md`
+  * **When** `/speckit.v-model.architecture-design` runs
+  * **Then** the architecture-design.md contains ASIL Decomposition, Defensive Programming, and Temporal Constraints sections from the overlay
+
+#### Test Case: ATP-050-B (Overlay not loaded when domain is absent)
+
+**Linked Requirement:** REQ-050
+**Description:** Verify the command does not attempt to load an overlay when no `domain` is specified in `v-model-config.yml`.
+**Validation Condition:** No overlay file is read and no domain-specific architecture sections appear in the output.
+**Expected Result:** architecture-design.md contains only generic architecture sections with no domain-specific content.
+
+* **User Scenario: SCN-050-B1**
+  * **Given** a project with no `v-model-config.yml` or a config file without a `domain` field
+  * **When** `/speckit.v-model.architecture-design` runs
+  * **Then** the architecture-design.md does not contain ASIL Decomposition, Defensive Programming, or Temporal Constraints sections
+
+---
+
+### Requirement Validation: REQ-051 (Integration Test Overlay Loading)
+
+#### Test Case: ATP-051-A (Overlay loaded when domain is set)
+
+**Linked Requirement:** REQ-051
+**Description:** Verify the command loads the domain overlay and uses its safety-critical test sections when `v-model-config.yml` specifies a `domain` value.
+**Validation Condition:** Domain overlay file is read and domain-specific test sections appear in the output.
+**Expected Result:** Domain-specific test sections (e.g., SIL/HIL Compatibility for do_178c) appear in integration-test.md.
+
+* **User Scenario: SCN-051-A1**
+  * **Given** a project with `v-model-config.yml` containing `domain: do_178c` and an overlay at `commands/overlays/do_178c/integration-test.md`
+  * **When** `/speckit.v-model.integration-test` runs
+  * **Then** the integration-test.md contains SIL/HIL Compatibility and Resource Contention sections from the overlay
+
+#### Test Case: ATP-051-B (Overlay not loaded when domain is absent)
+
+**Linked Requirement:** REQ-051
+**Description:** Verify the command does not attempt to load an overlay when no `domain` is specified in `v-model-config.yml`.
+**Validation Condition:** No overlay file is read and no domain-specific test sections appear in the output.
+**Expected Result:** integration-test.md contains only generic test sections with no domain-specific content.
+
+* **User Scenario: SCN-051-B1**
+  * **Given** a project with no `v-model-config.yml` or a config file without a `domain` field
+  * **When** `/speckit.v-model.integration-test` runs
+  * **Then** the integration-test.md does not contain SIL/HIL Compatibility or Resource Contention sections
+
+---
+
+### Requirement Validation: REQ-052 (Architecture Design Generic Framing)
+
+#### Test Case: ATP-052-A (Base text uses generic architecture framing)
+
+**Linked Requirement:** REQ-052
+**Description:** Verify the architecture-design command description and goal use generic framing referencing ISO/IEC/IEEE 42010 without mentioning safety standards in base text.
+**Validation Condition:** Base command text references ISO/IEC/IEEE 42010 and does not reference domain-specific safety standards.
+**Expected Result:** Command description and goal contain "ISO/IEC/IEEE 42010 architecture description" framing.
+
+* **User Scenario: SCN-052-A1**
+  * **Given** the base `/speckit.v-model.architecture-design` command definition without any overlay loaded
+  * **When** the user inspects the command description and goal text
+  * **Then** the text references "ISO/IEC/IEEE 42010 architecture description" `And` does not mention ISO 26262, DO-178C, IEC 61508, or other domain-specific safety standards
+
+#### Test Case: ATP-052-B (Domain-specific guidance only via overlay)
+
+**Linked Requirement:** REQ-052
+**Description:** Verify domain-specific architecture guidance appears only when a domain overlay is loaded, not from base text.
+**Validation Condition:** Domain-specific architecture terms are absent in base output and present only after overlay loading.
+**Expected Result:** No domain-specific architecture guidance in base output; overlay-sourced sections present when domain is set.
+
+* **User Scenario: SCN-052-B1**
+  * **Given** a project with `v-model-config.yml` containing `domain: iso_26262` and the corresponding overlay file
+  * **When** `/speckit.v-model.architecture-design` runs
+  * **Then** domain-specific sections originate from the overlay file `And` the base command template contains no hard-coded safety standard references
+
+---
+
+### Requirement Validation: REQ-053 (Integration Test Generic Framing)
+
+#### Test Case: ATP-053-A (Base text uses generic testing framing)
+
+**Linked Requirement:** REQ-053
+**Description:** Verify the integration-test command description and goal use generic framing referencing ISO 29119 without mentioning safety standards in base text.
+**Validation Condition:** Base command text references ISO 29119 and does not reference domain-specific safety standards.
+**Expected Result:** Command description and goal contain "ISO 29119 integration test design" framing.
+
+* **User Scenario: SCN-053-A1**
+  * **Given** the base `/speckit.v-model.integration-test` command definition without any overlay loaded
+  * **When** the user inspects the command description and goal text
+  * **Then** the text references "ISO 29119 integration test design" `And` does not mention ISO 26262, DO-178C, IEC 61508, or other domain-specific safety standards
+
+#### Test Case: ATP-053-B (Domain-specific guidance only via overlay)
+
+**Linked Requirement:** REQ-053
+**Description:** Verify domain-specific test guidance appears only when a domain overlay is loaded, not from base text.
+**Validation Condition:** Domain-specific test terms are absent in base output and present only after overlay loading.
+**Expected Result:** No domain-specific test guidance in base output; overlay-sourced sections present when domain is set.
+
+* **User Scenario: SCN-053-B1**
+  * **Given** a project with `v-model-config.yml` containing `domain: do_178c` and the corresponding overlay file
+  * **When** `/speckit.v-model.integration-test` runs
+  * **Then** domain-specific sections originate from the overlay file `And` the base command template contains no hard-coded safety standard references
+
+---
+
+### Requirement Validation: REQ-054 (No-Domain Fallback to General-Purpose Output)
+
+#### Test Case: ATP-054-A (General-purpose output without domain config)
+
+**Linked Requirement:** REQ-054
+**Description:** Verify architecture-design and integration-test commands produce general-purpose output without loading overlays when no domain is set or no config exists.
+**Validation Condition:** Commands complete successfully and output contains no domain-specific or safety-critical sections.
+**Expected Result:** Both architecture-design.md and integration-test.md contain only generic content with no overlay-sourced sections.
+
+* **User Scenario: SCN-054-A1**
+  * **Given** no `v-model-config.yml` exists in the project
+  * **When** the user invokes `/speckit.v-model.architecture-design` and `/speckit.v-model.integration-test`
+  * **Then** neither `architecture-design.md` nor `integration-test.md` contains ASIL Decomposition, Defensive Programming, Temporal Constraints, SIL/HIL Compatibility, or Resource Contention sections
+
+#### Test Case: ATP-054-B (General-purpose output when config exists without domain)
+
+**Linked Requirement:** REQ-054
+**Description:** Verify commands produce general-purpose output when `v-model-config.yml` exists but does not contain a `domain` field.
+**Validation Condition:** Commands complete successfully with config present but no domain, and output contains no overlay-sourced sections.
+**Expected Result:** Both commands produce generic output identical to the no-config scenario.
+
+* **User Scenario: SCN-054-B1**
+  * **Given** a `v-model-config.yml` exists but does not contain a `domain` field
+  * **When** the user invokes `/speckit.v-model.architecture-design` and `/speckit.v-model.integration-test`
+  * **Then** neither `architecture-design.md` nor `integration-test.md` contains domain-specific sections `And` output is identical to runs without any config file
+
+---
+
+### Requirement Validation: REQ-055 (Assembly Protocol Overlay Support)
+
+#### Test Case: ATP-055-A (All generative commands support overlay loading)
+
+**Linked Requirement:** REQ-055
+**Description:** Verify all generative commands in this feature support domain overlay loading via the assembly protocol when a domain is configured.
+**Validation Condition:** Each generative command checks for and loads its corresponding overlay file from `commands/overlays/{domain}/`.
+**Expected Result:** Every generative command with a matching overlay file incorporates domain-specific sections from the overlay.
+
+* **User Scenario: SCN-055-A1**
+  * **Given** a project with `v-model-config.yml` containing `domain: iso_26262` and overlay files exist for each generative command under `commands/overlays/iso_26262/`
+  * **When** each generative command in the feature is invoked
+  * **Then** each command loads its corresponding overlay file and includes domain-specific sections in its output
+
+#### Test Case: ATP-055-B (Commands work gracefully without overlay files)
+
+**Linked Requirement:** REQ-055
+**Description:** Verify generative commands operate correctly when a domain is set but the corresponding overlay file does not exist.
+**Validation Condition:** Commands complete without error and produce generic output when overlay files are missing.
+**Expected Result:** Commands produce general-purpose output and do not fail when overlay files are absent for the configured domain.
+
+* **User Scenario: SCN-055-B1**
+  * **Given** a project with `v-model-config.yml` containing `domain: custom_domain` but no overlay files exist under `commands/overlays/custom_domain/`
+  * **When** each generative command in the feature is invoked
+  * **Then** each command completes without error `And` produces generic output without domain-specific sections
+
+---
+
+### Requirement Validation: REQ-NF-006 (Domain-Agnostic Extensibility)
+
+#### Test Case: ATP-NF-006-A (New domain works with overlay files only)
+
+**Linked Requirement:** REQ-NF-006
+**Description:** Verify adding a new regulated domain requires only adding overlay files under `commands/overlays/{domain}/` with no modification to base commands or templates.
+**Validation Condition:** A new domain directory with overlay files is created, and commands use the new overlays without any base command changes.
+**Expected Result:** Commands load and apply the new domain's overlay files producing domain-specific output.
+
+* **User Scenario: SCN-NF-006-A1**
+  * **Given** a new domain directory `commands/overlays/iec_62304/` with `architecture-design.md` and `integration-test.md` overlay files `And` `v-model-config.yml` set to `domain: iec_62304`
+  * **When** `/speckit.v-model.architecture-design` and `/speckit.v-model.integration-test` run
+  * **Then** both commands load the iec_62304 overlays and include domain-specific sections `And` no base command files or templates were modified
+
+#### Test Case: ATP-NF-006-B (Base commands unchanged after domain addition)
+
+**Linked Requirement:** REQ-NF-006
+**Description:** Verify that base command definitions and templates remain unmodified after adding a new domain's overlay files.
+**Validation Condition:** Base command files have identical content before and after adding a new domain.
+**Expected Result:** No diff in base command files after adding a new domain overlay directory.
+
+* **User Scenario: SCN-NF-006-B1**
+  * **Given** the base command files for architecture-design and integration-test are captured before adding a new domain
+  * **When** a new domain overlay directory `commands/overlays/iec_62304/` is added with overlay files
+  * **Then** the base command files for architecture-design and integration-test are byte-identical to their pre-addition state
+
+---
+
 ## Coverage Summary
 
 | Metric | Count |
 |--------|-------|
-| Total Requirements | 61 |
-| Total Test Cases (ATP) | 86 |
-| Total Scenarios (SCN) | 86 |
+| Total Requirements | 68 (3 deprecated) |
+| Total Test Cases (ATP) | 100 (6 deprecated) |
+| Total Scenarios (SCN) | 100 (6 deprecated) |
 | REQ → ATP Coverage | 100% |
 | ATP → SCN Coverage | 100% |
 
-**Validation Status**: ✅ Full Coverage
+**Validation Status**: ✅ Full Coverage (deprecated items excluded from active counts)
 **Generated**: 2026-02-21
+**Last Evolved**: 2026-04-19
 **Validated by**: `validate-requirement-coverage.sh` (deterministic)
 
 ## Uncovered Requirements

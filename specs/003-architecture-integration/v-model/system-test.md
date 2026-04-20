@@ -2,14 +2,27 @@
 
 **Feature Branch**: `003-architecture-integration`
 **Created**: 2026-02-21
-**Status**: Approved
+**Updated**: 2026-03-07
+**Status**: Approved (Evolved)
 **Source**: `specs/003-architecture-integration/v-model/system-design.md`
 
 ## Overview
 
 This document defines the System Test Plan for the Architecture Design ↔ Integration Testing feature (v0.3.0). Every system component in `system-design.md` has one or more Test Cases (STP), and every Test Case has one or more executable System Scenarios (STS) in technical BDD format (Given/When/Then).
 
-System tests verify **architectural behavior**, not user journeys. Language must be technical and component-oriented. The feature under test comprises 2 new LLM agent commands, 2 templates, 1 trace command extension, 2 matrix builder script extensions (Bash + PowerShell), 2 validation scripts (Bash + PowerShell), setup script extensions, an extension manifest update, and a CI evaluation suite extension.
+System tests verify **architectural behavior**, not user journeys. Language must be technical and component-oriented. The feature under test comprises 2 new LLM agent commands, 2 templates, 1 trace command extension, 2 matrix builder script extensions (Bash + PowerShell), 2 validation scripts (Bash + PowerShell), setup script extensions, an extension manifest update, a CI evaluation suite extension, and a domain overlay infrastructure module.
+
+**Evolution History (Overlay Evolution Wave):** This document was evolved from the original 12-component / 27 STP / 64 STS test plan to incorporate SYS-013 (Domain Overlay Infrastructure) and to apply lifecycle suspect analysis for deprecated parent requirements:
+
+- **SYS-001 (STP-001-A through STP-001-C)**: Suspect from REQ-021 (deprecated → REQ-050) and REQ-CN-001 (deprecated → REQ-054). Resolved: SYS-001 confirmed active with updated parents; existing STPs confirmed active. New STP-001-D added for domain overlay loading behavior.
+- **SYS-002 (STP-002-A through STP-002-C)**: Suspect from REQ-022 (deprecated → REQ-051) and REQ-CN-001 (deprecated → REQ-054). Resolved: SYS-002 confirmed active with updated parents; existing STPs confirmed active. New STP-002-D added for domain overlay loading behavior.
+- **SYS-003 (STP-003-A through STP-003-C)**: Suspect from REQ-048 (deprecated). Resolved: SYS-003 confirmed active; REQ-048 removed from parents. Existing STPs confirmed active.
+- **SYS-004 (STP-004-A, STP-004-B)**: Suspect from REQ-021 (deprecated → REQ-050). Resolved: SYS-004 confirmed active; re-parented to REQ-050. Existing STPs confirmed active.
+- **SYS-005 (STP-005-A, STP-005-B)**: Suspect from REQ-022 (deprecated → REQ-051). Resolved: SYS-005 confirmed active; re-parented to REQ-051. Existing STPs confirmed active.
+- **SYS-006 (STP-006-A through STP-006-C)**: Suspect from REQ-047 (deprecated). Resolved: SYS-006 confirmed active; capability subsumed by REQ-035. REQ-047 removed from parents. Existing STPs confirmed active.
+- **SYS-013**: New component — STP-013-A through STP-013-D added.
+
+No STPs were deprecated in this evolution — all parent SYS components remain active.
 
 ## ID Schema
 
@@ -29,7 +42,7 @@ Each test case MUST identify its technique by name:
 
 ### Component Verification: SYS-001 (Architecture Design Command)
 
-**Parent Requirements**: REQ-001, REQ-002, REQ-003, REQ-004, REQ-005, REQ-006, REQ-007, REQ-008, REQ-009, REQ-010, REQ-012, REQ-013, REQ-021, REQ-041, REQ-045, REQ-NF-002, REQ-IF-001, REQ-CN-001
+**Parent Requirements**: REQ-001, REQ-002, REQ-003, REQ-004, REQ-005, REQ-006, REQ-007, REQ-008, REQ-009, REQ-010, REQ-012, REQ-013, REQ-041, REQ-045, REQ-050, REQ-052, REQ-054, REQ-055, REQ-NF-002, REQ-NF-006, REQ-IF-001
 
 #### Test Case: STP-001-A (File I/O Contract Compliance)
 
@@ -38,7 +51,7 @@ Each test case MUST identify its technique by name:
 **Description**: Verifies that the architecture design command reads exclusively from `{FEATURE_DIR}/v-model/system-design.md` and produces `{FEATURE_DIR}/v-model/architecture-design.md` containing `ARCH-NNN` identifiers with four mandatory 42010/4+1 views (Logical, Process, Interface, Data Flow), many-to-many SYS↔ARCH traceability, `[CROSS-CUTTING]` tagging, derived module flagging, and anti-pattern warnings for incomplete interface contracts.
 
 * **System Scenario: STS-001-A1**
-  * **Given** the architecture-design command receives `system-design.md` containing 12 `SYS-NNN` components in the Decomposition View
+  * **Given** the architecture-design command receives `system-design.md` containing 13 `SYS-NNN` components in the Decomposition View
   * **When** the command executes generation
   * **Then** the command produces `architecture-design.md` containing `ARCH-NNN` identifiers (3-digit zero-padded), a Logical View with "Parent System Components" fields, a Process View with Mermaid sequence diagrams, an Interface View with inputs/outputs/exceptions per module, and a Data Flow View with transformation chains
 
@@ -77,7 +90,7 @@ Each test case MUST identify its technique by name:
 
 **Technique**: Fault Injection
 **Target View**: Dependency View
-**Description**: Verifies that the architecture design command degrades gracefully when its dependencies (SYS-004 template, SYS-009 setup) are unavailable or when input is empty.
+**Description**: Verifies that the architecture design command degrades gracefully when its dependencies (SYS-004 template, SYS-009 setup, SYS-013 overlay infrastructure) are unavailable or when input is empty.
 
 * **System Scenario: STS-001-C1**
   * **Given** the architecture-design command is invoked and `architecture-design-template.md` (SYS-004) is not found in the `templates/` directory
@@ -99,11 +112,37 @@ Each test case MUST identify its technique by name:
   * **When** the architecture-design command invokes setup with `--require-system-design`
   * **Then** the command does not proceed with generation and surfaces the setup error message
 
+* **System Scenario: STS-001-C5**
+  * **Given** `v-model-config.yml` specifies `domain: iso_26262` and the architecture-design command invokes the domain overlay infrastructure (SYS-013), but the overlay file `commands/overlays/iso_26262/architecture-design.md` does not exist
+  * **When** the command attempts domain overlay loading
+  * **Then** the command proceeds with base-only output, logs a warning that the domain overlay file was not found, and does not include domain-specific safety-critical sections in `architecture-design.md`
+
+#### Test Case: STP-001-D (Domain Overlay Loading Contract)
+
+**Technique**: Interface Contract Testing
+**Target View**: Interface View
+**Description**: Verifies that the architecture design command correctly interacts with the domain overlay infrastructure (SYS-013) to load domain-specific content when configured, produce base-only output when unconfigured, and use generic ISO/IEC/IEEE 42010 framing without referencing specific safety standards in the base command.
+
+* **System Scenario: STS-001-D1**
+  * **Given** `v-model-config.yml` exists at the repository root with `domain: iso_26262`, and `commands/overlays/iso_26262/architecture-design.md` contains domain-specific safety-critical architecture sections
+  * **When** the architecture-design command executes generation via the assembly protocol (SYS-013)
+  * **Then** the generated `architecture-design.md` includes the overlay's safety-critical architecture sections in preference to the base command's generic guidance
+
+* **System Scenario: STS-001-D2**
+  * **Given** no `v-model-config.yml` exists at the repository root (or the file exists but `domain` is absent)
+  * **When** the architecture-design command executes generation
+  * **Then** the command skips overlay loading entirely, produces general-purpose output using generic ISO/IEC/IEEE 42010 framing, and does not include any safety-critical sections
+
+* **System Scenario: STS-001-D3**
+  * **Given** the architecture-design command generates `architecture-design.md` without any domain overlay loaded
+  * **When** the base command text is inspected
+  * **Then** the output uses generic architecture framing (e.g., "ISO/IEC/IEEE 42010 architecture description") without referencing specific safety standards (ISO 26262, DO-178C, IEC 62304)
+
 ---
 
 ### Component Verification: SYS-002 (Integration Test Command)
 
-**Parent Requirements**: REQ-014, REQ-015, REQ-016, REQ-017, REQ-018, REQ-019, REQ-020, REQ-011, REQ-022, REQ-023, REQ-042, REQ-049, REQ-NF-002, REQ-IF-002, REQ-CN-001
+**Parent Requirements**: REQ-014, REQ-015, REQ-016, REQ-017, REQ-018, REQ-019, REQ-020, REQ-011, REQ-023, REQ-042, REQ-049, REQ-051, REQ-053, REQ-054, REQ-055, REQ-NF-002, REQ-NF-006, REQ-IF-002
 
 #### Test Case: STP-002-A (File I/O Contract Compliance)
 
@@ -151,7 +190,7 @@ Each test case MUST identify its technique by name:
 
 **Technique**: Fault Injection
 **Target View**: Dependency View
-**Description**: Verifies that the integration test command handles failures in its dependencies (SYS-005 template, SYS-003 coverage gate, SYS-009 setup) without producing corrupt output.
+**Description**: Verifies that the integration test command handles failures in its dependencies (SYS-005 template, SYS-003 coverage gate, SYS-009 setup, SYS-013 overlay infrastructure) without producing corrupt output.
 
 * **System Scenario: STS-002-C1**
   * **Given** the integration-test command is invoked and `integration-test-template.md` (SYS-005) is not found in the `templates/` directory
@@ -168,11 +207,37 @@ Each test case MUST identify its technique by name:
   * **When** the integration-test command invokes setup
   * **Then** the command does not proceed with generation and surfaces the setup error message
 
+* **System Scenario: STS-002-C4**
+  * **Given** `v-model-config.yml` specifies `domain: do_178c` and the integration-test command invokes the domain overlay infrastructure (SYS-013), but the overlay file `commands/overlays/do_178c/integration-test.md` does not exist
+  * **When** the command attempts domain overlay loading
+  * **Then** the command proceeds with base-only output, logs a warning that the domain overlay file was not found, and does not include domain-specific safety-critical test sections in `integration-test.md`
+
+#### Test Case: STP-002-D (Domain Overlay Loading Contract)
+
+**Technique**: Interface Contract Testing
+**Target View**: Interface View
+**Description**: Verifies that the integration test command correctly interacts with the domain overlay infrastructure (SYS-013) to load domain-specific content when configured, produce base-only output when unconfigured, and use generic ISO 29119 framing without referencing specific safety standards in the base command.
+
+* **System Scenario: STS-002-D1**
+  * **Given** `v-model-config.yml` exists at the repository root with `domain: iso_26262`, and `commands/overlays/iso_26262/integration-test.md` contains domain-specific safety-critical test sections
+  * **When** the integration-test command executes generation via the assembly protocol (SYS-013)
+  * **Then** the generated `integration-test.md` includes the overlay's safety-critical test sections in preference to the base command's generic guidance
+
+* **System Scenario: STS-002-D2**
+  * **Given** no `v-model-config.yml` exists at the repository root (or the file exists but `domain` is absent)
+  * **When** the integration-test command executes generation
+  * **Then** the command skips overlay loading entirely, produces general-purpose output using generic ISO 29119 framing, and does not include any safety-critical test sections
+
+* **System Scenario: STS-002-D3**
+  * **Given** the integration-test command generates `integration-test.md` without any domain overlay loaded
+  * **When** the base command text is inspected
+  * **Then** the output uses generic testing framing (e.g., "ISO 29119 integration test design") without referencing specific safety standards (ISO 26262, DO-178C, IEC 62304)
+
 ---
 
 ### Component Verification: SYS-003 (Architecture Coverage Validation Script — Bash)
 
-**Parent Requirements**: REQ-024, REQ-025, REQ-026, REQ-027, REQ-028, REQ-029, REQ-030, REQ-011, REQ-046, REQ-048, REQ-NF-001, REQ-NF-003, REQ-IF-003, REQ-IF-004
+**Parent Requirements**: REQ-024, REQ-025, REQ-026, REQ-027, REQ-028, REQ-029, REQ-030, REQ-011, REQ-046, REQ-NF-001, REQ-NF-003, REQ-IF-003, REQ-IF-004
 
 #### Test Case: STP-003-A (CLI Contract Compliance)
 
@@ -241,13 +306,13 @@ Each test case MUST identify its technique by name:
 
 ### Component Verification: SYS-004 (Architecture Design Template)
 
-**Parent Requirements**: REQ-039, REQ-003, REQ-004, REQ-005, REQ-006, REQ-009, REQ-010, REQ-021
+**Parent Requirements**: REQ-039, REQ-003, REQ-004, REQ-005, REQ-006, REQ-009, REQ-010, REQ-050, REQ-NF-006
 
 #### Test Case: STP-004-A (Template Structure Compliance)
 
 **Technique**: Interface Contract Testing
 **Target View**: Interface View
-**Description**: Verifies that `architecture-design-template.md` contains the required section structure and field definitions for all four mandatory 42010/4+1 views that SYS-001 loads during generation.
+**Description**: Verifies that `architecture-design-template.md` contains the required section structure and field definitions for all four mandatory 42010/4+1 views that SYS-001 loads during generation, including conditional safety-critical section placeholders populated only when a domain overlay is loaded.
 
 * **System Scenario: STS-004-A1**
   * **Given** the `architecture-design-template.md` file exists in the `templates/` directory
@@ -257,7 +322,7 @@ Each test case MUST identify its technique by name:
 * **System Scenario: STS-004-A2**
   * **Given** the `architecture-design-template.md` file exists in the `templates/` directory
   * **When** the template is parsed for conditional sections
-  * **Then** the template contains conditional safety-critical section placeholders for ASIL Decomposition, Defensive Programming, and Temporal & Execution Constraints
+  * **Then** the template contains conditional safety-critical section placeholders for ASIL Decomposition, Defensive Programming, and Temporal & Execution Constraints that are populated only when a domain overlay is loaded
 
 #### Test Case: STP-004-B (Template Field Completeness)
 
@@ -274,13 +339,13 @@ Each test case MUST identify its technique by name:
 
 ### Component Verification: SYS-005 (Integration Test Template)
 
-**Parent Requirements**: REQ-040, REQ-049, REQ-015, REQ-016, REQ-017, REQ-018, REQ-019, REQ-022
+**Parent Requirements**: REQ-040, REQ-049, REQ-015, REQ-016, REQ-017, REQ-018, REQ-019, REQ-051, REQ-NF-006
 
 #### Test Case: STP-005-A (Template Structure Compliance)
 
 **Technique**: Interface Contract Testing
 **Target View**: Interface View
-**Description**: Verifies that `integration-test-template.md` contains the required three-tier ITP/ITS hierarchy, technique naming, view anchoring, BDD format definitions, and test harness strategy section that SYS-002 loads during generation.
+**Description**: Verifies that `integration-test-template.md` contains the required three-tier ITP/ITS hierarchy, technique naming, view anchoring, BDD format definitions, and test harness strategy section that SYS-002 loads during generation, including conditional safety-critical section placeholders populated only when a domain overlay is loaded.
 
 * **System Scenario: STS-005-A1**
   * **Given** the `integration-test-template.md` file exists in the `templates/` directory
@@ -290,7 +355,7 @@ Each test case MUST identify its technique by name:
 * **System Scenario: STS-005-A2**
   * **Given** the `integration-test-template.md` file exists in the `templates/` directory
   * **When** the template is parsed for conditional sections
-  * **Then** the template contains conditional safety-critical section placeholders for SIL/HIL Compatibility and Resource Contention
+  * **Then** the template contains conditional safety-critical section placeholders for SIL/HIL Compatibility and Resource Contention that are populated only when a domain overlay is loaded
 
 #### Test Case: STP-005-B (Template Technique Coverage)
 
@@ -307,7 +372,7 @@ Each test case MUST identify its technique by name:
 
 ### Component Verification: SYS-006 (Trace Command Extension)
 
-**Parent Requirements**: REQ-031, REQ-032, REQ-033, REQ-034, REQ-035, REQ-036, REQ-047, REQ-NF-004
+**Parent Requirements**: REQ-031, REQ-032, REQ-033, REQ-034, REQ-035, REQ-036, REQ-NF-004
 
 #### Test Case: STP-006-A (Matrix C Generation Contract)
 
@@ -581,15 +646,105 @@ Each test case MUST identify its technique by name:
 
 ---
 
+### Component Verification: SYS-013 (Domain Overlay Infrastructure)
+
+**Parent Requirements**: REQ-055, REQ-NF-006
+
+#### Test Case: STP-013-A (Assembly Protocol Contract)
+
+**Technique**: Interface Contract Testing
+**Target View**: Interface View
+**Description**: Verifies that the domain overlay infrastructure implements the assembly protocol for discovering and loading domain-specific command overlays from `commands/overlays/{domain}/{command}.md` and template overlays from `templates/overlays/{domain}/{template}.md` based on the `domain` value in `v-model-config.yml`.
+
+* **System Scenario: STS-013-A1**
+  * **Given** `v-model-config.yml` exists at the repository root with `domain: iso_26262`, and command overlay files exist at `commands/overlays/iso_26262/architecture-design.md` and `commands/overlays/iso_26262/integration-test.md`
+  * **When** the assembly protocol executes domain overlay discovery
+  * **Then** the infrastructure discovers and returns the correct overlay file paths for the configured domain, making them available to the calling command
+
+* **System Scenario: STS-013-A2**
+  * **Given** `v-model-config.yml` specifies `domain: do_178c`, and template overlay files exist at `templates/overlays/do_178c/architecture-design-template.md` and `templates/overlays/do_178c/integration-test-template.md`
+  * **When** the assembly protocol executes template overlay discovery
+  * **Then** the infrastructure discovers and returns the correct template overlay file paths for the configured domain
+
+* **System Scenario: STS-013-A3**
+  * **Given** `v-model-config.yml` does not exist at the repository root
+  * **When** the assembly protocol checks for domain configuration
+  * **Then** the infrastructure reports no domain configured, and overlay loading is skipped entirely — calling commands produce general-purpose output
+
+* **System Scenario: STS-013-A4**
+  * **Given** `v-model-config.yml` exists but does not contain a `domain` key
+  * **When** the assembly protocol checks for domain configuration
+  * **Then** the infrastructure treats the absence of `domain` as no domain configured and skips overlay loading
+
+#### Test Case: STP-013-B (Configuration Data Boundaries)
+
+**Technique**: Boundary Value Analysis
+**Target View**: Data Design View
+**Description**: Verifies boundary conditions for domain configuration values, overlay file presence, and directory structure conventions.
+
+* **System Scenario: STS-013-B1**
+  * **Given** `v-model-config.yml` exists with `domain:` set to an empty string
+  * **When** the assembly protocol evaluates the domain value
+  * **Then** the infrastructure treats the empty domain value as no domain configured and does not attempt overlay file discovery
+
+* **System Scenario: STS-013-B2**
+  * **Given** `v-model-config.yml` specifies `domain: iec_62304`, but the directory `commands/overlays/iec_62304/` does not exist
+  * **When** the assembly protocol attempts to discover command overlay files
+  * **Then** the infrastructure logs a warning indicating no overlay directory found for the configured domain and returns no overlay files — the calling command proceeds with base-only output
+
+* **System Scenario: STS-013-B3**
+  * **Given** `v-model-config.yml` specifies `domain: iso_26262`, and the directory `commands/overlays/iso_26262/` contains overlay files for multiple commands (`architecture-design.md`, `integration-test.md`, `system-design.md`)
+  * **When** the assembly protocol discovers overlay files for a specific command (e.g., `architecture-design`)
+  * **Then** the infrastructure returns only the overlay file matching the requested command, not all overlay files in the directory
+
+#### Test Case: STP-013-C (Dependency Failure Propagation)
+
+**Technique**: Fault Injection
+**Target View**: Dependency View
+**Description**: Verifies that the domain overlay infrastructure handles failures in its dependencies (SYS-004 and SYS-005 base templates) gracefully when attempting overlay merge point discovery.
+
+* **System Scenario: STS-013-C1**
+  * **Given** `v-model-config.yml` specifies `domain: iso_26262`, and the base template `architecture-design-template.md` (SYS-004) is not found in the `templates/` directory
+  * **When** the assembly protocol attempts overlay merge point discovery for the architecture design template
+  * **Then** the infrastructure logs a warning that the base template is missing and cannot determine merge points, and overlay content is not positioned — the calling command falls back to base-only behavior
+
+* **System Scenario: STS-013-C2**
+  * **Given** `v-model-config.yml` specifies `domain: iso_26262`, and the base template `integration-test-template.md` (SYS-005) exists but lacks the expected conditional safety-critical section placeholder markers
+  * **When** the assembly protocol attempts overlay merge point discovery for the integration test template
+  * **Then** the infrastructure logs a warning that merge points were not found in the base template and overlay content cannot be positioned — domain-specific sections are skipped
+
+* **System Scenario: STS-013-C3**
+  * **Given** `v-model-config.yml` specifies `domain: iso_26262`, and the overlay file `commands/overlays/iso_26262/architecture-design.md` exists but contains malformed Markdown (e.g., broken section structure)
+  * **When** the assembly protocol attempts to load the overlay content
+  * **Then** the infrastructure rejects the malformed overlay, logs an error identifying the file, and the calling command proceeds with base-only output
+
+#### Test Case: STP-013-D (Zero-Modification Extensibility)
+
+**Technique**: Equivalence Partitioning
+**Target View**: Data Design View
+**Description**: Verifies that adding support for a new regulated domain requires only creating new overlay files in the appropriate directories — no changes to base commands, base templates, or the assembly protocol.
+
+* **System Scenario: STS-013-D1**
+  * **Given** overlay files are created at `commands/overlays/new_domain/architecture-design.md` and `templates/overlays/new_domain/architecture-design-template.md` for a previously unsupported domain, and `v-model-config.yml` is set to `domain: new_domain`
+  * **When** the architecture-design command executes generation via the assembly protocol
+  * **Then** the command discovers and loads the new domain's overlay files without any modification to base commands, base templates, or the assembly protocol code
+
+* **System Scenario: STS-013-D2**
+  * **Given** two different domain configurations exist (`iso_26262` and `do_178c`), each with their own overlay files in `commands/overlays/{domain}/`
+  * **When** `v-model-config.yml` is changed from `domain: iso_26262` to `domain: do_178c` and the architecture-design command is re-run
+  * **Then** the command loads the `do_178c` overlay files instead of the `iso_26262` overlay files, producing domain-specific output for the newly configured domain
+
+---
+
 ## Coverage Summary
 
 | Metric | Count |
 |--------|-------|
-| Total System Components (SYS) | 12 |
-| Total Test Cases (STP) | 27 |
-| Total Scenarios (STS) | 64 |
-| Components with ≥1 STP | 12 / 12 (100%) |
-| Test Cases with ≥1 STS | 27 / 27 (100%) |
+| Total System Components (SYS) | 13 (13 active, 0 deprecated) |
+| Total Test Cases (STP) | 33 |
+| Total Scenarios (STS) | 84 |
+| Components with ≥1 STP | 13 / 13 (100%) (active items only) |
+| Test Cases with ≥1 STS | 33 / 33 (100%) |
 | **Overall Coverage (SYS→STP)** | **100%** |
 
 ## Uncovered Components

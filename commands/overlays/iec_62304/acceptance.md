@@ -1,8 +1,9 @@
-# IEC 62304 — Acceptance Command Overlay
+# Acceptance — IEC 62304 Domain Overlay
 
-## Domain-Specific Acceptance Testing Guidance
+> This overlay is loaded when `v-model-config.yml` sets `domain: iec_62304`.
+> It provides domain-specific safety-critical acceptance testing sections for the base `acceptance` command.
 
-### Safety Class–Dependent Test Completeness (§5.7)
+## Safety Class–Dependent Test Completeness (§5.7)
 
 IEC 62304 requires different levels of testing rigor based on the software safety class:
 
@@ -18,7 +19,7 @@ IEC 62304 requires different levels of testing rigor based on the software safet
 - **Class B software** requires acceptance testing with traceability to risk control measures.
 - **Class A software** has minimal formal testing requirements, but good practice still recommends functional verification.
 
-### Risk Control Measure Verification
+## Risk Control Measure Verification
 
 For requirements tagged `[RISK CONTROL: HAZ-NNN]`, generate acceptance tests that specifically verify:
 
@@ -28,7 +29,7 @@ For requirements tagged `[RISK CONTROL: HAZ-NNN]`, generate acceptance tests tha
 
 These scenarios should reference the specific hazard ID (HAZ-NNN) and the residual risk level after mitigation.
 
-### SOUP Component Acceptance
+## SOUP Component Acceptance
 
 If acceptance tests cover functionality provided by SOUP components:
 
@@ -36,7 +37,7 @@ If acceptance tests cover functionality provided by SOUP components:
 - Include negative scenarios based on the SOUP component's known anomaly list (§7.1.3).
 - Verify that SOUP component updates do not regress existing acceptance criteria.
 
-### Usability Validation (IEC 62366-1)
+## Usability Validation (IEC 62366-1)
 
 For medical devices with a user interface, acceptance tests should include usability-related scenarios:
 
@@ -45,3 +46,13 @@ For medical devices with a user interface, acceptance tests should include usabi
 - Scenarios verifying that critical safety information is presented clearly to the user.
 
 > **Note:** Usability validation for medical devices is governed by IEC 62366-1:2015. The quality-in-use criteria from the base command (Step 6d) align with this standard.
+
+## Regression Testing After Changes
+
+IEC 62304 §5.7 and §6 require regression testing after software changes to ensure that existing functionality is not adversely affected:
+
+- When requirements are modified, added, or deprecated, generate regression test scenarios that verify unchanged requirements still pass.
+- **Class C**: Full regression testing required — all previously passing acceptance tests must be re-executed after any change.
+- **Class B**: Regression testing required for affected areas — impact analysis determines the regression scope.
+- **Class A**: Regression testing recommended but not mandatory.
+- Regression test scope must be documented and justified based on the impact analysis (§6).

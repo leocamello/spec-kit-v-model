@@ -603,51 +603,59 @@ This document defines the Acceptance Test Plan for the System Design ↔ System 
 
 ---
 
-### Requirement Validation: REQ-035 (Safety-Critical System Design Sections (FFI + Restricted Complexity))
+### Requirement Validation: REQ-035 (Safety-Critical System Design Sections (FFI + Restricted Complexity)) — [SUSPECT — Parent REQ-035 deprecated]
 
-#### Test Case: ATP-035-A (Sections Generated When Regulated Domain Enabled)
+#### Test Case: ATP-035-A (Sections Generated When Regulated Domain Enabled) [DEPRECATED — Superseded by ATP-038-A]
 
-**Linked Requirement:** REQ-035
-**Description:** Verify FFI analysis and Restricted Complexity sections are generated when `v-model-config.yml` enables a regulated domain.
+**Linked Requirement:** REQ-035 [DEPRECATED — Superseded by REQ-038]
+**Description:** ~~Verify FFI analysis and Restricted Complexity sections are generated when `v-model-config.yml` enables a regulated domain.~~ Superseded by ATP-038-A which tests overlay-based domain loading.
+**Validation Condition:** ~~FFI and Restricted Complexity sections present when regulated domain is configured.~~
+**Expected Result:** ~~Domain-specific design sections generated for each SYS-NNN component.~~
 
-* **User Scenario: SCN-035-A1**
-  * **Given** a `v-model-config.yml` exists with `domain: iso_26262` `And` a valid `requirements.md` exists
-  * **When** the user invokes `/speckit.v-model.system-design`
-  * **Then** the `system-design.md` contains a "Freedom from Interference (FFI)" analysis section `And` a "Restricted Complexity" assessment section for each `SYS-NNN` component
+* **User Scenario: SCN-035-A1** [DEPRECATED — Superseded by SCN-038-A1]
+  * ~~**Given** a `v-model-config.yml` exists with `domain: iso_26262` `And` a valid `requirements.md` exists~~
+  * ~~**When** the user invokes `/speckit.v-model.system-design`~~
+  * ~~**Then** the `system-design.md` contains a "Freedom from Interference (FFI)" analysis section `And` a "Restricted Complexity" assessment section for each `SYS-NNN` component~~
 
-#### Test Case: ATP-035-B (Sections Absent When Domain Not Configured)
+#### Test Case: ATP-035-B (Sections Absent When Domain Not Configured) [DEPRECATED — Superseded by ATP-038-B]
 
-**Linked Requirement:** REQ-035
-**Description:** Verify safety-critical sections are omitted when no regulated domain is configured.
+**Linked Requirement:** REQ-035 [DEPRECATED — Superseded by REQ-038]
+**Description:** ~~Verify safety-critical sections are omitted when no regulated domain is configured.~~ Superseded by ATP-038-B which tests graceful fallback.
+**Validation Condition:** ~~Safety-critical sections absent when no domain configured.~~
+**Expected Result:** ~~No FFI or Restricted Complexity sections in output.~~
 
-* **User Scenario: SCN-035-B1**
-  * **Given** no `v-model-config.yml` exists in the project `Or` the config does not specify a regulated domain
-  * **When** the user invokes `/speckit.v-model.system-design`
-  * **Then** the `system-design.md` does not contain "Freedom from Interference" or "Restricted Complexity" sections
+* **User Scenario: SCN-035-B1** [DEPRECATED — Superseded by SCN-038-B1]
+  * ~~**Given** no `v-model-config.yml` exists in the project `Or` the config does not specify a regulated domain~~
+  * ~~**When** the user invokes `/speckit.v-model.system-design`~~
+  * ~~**Then** the `system-design.md` does not contain "Freedom from Interference" or "Restricted Complexity" sections~~
 
 ---
 
-### Requirement Validation: REQ-036 (Safety-Critical System Test Sections (MC/DC + WCET))
+### Requirement Validation: REQ-036 (Safety-Critical System Test Sections (MC/DC + WCET)) — [SUSPECT — Parent REQ-036 deprecated]
 
-#### Test Case: ATP-036-A (Sections Generated When Regulated Domain Enabled)
+#### Test Case: ATP-036-A (Sections Generated When Regulated Domain Enabled) [DEPRECATED — Superseded by ATP-039-A]
 
-**Linked Requirement:** REQ-036
-**Description:** Verify MC/DC test obligations and WCET verification scenarios are generated when `v-model-config.yml` enables a regulated domain.
+**Linked Requirement:** REQ-036 [DEPRECATED — Superseded by REQ-039]
+**Description:** ~~Verify MC/DC test obligations and WCET verification scenarios are generated when `v-model-config.yml` enables a regulated domain.~~ Superseded by ATP-039-A which tests overlay-based domain loading.
+**Validation Condition:** ~~MC/DC and WCET sections present when regulated domain is configured.~~
+**Expected Result:** ~~Domain-specific test sections generated for applicable STP-NNN-X test cases.~~
 
-* **User Scenario: SCN-036-A1**
-  * **Given** a `v-model-config.yml` exists with `domain: do_178c` `And` a valid `system-design.md` exists
-  * **When** the user invokes `/speckit.v-model.system-test`
-  * **Then** the `system-test.md` contains "MC/DC Coverage" test obligations `And` "WCET Verification" scenarios for applicable `STP-NNN-X` test cases
+* **User Scenario: SCN-036-A1** [DEPRECATED — Superseded by SCN-039-A1]
+  * ~~**Given** a `v-model-config.yml` exists with `domain: do_178c` `And` a valid `system-design.md` exists~~
+  * ~~**When** the user invokes `/speckit.v-model.system-test`~~
+  * ~~**Then** the `system-test.md` contains "MC/DC Coverage" test obligations `And` "WCET Verification" scenarios for applicable `STP-NNN-X` test cases~~
 
-#### Test Case: ATP-036-B (Sections Absent When Domain Not Configured)
+#### Test Case: ATP-036-B (Sections Absent When Domain Not Configured) [DEPRECATED — Superseded by ATP-039-B]
 
-**Linked Requirement:** REQ-036
-**Description:** Verify safety-critical test sections are omitted when no regulated domain is configured.
+**Linked Requirement:** REQ-036 [DEPRECATED — Superseded by REQ-039]
+**Description:** ~~Verify safety-critical test sections are omitted when no regulated domain is configured.~~ Superseded by ATP-039-B which tests graceful fallback.
+**Validation Condition:** ~~Safety-critical test sections absent when no domain configured.~~
+**Expected Result:** ~~No MC/DC or WCET sections in output.~~
 
-* **User Scenario: SCN-036-B1**
-  * **Given** no `v-model-config.yml` exists in the project `Or` the config does not specify a regulated domain
-  * **When** the user invokes `/speckit.v-model.system-test`
-  * **Then** the `system-test.md` does not contain "MC/DC Coverage" or "WCET Verification" sections
+* **User Scenario: SCN-036-B1** [DEPRECATED — Superseded by SCN-039-B1]
+  * ~~**Given** no `v-model-config.yml` exists in the project `Or` the config does not specify a regulated domain~~
+  * ~~**When** the user invokes `/speckit.v-model.system-test`~~
+  * ~~**Then** the `system-test.md` does not contain "MC/DC Coverage" or "WCET Verification" sections~~
 
 ---
 
@@ -777,27 +785,31 @@ This document defines the Acceptance Test Plan for the System Design ↔ System 
 
 ---
 
-### Requirement Validation: REQ-CN-001 (Safety-Critical Sections Omitted by Default)
+### Requirement Validation: REQ-CN-001 (Safety-Critical Sections Omitted by Default) — [SUSPECT — Parent REQ-CN-001 deprecated]
 
-#### Test Case: ATP-CN-001-A (No Safety Sections Without Config)
+#### Test Case: ATP-CN-001-A (No Safety Sections Without Config) [DEPRECATED — Superseded by ATP-042-A]
 
-**Linked Requirement:** REQ-CN-001
-**Description:** Verify safety-critical sections (FFI, Restricted Complexity, MC/DC, WCET) are omitted when no regulated domain is configured.
+**Linked Requirement:** REQ-CN-001 [DEPRECATED — Superseded by REQ-042]
+**Description:** ~~Verify safety-critical sections (FFI, Restricted Complexity, MC/DC, WCET) are omitted when no regulated domain is configured.~~ Superseded by ATP-042-A which tests general-purpose output without overlays.
+**Validation Condition:** ~~Safety-critical sections absent when no domain configured.~~
+**Expected Result:** ~~No FFI, Restricted Complexity, MC/DC, or WCET sections in output.~~
 
-* **User Scenario: SCN-CN-001-A1**
-  * **Given** no `v-model-config.yml` exists `Or` the file does not contain a `domain` field
-  * **When** the user invokes `/speckit.v-model.system-design` and `/speckit.v-model.system-test`
-  * **Then** neither `system-design.md` nor `system-test.md` contains sections for FFI, Restricted Complexity, MC/DC, or WCET
+* **User Scenario: SCN-CN-001-A1** [DEPRECATED — Superseded by SCN-042-A1]
+  * ~~**Given** no `v-model-config.yml` exists `Or` the file does not contain a `domain` field~~
+  * ~~**When** the user invokes `/speckit.v-model.system-design` and `/speckit.v-model.system-test`~~
+  * ~~**Then** neither `system-design.md` nor `system-test.md` contains sections for FFI, Restricted Complexity, MC/DC, or WCET~~
 
-#### Test Case: ATP-CN-001-B (Sections Present Only When Explicitly Enabled)
+#### Test Case: ATP-CN-001-B (Sections Present Only When Explicitly Enabled) [DEPRECATED — Superseded by ATP-042-B]
 
-**Linked Requirement:** REQ-CN-001
-**Description:** Verify sections appear only when a specific regulated domain is configured.
+**Linked Requirement:** REQ-CN-001 [DEPRECATED — Superseded by REQ-042]
+**Description:** ~~Verify sections appear only when a specific regulated domain is configured.~~ Superseded by ATP-042-B which tests overlay-gated section presence.
+**Validation Condition:** ~~Sections present only when domain explicitly configured.~~
+**Expected Result:** ~~Domain-specific sections populated with component-specific analysis.~~
 
-* **User Scenario: SCN-CN-001-B1**
-  * **Given** a `v-model-config.yml` exists with `domain: iso_26262`
-  * **When** the user invokes `/speckit.v-model.system-design`
-  * **Then** the `system-design.md` contains FFI and Restricted Complexity sections `And` these sections are populated with component-specific analysis
+* **User Scenario: SCN-CN-001-B1** [DEPRECATED — Superseded by SCN-042-B1]
+  * ~~**Given** a `v-model-config.yml` exists with `domain: iso_26262`~~
+  * ~~**When** the user invokes `/speckit.v-model.system-design`~~
+  * ~~**Then** the `system-design.md` contains FFI and Restricted Complexity sections `And` these sections are populated with component-specific analysis~~
 
 ---
 
@@ -853,15 +865,217 @@ This document defines the Acceptance Test Plan for the System Design ↔ System 
 
 ---
 
+### Requirement Validation: REQ-038 (Domain Overlay Loading for System Design)
+
+#### Test Case: ATP-038-A (Overlay loaded when domain is set)
+**Linked Requirement:** REQ-038
+**Description:** Verify the command loads the domain overlay and uses its safety-critical design sections when `v-model-config.yml` specifies a `domain` value.
+**Validation Condition:** Domain overlay file is read and domain-specific design sections appear in the output.
+**Expected Result:** Domain-specific design sections (e.g., FFI for iso_26262) are used instead of the base general-purpose sections.
+
+* **User Scenario: SCN-038-A1**
+  * **Given** a project with `v-model-config.yml` containing `domain: iso_26262` and an overlay at `commands/overlays/iso_26262/system-design.md`
+  * **When** `/speckit.v-model.system-design` runs
+  * **Then** the `system-design.md` contains FFI, Restricted Complexity, and Safety Integrity Allocation sections from the overlay
+
+* **User Scenario: SCN-038-A2**
+  * **Given** a project with `v-model-config.yml` containing `domain: do_178c` and an overlay at `commands/overlays/do_178c/system-design.md`
+  * **When** `/speckit.v-model.system-design` runs
+  * **Then** the `system-design.md` contains DAL-specific design assurance sections from the overlay
+
+#### Test Case: ATP-038-B (Graceful fallback when overlay missing)
+**Linked Requirement:** REQ-038
+**Description:** Verify the command falls back to base general-purpose design when a domain is set but no overlay file exists for that domain.
+**Validation Condition:** Command does not error; base general-purpose design sections are used.
+**Expected Result:** System design produced with generic IEEE 1016 sections and no error.
+
+* **User Scenario: SCN-038-B1**
+  * **Given** a project with `v-model-config.yml` containing `domain: custom_domain` but no overlay at `commands/overlays/custom_domain/system-design.md`
+  * **When** `/speckit.v-model.system-design` runs
+  * **Then** the command proceeds with the base general-purpose design sections without error
+
+---
+
+### Requirement Validation: REQ-039 (Domain Overlay Loading for System Test)
+
+#### Test Case: ATP-039-A (Overlay loaded when domain is set)
+**Linked Requirement:** REQ-039
+**Description:** Verify the command loads the domain overlay and uses its safety-critical test sections when `v-model-config.yml` specifies a `domain` value.
+**Validation Condition:** Domain overlay file is read and domain-specific test sections appear in the output.
+**Expected Result:** Domain-specific test sections (e.g., MC/DC, WCET for do_178c) are used instead of the base general-purpose sections.
+
+* **User Scenario: SCN-039-A1**
+  * **Given** a project with `v-model-config.yml` containing `domain: do_178c` and an overlay at `commands/overlays/do_178c/system-test.md`
+  * **When** `/speckit.v-model.system-test` runs
+  * **Then** the `system-test.md` contains MC/DC Coverage, WCET Verification, and Resource Usage test sections from the overlay
+
+* **User Scenario: SCN-039-A2**
+  * **Given** a project with `v-model-config.yml` containing `domain: iso_26262` and an overlay at `commands/overlays/iso_26262/system-test.md`
+  * **When** `/speckit.v-model.system-test` runs
+  * **Then** the `system-test.md` contains ASIL-specific test coverage sections from the overlay
+
+#### Test Case: ATP-039-B (Graceful fallback when overlay missing)
+**Linked Requirement:** REQ-039
+**Description:** Verify the command falls back to base general-purpose test design when a domain is set but no overlay file exists for that domain.
+**Validation Condition:** Command does not error; base general-purpose test sections are used.
+**Expected Result:** System test produced with generic ISO 29119 sections and no error.
+
+* **User Scenario: SCN-039-B1**
+  * **Given** a project with `v-model-config.yml` containing `domain: custom_domain` but no overlay at `commands/overlays/custom_domain/system-test.md`
+  * **When** `/speckit.v-model.system-test` runs
+  * **Then** the command proceeds with the base general-purpose test sections without error
+
+---
+
+### Requirement Validation: REQ-040 (Generic System Design Framing)
+
+#### Test Case: ATP-040-A (Command text uses generic framing)
+**Linked Requirement:** REQ-040
+**Description:** Verify `/speckit.v-model.system-design` description and goal use generic framing (e.g., "IEEE 1016 system design") without referencing safety standards in base text.
+**Validation Condition:** The command file `commands/system-design.md` description and goal do not contain domain-specific safety standard references.
+**Expected Result:** Description and goal reference "IEEE 1016" or equivalent generic system design terminology.
+
+* **User Scenario: SCN-040-A1**
+  * **Given** the command file `commands/system-design.md`
+  * **When** inspecting the `description` field and Goal section
+  * **Then** neither contain the strings "ISO 26262", "DO-178C", "IEC 62304", or "IEC 61508"
+
+* **User Scenario: SCN-040-A2**
+  * **Given** the iso_26262 overlay at `commands/overlays/iso_26262/system-design.md`
+  * **When** inspecting the overlay content
+  * **Then** the overlay contains domain-specific references to FFI methodology and restricted complexity per ISO 26262
+
+#### Test Case: ATP-040-B (Domain-specific guidance only from overlays)
+**Linked Requirement:** REQ-040
+**Description:** Verify domain-specific design guidance is provided only by loaded overlays, not by the base command.
+**Validation Condition:** Running without a domain produces no safety-standard references in output.
+**Expected Result:** Output contains only generic IEEE 1016-based design sections.
+
+* **User Scenario: SCN-040-B1**
+  * **Given** a project without `v-model-config.yml`
+  * **When** `/speckit.v-model.system-design` runs
+  * **Then** the `system-design.md` does not contain "FFI", "ASIL", "DAL", "Restricted Complexity", or other domain-specific terminology
+
+---
+
+### Requirement Validation: REQ-041 (Generic System Test Framing)
+
+#### Test Case: ATP-041-A (Command text uses generic framing)
+**Linked Requirement:** REQ-041
+**Description:** Verify `/speckit.v-model.system-test` description and goal use generic testing framing (e.g., "ISO 29119 system test design") without referencing safety standards in base text.
+**Validation Condition:** The command file `commands/system-test.md` description and goal do not contain domain-specific safety standard references.
+**Expected Result:** Description and goal reference "ISO 29119" or equivalent generic testing terminology.
+
+* **User Scenario: SCN-041-A1**
+  * **Given** the command file `commands/system-test.md`
+  * **When** inspecting the `description` field and Goal section
+  * **Then** neither contain the strings "ISO 26262", "DO-178C", "IEC 62304", or "IEC 61508"
+
+* **User Scenario: SCN-041-A2**
+  * **Given** the do_178c overlay at `commands/overlays/do_178c/system-test.md`
+  * **When** inspecting the overlay content
+  * **Then** the overlay contains domain-specific references to MC/DC coverage and WCET verification per DO-178C
+
+#### Test Case: ATP-041-B (Domain-specific guidance only from overlays)
+**Linked Requirement:** REQ-041
+**Description:** Verify domain-specific test guidance is provided only by loaded overlays, not by the base command.
+**Validation Condition:** Running without a domain produces no safety-standard references in test output.
+**Expected Result:** Output contains only generic ISO 29119-based test sections.
+
+* **User Scenario: SCN-041-B1**
+  * **Given** a project without `v-model-config.yml`
+  * **When** `/speckit.v-model.system-test` runs
+  * **Then** the `system-test.md` does not contain "MC/DC", "WCET", "ASIL", "DAL", or other domain-specific terminology
+
+---
+
+### Requirement Validation: REQ-042 (General-Purpose Output Without Domain)
+
+#### Test Case: ATP-042-A (No overlays loaded when domain absent)
+**Linked Requirement:** REQ-042
+**Description:** Verify that when no domain is set (or no config exists), system-design and system-test commands produce general-purpose output without loading overlays. Safety-critical sections omitted entirely.
+**Validation Condition:** No overlay files are loaded and no safety-critical sections appear in output.
+**Expected Result:** Both commands produce general-purpose output with no domain-specific sections.
+
+* **User Scenario: SCN-042-A1**
+  * **Given** no `v-model-config.yml` exists in the project
+  * **When** the user invokes `/speckit.v-model.system-design` and `/speckit.v-model.system-test`
+  * **Then** neither `system-design.md` nor `system-test.md` contains sections for FFI, Restricted Complexity, MC/DC, WCET, or Safety Integrity Allocation
+
+#### Test Case: ATP-042-B (Config exists but domain field absent)
+**Linked Requirement:** REQ-042
+**Description:** Verify general-purpose output when config exists but has no `domain` field.
+**Validation Condition:** Commands run successfully and produce output identical to no-config scenario.
+**Expected Result:** General-purpose output with no overlay-sourced sections.
+
+* **User Scenario: SCN-042-B1**
+  * **Given** a `v-model-config.yml` exists but does not contain a `domain` field
+  * **When** the user invokes `/speckit.v-model.system-design`
+  * **Then** the `system-design.md` contains only generic IEEE 1016-based design sections with no safety-critical content
+
+---
+
+### Requirement Validation: REQ-043 (Assembly Protocol Support for All Generative Commands)
+
+#### Test Case: ATP-043-A (All generative commands support overlay loading)
+**Linked Requirement:** REQ-043
+**Description:** Verify all generative commands in this feature support domain overlay loading via the assembly protocol.
+**Validation Condition:** Each generative command checks for domain config and loads corresponding overlay when present.
+**Expected Result:** Both `/speckit.v-model.system-design` and `/speckit.v-model.system-test` load domain overlays via assembly protocol.
+
+* **User Scenario: SCN-043-A1**
+  * **Given** a project with `v-model-config.yml` containing `domain: iso_26262` and overlays at `commands/overlays/iso_26262/system-design.md` and `commands/overlays/iso_26262/system-test.md`
+  * **When** `/speckit.v-model.system-design` and `/speckit.v-model.system-test` both run
+  * **Then** both commands load and apply their respective domain overlays via the assembly protocol
+
+#### Test Case: ATP-043-B (Assembly protocol graceful when overlay directory missing)
+**Linked Requirement:** REQ-043
+**Description:** Verify the assembly protocol handles missing overlay directories gracefully.
+**Validation Condition:** Commands do not error when overlay directory does not exist for the specified domain.
+**Expected Result:** Commands fall back to base behavior without error.
+
+* **User Scenario: SCN-043-B1**
+  * **Given** a project with `v-model-config.yml` containing `domain: unknown_domain` and no `commands/overlays/unknown_domain/` directory
+  * **When** any generative command runs
+  * **Then** the command produces base general-purpose output without error or warning about missing overlay
+
+---
+
+### Requirement Validation: REQ-NF-006 (Domain-Agnostic Base Form)
+
+#### Test Case: ATP-NF-006-A (New domain requires only overlay files)
+**Linked Requirement:** REQ-NF-006
+**Description:** Verify that adding a new regulated domain requires only adding overlay files with no modification to base commands or templates.
+**Validation Condition:** A new domain overlay is added and commands produce domain-specific output without any base command changes.
+**Expected Result:** New domain overlay files are sufficient; no base command or template edits needed.
+
+* **User Scenario: SCN-NF-006-A1**
+  * **Given** a new domain `iec_61508` with overlay files added at `commands/overlays/iec_61508/system-design.md` and `commands/overlays/iec_61508/system-test.md` and no changes to base command files
+  * **When** `v-model-config.yml` is set to `domain: iec_61508` and `/speckit.v-model.system-design` runs
+  * **Then** the `system-design.md` contains IEC 61508 SIL-specific design sections from the new overlay
+
+#### Test Case: ATP-NF-006-B (Base commands unchanged after adding domain)
+**Linked Requirement:** REQ-NF-006
+**Description:** Verify base command files remain unmodified after adding a new domain overlay.
+**Validation Condition:** File checksums of base commands are identical before and after adding the overlay.
+**Expected Result:** No changes to `commands/system-design.md` or `commands/system-test.md`.
+
+* **User Scenario: SCN-NF-006-B1**
+  * **Given** checksums recorded for `commands/system-design.md` and `commands/system-test.md` before adding a new domain overlay
+  * **When** overlay files for `iec_61508` are added to `commands/overlays/iec_61508/`
+  * **Then** checksums of `commands/system-design.md` and `commands/system-test.md` remain identical to the recorded values
+
+---
+
 ## Coverage Summary
 
 | Metric | Count |
 |--------|-------|
-| Total Requirements (REQ) | 49 |
-| Total Test Cases (ATP) | 64 |
-| Total Scenarios (SCN) | 64 |
-| Requirements with ≥1 ATP | 49 / 49 (100%) |
-| Test Cases with ≥1 SCN | 64 / 64 (100%) |
+| Total Requirements (REQ) | 56 (3 deprecated) |
+| Total Test Cases (ATP) | 78 (6 deprecated) |
+| Total Scenarios (SCN) | 82 (6 deprecated) |
+| Requirements with ≥1 ATP | 56 / 56 (100%) |
+| Test Cases with ≥1 SCN | 78 / 78 (100%) |
 | **Overall Coverage** | **100%** |
 
 ## Uncovered Requirements
@@ -870,6 +1084,7 @@ None — full coverage achieved.
 
 ---
 
-**Validation Status**: ✅ Full Coverage
+**Validation Status**: ✅ Full Coverage (deprecated items excluded from active counts)
 **Generated**: 2026-02-20
+**Last Evolved**: 2026-04-19
 **Validated by**: `validate-requirement-coverage.sh` (deterministic)

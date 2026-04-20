@@ -55,18 +55,29 @@ For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\''m Groot
 
 3. **Load requirements**: Read `requirements.md` from the `REQUIREMENTS` path for context on what each requirement demands. This helps generate meaningful test conditions.
 
-4. **Load v-model-config.yml** (if it exists at the repository root):
-   - If `domain` is set to `iso_26262`, `do_178c`, or `iec_62304`: Enable safety-critical test sections (MC/DC, WCET)
-   - If absent or `domain` is empty: Skip safety-critical test sections entirely
-
-5. **Load existing system tests** (if `AVAILABLE_DOCS` contains `"system-test.md"`):
+4. **Load existing system tests** (if `AVAILABLE_DOCS` contains `"system-test.md"`):
    - Read the existing `system-test.md` to preserve existing STP/STS IDs and content
    - Identify the highest existing STP number to continue the sequence
    - New test cases append after existing ones — **never renumber**
 
+### 2a. Domain Configuration
+
+Load `v-model-config.yml` (if it exists at the repository root).
+
+**If `domain` is set** (e.g., `iso_26262`, `do_178c`, `iec_62304`):
+1. Read the command overlay: `commands/overlays/{domain}/system-test.md`
+   - If it exists: note the safety-critical test sections (e.g., structural coverage targets, resource usage verification)
+   - If it does not exist: this domain does not extend this command — proceed with base only
+2. Where the base command has a domain-variant section (marked with "If a domain overlay is loaded, prefer its content"), use the overlay's version instead of the base default
+
+**If `domain` is empty or absent:**
+- Proceed with the base command only
+- Use generic best-practice terminology throughout
+- Do NOT include any safety-critical or domain-specific regulatory references
+
 ### 3. Lifecycle Rules (When Evolving Existing Artifacts)
 
-When an existing `system-test.md` is loaded (step 2.5), apply these rules
+When an existing `system-test.md` is loaded (step 2.4), apply these rules
 before generating new content:
 
 1. **Never delete an ID** — mark as `[DEPRECATED]`
@@ -192,24 +203,9 @@ Every STS scenario must satisfy:
 
 ### 6. Safety-Critical Test Sections (Conditional)
 
-**Only generate these sections if `v-model-config.yml` has `domain` set.**
+**If a domain overlay is loaded (Step 2a), include the overlay's safety-critical test sections here.** The overlay provides domain-specific content such as structural coverage targets (e.g., MC/DC requirements per safety level), resource usage verification (e.g., WCET thresholds), and other domain-mandated test criteria — with the appropriate standard references and table structures for the configured domain.
 
-#### 6.1 Structural Coverage (DO-178C §6.4.4.2 / ISO 26262-6 §9.4.5)
-
-| Component | Coverage Target | Technique | Rationale |
-|-----------|----------------|-----------|-----------|
-
-- Specify MC/DC (Modified Condition/Decision Coverage) targets per component
-- Map to the ASIL/DAL level from the system design's FFI section
-
-#### 6.2 Resource Usage Testing (DO-178C §6.3.4 / ISO 26262-6 §9.4.4)
-
-| Component | Resource | Measurement | Threshold | Verification Method |
-|-----------|----------|-------------|-----------|---------------------|
-
-- WCET (Worst Case Execution Time) per critical component
-- Maximum stack depth
-- Heap usage limits
+If no domain overlay is loaded, skip this section entirely.
 
 ### 7. Write Output
 
@@ -220,7 +216,7 @@ Write the complete system test plan to `{VMODEL_DIR}/system-test.md` using the t
 3. **ID Schema**: Document the STP-NNN-X → SYS-NNN relationship encoding
 4. **ISO 29119 Techniques**: Reference section listing applied techniques
 5. **System Tests**: All STP test cases with STS scenarios, organized by SYS component
-6. **Safety-Critical Sections**: MC/DC and WCET (if domain configured)
+6. **Safety-Critical Sections**: Domain-specific test sections (if overlay loaded in Step 2a)
 7. **Coverage Summary**: Component count, test case count, scenario count, coverage percentage
 8. **Uncovered Components**: List of SYS without STP (should be empty)
 
@@ -231,7 +227,7 @@ Display a summary:
 - Coverage: X/Y SYS components covered (must be 100% or flagged)
 - Technique distribution: Interface Contract [N], Boundary Value [N], Fault Injection [N], Equivalence Partitioning [N]
 - Language compliance: Confirm zero user-journey phrases in STS scenarios
-- Safety-critical sections included (yes/no, which domain)
+- Safety-critical sections included (yes/no, overlay loaded yes/no)
 - Path to the generated file
 - Next step: Recommend running `/speckit.v-model.trace` to build the full traceability matrix
 

@@ -1,4 +1,7 @@
-# ISO 26262 — Hazard Analysis Command Overlay
+# Hazard Analysis — ISO 26262 Domain Overlay
+
+> This overlay is loaded when `v-model-config.yml` sets `domain: iso_26262`.
+> It provides domain-specific safety-critical hazard analysis sections for the base `hazard-analysis` command.
 
 ## Preferred Severity Scale
 

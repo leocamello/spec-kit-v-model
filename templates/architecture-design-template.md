@@ -137,22 +137,25 @@ sequenceDiagram
 | 2 | ARCH-002 | [format] | [what happens] | [format] |
 | 3 | ARCH-003 | [format] | [what happens] | [format] |
 
-<!-- SAFETY-CRITICAL SECTION: Only include when v-model-config.yml domain is set -->
+<!-- SAFETY-CRITICAL SECTION: Only include when a domain overlay is loaded (Step 2a) -->
 
 <!--
-## ASIL Decomposition (ISO 26262-9 §5)
+> **Note:** If a domain overlay is loaded, use the overlay's version of this section.
+> The tables below show the generic structure; domain overlays provide domain-specific column headers and content.
 
-| Parent Component | Parent ASIL | Child Module | Child ASIL | Independence Argument |
+## Safety Integrity Decomposition
+
+| Parent Component | Parent Level | Child Module | Child Level | Independence Argument |
 |-----------------|-------------|-------------|------------|----------------------|
-| SYS-NNN | ASIL [A-D] | ARCH-NNN | ASIL [A-D/QM] | [How independence is guaranteed] |
+| SYS-NNN | [Level] | ARCH-NNN | [Level] | [How independence is guaranteed] |
 
-## Defensive Programming (ISO 26262-6 §7.4.2 / DO-178C §6.3.3)
+## Defensive Programming
 
 | Module | Invalid Input | Detection Method | Recovery Action |
 |--------|--------------|-----------------|-----------------|
 | ARCH-NNN | [What could go wrong] | [How detected] | [What happens] |
 
-## Temporal & Execution Constraints (DO-178C §6.3.4)
+## Temporal & Execution Constraints
 
 | Module | Constraint Type | Value | Enforcement Mechanism |
 |--------|----------------|-------|----------------------|
