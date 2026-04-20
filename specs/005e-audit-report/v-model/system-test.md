@@ -316,3 +316,56 @@ Given anomalies with mixed waiver status and --json flag
 When JSON output is examined
 Then each anomaly SHALL have id, type, and disposition fields
 ```
+
+### SYS-008 — CLI Entry Point
+
+#### STP-008-A: Bash CLI argument parsing
+
+| Field | Value |
+|-------|-------|
+| **Traces To** | SYS-008 |
+| **Technique** | Interface Contract Testing |
+| **Precondition** | Bash 4+ available; valid V-Model directory |
+
+##### STS-008-A1: Positional vmodel-dir argument accepted
+```
+Given build-audit-report.sh invoked with a valid V-Model directory path as the first positional argument
+When the script starts
+Then the directory SHALL be used as the primary input with no error
+```
+
+##### STS-008-A2: All named arguments accepted
+```
+Given build-audit-report.sh invoked with --system-name "Sys" --version "1.0" --git-tag "v1.0" --regulatory-context "ISO 9001" --output "report.md" --json
+When the script starts
+Then all argument values SHALL be parsed and passed to internal components without error
+```
+
+##### STS-008-A3: Missing required argument exits 2 with usage
+```
+Given build-audit-report.sh invoked with no arguments
+When the script starts
+Then exit code SHALL be 2 and a usage message SHALL appear on stderr
+```
+
+#### STP-008-B: PowerShell CLI parameter parsing
+
+| Field | Value |
+|-------|-------|
+| **Traces To** | SYS-008 |
+| **Technique** | Interface Contract Testing |
+| **Precondition** | PowerShell 7+ available; valid V-Model directory |
+
+##### STS-008-B1: PowerShell parameters accepted with idiomatic naming
+```
+Given Build-Audit-Report.ps1 invoked with -VModelDir <path> -SystemName "Sys" -Version "1.0" -GitTag "v1.0" -RegulatoryContext "ISO 9001" -Output "report.md" -Json
+When the script starts
+Then all parameter values SHALL be parsed and produce equivalent behaviour to the Bash implementation
+```
+
+##### STS-008-B2: Standard toolchain only — no external dependencies
+```
+Given a clean CI runner with only Bash 4+, Git, and Python 3.x standard library
+When build-audit-report.sh runs to completion
+Then it SHALL succeed without installing any packages or invoking any tool outside the standard toolchain
+```
