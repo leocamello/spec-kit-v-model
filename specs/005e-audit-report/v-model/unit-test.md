@@ -373,3 +373,119 @@ Then the JSON SHALL contain keys: metadata, compliance_status, exit_code, artifa
 When render_json outputs to stdout
 Then the output SHALL be valid JSON (parseable by json.loads / ConvertFrom-Json)
 ```
+
+### MOD-011 — dispatch_pipeline
+
+**Parent Architecture Modules**: ARCH-010
+**Target Source File(s)**: `scripts/bash/build-audit-report.sh`, `scripts/powershell/Build-Audit-Report.ps1`
+
+#### UTP-011-A: Pipeline orchestration — statement and branch coverage
+
+| Field | Value |
+|-------|-------|
+| **Traces To** | MOD-011 |
+| **Technique** | Statement & Branch Coverage |
+| **Target View** | Algorithmic/Logic View |
+
+**Dependency & Mock Registry:**
+
+| Dependency | Source | Mock/Stub Strategy | Rationale |
+|------------|--------|--------------------|-----------|
+| parse_cli_args | MOD-001 / ARCH-001 | Stub — returns configurable config struct | Isolate orchestrator from argument-parsing logic |
+| discover_artifacts | MOD-002 / ARCH-002 | Stub — returns fixed artifact array | Isolate orchestrator from file-system discovery |
+| parse_matrix_file | MOD-003 / ARCH-003 | Stub — returns fixed matrix array | Isolate orchestrator from markdown parsing |
+| compute_coverage_metrics | MOD-004 / ARCH-003 | Stub — returns fixed coverage object | Isolate orchestrator from coverage computation |
+| parse_hazards | MOD-005 / ARCH-004 | Stub — returns null | Isolate orchestrator from hazard parsing |
+| scan_anomalies | MOD-006 / ARCH-005 | Stub — returns fixed anomaly list | Isolate orchestrator from anomaly scanning |
+| parse_waivers | MOD-007 / ARCH-006 | Stub — returns fixed waiver map | Isolate orchestrator from waiver parsing |
+| cross_reference | MOD-008 / ARCH-007 | Stub — returns configurable result with exit_code | Control exit_code to drive step-10 assertion |
+| render_report | MOD-009 / ARCH-008 | Spy — records call arguments | Verify report renderer is invoked with assembled data |
+| render_json | MOD-010 / ARCH-009 | Spy — records invocation | Verify JSON renderer is conditionally invoked |
+
+* **Unit Scenario: UTS-011-A1** — happy path: all 10 steps execute, exit code 0 propagated
+  * **Arrange**: Stub `parse_cli_args` to return `{vmodel_dir: "./v-model", json_flag: false, exit_code: 0}`; stub `discover_artifacts` to return 11 artifact records; stub `parse_matrix_file` to return 2 matrix objects; stub `compute_coverage_metrics` to return `{forward_count: 10, forward_total: 10, gaps: [], orphans: []}`; stub `parse_hazards` to return `null`; stub `scan_anomalies` to return `[]`; stub `parse_waivers` to return `{}`; stub `cross_reference` to return `{classified: [], orphaned: [], status: "✅ RELEASE READY", exit_code: 0}`; spy `render_report` and `render_json`
+  * **Act**: Call `dispatch_pipeline(["./v-model"])`
+  * **Assert**: `render_report` spy records exactly 1 invocation; `render_json` spy records 0 invocations (branch B false-path: `json_flag=false`); `dispatch_pipeline` exits with code 0 (propagated from `cross_reference` stub's `result.exit_code`)
+
+* **Unit Scenario: UTS-011-A2** — `parse_cli_args` returns exit_code 2: pipeline aborts at step-1 branch
+  * **Arrange**: Stub `parse_cli_args` to return `{exit_code: 2}`; spy `discover_artifacts`, `parse_matrix_file`, `compute_coverage_metrics`, `parse_hazards`, `scan_anomalies`, `parse_waivers`, `cross_reference`, `render_report`, `render_json`
+  * **Act**: Call `dispatch_pipeline(["/nonexistent/path"])`
+  * **Assert**: `dispatch_pipeline` exits with code 2; all step-2 through step-10 spies record 0 invocations (branch A true-path exits immediately after step 1)
+
+* **Unit Scenario: UTS-011-A3** — `json_flag=true` branch: `render_json` IS invoked after `render_report`
+  * **Arrange**: Stub `parse_cli_args` to return `{vmodel_dir: "./v-model", json_flag: true, exit_code: 0}`; stub all intermediate sub-modules (steps 2–7) with nominal return values; stub `cross_reference` to return `{exit_code: 0, status: "✅ RELEASE READY", classified: [], orphaned: []}`; spy `render_report` and `render_json`
+  * **Act**: Call `dispatch_pipeline(["./v-model", "--json"])`
+  * **Assert**: `render_report` spy records exactly 1 invocation (step 8 still executes); `render_json` spy records exactly 1 invocation (branch B true-path entered); `render_report` is invoked before `render_json` (step 8 precedes step 9); `dispatch_pipeline` exits with code 0
+
+* **Unit Scenario: UTS-011-A4** — `json_flag=false` branch: `render_json` is NOT invoked
+  * **Arrange**: Stub `parse_cli_args` to return `{vmodel_dir: "./v-model", json_flag: false, exit_code: 0}`; stub all intermediate sub-modules (steps 2–7) with nominal return values; stub `cross_reference` to return `{exit_code: 0, classified: [], orphaned: []}`; spy `render_json`
+  * **Act**: Call `dispatch_pipeline(["./v-model"])`
+  * **Assert**: `render_json` spy records 0 invocations (branch B false-path skips step 9); `dispatch_pipeline` exits with code 0
+
+* **Unit Scenario: UTS-011-A5** — `cross_reference` returns exit_code 1: dispatch propagates exit 1
+  * **Arrange**: Stub `parse_cli_args` to return `{vmodel_dir: "./v-model", json_flag: false, exit_code: 0}`; stub all intermediate sub-modules (steps 2–7) with nominal return values; stub `cross_reference` to return `{classified: [{disposition: "BLOCKING"}], status: "❌ NOT READY — Unwaived anomalies detected", exit_code: 1}`; spy `render_report`
+  * **Act**: Call `dispatch_pipeline(["./v-model"])`
+  * **Assert**: `render_report` spy records exactly 1 invocation and receives result with `exit_code=1` in arguments (step 8 still executes); `dispatch_pipeline` exits with code 1 (step 10 propagates `result.exit_code`)
+
+#### UTP-011-B: Pipeline sub-module invocation — strict isolation of all dependencies
+
+| Field | Value |
+|-------|-------|
+| **Traces To** | MOD-011 |
+| **Technique** | Strict Isolation |
+| **Target View** | Architecture Interface View |
+
+**Dependency & Mock Registry:**
+
+Same registry as UTP-011-A — all 10 sub-module functions are stubbed or spied.
+
+* **Unit Scenario: UTS-011-B1** — `discover_artifacts` called with `vmodel_dir` from config
+  * **Arrange**: Stub `parse_cli_args` to return `{vmodel_dir: "/spec/v-model", json_flag: false, exit_code: 0}`; spy `discover_artifacts` to capture invocation arguments and return 11 artifact records; stub all remaining sub-modules with nominal return values
+  * **Act**: Call `dispatch_pipeline(["/spec/v-model"])`
+  * **Assert**: `discover_artifacts` spy records exactly 1 invocation; captured argument equals `"/spec/v-model"` (`config.vmodel_dir` passed verbatim in step 2)
+
+* **Unit Scenario: UTS-011-B2** — `parse_matrix_file` called with `vmodel_dir + "/traceability-matrix.md"`
+  * **Arrange**: Stub `parse_cli_args` to return `{vmodel_dir: "/spec/v-model", json_flag: false, exit_code: 0}`; spy `parse_matrix_file` to capture invocation arguments and return `[]`; stub all remaining sub-modules with nominal return values
+  * **Act**: Call `dispatch_pipeline(["/spec/v-model"])`
+  * **Assert**: `parse_matrix_file` spy records exactly 1 invocation; captured argument equals `"/spec/v-model/traceability-matrix.md"` (path constructed by concatenation in step 3)
+
+* **Unit Scenario: UTS-011-B3** — `parse_hazards` called with `vmodel_dir + "/hazard-analysis.md"`
+  * **Arrange**: Stub `parse_cli_args` to return `{vmodel_dir: "/spec/v-model", json_flag: false, exit_code: 0}`; spy `parse_hazards` to capture invocation arguments and return `null`; stub all remaining sub-modules with nominal return values
+  * **Act**: Call `dispatch_pipeline(["/spec/v-model"])`
+  * **Assert**: `parse_hazards` spy records exactly 1 invocation; captured argument equals `"/spec/v-model/hazard-analysis.md"` (path constructed in step 4)
+
+* **Unit Scenario: UTS-011-B4** — `parse_waivers` called with `vmodel_dir + "/waivers.md"`
+  * **Arrange**: Stub `parse_cli_args` to return `{vmodel_dir: "/spec/v-model", json_flag: false, exit_code: 0}`; spy `parse_waivers` to capture invocation arguments and return `{}`; stub all remaining sub-modules with nominal return values
+  * **Act**: Call `dispatch_pipeline(["/spec/v-model"])`
+  * **Assert**: `parse_waivers` spy records exactly 1 invocation; captured argument equals `"/spec/v-model/waivers.md"` (path constructed in step 6)
+
+---
+
+## Coverage Summary
+
+| Metric | Count |
+|--------|-------|
+| Total Modules (MOD) | 11 (11 active, 0 deprecated) |
+| Modules tested | 11 (excludes [EXTERNAL]) |
+| Modules bypassed ([EXTERNAL]) | 0 |
+| Total Test Cases (UTP) | 15 |
+| Total Scenarios (UTS) | 45 |
+| Modules with ≥1 UTP | 11 / 11 (100%) (active, non-[EXTERNAL] items only) |
+| Test Cases with ≥1 UTS | 15 / 15 (100%) |
+| **Overall Coverage (MOD→UTP)** | **100%** |
+
+### Technique Distribution
+
+| Technique | Test Cases | Percentage |
+|-----------|-----------|------------|
+| Statement & Branch Coverage | 1 | 7% |
+| Boundary Value Analysis | 2 | 13% |
+| Equivalence Partitioning | 8 | 53% |
+| Strict Isolation | 1 | 7% |
+| State Transition Testing | 0 | 0% |
+| Interface Testing (legacy) | 2 | 13% |
+| Decision Table (legacy) | 1 | 7% |
+
+## Uncovered Modules
+
+None — full coverage achieved.
