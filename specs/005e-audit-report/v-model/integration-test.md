@@ -215,3 +215,34 @@ When the full pipeline runs
 Then a release-audit-report.md SHALL be generated with ❌ NOT READY
 And the exit code SHALL be 1
 ```
+
+### ARCH-010 — CLI Dispatch Orchestrator (Entry Point)
+
+#### ITP-010-A: CLI entry point orchestrates full pipeline and propagates exit code
+
+| Field | Value |
+|-------|-------|
+| **Traces To** | ARCH-010 |
+| **Technique** | Interface Contract Testing |
+| **Precondition** | Valid V-Model directory; standard CI toolchain (Bash 4+, Git, Python 3.x) available |
+
+##### ITS-010-A1: Entry point invokes pipeline and returns exit code 0
+```
+Given ARCH-010 is invoked with a valid vmodel-dir and complete, passing V-Model artifacts
+When the full orchestration pipeline completes without errors
+Then ARCH-010 SHALL exit with code 0 (RELEASE READY or RELEASE CANDIDATE)
+```
+
+##### ITS-010-A2: Entry point propagates exit code 1 from compliance status
+```
+Given ARCH-010 is invoked with a V-Model directory containing BLOCKING anomalies
+When ARCH-007 returns exit code 1 via compliance status
+Then ARCH-010 SHALL propagate exit code 1 to the caller
+```
+
+##### ITS-010-A3: Entry point exits code 2 on missing required argument
+```
+Given ARCH-010 is invoked with no arguments
+When ARCH-001 argument validation fails
+Then ARCH-010 SHALL print usage to stderr and exit with code 2 without invoking downstream modules
+```

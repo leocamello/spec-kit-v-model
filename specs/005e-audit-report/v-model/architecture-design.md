@@ -13,7 +13,7 @@ This document decomposes the system components into architecture modules followi
 
 | ARCH ID | Name | Description | Parent SYS | Type |
 |---------|------|-------------|------------|------|
-| ARCH-001 | CLI Argument Parser | Parses and validates command-line arguments for both Bash and PowerShell entry points | SYS-006, SYS-007 | Component |
+| ARCH-001 | CLI Argument Parser | Parses and validates command-line arguments for both Bash and PowerShell entry points | SYS-008 | Component |
 | ARCH-002 | File Discovery Module | Enumerates V-Model filenames, checks existence, collects Git metadata | SYS-001 | Component |
 | ARCH-003 | Matrix Parser Module | Reads traceability-matrix.md, splits into matrix sections, extracts rows and coverage | SYS-002 | Component |
 | ARCH-004 | Hazard Parser Module | Parses hazard-analysis.md FMEA table to extract HAZ-NNN entries | SYS-003 | Component |
@@ -22,6 +22,7 @@ This document decomposes the system components into architecture modules followi
 | ARCH-007 | Cross-Reference Engine | Joins anomalies with waivers, computes compliance status | SYS-004, SYS-005 | Component |
 | ARCH-008 | Report Renderer Module | Renders 7-section Markdown report from all collected data | SYS-006 | Component |
 | ARCH-009 | JSON Output Module | Serializes audit data to JSON when --json flag is active | SYS-007 | Component |
+| ARCH-010 | CLI Dispatch Orchestrator | Top-level entry point in both Bash and PowerShell scripts; invokes ARCH-001 for argument parsing, then sequentially orchestrates ARCH-002 through ARCH-009, and propagates the exit code from compliance status. Uses only standard CI toolchain (Bash 4+, PowerShell 7+, Git, Python 3.x stdlib) — no external package managers or third-party libraries | SYS-008 | Component |
 
 ## Architecture Modules
 
@@ -29,12 +30,12 @@ This document decomposes the system components into architecture modules followi
 
 | Field | Value |
 |-------|-------|
-| **Traces To** | SYS-006, SYS-007 |
-| **Description** | Parses command-line arguments for both Bash and PowerShell entry points: positional vmodel-dir, named options (--system-name, --version, --git-tag, --regulatory-context, --output, --json, --help). Validates required arguments and file existence. |
+| **Traces To** | SYS-008 |
+| **Description** | Parses command-line arguments for both Bash and PowerShell entry points: positional vmodel-dir, named options (--system-name, --version, --git-tag, --regulatory-context, --output, --json, --help). Validates required arguments and file existence. Invoked by ARCH-010 before pipeline dispatch. |
 
 **Logical View**: Sequential argument parsing. Bash uses `getopts`-style loop; PowerShell uses `param()` block.
 
-**Interface View**: Input: raw CLI args. Output: validated config object (vmodel_dir, system_name, version, git_tag, regulatory_context, output_path, json_flag).
+**Interface View**: Input: raw CLI args. Output: validated config object (vmodel_dir, system_name, version, git_tag, regulatory_context, output_path, json_flag). Exception: prints usage to stderr and exits 2 on missing required argument.
 
 ### ARCH-002 — File Discovery Module
 
@@ -124,10 +125,59 @@ This document decomposes the system components into architecture modules followi
 
 **Interface View**: Input: all computed data. Output: JSON string to stdout.
 
+### ARCH-010 — CLI Dispatch Orchestrator
+
+| Field | Value |
+|-------|-------|
+| **Traces To** | SYS-008 |
+| **Description** | The top-level entry point function in both the Bash (`build-audit-report.sh`) and PowerShell (`Build-Audit-Report.ps1`) scripts. Invokes ARCH-001 to parse and validate arguments, then orchestrates the full processing pipeline in sequence, and propagates the exit code returned by ARCH-007 via SYS-005 compliance status. Uses only standard CI toolchain dependencies (Bash 4+, PowerShell 7+, Git, optionally Python 3.x standard library) — no external package managers or third-party libraries. |
+
+**Logical View**: Main function / script body. Bash implementation calls named functions in sequence; PowerShell implementation calls local functions. No loop or parallelism — strictly sequential single-threaded execution.
+
+**Interface View**: Input: raw process arguments (delegated immediately to ARCH-001). Output: exit code (0 = RELEASE READY or RELEASE CANDIDATE, 1 = NOT READY, 2 = missing required artifacts or argument error). Exception: propagates exit code 2 from any sub-component that encounters a fatal error.
+
 ## Process View
 
+```mermaid
+sequenceDiagram
+    participant Caller as External Caller
+    participant ARCH010 as ARCH-010 CLI Dispatch Orchestrator
+    participant ARCH001 as ARCH-001 CLI Argument Parser
+    participant ARCH002 as ARCH-002 File Discovery
+    participant ARCH003 as ARCH-003 Matrix Parser
+    participant ARCH004 as ARCH-004 Hazard Parser
+    participant ARCH005 as ARCH-005 Anomaly Scanner
+    participant ARCH006 as ARCH-006 Waiver Parser
+    participant ARCH007 as ARCH-007 Cross-Reference Engine
+    participant ARCH008 as ARCH-008 Report Renderer
+    participant ARCH009 as ARCH-009 JSON Output
+
+    Caller->>ARCH010: invoke(raw args)
+    ARCH010->>ARCH001: parse_args(raw args)
+    ARCH001-->>ARCH010: validated config (or exit 2)
+    ARCH010->>ARCH002: discover_artifacts(vmodel_dir)
+    ARCH002-->>ARCH010: artifact inventory
+    ARCH010->>ARCH003: parse_matrix(vmodel_dir)
+    ARCH003-->>ARCH010: matrices + coverage metrics
+    ARCH010->>ARCH004: parse_hazards(vmodel_dir)
+    ARCH004-->>ARCH010: hazard summary (or null)
+    ARCH010->>ARCH005: scan_anomalies(matrices)
+    ARCH005-->>ARCH010: anomaly list
+    ARCH010->>ARCH006: parse_waivers(vmodel_dir)
+    ARCH006-->>ARCH010: waiver map
+    ARCH010->>ARCH007: cross_reference(anomalies, waiver map)
+    ARCH007-->>ARCH010: classified anomalies + compliance status + exit code
+    ARCH010->>ARCH008: render_report(all data, output_path)
+    ARCH008-->>ARCH010: report written (or exit 2)
+    alt --json flag active
+        ARCH010->>ARCH009: serialize_json(all data)
+        ARCH009-->>ARCH010: JSON to stdout
+    end
+    ARCH010-->>Caller: exit code (0/1/2)
 ```
-1. ARCH-001 (CLI Parser) → validate args
+
+**Execution order (sequential, single-threaded)**:
+1. ARCH-010 (Entry Point) → delegates to ARCH-001 to validate args
 2. ARCH-002 (File Discovery) → enumerate artifacts + git metadata
 3. ARCH-003 (Matrix Parser) → extract matrices + coverage
 4. ARCH-004 (Hazard Parser) → extract HAZ entries (if present)
@@ -136,23 +186,38 @@ This document decomposes the system components into architecture modules followi
 7. ARCH-007 (Cross-Reference) → join anomalies ↔ waivers → status
 8. ARCH-008 (Report Renderer) → assemble + write report
 9. ARCH-009 (JSON Output) → serialize to JSON (if --json)
-```
+10. ARCH-010 (Entry Point) → propagates exit code to caller
 
 ## Data Flow View
 
 | Source | Data | Destination |
 |--------|------|-------------|
-| CLI args | vmodel-dir, metadata, flags | ARCH-001 |
-| ARCH-001 | validated config | ARCH-002, ARCH-008, ARCH-009 |
+| CLI args | raw argv (vmodel-dir, metadata, flags) | ARCH-010 |
+| ARCH-010 | raw args | ARCH-001 |
+| ARCH-001 | validated config (vmodel_dir, system_name, version, git_tag, regulatory_context, output_path, json_flag) | ARCH-010 |
+| ARCH-010 | vmodel_dir | ARCH-002 |
 | ARCH-002 | artifact inventory | ARCH-008 |
-| V-Model files | traceability-matrix.md | ARCH-003 |
+| ARCH-010 | vmodel_dir | ARCH-003 |
 | ARCH-003 | matrices, coverage metrics | ARCH-005, ARCH-008 |
-| V-Model files | hazard-analysis.md | ARCH-004 |
+| ARCH-010 | vmodel_dir | ARCH-004 |
 | ARCH-004 | hazard summary | ARCH-008 |
 | ARCH-003 | matrix rows with status | ARCH-005 |
 | ARCH-005 | anomaly list | ARCH-007 |
-| V-Model files | waivers.md | ARCH-006 |
+| ARCH-010 | vmodel_dir | ARCH-006 |
 | ARCH-006 | waiver map | ARCH-007 |
-| ARCH-007 | classified anomalies, status | ARCH-008, ARCH-009 |
+| ARCH-007 | classified anomalies, compliance status, exit code | ARCH-008, ARCH-009, ARCH-010 |
 | ARCH-008 | Markdown report | output file |
 | ARCH-009 | JSON | stdout |
+| ARCH-010 | exit code (0/1/2) | caller process |
+---
+
+
+## Coverage Summary
+
+| Metric | Count |
+|--------|-------|
+| Total Architecture Modules (ARCH) | 10 (10 active, 0 deprecated) |
+| SYS → ARCH Coverage | 8/8 (100%) |
+| ARCH modules by Type | Component: 10 |
+| Cross-Cutting Modules | 0 |
+| **Forward Coverage (SYS→ARCH)** | **100%** |
