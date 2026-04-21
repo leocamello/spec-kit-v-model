@@ -97,6 +97,27 @@ The impact-analysis script is a stateless command-line tool. Each invocation is 
 
 ---
 
+## Quality Attribute Coverage (ISO/IEC 25010:2023)
+
+### Applicable Quality Characteristics
+
+For each characteristic implied by `requirements.md`, at least one `SYS-NNN` component or design-view decision is confirmed as covering it. The analysis below applies the user-specified quality characteristics to the actual SYS-001 – SYS-006 components defined in the Decomposition View.
+
+| Quality Characteristic | ISO/IEC 25010 Ref | SYS Components | Design Evidence | Status |
+|------------------------|-------------------|----------------|-----------------|--------|
+| **Functional Suitability** — completeness of impact detection across all V-Model artifact types | §4.2.1 | SYS-001, SYS-002, SYS-003, SYS-004, SYS-005, SYS-006 | SYS-001 scans all 13 known V-Model ID prefixes (REQ, ATP, SCN, SYS, STP, STS, ARCH, ITP, ITS, MOD, UTP, UTS, HAZ), ensuring no artifact type is absent from the dependency graph. SYS-002 traverses all reachable IDs in three modes (downward, upward, full). Decomposition View confirms 100% forward coverage: every REQ-NNN maps to at least one SYS-NNN. | ✅ Covered |
+| **Reliability** — consistent blast-radius computation across runs (deterministic) | §4.2.2 | SYS-001, SYS-002 | REQ-NF-002 mandates identical output for identical inputs. SYS-001 uses deterministic regex-based parsing (awk, grep, sed) with no random or time-dependent elements. SYS-002 uses a visited-set (Bash associative array) that eliminates traversal non-determinism and prevents cycle-induced divergence. Dependency View documents failure propagation: if SYS-001 produces an inconsistent graph, SYS-002 propagates the inconsistency — therefore SYS-001 determinism is the root guarantee. | ✅ Covered |
+| **Performance Efficiency** — graph traversal performance for large repositories | §4.2.3 | SYS-002 | REQ-018 sets a measurable time-behaviour constraint: ≤10 s for ≤20 files / ≤500 IDs. SYS-002's visited-set prevents re-traversal of already-processed nodes, bounding worst-case traversal to O(V+E) over the dependency graph. Data Design View confirms all data structures are in-memory (no I/O-bound storage during traversal). The Interface View documents the CLI output contract; capacity beyond 500 IDs is not governed by any current REQ. | ✅ Covered |
+| **Security** — no sensitive requirement content leaked via impact reports | §4.2.5 | SYS-003 | SYS-003 formats only V-Model IDs and blast-radius statistics; full artifact text is never read into the output. Data Design View confirms: Impact Report (Markdown) is governed by existing Git repository access controls; Impact Report (JSON) is ephemeral stdout — consumed by the caller and never persisted autonomously. No authentication or confidentiality requirement exists beyond file-system access controls already in place. | ✅ Covered |
+| **Maintainability** — extensibility to new artifact types without changing core traversal logic | §4.2.7 | SYS-001, SYS-002 | SYS-002's traversal engine operates on the adjacency-list graph produced by SYS-001 and is agnostic to specific prefix values — adding a new artifact type requires updating the regex prefix list in SYS-001 only; SYS-002, SYS-003, SYS-004 require no modification. Decomposition View separates concerns across six distinct modules; every inter-component interface is explicitly contracted in the Interface View. | ✅ Covered |
+| **Safety** — operational constraint, risk identification, fail-safe, hazard warning | §4.2.9 | N/A | N/A — Developer tooling with no safety-critical domain overlay active. No HAZ-NNN entries are defined for this feature. This characteristic does not apply to a deterministic, read-only offline analysis tool running in a developer or CI environment. | N/A |
+
+### Gaps and Actions
+
+No quality gaps were identified. All characteristics implied by the requirements are addressed by at least one SYS-NNN component or an explicit design-view decision. Safety (§4.2.9) is not applicable to this feature.
+
+---
+
 ## Coverage Summary
 
 | Metric | Count |
