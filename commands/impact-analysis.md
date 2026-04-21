@@ -23,6 +23,8 @@ $ARGUMENTS
 
 Run **deterministic impact analysis** on V-Model artifacts to identify the blast radius of a change. This is a **script-only command** — no AI generation is needed. The script scans all markdown files in the V-Model directory, builds an ID dependency graph, and traverses it from the specified changed IDs to produce an impact report.
 
+This command implements the **IEEE 828-2012 §6.3 Configuration Control** process: when a configuration item changes, the impact on all related configuration items must be evaluated before the change is approved. The Re-validation Order in the output directly supports IEEE 828's Change Control Board (CCB) review by providing the ordered list of artifacts requiring re-validation, in dependency order.
+
 ## How to Use
 
 This command is invoked directly via the script, not through AI generation:
@@ -112,6 +114,7 @@ The impact analysis script detects lifecycle tags when traversing the dependency
 - The script uses **no external tooling** beyond standard Bash/PowerShell utilities
 - The script completes within **10 seconds** for projects with up to 20 files and 500 IDs
 - Bash and PowerShell produce **identical JSON structure** and exit codes
+- The Re-validation Order satisfies the **IEEE 828-2012 §6.3.3** requirement that a change impact assessment identifies all affected configuration items — in dependency order — prior to change approval
 
 ## Governing Standards
 

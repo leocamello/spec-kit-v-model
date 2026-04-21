@@ -67,13 +67,29 @@ For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\''m Groot
    |--------------|-------------|-------------------|
    | `requirements.md` | REQ | INCOSE Guide for Writing Requirements |
    | `acceptance-plan.md` | ATP | ISO 29119 |
-   | `system-design.md` | SYS | IEEE 1016 |
-   | `system-test.md` | STP | ISO 29119 |
-   | `architecture-design.md` | ARCH | IEEE 42010 / Kruchten 4+1 |
-   | `integration-test.md` | ITP | ISO 29119-4 |
-   | `module-design.md` | MOD | Low-Level Design Best Practices |
-   | `unit-test.md` | UTP | ISO 29119-4 |
-   | `hazard-analysis.md` | HAZ | FMEA Best Practices (ISO 14971) |
+   | `system-design.md` | SYS | IEEE 1016:2009 |
+   | `system-test.md` | STP | ISO/IEC/IEEE 29119 |
+   | `architecture-design.md` | ARCH | IEEE 42010:2011 / Kruchten 4+1 |
+   | `integration-test.md` | ITP | ISO/IEC/IEEE 29119-4 |
+   | `module-design.md` | MOD | IEEE 1016:2009 + ISO/IEC/IEEE 12207:2017 §8.4 |
+   | `unit-test.md` | UTP | ISO/IEC/IEEE 29119-4:2021 |
+   | `hazard-analysis.md` | HAZ | IEC 60812:2018 + ISO 14971:2019 |
+
+#### 2.5 Review Type Selection (IEEE 1028:2008)
+
+IEEE 1028:2008 defines four software review types. Select the appropriate type based on the artifact and context. Default to **Technical Review** for automated first-pass review:
+
+| Review Type | IEEE 1028 Ref | When to Apply | Minimum Participants |
+|-------------|---------------|---------------|----------------------|
+| **Inspection** | §4 | High-risk artifacts (`hazard-analysis.md`, `requirements.md`) where defect detection must be maximised | Independent moderator + reader + recorder + author |
+| **Technical Review** | §5 | Standard artifact review (`system-design.md`, `architecture-design.md`, `module-design.md`, `unit-test.md`) | Author + 1 independent reviewer minimum |
+| **Walkthrough** | §6 | Early draft review where understanding is the goal | Author-led; findings are advisory |
+| **Management Review** | §7 | Release gate review of `audit-report.md` | Management decision authority required |
+
+For this automated review, apply **Technical Review** criteria (IEEE 1028:2008 §5):
+- **Entry Criteria**: Artifact exists, is complete, and the review focus is defect detection
+- **Exit Criteria**: All findings documented with severity (Critical / Major / Minor / Observation)
+- **Defect Logging**: Each finding carries PRF-NNN, severity, description, affected ID, and recommended resolution
 
 ### 3. Load Context
 
@@ -92,9 +108,17 @@ For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\''m Groot
    - `unit-test.md`: Count `UTP-NNN` IDs — separately count active and deprecated
    - `hazard-analysis.md`: Count `HAZ-NNN` IDs — separately count active and deprecated
 
-### 4. Evaluate Against Standards-Based Criteria
+### 4. Evaluate Against Standards-Based Criteria (IEEE 1028:2008 / ISO/IEC 20246:2017)
 
-Apply the review criteria specific to the artifact type. Each criterion that is violated produces one finding.
+Apply the review criteria specific to the artifact type. Per ISO/IEC 20246:2017 §5.2 (Review Technique Selection), the technique is selected based on the artifact's purpose, available resources, and desired outcome. For each criterion violated, produce one finding.
+
+**Defect Taxonomy (ISO/IEC 20246:2017 §6.3)**: Classify every finding using one of these defect types:
+- **Missing**: Required content is absent (e.g., no error handling documented)
+- **Wrong**: Content is present but incorrect (e.g., wrong standard reference, incorrect ID)
+- **Superfluous**: Content is present but unneeded (e.g., duplicate ID, unreferenced section)
+- **Incomplete**: Content is partially specified (e.g., interface defined but error codes absent)
+- **Inconsistent**: Content contradicts another part of the artifact or a related artifact
+- **Ambiguous**: Content has more than one valid interpretation
 
 #### 4.1 Requirements (`requirements.md`) — INCOSE
 

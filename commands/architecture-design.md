@@ -201,6 +201,39 @@ Trace data through architecture modules:
 - Each flow traces input → transformation → output with intermediate formats
 - Data flows directly drive **Data Flow Testing** in the integration test phase
 
+### 5.5 Architecture Evaluation (ISO/IEC 42030:2019 / ISO/IEC 25010:2023)
+
+After generating the four architecture views, perform a scenario-based fitness-for-purpose evaluation per ISO/IEC 42030:2019. This completes the IEEE 42010 "describe" → ISO 42030 "evaluate" cycle.
+
+#### 5.5.1 Quality Attribute Justification (ISO/IEC 25010:2023)
+
+For each significant architectural decision (one that affects more than one view or introduces a cross-cutting module), document its quality attribute rationale. This anchors design choices to auditable 25010 evidence:
+
+| Architecture Decision | Quality Characteristic (ISO 25010) | Trade-off Accepted |
+|----------------------|------------------------------------|--------------------|
+| e.g., Microservices decomposition | Flexibility §4.2.7 ↑, Performance Efficiency §4.2.3 ↓ | Latency overhead accepted for independent deployability |
+| e.g., Read-through cache layer | Performance Efficiency §4.2.3 ↑, Consistency risk | Cache invalidation strategy documented in Interface View |
+| e.g., Redundant module instances | Reliability §4.2.2 ↑, Resource Utilisation §4.2.3 ↓ | Extra resource cost justified by fault-tolerance requirement |
+
+Populate one row per significant ARCH decision. Explicitly name the ISO 25010 characteristic(s) impacted.
+
+#### 5.5.2 Fitness-for-Purpose Scenario Analysis (ISO/IEC 42030:2019 §6)
+
+Evaluate the architecture against the top stakeholder concerns (quality scenarios). For each concern evaluate at minimum Reliability, Performance Efficiency, Security, and Maintainability:
+
+| Quality Scenario | Architecture Response (ARCH-NNN) | Risk / Sensitivity Point | Verdict |
+|-----------------|-----------------------------------|--------------------------|---------|
+| e.g., 99.9% availability under peak load | ARCH-NNN (load balancer) + ARCH-NNN (health check) | Single-region failure not handled | ⚠️ Partial |
+| e.g., Data encrypted at rest and in transit | ARCH-NNN (encryption service) | Key rotation strategy TBD | ⚠️ Partial |
+
+- ✅ Addressed: architecture fully satisfies the scenario
+- ⚠️ Partially Addressed: gap identified — flag as `[ARCH CONCERN: description]` for human resolution
+- ❌ Not Addressed: significant gap — must be resolved before proceeding to integration test
+
+#### 5.5.3 Sensitivity and Trade-off Points
+
+List any **sensitivity points** (where a small change significantly affects quality) and **trade-off points** (where improving one characteristic degrades another). Include these in the Architecture Overview section of the output.
+
 ### 6. Safety-Critical Architecture Sections (Conditional)
 
 **If a domain overlay is loaded (Step 2a), include the overlay's safety-critical architecture sections here.** The overlay provides domain-specific content such as safety integrity decomposition, defensive programming requirements, and temporal/execution constraints — with the appropriate standard references and table structures for the configured domain.

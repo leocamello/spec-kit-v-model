@@ -23,7 +23,9 @@ You **MUST** consider the user input before proceeding (if not empty).
 
 ## Goal
 
-Generate a **Hazard Analysis** (Failure Mode and Effects Analysis — FMEA) where **every system component** (`SYS-NNN`) from `system-design.md` is assessed for potential failure modes across operational states defined in the system design. Each hazard receives a unique `HAZ-NNN` identifier and is linked back to risk control measures (`REQ-NNN` / `SYS-NNN`), creating a traceable chain: Hazard → Mitigation → Requirement/Component → Test Case.
+Generate a **Hazard Analysis** (Failure Mode and Effects Analysis — FMEA) per **IEC 60812:2018** where **every system component** (`SYS-NNN`) from `system-design.md` is assessed for potential failure modes across operational states defined in the system design. The FMEA procedure follows IEC 60812:2018 §6: item definition → function analysis → failure mode identification → effect analysis → risk evaluation → mitigation. Each hazard receives a unique `HAZ-NNN` identifier and is linked back to risk control measures (`REQ-NNN` / `SYS-NNN`), creating a traceable chain: Hazard → Mitigation → Requirement/Component → Test Case.
+
+Risk evaluation uses a severity × likelihood risk matrix aligned with **ISO 14971:2019 §5** (Risk estimation and evaluation) as the base best practice for systematic risk management. Domain overlays extend this with domain-specific severity scales and risk acceptability criteria.
 
 The output follows the FMEA register format with operational state awareness: the same failure mode (e.g., sensor corruption) may appear as multiple `HAZ-NNN` entries with different severity classifications depending on whether the system is in IDLE, ACTIVE, or EMERGENCY state.
 
@@ -117,7 +119,20 @@ hazards are new.
 
 ### 4. Generate Hazard Register (FMEA)
 
-For each `SYS-NNN` component in the system design, brainstorm potential failure modes and analyze each across operational states.
+For each `SYS-NNN` component in the system design, brainstorm potential failure modes and analyze each across operational states. This step implements the IEC 60812:2018 §6 FMEA procedure.
+
+#### 4.0 IEC 60812:2018 FMEA Procedure Compliance
+
+Per IEC 60812:2018 §6, the FMEA must be performed in this order for each `SYS-NNN`:
+
+1. **Item Definition** (§6.1): Identify the component, its function, and its operational boundaries
+2. **Failure Mode Identification** (§6.2): Enumerate all ways the component can fail to perform its function — see §4.1 below
+3. **Effect Analysis** (§6.3): Determine the consequence of each failure mode at system level — see §4.2
+4. **Failure Mode Detection** (§6.4): Identify how the failure is detected (automatic, operator, none)
+5. **Risk Estimation** (§6.5 + ISO 14971:2019 §5): Assess severity and likelihood using the risk matrix — see §4.5 and §4.6
+6. **Risk Mitigation** (§6.6): Identify control measures that reduce risk to an acceptable level — each mitigation MUST reference at least one `REQ-NNN` or `SYS-NNN`
+
+Do NOT proceed to generate `HAZ-NNN` entries without completing steps 1–6 in order.
 
 #### 4.1 Failure Mode Identification
 
@@ -177,9 +192,9 @@ Every `SYS-NNN` in the system design MUST have at least one `HAZ-NNN` entry. If 
 | Minor | Slight injury or minor degradation; first aid sufficient |
 | Negligible | No injury; cosmetic or inconvenience-level impact |
 
-#### 4.6 Risk Matrix
+#### 4.6 Risk Matrix (ISO 14971:2019 §5)
 
-Use the standard severity × likelihood risk matrix:
+Use the severity × likelihood risk matrix per ISO 14971:2019 §5 (Risk estimation). For domain-configured projects, the domain overlay replaces this general-purpose matrix with the domain-appropriate risk acceptability criteria:
 
 | | Frequent | Probable | Occasional | Remote | Improbable |
 |---|---|---|---|---|---|
@@ -234,6 +249,17 @@ Display a summary:
 - Progressive deepening: architecture-level hazards added (count, or "N/A")
 - Path to the generated file
 - Next step: Recommend running `validate-hazard-coverage.sh` to validate coverage, then `/speckit.v-model.trace` to build Matrix H
+
+## Governing Standards
+
+This command is governed by the following standards for hazard analysis:
+
+| Standard | Full Name | Role in this Command |
+|----------|-----------|----------------------|
+| **IEC 60812:2018** | Analysis Techniques for System Reliability — Failure Modes and Effects Analysis (FMEA) | Primary FMEA standard: defines the FMEA procedure (§6), failure mode identification criteria, effect analysis methodology, detection assessment, and documentation requirements (§7). Governs the step-by-step procedure in Step 4.0 and the FMEA register format. |
+| **ISO 14971:2019** | Medical Devices — Application of Risk Management to Medical Devices | Risk estimation and evaluation: defines the severity × likelihood risk matrix framework (§5), risk acceptability criteria, and residual risk documentation. Used as base best-practice for the general-purpose risk matrix in §4.6. Domain overlays extend with domain-specific acceptability criteria. |
+
+> **Domain extensions:** If a domain overlay is loaded (Step 2a), the severity scale, risk acceptability criteria, and regulatory risk classification framework are replaced by the domain-specific standard (e.g., ISO 26262-3 §7 HARA with ASIL assignment, DO-178C §2.3 FHA with DAL determination, IEC 62304 §4.3 Software Safety Classification). The IEC 60812:2018 FMEA procedure and ISO 14971 risk estimation principles remain applicable as the structural foundation.
 
 ## Operating Constraints
 

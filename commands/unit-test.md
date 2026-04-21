@@ -272,7 +272,7 @@ Write the complete unit test plan to `{VMODEL_DIR}/unit-test.md` using the templ
 10. **Technique Distribution**: Statement & Branch [N], BVA [N], EP [N], Strict Isolation [N], State Transition [N]
 11. **Uncovered Modules**: List of MOD without UTP (should be empty, excluding `[EXTERNAL]`)
 
-### 8. Coverage Gate
+### 8. Coverage Gate (IEEE 1012:2016 / ISO/IEC/IEEE 29119-4:2021)
 
 After writing the test plan, run the coverage gate:
 
@@ -280,6 +280,13 @@ After writing the test plan, run the coverage gate:
    - Forward coverage: every ARCH has at least one MOD
    - Backward coverage: every non-`[EXTERNAL]` MOD has at least one UTP
 2. Include the validation result (pass/fail with coverage summary) in the output
+
+**IEEE 1012:2016 §5.7 V&V Completeness Check**: In addition to script validation, confirm:
+
+3. **Every `MOD-NNN`** (excluding `[EXTERNAL]`) has at least one `UTP-NNN-X` test case — white-box verification of the module's algorithmic logic per IEEE 1012:2016 §5.7
+4. **Every `UTP-NNN-X`** has at least one `UTS-NNN-X#` executable scenario — each test case is runnable
+5. **No `MOD-NNN`** is left without any V&V activity — flag gaps as: `[V&V GAP: MOD-NNN has no unit-level V&V activity — IEEE 1012:2016 §5.7]`
+6. **Technique completeness**: Every UTP declares an ISO 29119-4 technique — flag any missing technique declarations
 
 If validation fails, include the gap report but do NOT delete the generated file.
 
@@ -295,6 +302,17 @@ Display a summary:
 - Coverage gate result: pass/fail
 - Path to the generated file
 - Next step: Recommend running `/speckit.v-model.trace` to build the full traceability matrix (Matrix D)
+
+## Governing Standards
+
+This command is governed by the following standards for unit testing:
+
+| Standard | Full Name | Role in this Command |
+|----------|-----------|----------------------|
+| **ISO/IEC/IEEE 29119-4:2021** | Software and Systems Engineering — Software Testing — Part 4: Test Techniques | Primary test technique standard: defines the five mandatory white-box unit test techniques (Statement & Branch Coverage, Boundary Value Analysis, Equivalence Partitioning, State Transition, Strict Isolation), their application criteria per module view, and the Arrange/Act/Assert scenario format |
+| **IEEE 1012:2016** | IEEE Standard for System, Software, and Hardware Verification and Validation | V&V governance: ensures every module has at least one white-box V&V activity (Step 8 — Coverage Gate §5.7); defines unit testing as a verification activity confirming that each module implements its design correctly; prescribes entry/exit criteria for unit test activities |
+
+> **Domain extensions:** If a domain overlay is loaded (Step 6 — Safety-Critical Techniques), additional structural coverage techniques (e.g., MC/DC per ISO 26262-6 §9.4.4 by ASIL, DO-178C §6.4.4.2 coverage objectives by DAL, IEC 62304 §5.5.3 unit testing by safety class) are applied on top of the ISO 29119-4 base techniques.
 
 ## Operating Constraints
 

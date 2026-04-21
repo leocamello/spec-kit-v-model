@@ -24,6 +24,8 @@ $ARGUMENTS
 
 Build a **release audit report** from the V-Model artifacts directory. This is a **100% deterministic, script-only command** — no AI generation is needed. The script discovers all V-Model artifacts, extracts traceability matrices and coverage metrics, cross-references anomalies with waivers, computes compliance status, and assembles a monolithic `release-audit-report.md`.
 
+The audit report constitutes both a **Functional Configuration Audit (FCA)** — verifying that the software functions correctly per its requirements — and a **Physical Configuration Audit (PCA)** — verifying that the software matches its documentation — as defined by **IEEE 828-2012 §6.4** (Configuration Audits). The exit code directly reflects FCA/PCA pass/fail status, making the output actionable for both internal quality assurance and external certification reviews.
+
 ## How to Use
 
 This command is invoked directly via the script, not through AI generation:
@@ -70,6 +72,11 @@ scripts/powershell/Build-Audit-Report.ps1 -VModelDir specs/<feature>/v-model -Js
 | 0 | ✅ RELEASE READY (no anomalies, no unresolved suspects) or ✅ RELEASE CANDIDATE (all anomalies and suspects waived) |
 | 1 | ❌ NOT READY (unwaived anomalies or unresolved suspect items detected — blocks CI pipeline) |
 | 2 | Error — required artifacts missing (requirements.md or traceability-matrix.md) |
+
+Per **ISO 19011:2018 §6.4.9** (Audit Conclusions), findings in the generated report are classified as:
+- **Major Nonconformity**: Unwaived anomaly or unresolved suspect item — blocks release (exit code 1)
+- **Minor Nonconformity**: Waived anomaly or lifecycle warning — noted but does not block release
+- **Observation**: Coverage metric below threshold or advisory finding — informational only
 
 ## Lifecycle Status Reporting
 
@@ -144,6 +151,7 @@ Each `### WAV-NNN` entry must include an `**Artifact**:` field matching the anom
 - Run `/speckit.v-model.test-results` first to ingest CI results into the traceability matrix
 - The report pins every artifact to its Git SHA and timestamp for audit traceability
 - Orphaned waivers (referencing non-existent anomalies) are reported but do not affect compliance status
+- The generated `release-audit-report.md` satisfies the minimum content requirements for a Software Quality Assurance Records information item per **ISO/IEC/IEEE 15289:2019 §D.31** — it documents artifact completeness, traceability, and verification status in a reviewable and archivable format
 
 ## Governing Standards
 
