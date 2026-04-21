@@ -1205,6 +1205,80 @@ Each test case MUST identify its technique by name and anchor to a specific arch
 
 ---
 
+## V&V Coverage Gate (IEEE 1012:2016)
+
+IEEE 1012:2016 §5.6 requires every architecture module interface to be exercised by at least one V&V activity. The coverage gate validates that all 28 ARCH-NNN components have at least one `ITP-NNN-X` test case at integration test level.
+
+### Script Execution
+
+```
+bash scripts/bash/validate-architecture-coverage.sh specs/003-architecture-integration/v-model
+```
+
+```
+=== Architecture-Level Coverage Validation ===
+
+Totals: 13 SYS | 28 ARCH (1 cross-cutting) | 83 ITPs | 94 ITSs
+SYS → ARCH coverage: 13/13 (100%)
+ARCH → ITP coverage: 28/28 (100%)
+ITP → ITS coverage: 83/83 (100%)
+
+ℹ️  Cross-cutting modules (no SYS parent required):
+   - ARCH-028 [CROSS-CUTTING]
+
+✅ Full architecture-level coverage — all system components decomposed, all modules tested.
+```
+
+**Exit code**: 0 (PASS — no gaps)
+
+### ARCH→ITP Coverage Table
+
+| ARCH Module | Module Name | V&V Activities (ITP) | Status |
+|-------------|-------------|----------------------|--------|
+| ARCH-001 | SYS Component Extractor | ITP-001-A, ITP-001-B, ITP-001-C | ✅ Covered |
+| ARCH-002 | Architecture Module Decomposer | ITP-002-A, ITP-002-B, ITP-002-C | ✅ Covered |
+| ARCH-003 | Logical View Generator | ITP-003-A, ITP-003-B, ITP-003-C | ✅ Covered |
+| ARCH-004 | Process View Generator | ITP-004-A, ITP-004-B, ITP-004-C | ✅ Covered |
+| ARCH-005 | Interface View Generator | ITP-005-A, ITP-005-B, ITP-005-C | ✅ Covered |
+| ARCH-006 | Data Flow View Generator | ITP-006-A, ITP-006-B, ITP-006-C | ✅ Covered |
+| ARCH-007 | Architecture Design Parser | ITP-007-A, ITP-007-B, ITP-007-C | ✅ Covered |
+| ARCH-008 | Integration Test Case Generator | ITP-008-A, ITP-008-B, ITP-008-C | ✅ Covered |
+| ARCH-009 | Integration Test Scenario Generator | ITP-009-A, ITP-009-B, ITP-009-C, ITP-009-D | ✅ Covered |
+| ARCH-010 | Forward Coverage Validator | ITP-010-A, ITP-010-B, ITP-010-C, ITP-010-D | ✅ Covered |
+| ARCH-011 | Backward Coverage Validator | ITP-011-A, ITP-011-B, ITP-011-C | ✅ Covered |
+| ARCH-012 | Orphan and Circular Dependency Detector | ITP-012-A, ITP-012-B, ITP-012-C | ✅ Covered |
+| ARCH-013 | Coverage Report Formatter | ITP-013-A, ITP-013-B, ITP-013-C, ITP-013-D | ✅ Covered |
+| ARCH-014 | Architecture Template Structure | ITP-014-A, ITP-014-B | ✅ Covered |
+| ARCH-015 | Integration Test Template Structure | ITP-015-A, ITP-015-B | ✅ Covered |
+| ARCH-016 | Matrix C Table Generator | ITP-016-A, ITP-016-B, ITP-016-C | ✅ Covered |
+| ARCH-017 | Progressive Matrix Assembler | ITP-017-A, ITP-017-B, ITP-017-C, ITP-017-D | ✅ Covered |
+| ARCH-018 | Matrix C Data Parser (Bash) | ITP-018-A, ITP-018-B, ITP-018-C, ITP-018-D | ✅ Covered |
+| ARCH-019 | Matrix C Data Parser (PowerShell) | ITP-019-A, ITP-019-B, ITP-019-C | ✅ Covered |
+| ARCH-020 | System Design Prerequisite Check | ITP-020-A, ITP-020-B, ITP-020-D | ✅ Covered |
+| ARCH-021 | Extended Document Detection | ITP-021-A, ITP-021-B, ITP-021-D | ✅ Covered |
+| ARCH-022 | Manifest Version and Command Registry | ITP-022-A, ITP-022-B | ✅ Covered |
+| ARCH-023 | Architecture Command Evaluator | ITP-023-A, ITP-023-B | ✅ Covered |
+| ARCH-024 | Integration Test Command Evaluator | ITP-024-A, ITP-024-B | ✅ Covered |
+| ARCH-025 | Mermaid Syntax Validator | ITP-025-A, ITP-025-B | ✅ Covered |
+| ARCH-026 | Overlay Discovery Mechanism | ITP-026-A, ITP-026-B, ITP-026-D | ✅ Covered |
+| ARCH-027 | Overlay Assembly Protocol | ITP-027-A, ITP-027-B | ✅ Covered |
+| ARCH-028 | ID Pattern Library [CROSS-CUTTING] | ITP-028-A, ITP-028-B, ITP-028-C, ITP-028-D | ✅ Covered |
+
+**V&V Gap Summary**: No gaps — all 28 ARCH-NNN components have at least one integration-level V&V activity.
+
+### Entry Criteria (IEEE 1012:2016 §5.6.1)
+
+| Criterion | Status |
+|-----------|--------|
+| `architecture-design.md` is current and peer-reviewed | ✅ Met |
+| Every `ARCH-NNN` module has at least one `ITP-NNN-X` test case (100% forward coverage) | ✅ Met — 28/28 (100%) |
+| All `ITP-NNN-X` test cases have at least one `ITS-NNN-X#` executable scenario | ✅ Met — 83/83 (100%) |
+| V&V gap list is empty (all integration boundaries covered) | ✅ Met — 0 gaps |
+
+**Verdict**: ✅ PASS — IEEE 1012:2016 §5.6 V&V completeness requirements satisfied at integration test level.
+
+---
+
 ## Coverage Summary
 
 | Metric | Count |
