@@ -13,10 +13,6 @@ scripts:
   ps: scripts/powershell/setup-v-model.ps1 -Json -RequireReqs -RequireSystemDesign
 ---
 
-
-<!-- Extension: v-model -->
-<!-- Config: .specify/extensions/v-model/ -->
-
 ## User Input
 
 ```text
@@ -211,7 +207,33 @@ Every STS scenario must satisfy:
 
 If no domain overlay is loaded, skip this section entirely.
 
-### 7. Write Output
+### 7. V&V Coverage Gate (IEEE 1012:2016)
+
+Before writing the final output, verify IEEE 1012:2016 V&V completeness for the system test layer.
+
+#### 7.1 Requirement-to-V&V Activity Coverage
+
+IEEE 1012:2016 §5.5 requires every requirement to be exercised by at least one V&V activity. At system test level, confirm:
+
+1. **Every `REQ-F-NNN`** has at least one `STP-NNN-X` test case that validates it
+2. **Every `REQ-NF-NNN`** has at least one applicable V&V activity:
+   - **Test** (`STP`) — preferred when the quality characteristic is measurable
+   - **Analysis** — documented in the Coverage Summary when a test is impractical
+   - **Inspection** — documented with rationale when structural examination suffices
+3. **No `REQ-NNN`** is left without any V&V activity — flag uncovered requirements as: `[V&V GAP: REQ-NNN has no system-level V&V activity — IEEE 1012:2016 §5.5]`
+
+#### 7.2 Entry Criteria Check (IEEE 1012:2016 §5.5.1)
+
+Confirm these entry criteria are satisfied before the test plan is considered complete:
+
+- `system-design.md` is current and has been peer-reviewed
+- Every `SYS-NNN` component has at least one `STP-NNN-X` test case (100% forward coverage)
+- All `STP-NNN-X` test cases have at least one `STS-NNN-X#` executable scenario
+- V&V gap list is empty (all `REQ-NNN` covered)
+
+List any unmet criteria in the Report Completion summary.
+
+### 8. Write Output
 
 Write the complete system test plan to `{VMODEL_DIR}/system-test.md` using the template structure. Include:
 
@@ -221,10 +243,11 @@ Write the complete system test plan to `{VMODEL_DIR}/system-test.md` using the t
 4. **ISO 29119 Techniques**: Reference section listing applied techniques
 5. **System Tests**: All STP test cases with STS scenarios, organized by SYS component
 6. **Safety-Critical Sections**: Domain-specific test sections (if overlay loaded in Step 2a)
-7. **Coverage Summary**: Component count, test case count, scenario count, coverage percentage
-8. **Uncovered Components**: List of SYS without STP (should be empty)
+7. **V&V Coverage (IEEE 1012:2016)**: REQ-to-V&V activity mapping with any flagged gaps (from Step 7)
+8. **Coverage Summary**: Component count, test case count, scenario count, coverage percentage
+9. **Uncovered Components**: List of SYS without STP (should be empty)
 
-### 8. Report Completion
+### 9. Report Completion
 
 Display a summary:
 - Total test cases (STP) and scenarios (STS) generated
@@ -234,6 +257,17 @@ Display a summary:
 - Safety-critical sections included (yes/no, overlay loaded yes/no)
 - Path to the generated file
 - Next step: Recommend running `/speckit.v-model.trace` to build the full traceability matrix
+
+## Governing Standards
+
+This command is governed by the following standards for system testing:
+
+| Standard | Full Name | Role in this Command |
+|----------|-----------|----------------------|
+| **ISO/IEC/IEEE 29119** | Software and Systems Testing | Primary test standard: named test techniques, test case structure, test scenario format, and system-level test design |
+| **IEEE 1012:2016** | IEEE Standard for System, Software, and Hardware Verification and Validation | V&V governance: ensures every requirement is exercised by at least one V&V activity (test, analysis, inspection, or demonstration); distinguishes verification ("built right") from validation ("right product"); prescribes entry/exit criteria for test activities |
+
+> **Domain extensions:** If a domain overlay is loaded (Step 2a), additional structural coverage requirements from the applicable standard (e.g., ISO 26262-6 §9.4.4 MC/DC by ASIL, DO-178C §6.4.4 coverage by DAL) are applied alongside these best-practice standards.
 
 ## Operating Constraints
 

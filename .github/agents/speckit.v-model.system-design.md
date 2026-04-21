@@ -13,10 +13,6 @@ scripts:
   ps: scripts/powershell/setup-v-model.ps1 -Json -RequireReqs
 ---
 
-
-<!-- Extension: v-model -->
-<!-- Config: .specify/extensions/v-model/ -->
-
 ## User Input
 
 ```text
@@ -181,7 +177,30 @@ Document data structures and protection:
 
 If no domain overlay is loaded, skip this section entirely.
 
-### 6. Derived Requirement Detection
+### 6. Quality Attribute Cross-Check (ISO/IEC 25010:2023)
+
+After generating all `SYS-NNN` components and populating the four IEEE 1016 design views, verify that the design adequately addresses the relevant ISO/IEC 25010:2023 quality characteristics.
+
+#### 6.1 Applicable Quality Characteristics
+
+For each characteristic implied or explicitly stated in `requirements.md`, confirm at least one `SYS-NNN` component or design view decision covers it:
+
+| Quality Characteristic | ISO/IEC 25010 Ref | Design Evidence Required |
+|------------------------|-------------------|--------------------------|
+| Functional Suitability (completeness, correctness, appropriateness) | §4.2.1 | Every `REQ-F-NNN` maps to at least one `SYS-NNN` component |
+| Reliability (availability, fault tolerance, recoverability) | §4.2.2 | Dependency View documents failure propagation and recovery strategies |
+| Performance Efficiency (time behaviour, resource utilisation, capacity) | §4.2.3 | Interface View or Data Design View specifies measurable performance constraints |
+| Security (confidentiality, integrity, authenticity, accountability) | §4.2.5 | Data Design View documents protection at rest and in transit for all sensitive data |
+| Maintainability (modularity, reusability, analysability, modifiability, testability) | §4.2.7 | Decomposition View separates concerns; every interface is explicitly contracted |
+| Safety (operational constraint, risk identification, fail safe, hazard warning) | §4.2.9 | Relevant `SYS-NNN` components link to `HAZ-NNN` entries in the hazard analysis (if applicable) |
+
+#### 6.2 Action on Gaps
+
+- If a characteristic implied by the requirements is **not addressed** by any SYS component or view decision: flag it as `[QUALITY GAP: ISO 25010 §X.X — <characteristic> not explicitly addressed]`
+- If the requirements do NOT imply a characteristic: skip it — not every characteristic must be covered
+- Summarise any gaps in the Coverage Summary section of the output
+
+### 7. Derived Requirement Detection
 
 During decomposition, the AI may identify a technical capability necessary for the architecture but not explicitly stated in `requirements.md`. These are **derived requirements**.
 
@@ -194,7 +213,7 @@ During decomposition, the AI may identify a technical capability necessary for t
   2. Reject it as unnecessary
   3. Merge it into an existing requirement
 
-### 7. Write Output
+### 8. Write Output
 
 Write the complete system design document to `{VMODEL_DIR}/system-design.md` using the template structure. Include:
 
@@ -206,11 +225,12 @@ Write the complete system design document to `{VMODEL_DIR}/system-design.md` usi
 6. **Interface View**: External and internal interfaces with contracts
 7. **Data Design View**: Data structures, storage, and protection
 8. **Safety-Critical Sections**: Domain-specific design sections (if overlay loaded in Step 2a)
-9. **Coverage Summary**: Component count, forward coverage percentage
-10. **Derived Requirements**: List of flagged items requiring human resolution
-11. **Glossary**: Domain-specific terms
+9. **Quality Attribute Coverage (ISO/IEC 25010:2023)**: Quality characteristic coverage table with any flagged gaps (from Step 6)
+10. **Coverage Summary**: Component count, forward coverage percentage
+11. **Derived Requirements**: List of flagged items requiring human resolution
+12. **Glossary**: Domain-specific terms
 
-### 8. Report Completion
+### 9. Report Completion
 
 Display a summary:
 - Total system components generated (by type: Subsystem/Module/Service/Library/Utility)
@@ -221,6 +241,17 @@ Display a summary:
 - Safety-critical sections included (yes/no, overlay loaded yes/no)
 - Path to the generated file
 - Next step: Recommend running `/speckit.v-model.system-test` to generate the paired test plan
+
+## Governing Standards
+
+This command is governed by the following standards for system design:
+
+| Standard | Full Name | Role in this Command |
+|----------|-----------|----------------------|
+| **IEEE 1016:2009** | IEEE Standard for Information Technology — Software Design Descriptions | Primary structure standard: four mandatory design views (Decomposition, Dependency, Interface, Data Design) and SDD content requirements |
+| **ISO/IEC 25010:2023** | Systems and Software Quality Models | Quality attribute taxonomy: design decisions are cross-checked against 25010 characteristics (Functional Suitability, Reliability, Performance Efficiency, Usability, Security, Compatibility, Flexibility, Safety, Interaction Capability) to make quality rationale explicit and auditable |
+
+> **Domain extensions:** If a domain overlay is loaded (Step 2a), additional safety-integrity design requirements from the applicable standard (e.g., ISO 26262-6 §7.4 Freedom from Interference, DO-178C §5.2 Software Architecture) are applied alongside these best-practice standards.
 
 ## Operating Constraints
 

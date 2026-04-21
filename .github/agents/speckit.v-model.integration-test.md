@@ -13,10 +13,6 @@ scripts:
   ps: scripts/powershell/setup-v-model.ps1 -Json -RequireReqs -RequireArchitectureDesign
 ---
 
-
-<!-- Extension: v-model -->
-<!-- Config: .specify/extensions/v-model/ -->
-
 ## User Input
 
 ```text
@@ -220,7 +216,30 @@ Every ITS scenario must satisfy:
 
 If no domain overlay is loaded, skip this section entirely.
 
-### 7. Write Output
+### 7. V&V Coverage Gate (IEEE 1012:2016)
+
+Before writing the final output, verify IEEE 1012:2016 V&V completeness for the integration test layer.
+
+#### 7.1 Architecture Module–to–V&V Activity Coverage
+
+IEEE 1012:2016 §5.6 requires every architecture module interface to be exercised by at least one V&V activity. At integration test level, confirm:
+
+1. **Every `ARCH-NNN`** module has at least one `ITP-NNN-X` test case that exercises its integration boundary
+2. **Every inter-module interface** in the Interface View has at least one ITP targeting its contract
+3. **No `ARCH-NNN`** is left without any V&V activity — flag gaps as: `[V&V GAP: ARCH-NNN has no integration-level V&V activity — IEEE 1012:2016 §5.6]`
+
+#### 7.2 Entry Criteria Check (IEEE 1012:2016 §5.6.1)
+
+Confirm these entry criteria before the test plan is considered complete:
+
+- `architecture-design.md` is current and has been peer-reviewed
+- Every `ARCH-NNN` module has at least one `ITP-NNN-X` test case (100% forward coverage)
+- All `ITP-NNN-X` test cases have at least one `ITS-NNN-X#` executable scenario
+- V&V gap list is empty (all integration boundaries covered)
+
+List any unmet criteria in the Report Completion summary.
+
+### 8. Write Output
 
 Write the complete integration test plan to `{VMODEL_DIR}/integration-test.md` using the template structure. Include:
 
@@ -231,11 +250,12 @@ Write the complete integration test plan to `{VMODEL_DIR}/integration-test.md` u
 5. **Integration Tests**: All ITP test cases with ITS scenarios, organized by ARCH module — each ITP names its technique and target architecture view
 6. **Test Harness & Mocking Strategy**: Mock/stub definitions per test case
 7. **Safety-Critical Sections**: Domain-specific integration test sections (if overlay loaded in Step 2a)
-8. **Coverage Summary**: Module count, test case count, scenario count, coverage percentage
-9. **Technique Distribution**: Interface Contract [N], Data Flow [N], Fault Injection [N], Concurrency [N]
-10. **Uncovered Modules**: List of ARCH without ITP (should be empty)
+8. **V&V Coverage (IEEE 1012:2016)**: ARCH module-to-V&V activity mapping with any flagged gaps (from Step 7)
+9. **Coverage Summary**: Module count, test case count, scenario count, coverage percentage
+10. **Technique Distribution**: Interface Contract [N], Data Flow [N], Fault Injection [N], Concurrency [N]
+11. **Uncovered Modules**: List of ARCH without ITP (should be empty)
 
-### 8. Report Completion
+### 9. Report Completion
 
 Display a summary:
 - Total test cases (ITP) and scenarios (ITS) generated
@@ -246,12 +266,23 @@ Display a summary:
 - Path to the generated file
 - Next step: Recommend running `/speckit.v-model.trace` to build the full traceability matrix
 
-### 9. Test Harness & Mocking Strategy
+### 10. Test Harness & Mocking Strategy
 
 After writing the test plan, include a "Test Harness & Mocking Strategy" section that describes:
 1. Which modules need mocks/stubs for integration testing
 2. How interface contracts drive mock behavior
 3. Test data management strategy for integration scenarios
+
+## Governing Standards
+
+This command is governed by the following standards for integration testing:
+
+| Standard | Full Name | Role in this Command |
+|----------|-----------|----------------------|
+| **ISO/IEC/IEEE 29119-4:2021** | Software and Systems Engineering — Software Testing — Part 4: Test Techniques | Primary test technique standard: defines the four mandatory integration test techniques (Interface Contract Testing, Data Flow Testing, Fault Injection, Concurrency Testing) and their application criteria for architecture module boundaries |
+| **IEEE 1012:2016** | IEEE Standard for System, Software, and Hardware Verification and Validation | V&V governance: ensures every architecture module interface is exercised by at least one V&V activity (Step 7 — V&V Coverage Gate); distinguishes integration verification ("module interfaces built right") from system validation; prescribes entry/exit criteria for integration test activities (§5.6) |
+
+> **Domain extensions:** If a domain overlay is loaded (Step 2a), additional structural coverage requirements and interface test criteria from the applicable standard (e.g., ISO 26262-6 §9.4.4 interface correctness verification by ASIL, DO-178C §6.4.4.2 structural coverage at component integration level) are applied alongside these best-practice standards.
 
 ## Operating Constraints
 
