@@ -112,3 +112,13 @@ The impact analysis script detects lifecycle tags when traversing the dependency
 - The script uses **no external tooling** beyond standard Bash/PowerShell utilities
 - The script completes within **10 seconds** for projects with up to 20 files and 500 IDs
 - Bash and PowerShell produce **identical JSON structure** and exit codes
+
+## Governing Standards
+
+This command is governed by the following standard for change impact analysis:
+
+| Standard | Full Name | Role in this Command |
+|----------|-----------|----------------------|
+| **IEEE 828-2012** | IEEE Standard for Configuration Management in Systems and Software Engineering | Configuration management governance: defines the change management process — change request submission, impact evaluation, change control board review, and change disposition. The suspect-artifact classification, propagation scope, and rework prioritization in this command are grounded in IEEE 828 §6.3 (Configuration Control). |
+
+> **Domain extensions:** If a domain overlay is loaded, additional domain-specific change impact requirements apply (e.g., ISO 26262-8 §8 Safety-Impacted Item Assessment and ASIL re-evaluation, DO-178C §7 Software Change Control with problem reporting, IEC 62304 §6 Software Maintenance and §8 CM per safety class). These are defined in the domain overlay files.

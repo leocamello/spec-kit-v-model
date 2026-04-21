@@ -245,6 +245,19 @@ Display a summary:
 - Path to the generated file
 - Next step: Recommend running `/speckit.v-model.integration-test` to generate the paired test plan
 
+## Governing Standards
+
+This command is governed by the following standards for architecture design:
+
+| Standard | Full Name | Role in this Command |
+|----------|-----------|----------------------|
+| **IEEE 42010:2011** | Systems and Software Engineering — Architecture Description | Primary description standard: architecture description structure, viewpoint definitions, architecture rationale, and correspondence rules |
+| **Kruchten 4+1** | 4+1 Architectural View Model (P. Kruchten, 1995) | Mandatory view model: Logical, Process, Interface, and Data Flow views (adapted from 4+1's Logical, Process, Physical, Development + Scenarios) |
+| **ISO/IEC 42030:2019** | Software, Systems and Enterprise — Architecture Evaluation | Architecture evaluation: scenario-based fitness-for-purpose analysis, trade-off assessment (à la ATAM), and evaluation against stakeholder concerns. Completes the describe (IEEE 42010) → evaluate (ISO 42030) cycle. Applied in the Architecture Evaluation step after views are generated. |
+| **ISO/IEC 25010:2023** | Systems and Software Quality Models | Quality attribute justification: architectural decisions are anchored to 25010 quality characteristics (e.g., "microservices for Flexibility [25010 §4.2.5]", "redundancy for Reliability [25010 §4.2.2]") making design rationale auditable |
+
+> **Domain extensions:** If a domain overlay is loaded (Step 2a), additional safety-integrity architecture requirements (e.g., ISO 26262-9 §5 ASIL Decomposition, DO-178C §6.3.3 Defensive Programming) are applied alongside these best-practice standards.
+
 ## Operating Constraints
 
 ### Strict Translation Rules

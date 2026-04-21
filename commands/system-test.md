@@ -231,6 +231,17 @@ Display a summary:
 - Path to the generated file
 - Next step: Recommend running `/speckit.v-model.trace` to build the full traceability matrix
 
+## Governing Standards
+
+This command is governed by the following standards for system testing:
+
+| Standard | Full Name | Role in this Command |
+|----------|-----------|----------------------|
+| **ISO/IEC/IEEE 29119** | Software and Systems Testing | Primary test standard: named test techniques, test case structure, test scenario format, and system-level test design |
+| **IEEE 1012:2016** | IEEE Standard for System, Software, and Hardware Verification and Validation | V&V governance: ensures every requirement is exercised by at least one V&V activity (test, analysis, inspection, or demonstration); distinguishes verification ("built right") from validation ("right product"); prescribes entry/exit criteria for test activities |
+
+> **Domain extensions:** If a domain overlay is loaded (Step 2a), additional structural coverage requirements from the applicable standard (e.g., ISO 26262-6 §9.4.4 MC/DC by ASIL, DO-178C §6.4.4 coverage by DAL) are applied alongside these best-practice standards.
+
 ## Operating Constraints
 
 ### Strict Translation Rules

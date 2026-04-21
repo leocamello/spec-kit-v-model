@@ -183,14 +183,14 @@ For each `MOD-NNN`:
 - **MISRA/CERT-C Rule Annotations**: Specific rules applicable to the module
 - **Coding Standard Deviations**: Any justified deviations with rationale
 
-#### 6.2 Memory Management (DO-178C / ISO 26262)
+#### 6.2 Memory Management (Safety-Critical Best Practice)
 
 For each `MOD-NNN`:
 - **Dynamic Allocation**: Forbidden after initialization (document init-time allocations)
 - **Unbounded Loops**: Forbidden — all loops must have provable termination
 - **Stack Usage**: Maximum stack depth estimate
 
-#### 6.3 Single Entry/Exit (DO-178C Level A)
+#### 6.3 Single Entry/Exit (Safety-Critical Best Practice)
 
 For each `MOD-NNN`:
 - **Entry Points**: Exactly one per function
@@ -240,6 +240,17 @@ Display a summary:
 - `[DERIVED MODULE]` flags (should be 0)
 - Path to the generated file
 - Next step: Recommend running `/speckit.v-model.unit-test` to generate paired white-box unit tests
+
+## Governing Standards
+
+This command is governed by the following standards for module design:
+
+| Standard | Full Name | Role in this Command |
+|----------|-----------|----------------------|
+| **IEEE 1016:2009** | IEEE Standard for Information Technology — Software Design Descriptions | Detailed design structure: algorithm specification, interface definition, data structure descriptions, and design verification requirements at module level |
+| **ISO/IEC/IEEE 12207:2017** | Systems and Software Engineering — Software Life Cycle Processes | Lifecycle process governance (Clause 8.4 — Software Detailed Design): requirement allocation to modules, algorithm specification completeness, interface definition discipline, and design verification activities. Provides the general-purpose detailed design process independent of any safety domain. |
+
+> **Domain extensions:** If a domain overlay is loaded (Step 2a), domain-specific module design constraints (e.g., MISRA C/C++ per ISO 26262-6 §8.4.5, CERT-C per DO-178C §5.2.3, IEC 62304 §5.4 safety class constraints) are applied alongside these best-practice standards.
 
 ## Operating Constraints
 

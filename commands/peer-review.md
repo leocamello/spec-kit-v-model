@@ -229,6 +229,17 @@ Display a summary:
   - Exit 2 if Minor findings only (no Critical/Major)
 - Next step: If Critical or Major findings exist, recommend fixing them and re-running
 
+## Governing Standards
+
+This command is governed by the following standards for peer review:
+
+| Standard | Full Name | Role in this Command |
+|----------|-----------|----------------------|
+| **IEEE 1028:2008** | IEEE Standard for Software Reviews and Audits | Formal review process: defines review types (inspection, walkthrough, technical review, management review), roles (moderator, reader, recorder, author), entry/exit criteria, and defect metrics collection. Provides the process rigor for this command's checklists. |
+| **ISO/IEC 20246:2017** | Software and Systems Engineering — Work Product Reviews | Modern review technique selection and defect logging taxonomy: complements IEEE 1028 with more lightweight and adaptable guidance for selecting the appropriate review technique per artifact type and criticality. Adds defect classification schema and follow-up verification requirements. |
+
+> **Domain extensions:** If a domain overlay is loaded (Step 2a), domain-specific governing standards override the generic standards in the artifact type table (e.g., `module-design.md` reviewed against ISO 26262-6 §7 instead of IEEE 1016, `hazard-analysis.md` reviewed against ISO 26262-3 §7 HARA or DO-178C §2.3 FHA). ASIL/DAL/Safety-Class-dependent review rigor also applies.
+
 ## Operating Constraints
 
 ### Stateless Linting Model

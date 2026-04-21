@@ -218,6 +218,17 @@ Display a summary:
 - Path to the generated file
 - Next step: Recommend running `/speckit.v-model.system-test` to generate the paired test plan
 
+## Governing Standards
+
+This command is governed by the following standards for system design:
+
+| Standard | Full Name | Role in this Command |
+|----------|-----------|----------------------|
+| **IEEE 1016:2009** | IEEE Standard for Information Technology — Software Design Descriptions | Primary structure standard: four mandatory design views (Decomposition, Dependency, Interface, Data Design) and SDD content requirements |
+| **ISO/IEC 25010:2023** | Systems and Software Quality Models | Quality attribute taxonomy: design decisions are cross-checked against 25010 characteristics (Functional Suitability, Reliability, Performance Efficiency, Usability, Security, Compatibility, Flexibility, Safety, Interaction Capability) to make quality rationale explicit and auditable |
+
+> **Domain extensions:** If a domain overlay is loaded (Step 2a), additional safety-integrity design requirements from the applicable standard (e.g., ISO 26262-6 §7.4 Freedom from Interference, DO-178C §5.2 Software Architecture) are applied alongside these best-practice standards.
+
 ## Operating Constraints
 
 ### Strict Translation Rules

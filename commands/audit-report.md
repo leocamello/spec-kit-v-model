@@ -144,3 +144,15 @@ Each `### WAV-NNN` entry must include an `**Artifact**:` field matching the anom
 - Run `/speckit.v-model.test-results` first to ingest CI results into the traceability matrix
 - The report pins every artifact to its Git SHA and timestamp for audit traceability
 - Orphaned waivers (referencing non-existent anomalies) are reported but do not affect compliance status
+
+## Governing Standards
+
+This command is governed by the following standards for audit reporting:
+
+| Standard | Full Name | Role in this Command |
+|----------|-----------|----------------------|
+| **IEEE 828-2012** | IEEE Standard for Configuration Management in Systems and Software Engineering | Configuration audit baseline: defines Functional Configuration Audit (FCA — verify software functions per requirements) and Physical Configuration Audit (PCA — verify software matches its documentation). Governs the audit scope and finding classification in this command. |
+| **ISO 19011:2018** | Guidelines for Auditing Management Systems | Audit methodology and evidence evaluation: audit planning, objective evidence collection, audit finding classification (major nonconformity, minor nonconformity, observation), auditor competence, and audit report structure. Provides the process rigor that makes this command's outputs credible to external auditors. |
+| **ISO/IEC/IEEE 15289:2019** | Systems and Software Engineering — Content of Life-Cycle Information Items | Audit report content requirements: specifies the minimum content required in compliance information items. Ensures this command produces audit reports that satisfy the documentation completeness requirements of both open-source and regulated-industry contexts. |
+
+> **Domain extensions:** If a domain overlay is loaded, additional domain-specific audit requirements apply (e.g., ISO 26262-2 §6 Functional Safety Audit and Confirmation Measures, DO-178C §8 SQA and SOI-1–SOI-4 certification liaison, IEC 62304 §8 Configuration Management and §9 Problem Resolution). These are defined in the domain overlay files.
