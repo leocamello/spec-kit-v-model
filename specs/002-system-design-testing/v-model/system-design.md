@@ -126,6 +126,29 @@ graph TD
 
 ---
 
+## Quality Attribute Coverage (ISO/IEC 25010:2023)
+
+This section cross-checks the design decisions against the ISO/IEC 25010:2023 quality characteristics applicable to this feature. Characteristics not implied by the requirements are marked **N/A**.
+
+### Quality Characteristic Coverage
+
+| Quality Characteristic | ISO/IEC 25010 Ref | SYS Components | Design Evidence | Status |
+|------------------------|-------------------|----------------|-----------------|--------|
+| Functional Suitability (completeness, correctness, appropriateness) | §4.2.1 | SYS-001 – SYS-013 | Decomposition View achieves 100% forward coverage — all 53 active REQ-NNN identifiers appear in at least one SYS-NNN component's Parent Requirements column. REQ-009 explicitly requires non-functional requirements (performance, security, reliability) to be addressed as cross-cutting quality attributes with explicit design decisions in the relevant IEEE 1016 views. | ✅ Covered |
+| Reliability (availability, fault tolerance, recoverability) | §4.2.2 | SYS-003, SYS-005, SYS-006, SYS-013 | Dependency View documents 14 inter-component failure impacts covering all inter-component relationships (e.g., SYS-003→SYS-005: coverage gate unavailability prevents post-generation validation). SYS-006 mirrors SYS-005 for cross-platform reliability. SYS-013 Backward Compatibility Guard ensures v0.1.0 artifact integrity is preserved under all v0.2.0 operations, satisfying REQ-NF-004. | ✅ Covered |
+| Performance Efficiency (time behaviour, resource utilisation, capacity) | §4.2.3 | SYS-001 | REQ-NF-002 implies a capacity constraint: commands must handle 200+ REQ-NNN identifiers without truncation. This is addressed in SYS-001's Decomposition View description. However, no measurable time-behaviour thresholds (response time SLAs, throughput limits) are documented in the Interface View or Data Design View. | ⚠️ [QUALITY GAP: ISO 25010 §4.2.3 — time-behaviour thresholds not formalised in Interface View or Data Design View; capacity constraint addressed in SYS-001 description only] |
+| Security (confidentiality, integrity, authenticity, accountability) | §4.2.5 | SYS-001, SYS-002, SYS-003, SYS-004, SYS-007, SYS-008, SYS-011 | Data Design View documents protection at rest (Git repository access controls) and protection in transit (N/A — all artifact data is processed locally with no network transmission) for all 9 data entities. | ✅ Covered |
+| Maintainability (modularity, reusability, analysability, modifiability, testability) | §4.2.7 | SYS-002, SYS-004, SYS-010, SYS-011, SYS-013 | Decomposition View partitions the system into 13 components with distinct responsibility boundaries (commands, templates, scripts, manifest, guard). Interface View explicitly contracts all external and internal interfaces. SYS-013 formalises modifiability constraints; SYS-010 enables machine-parseable ID lineage extraction for analysability. REQ-NF-006 requires domain-agnostic base commands, enforcing overlay-only extensibility. | ✅ Covered |
+| Safety (operational constraint, risk identification, fail safe, hazard warning) | §4.2.9 | N/A | No domain overlay is loaded; no hazard analysis (HAZ-NNN) is defined for this feature. This feature is developer tooling with no operational safety-critical constraints. Safety-critical sections are intentionally omitted when no domain is configured, per REQ-042. | N/A — not implied by requirements |
+
+### Quality Gap Summary
+
+| Gap ID | Characteristic | ISO 25010 Ref | Description | Affected Components |
+|--------|---------------|---------------|-------------|---------------------|
+| QG-001 | Performance Efficiency | §4.2.3 | Time-behaviour thresholds (response time SLAs, throughput limits) are not documented in the Interface View or Data Design View. The capacity constraint from REQ-NF-002 (handle 200+ REQ-NNN files without truncation) is noted in SYS-001's Decomposition View description but is not formalised as a measurable Interface View or Data Design View entry. | SYS-001 |
+
+---
+
 ## Coverage Summary
 
 | Metric | Count |
@@ -134,6 +157,9 @@ graph TD
 | Total Parent Requirements Covered | 53 / 53 active (100%) + 3 deprecated (REQ-035, REQ-036, REQ-CN-001) |
 | Components per Type | Subsystem: 0 \| Module: 7 \| Service: 0 \| Library: 0 \| Utility: 6 |
 | **Forward Coverage (REQ→SYS)** | **100%** |
+| ISO 25010 Quality Characteristics Covered | 4 / 5 applicable (Functional Suitability, Reliability, Security, Maintainability) |
+| ISO 25010 Quality Gaps | 1 — QG-001 Performance Efficiency §4.2.3 (time-behaviour thresholds not formalised) |
+| ISO 25010 Characteristics Not Applicable | 1 — Safety §4.2.9 (developer tooling, no safety-critical operational constraints) |
 
 ## Derived Requirements
 
@@ -158,3 +184,5 @@ None — all components trace to existing requirements.
 | Derived Requirement | A technical capability identified during design that was not in the original requirements; must be flagged as `[DERIVED REQUIREMENT]`, not silently added. |
 | Partial Validation | Mode where the coverage script validates only forward coverage (REQ→SYS) when `system-test.md` does not yet exist. |
 | BDD | Behavior-Driven Development — Given/When/Then specification format used for system test scenarios with technical, component-oriented language. |
+| ISO/IEC 25010:2023 | ISO/IEC standard defining Systems and Software Quality Models. Provides a quality characteristic taxonomy used to cross-check design decisions against quality attributes (Functional Suitability, Reliability, Performance Efficiency, Security, Maintainability, Safety, and others). |
+| Quality Gap | A quality characteristic implied by the requirements that is not explicitly addressed by any SYS-NNN component or IEEE 1016 design view decision; flagged as `[QUALITY GAP: ISO 25010 §X.X — description]` and listed in the Quality Gap Summary. |
