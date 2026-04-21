@@ -92,6 +92,28 @@ graph TD
 
 ---
 
+## Quality Attribute Cross-Check (ISO/IEC 25010:2023)
+
+### 6.1 Applicable Quality Characteristics
+
+| Quality Characteristic | ISO/IEC 25010 Ref | Design Evidence | SYS Components | Status |
+|------------------------|-------------------|-----------------|----------------|--------|
+| Functional Suitability (completeness, correctness, appropriateness) | §4.2.1 | SYS-002 defines 9 artifact-type-specific rule sets covering every supported V-Model artifact type (requirements, system-design, architecture-design, system-test, integration-test, module-design, unit-test, hazard-analysis, acceptance-plan). The Coverage Summary confirms 100% forward coverage — every REQ-NNN maps to at least one SYS-NNN. Checklist completeness is enforced by the per-type criteria embedded in SYS-002 (e.g., INCOSE 6-attribute check for requirements, IEEE 1016 4-view check for system design). | SYS-001, SYS-002 | ✅ Covered |
+| Reliability (availability, fault tolerance, recoverability) | §4.2.2 | The CI check path (SYS-005, SYS-006) is explicitly deterministic: the same input file always produces the same exit code and JSON output (REQ-NF-002). The AI evaluation path (SYS-001 → SYS-002 → SYS-003 → SYS-004) is stateless — the report is fully regenerated on each invocation with no persistent finding state (REQ-NF-001, REQ-021); re-running after a fix produces a fresh report reflecting current artifact state. The Dependency View documents failure propagation for all six component interactions. | SYS-004, SYS-005, SYS-006 | ✅ Covered — CI path deterministic; AI path stateless |
+| Performance Efficiency (time behaviour, resource utilisation, capacity) | §4.2.3 | No measurable time-behaviour or resource-utilisation constraint is defined in the Interface View or Data Design View for the LLM evaluation path. Neither requirements.md nor the design specifies a maximum acceptable review completion time for large artifacts (e.g., a 500-line requirements.md). Without a defined SLA, the system test plan cannot validate acceptable latency for SYS-002. | SYS-002 | `[QUALITY GAP: ISO 25010 §4.2.3 — Performance Efficiency: no measurable response-time or throughput constraint is specified for SYS-002 (AI Review Criteria Engine) when evaluating large artifacts]` |
+| Security (confidentiality, integrity, authenticity, accountability) | §4.2.5 | SYS-001 operates in read-only mode, ensuring the reviewed artifact is never modified during evaluation. Each invocation processes exactly one artifact (REQ-CN-001, REQ-CN-003), eliminating cross-artifact data leakage — findings are scoped exclusively to the single artifact under review. All intermediate data entities (artifact content, raw findings, classified findings) are transient in-memory objects that do not persist across invocations. The Peer Review Report (SYS-004) is persisted as a file protected by Git repository access controls. No data from other features, other V-Model directories, or other invocations is read or written. | SYS-001, SYS-003, SYS-004 | ✅ Covered |
+| Maintainability (modularity, reusability, analysability, modifiability, testability) | §4.2.7 | The Decomposition View separates five distinct concerns: artifact reading (SYS-001), AI evaluation (SYS-002), finding classification (SYS-003), report formatting (SYS-004), and CI gating (SYS-005, SYS-006). Every inter-component interface is explicitly contracted in the Interface View with defined protocols, data formats, and error handling. However, SYS-002 bundles all 9 artifact-type rule sets in a single module — adding a new artifact type or modifying an existing rule set requires changing the core engine with no defined plugin, registry, or extension point. | SYS-002 | `[QUALITY GAP: ISO 25010 §4.2.7 — Maintainability (modifiability): SYS-002 bundles all 9 rule sets monolithically; adding or modifying review rules requires editing the core engine with no defined extension point]` |
+| Safety (operational constraint, risk identification, fail safe, hazard warning) | §4.2.9 | Not applicable — this is developer tooling with no domain overlay active. No safety-critical operational context is defined for this feature; no HAZ-NNN entries exist in a hazard analysis for the peer-review command itself. | N/A | ✅ N/A — developer tooling, no domain overlay active |
+
+### 6.2 Quality Gaps
+
+| Gap ID | ISO/IEC 25010 Ref | Characteristic | Description | Recommendation |
+|--------|-------------------|---------------|-------------|----------------|
+| QG-001 | §4.2.3 | Performance Efficiency | No measurable response-time SLA is defined for SYS-002 when reviewing large artifacts. Without a quantified constraint, the system test plan cannot include a time-behaviour test scenario and CI pipelines have no timeout baseline. | Add a non-functional requirement to `requirements.md` specifying a maximum acceptable LLM evaluation time for a defined artifact size (e.g., ≤ 60 seconds for an artifact of up to 500 lines). Map the new REQ to SYS-002 and add a corresponding time-behaviour test scenario to the system test plan. |
+| QG-002 | §4.2.7 | Maintainability (modifiability) | SYS-002 encapsulates all 9 artifact-type rule sets in a single module. Adding a 10th artifact type or updating an existing rule set requires modifying the core evaluation engine, violating the open/closed principle and increasing regression risk across all rule sets simultaneously. | Define a rule-registry interface within SYS-002 that decouples rule-set definitions from engine logic, or introduce a dedicated Rule Registry component (as a new SYS entry derived from a new requirement) allowing new artifact types to be registered without touching the core evaluation path. |
+
+---
+
 ## Coverage Summary
 
 | Metric | Count |
