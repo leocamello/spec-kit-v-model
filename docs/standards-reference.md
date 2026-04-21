@@ -32,9 +32,10 @@
 
 ## 1. Current State — Standards Already in Use
 
-The spec-kit V-Model extension currently references **15 unique standards**
-across **14 command files**, their corresponding templates, and supporting
-documentation. These standards fall into two categories:
+The spec-kit V-Model extension now references **26 unique standards**
+across **14 command files**, their corresponding templates, supporting
+documentation, and 36 domain overlay files (12 commands × 3 domains). These
+standards fall into two categories:
 
 - **🟢 Best Practice** — govern the core V-Cycle methodology for each layer
   (requirements, design, testing). They apply to every project regardless of
@@ -43,53 +44,78 @@ documentation. These standards fall into two categories:
   safety and regulatory requirements (automotive, aviation, medical, industrial).
   They are activated per project configuration.
 
+> **Phase B complete (v0.6.0):** All 9 new best-practice standards proposed in
+> §2.1–2.2 have been integrated into the base commands. All 3 phases of the
+> Implementation Roadmap (§3) are complete. §1.1 and §1.2 below reflect the
+> current post-Phase-B state.
+
 ### 1.1 Master List of All Standards Referenced
 
 | # | Standard | Full Name / Scope | Category | Where Referenced (Commands) |
 |---|---------|-------------------|----------|---------------------------|
-| 1 | **IEEE 29148** | Systems & Software Engineering — Requirements | 🟢 Best Practice | `requirements.md`, `peer-review.md` |
+| 1 | **IEEE 29148:2018** | Systems & Software Engineering — Requirements | 🟢 Best Practice | `requirements.md`, `trace.md`, `peer-review.md` |
 | 2 | **INCOSE GWR** | Guide for Writing Requirements | 🟢 Best Practice | `requirements.md`, `peer-review.md` |
-| 3 | **IEEE 1016** | Software Design Descriptions | 🟢 Best Practice | `system-design.md`, `system-test.md`, `peer-review.md` |
-| 4 | **IEEE 42010** | Architecture Description | 🟢 Best Practice | `architecture-design.md`, `peer-review.md` |
-| 5 | **Kruchten 4+1** | 4+1 Architectural View Model | 🟢 Best Practice | `architecture-design.md`, `peer-review.md` |
-| 6 | **ISO 29119** | Software & Systems Testing | 🟢 Best Practice | `system-test.md`, `integration-test.md`, `peer-review.md` |
-| 7 | **ISO 29119-4** | Test Techniques (white-box) | 🟢 Best Practice | `unit-test.md`, `integration-test.md`, `peer-review.md` |
-| 8 | **ISO 26262** | Automotive Functional Safety | 🔴 Safety | `system-design.md`, `architecture-design.md`, `module-design.md`, `system-test.md`, `integration-test.md`, `hazard-analysis.md`, `trace.md`, `peer-review.md` |
-| 9 | **DO-178C** | Airborne Software Assurance (Aviation) | 🔴 Safety | `architecture-design.md`, `module-design.md`, `system-test.md`, `integration-test.md`, `hazard-analysis.md`, `trace.md`, `peer-review.md` |
-| 10 | **IEC 62304** | Medical Device Software Lifecycle | 🔴 Safety | `hazard-analysis.md`, `audit-report.md`, `trace.md` |
-| 11 | **ISO 14971** | Medical Device Risk Management | 🔴 Safety | `hazard-analysis.md`, `audit-report.md`, `peer-review.md`, `trace.md` |
-| 12 | **IEC 61508** | Industrial Functional Safety | 🔴 Safety | `trace.md` |
-| 13 | **FDA 21 CFR 820** | Medical Device Quality Systems | 🔴 Safety | `trace.md` |
-| 14 | **MISRA C/C++** | Safety-Critical Coding Rules | 🔴 Safety | `module-design.md` |
-| 15 | **CERT-C** | Secure Coding Standard | 🔴 Safety | `module-design.md` |
+| 3 | **ISO/IEC 25010:2023** | Systems & Software Quality Models (9 characteristics) | 🟢 Best Practice | `requirements.md`, `acceptance.md`, `system-design.md`, `architecture-design.md` |
+| 4 | **IEEE 1012:2016** | System, Software & Hardware Verification & Validation | 🟢 Best Practice | `acceptance.md`, `system-test.md`, `integration-test.md`, `unit-test.md`, `trace.md` |
+| 5 | **IEEE 1016:2009** | Software Design Descriptions | 🟢 Best Practice | `system-design.md`, `module-design.md`, `peer-review.md` |
+| 6 | **IEEE 42010:2011** | Architecture Description | 🟢 Best Practice | `architecture-design.md`, `peer-review.md` |
+| 7 | **Kruchten 4+1** | 4+1 Architectural View Model | 🟢 Best Practice | `architecture-design.md`, `peer-review.md` |
+| 8 | **ISO/IEC 42030:2019** | Architecture Evaluation | 🟢 Best Practice | `architecture-design.md` |
+| 9 | **ISO/IEC/IEEE 29119** | Software & Systems Testing | 🟢 Best Practice | `system-test.md`, `peer-review.md` |
+| 10 | **ISO/IEC/IEEE 29119-3:2013** | Test Documentation | 🟢 Best Practice | `test-results.md` |
+| 11 | **ISO/IEC/IEEE 29119-4:2021** | Test Techniques (white-box & black-box) | 🟢 Best Practice | `acceptance.md`, `unit-test.md`, `integration-test.md`, `peer-review.md` |
+| 12 | **ISO/IEC/IEEE 12207:2017** | Software Lifecycle Processes | 🟢 Best Practice | `module-design.md` |
+| 13 | **IEC 60812:2018** | FMEA — Failure Modes & Effects Analysis | 🟢 Best Practice | `hazard-analysis.md` |
+| 14 | **ISO 14971:2019** | Medical Device Risk Management | 🟢 Best Practice ¹ | `hazard-analysis.md`, `peer-review.md` |
+| 15 | **IEEE 1028:2008** | Software Reviews & Audits | 🟢 Best Practice | `peer-review.md` |
+| 16 | **ISO/IEC 20246:2017** | Work Product Reviews | 🟢 Best Practice | `peer-review.md` |
+| 17 | **IEEE 828-2012** | Configuration Management in Systems & Software Engineering | 🟢 Best Practice | `audit-report.md`, `impact-analysis.md` |
+| 18 | **ISO 19011:2018** | Guidelines for Auditing Management Systems | 🟢 Best Practice | `audit-report.md` |
+| 19 | **ISO/IEC/IEEE 15289:2019** | Content of Life-Cycle Information Items | 🟢 Best Practice | `audit-report.md`, `trace.md` |
+| 20 | **ISO 26262** | Automotive Functional Safety | 🔴 Safety | overlays: `requirements`, `acceptance`, `system-design`, `architecture-design`, `system-test`, `integration-test`, `module-design`, `unit-test`, `hazard-analysis`, `trace`, `peer-review`, `audit-report`, `impact-analysis` |
+| 21 | **DO-178C** | Airborne Software Assurance (Aviation) | 🔴 Safety | overlays: `requirements`, `acceptance`, `system-design`, `architecture-design`, `system-test`, `integration-test`, `module-design`, `unit-test`, `hazard-analysis`, `trace`, `peer-review`, `audit-report`, `impact-analysis` |
+| 22 | **IEC 62304** | Medical Device Software Lifecycle | 🔴 Safety | overlays: `requirements`, `acceptance`, `system-design`, `architecture-design`, `system-test`, `integration-test`, `module-design`, `unit-test`, `hazard-analysis`, `trace`, `peer-review`, `audit-report`, `impact-analysis` |
+| 23 | **IEC 61508** | Industrial Functional Safety | 🔴 Safety | `trace.md` (domain reference) |
+| 24 | **FDA 21 CFR 820** | Medical Device Quality Systems | 🔴 Safety | `trace.md` (domain reference) |
+| 25 | **MISRA C/C++** | Safety-Critical Coding Rules | 🔴 Safety | overlays: `module-design` (iso_26262, do_178c) |
+| 26 | **CERT-C** | Secure Coding Standard | 🔴 Safety | overlays: `module-design` (do_178c) |
 
 > **Note:** ISO 8601 (date formatting) also appears in `peer-review.md` but is a
-> utility standard, not a V-Cycle concern.
+> utility standard, not a V-Cycle concern. JUnit XML and Cobertura XML are de
+> facto formats referenced by `test-results.md`.
+>
+> ¹ ISO 14971:2019 is listed as Best Practice because the `hazard-analysis.md`
+> command uses its risk estimation framework (severity × likelihood matrix) as the
+> **general-purpose** base, independently of any safety domain. Domain-specific
+> overlays then layer the ISO 26262 HARA, DO-178C FHA, or IEC 62304 safety class
+> methodology on top.
 
 ### 1.2 Standards Mapped to Each V-Cycle Layer
 
+> **Updated for v0.6.0 (Phase B complete).** Every column reflects the current
+> post-Phase-B state of the base commands. Safety extensions are delivered by
+> domain overlay files (`commands/overlays/{domain}/`).
+
 | V-Cycle Layer | Command | 🟢 Best Practice Standard | 🔴 Safety Extensions (§-sections) |
 |---|---|---|---|
-| **Requirements** | `requirements.md` | IEEE 29148 / INCOSE | — |
-| **Acceptance Test** | `acceptance.md` | *(none explicit)* | — |
-| **System Design** | `system-design.md` | IEEE 1016 (§5.1–5.4) | ISO 26262-6 §7.4.8 (Freedom from Interference), §7.4.9 (Restricted Complexity) |
-| **System Test** | `system-test.md` | ISO 29119 | DO-178C §6.4.4.2 / ISO 26262-6 §9.4.5 (Structural Coverage), DO-178C §6.3.4 / ISO 26262-6 §9.4.4 (Resource Usage) |
-| **Architecture Design** | `architecture-design.md` | IEEE 42010 / Kruchten 4+1 | ISO 26262-9 §5 (ASIL Decomposition), ISO 26262-6 §7.4.2 / DO-178C §6.3.3 (Defensive Programming), DO-178C §6.3.4 (Temporal Constraints) |
-| **Integration Test** | `integration-test.md` | ISO 29119 | ISO 26262-8 §9 / DO-178C §6.4 (SIL/HIL), ISO 26262-6 §7.4.11 / DO-178C §6.3.3 (Resource Contention) |
-| **Module Design** | `module-design.md` | DO-178C / ISO 26262 ¹ | MISRA C/C++ / CERT-C (Complexity), DO-178C Level A (Single Entry/Exit) |
-| **Unit Test** | `unit-test.md` | ISO 29119-4 | — |
-| **Hazard Analysis** | `hazard-analysis.md` | ISO 14971 / ISO 26262 ¹ | DO-178C (failure classification), IEC 62304 (safety classification) |
-| **Traceability** | `trace.md` | *(none — inherently regulatory)* | DO-178C §6.3.4, ISO 26262 Pt.6 Cl.9, IEC 62304 Cl.5.7, FDA 21 CFR 820 §820.30(i), IEC 61508 Pt.3 Cl.7.9 |
-| **Peer Review** | `peer-review.md` | *(references all layer standards)* | — |
-| **Audit Report** | `audit-report.md` | *(none explicit)* | IEC 62304, ISO 14971 |
-| **Impact Analysis** | `impact-analysis.md` | *(none — deterministic script)* | — |
-| **Test Results** | `test-results.md` | *(none — deterministic script)* | — |
+| **Requirements** | `requirements.md` | IEEE 29148:2018 / INCOSE GWR / **ISO/IEC 25010:2023** (Step 6 quality characteristics) | ISO 26262-6 §6.4 (ASIL Allocation + Decomposition), DO-178C §5.2.1 Table A-4 (DAL Traceability, Derived Requirements), IEC 62304 §5.2 + §4.3 (Risk Analysis Input, Safety Class Rigor) |
+| **Acceptance Test** | `acceptance.md` | **IEEE 1012:2016** (Step 6c V&V validation) / **ISO/IEC 25010:2023** (Step 6d quality-in-use) / ISO/IEC 29119-4:2021 (Step 5 BDD structure) | ISO 26262-6 §6.9 Table 11 (ASIL-dependent Verification Methods), DO-178C §6.4.2 Table A-7 (Coverage by DAL, Robustness Testing), IEC 62304 §5.7 (Safety Class Test Completeness, Regression) |
+| **System Design** | `system-design.md` | IEEE 1016:2009 (§5.1–5.4 four mandatory views) / **ISO/IEC 25010:2023** (Step 6 quality attribute cross-check) | ISO 26262-6 §7.4.8 (Freedom from Interference), §7.4.9 (Restricted Complexity), §6.5 (Safety Mechanisms Allocation); DO-178C §5.2.2 (Partitioning, Data/Control Coupling, Derived Requirements); IEC 62304 §5.3 (Architecture + Risk Control Traceability) |
+| **System Test** | `system-test.md` | ISO/IEC/IEEE 29119 (test techniques) / **IEEE 1012:2016** (Step 7 V&V Coverage Gate §5.5) | ISO 26262-6 §6.9 Table 11 (MC/DC by ASIL, Back-to-Back Testing), DO-178C §6.4 Table A-7/A-8 (Structural Coverage by DAL), IEC 62304 §5.7 (Testing by Safety Class) |
+| **Architecture Design** | `architecture-design.md` | IEEE 42010:2011 (4 views + rationale) / Kruchten 4+1 / **ISO/IEC 42030:2019** (Step 5.5 evaluation) / **ISO/IEC 25010:2023** (Step 5.5 quality attribute justification) | ISO 26262-9 §5 (ASIL Decomposition), ISO 26262-6 §7.4.2/§7.4.4 (Defensive Programming, Temporal Constraints); DO-178C §5.2.2 Table A-5 (Partitioning, Data/Control Coupling by DAL); IEC 62304 §5.3 (Architecture by Safety Class) |
+| **Integration Test** | `integration-test.md` | ISO/IEC/IEEE 29119-4:2021 (4 test techniques) / **IEEE 1012:2016** (Step 7 V&V Coverage Gate §5.6) | ISO 26262-6 §6.8 (SIL/HIL Testing by ASIL, Resource Contention), DO-178C §6.4 Table A-8 (Integration Testing by DAL, Hardware Fidelity), IEC 62304 §5.6 (Integration Testing by Safety Class) |
+| **Module Design** | `module-design.md` | IEEE 1016:2009 (detailed design structure) / **ISO/IEC/IEEE 12207:2017** (§8.4.4 §4.0 preamble) | ISO 26262-6 §8.4.5 (MISRA C/C++, Complexity Constraints by ASIL), DO-178C §5.2.3/§6.3.4 Table A-6 (CERT-C, Complexity Limits by DAL), IEC 62304 §5.4 (Detailed Design by Safety Class) |
+| **Unit Test** | `unit-test.md` | ISO/IEC/IEEE 29119-4:2021 (5 mandatory white-box techniques) / **IEEE 1012:2016** (Step 8 Coverage Gate §5.7) | ISO 26262-6 §9.4.4 Table 11 (MC/DC by ASIL, Variable-Level Fault Injection), DO-178C §6.4.4 Table A-7 (Structural Coverage by DAL, MC/DC for DAL A), IEC 62304 §5.5 (Verification by Safety Class, Robustness Testing) |
+| **Hazard Analysis** | `hazard-analysis.md` | **IEC 60812:2018** (Step 4.0 FMEA procedure §6) / ISO 14971:2019 (§4.6 risk matrix §5) | ISO 26262-3 §7 / ISO 26262-9 §7 (HARA, ASIL Classification S×E×C), DO-178C + ARP 4761 (FHA, Failure Condition Classification, DAL Determination), IEC 62304 §7 + ISO 14971 (Software Safety Classification A–C) |
+| **Traceability** | `trace.md` | **IEEE 1012:2016** (V&V activity coverage) / **ISO/IEC/IEEE 15289:2019** (content requirements) / IEEE 29148:2018 (traceability property) | ISO 26262-6 Cl.9 / ISO 26262-8 (Bidirectional Traceability by ASIL), DO-178C §6.3.4 Table A-9 (Traceability by DAL), IEC 62304 §5.7/§8 (Traceability by Safety Class) |
+| **Peer Review** | `peer-review.md` | **IEEE 1028:2008** (Step 2.5 review type selection, Step 4 process) / **ISO/IEC 20246:2017** (Step 4 defect taxonomy §6.3) | ISO 26262 Table 1 (Review rigor by ASIL — walkthrough at QM, formal inspection at ASIL D), DO-178C §6.3 (Reviews by DAL — formal inspection at DAL A), IEC 62304 §5.x (Review rigor by Safety Class — independent review at Class C) |
+| **Audit Report** | `audit-report.md` | **IEEE 828-2012** (FCA/PCA §6.4) / **ISO 19011:2018** (finding classification §6.4.9) / **ISO/IEC/IEEE 15289:2019** (content §D.31) | ISO 26262-2 §6 (Functional Safety Audit, Confirmation Measures), DO-178C §8 SQA / §9 Certification Liaison (SOI-1–SOI-4), IEC 62304 §8/§9 (CM Audit, Problem Resolution) |
+| **Impact Analysis** | `impact-analysis.md` | **IEEE 828-2012** (§6.3 Configuration Control, CCB review) | ISO 26262-8 §8 (Safety-Impacted Item Assessment, ASIL Re-evaluation), DO-178C §7 (Change Control, Problem Reporting), IEC 62304 §6/§8 (Software Maintenance, CM by Safety Class) |
+| **Test Results** | `test-results.md` | **ISO/IEC 29119-3:2013** (Test Status Report §9.2, Test Completion Report §9.3) | ISO 26262-6 §6.7 Table 12 (ASIL Coverage Metrics), DO-178C §6.4/§11 (Test Evidence by DAL), IEC 62304 §5.5/§5.6/§5.7 (Test Results by Safety Class) |
 
-> ¹ **Module Design** and **Hazard Analysis** are inherently safety-scoped layers
-> — their "best practice" standards *are* safety standards. This is
-> architecturally intentional: low-level module rigor and hazard identification
-> demand the discipline that DO-178C, ISO 26262, and ISO 14971 provide, even for
-> non-regulated projects that choose to adopt them voluntarily.
+> **Bold** standards were added in Phase B (v0.6.0). Every layer now has at least
+> one explicit best-practice governing standard — the original goal of this
+> standards programme.
 
 ### 1.3 Rationale & Benefits per Standard
 
@@ -234,38 +260,74 @@ documentation. These standards fall into two categories:
   constraints section, ensuring that security considerations are built into the
   design specification, not bolted on later.
 
+#### Phase B Additions (v0.6.0)
+
+The following 11 standards were added in Phase B (v0.6.0). See §2.2 for the
+full rationale on ISO/IEC 25010:2023, IEEE 1012:2016, ISO/IEC 42030:2019,
+ISO/IEC/IEEE 12207:2017, IEEE 1028:2008, ISO/IEC 20246:2017, IEEE 828-2012,
+ISO 19011:2018, and ISO/IEC/IEEE 15289:2019.
+
+**IEC 60812:2018 — Analysis Techniques for System Reliability: FMEA Procedure**
+
+- **Rationale:** Provides the authoritative international standard for Failure
+  Mode and Effects Analysis (FMEA) — the systematic procedure for analyzing
+  potential failure modes, their causes, and their effects on system operation.
+  Supersedes the 2006 edition with a strengthened process structure, clearer
+  FMEA types (Design FMEA, Process FMEA), and explicit ordered steps.
+- **Benefits:** The `hazard-analysis.md` command now follows IEC 60812:2018 §6
+  ordered procedure as its primary FMEA backbone, independent of any
+  domain-specific safety standard. Domain overlays then layer ISO 14971 /
+  ISO 26262 / ARP 4761 severity scales on top of this neutral FMEA structure.
+
+**ISO/IEC 29119-3:2013 — Software and Systems Engineering — Software Testing,
+Part 3: Test Documentation**
+
+- **Rationale:** Prescribes the required content and structure for test status
+  reports, test completion reports, incident reports, and test logs. Provides a
+  domain-neutral baseline for what information must be captured when recording
+  test results.
+- **Benefits:** The `test-results.md` command's output now maps to ISO 29119-3
+  §9.2 (Test Status Report) and §9.3 (Test Completion Report) fields, ensuring
+  test records meet documentation expectations regardless of whether the project
+  is subject to safety certification. Domain overlays extend this with
+  ASIL/DAL/Safety Class coverage metric requirements.
+
 ---
 
-## 2. Proposed Enhancements — New Standards
+## 2. Implemented Enhancements — New Standards (v0.6.0 Complete)
 
-The following standards were identified through systematic research as candidates
-to improve the quality, rigor, and completeness of the spec-kit V-Model
-extension. They focus on **best-practice** concerns — filling gaps in layers that
-currently lack an explicit standard, or complementing existing standards with
+The following standards were identified through systematic research and have
+been integrated into spec-kit-v-model v0.6.0. They fill gaps in layers that
+previously lacked an explicit standard and complement existing standards with
 orthogonal capabilities.
 
-### 2.1 Suggested New Standards Mapped to Each V-Cycle Layer
+### 2.1 New Standards — Implementation Status (v0.6.0 ✅)
 
-| V-Cycle Layer | Command | Suggested Standard | What It Adds |
-|---|---|---|---|
-| **Requirements** | `requirements.md` | **ISO/IEC 25010:2023** (Product Quality Model) | Provides a structured taxonomy (9 characteristics, including Safety) for writing non-functional/quality requirements. Currently NFRs rely on INCOSE prose guidance only — 25010 gives a formal checklist of quality dimensions (performance, security, reliability, interaction capability, etc.) to validate completeness. |
-| **Acceptance Test** | `acceptance.md` | **IEEE 1012:2016** (Verification & Validation) | **Biggest gap today** — this command has no governing standard. IEEE 1012 prescribes formal validation activities, entry/exit criteria, independent V&V, and traceability of acceptance tests to stakeholder needs. It distinguishes verification ("built right") from validation ("right product"). |
-| **Acceptance Test** | `acceptance.md` | **ISO/IEC 25010:2023** (Product Quality Model) | Extends acceptance criteria beyond functional pass/fail to cover all quality characteristics (usability, performance, security, safety, etc.). Acceptance tests should demonstrate that the delivered product meets quality-in-use targets. |
-| **System Design** | `system-design.md` | **ISO/IEC 25010:2023** (Product Quality Model) | Provides a formal basis for design-time quality attributes. Design decisions (e.g., caching for performance, redundancy for reliability) can be explicitly traced to 25010 characteristics, making the rationale auditable. |
-| **System Test** | `system-test.md` | **IEEE 1012:2016** (Verification & Validation) | Adds V&V coverage analysis: ensures every requirement has been exercised by at least one system-level V&V activity (test, analysis, inspection, or demonstration). Complements ISO 29119's test-technique focus with a broader verification lens. |
-| **Architecture Design** | `architecture-design.md` | **ISO/IEC 42030:2019** (Architecture Evaluation) | Currently IEEE 42010 governs how to *describe* the architecture. ISO 42030 governs how to *evaluate* it — scenario-based analysis, trade-off assessment (à la ATAM), and fitness-for-purpose judgment against stakeholder concerns. Completes the describe→evaluate cycle. |
-| **Architecture Design** | `architecture-design.md` | **ISO/IEC 25010:2023** (Product Quality Model) | Architectural decisions should be justified against quality attributes. 25010:2023 provides the canonical taxonomy (e.g., "we chose microservices for Scalability [25010 Flexibility]"). |
-| **Module Design** | `module-design.md` | **ISO/IEC/IEEE 12207:2017** (Lifecycle Processes) | Currently the only standards here are safety-specific (DO-178C / ISO 26262). 12207 Clause 8 prescribes the general-purpose detailed design process: requirement allocation to modules, algorithm specification, interface definition, and design verification — independent of safety domain. |
-| **Traceability** | `trace.md` | **IEEE 1012:2016** (Verification & Validation) | Adds V&V traceability analysis — not just "does each requirement link to a test?" but "has each requirement been *verified* by an appropriate V&V method (test, analysis, inspection, demonstration)?". |
-| **Traceability** | `trace.md` | **ISO/IEC/IEEE 15289:2019** (Lifecycle Information Items) | Prescribes the required content for lifecycle documentation (plans, specs, reports, records). Strengthens the traceability command's ability to validate that all required information items exist and are properly linked. |
-| **Peer Review** | `peer-review.md` | **IEEE 1028:2008** (Software Reviews & Audits) | Defines formal review types (inspection, walkthrough, technical review) with roles (moderator, reader, recorder), entry/exit criteria, and metrics collection. Currently the peer-review command applies ad-hoc checklists per artifact — IEEE 1028 adds process rigor. |
-| **Peer Review** | `peer-review.md` | **ISO/IEC 20246:2017** (Work Product Reviews) | The modern ISO counterpart to IEEE 1028. Adds review technique selection guidance, defect logging taxonomy, and follow-up verification. More lightweight and adaptable than 1028's formal inspections. |
-| **Audit Report** | `audit-report.md` | **IEEE 1028:2008** (Software Reviews & Audits) | Covers Functional & Physical Configuration Audits (FCA/PCA). Currently the audit command has no governing best-practice standard — 1028 provides the audit process, roles, and evidence requirements. |
-| **Audit Report** | `audit-report.md` | **ISO 19011:2018** (Auditing Management Systems) | Provides audit principles (integrity, independence, evidence-based), auditor competence requirements, audit program management, and continual improvement — applicable beyond safety-specific auditing. |
-| **Audit Report** | `audit-report.md` | **IEEE 828** (Configuration Management) | Prescribes configuration identification, control, status accounting, and configuration audits. Directly relevant when the audit verifies that the right baselines were built and released. |
-| **Impact Analysis** | `impact-analysis.md` | **IEEE 828** (Configuration Management) | Impact analysis is fundamentally a change-management activity. IEEE 828 prescribes change request evaluation, impact assessment, and configuration control processes that formalize what the script currently does ad-hoc. |
+All standards below are now implemented in the base commands. See §2.2 for full
+rationale on each.
 
-### 2.2 Rationale for Each Suggested Standard
+| V-Cycle Layer | Command | Integrated Standard | What It Adds | Status |
+|---|---|---|---|---|
+| **Requirements** | `requirements.md` | **ISO/IEC 25010:2023** (Product Quality Model) | Structured taxonomy (9 characteristics) for quality requirements — completeness checklist for NFRs | ✅ Done |
+| **Acceptance Test** | `acceptance.md` | **IEEE 1012:2016** (Verification & Validation) | Formal validation activities, entry/exit criteria, V&V traceability, verification vs validation distinction | ✅ Done |
+| **Acceptance Test** | `acceptance.md` | **ISO/IEC 25010:2023** (Product Quality Model) | Quality-in-use acceptance criteria beyond functional pass/fail | ✅ Done |
+| **System Design** | `system-design.md` | **ISO/IEC 25010:2023** (Product Quality Model) | Formal basis for design-time quality attribute traceability | ✅ Done |
+| **System Test** | `system-test.md` | **IEEE 1012:2016** (Verification & Validation) | V&V coverage analysis — every requirement exercised by at least one V&V activity | ✅ Done |
+| **Architecture Design** | `architecture-design.md` | **ISO/IEC 42030:2019** (Architecture Evaluation) | Scenario-based evaluation, trade-off assessment, fitness-for-purpose judgment | ✅ Done |
+| **Architecture Design** | `architecture-design.md` | **ISO/IEC 25010:2023** (Product Quality Model) | Quality attribute justification for architecture decisions | ✅ Done |
+| **Module Design** | `module-design.md` | **ISO/IEC/IEEE 12207:2017** (Lifecycle Processes) | General-purpose detailed design process independent of safety domain (§8.4.4) | ✅ Done |
+| **Hazard Analysis** | `hazard-analysis.md` | **IEC 60812:2018** (FMEA Procedure) | Authoritative domain-neutral FMEA procedure as primary backbone | ✅ Done |
+| **Traceability** | `trace.md` | **IEEE 1012:2016** (Verification & Validation) | V&V traceability — verified by appropriate V&V method, not just linked | ✅ Done |
+| **Traceability** | `trace.md` | **ISO/IEC/IEEE 15289:2019** (Lifecycle Information Items) | Required content for lifecycle documentation completeness checks | ✅ Done |
+| **Peer Review** | `peer-review.md` | **IEEE 1028:2008** (Software Reviews & Audits) | Formal review types with roles, entry/exit criteria, metrics | ✅ Done |
+| **Peer Review** | `peer-review.md` | **ISO/IEC 20246:2017** (Work Product Reviews) | Review technique selection, defect taxonomy, follow-up verification | ✅ Done |
+| **Audit Report** | `audit-report.md` | **IEEE 828-2012** (Configuration Management) | FCA/PCA configuration audits, audit process, roles, evidence requirements | ✅ Done |
+| **Audit Report** | `audit-report.md` | **ISO 19011:2018** (Auditing Management Systems) | Audit principles, auditor competence, finding classification | ✅ Done |
+| **Audit Report** | `audit-report.md` | **ISO/IEC/IEEE 15289:2019** (Lifecycle Information Items) | Audit report content requirements | ✅ Done |
+| **Impact Analysis** | `impact-analysis.md` | **IEEE 828-2012** (Configuration Management) | Change request evaluation, impact assessment, configuration control formalization | ✅ Done |
+| **Test Results** | `test-results.md` | **ISO/IEC 29119-3:2013** (Test Documentation) | Test status/completion report structure, mandatory fields | ✅ Done |
+
+### 2.2 Rationale for Each Integrated Standard
 
 #### ISO/IEC 25010:2023 — Product Quality Model
 
@@ -435,7 +497,7 @@ specific domain.
 | **System Test** | Part 6 §6.9 + Table 11 — MC/DC, WCET analysis, structural coverage by ASIL, back-to-back testing | §6.4, Table A-7/A-8 — Requirements-based testing, structural coverage analysis by DAL | §5.7 — System testing per safety class, requirements coverage verification |
 | **Architecture Design** | Part 9 §5 — ASIL decomposition; Part 6 §6.5 — defensive programming, temporal constraints, restricted complexity | §5.2.2, Table A-5 — DAL-driven architecture verification, partitioning requirements, data/control coupling | §5.3 — Architecture with safety class considerations, interface documentation, risk control traceability |
 | **Integration Test** | Part 6 §6.8 — SIL/HIL testing, resource contention, back-to-back testing | §5.4, Table A-8 — Integration process verification, interface testing by DAL | §5.6 — Integration testing per safety class, interface verification |
-| **Module Design** | Part 6 §6.6 — MISRA C/C++, single entry/exit, complexity constraints, memory management | §5.2.3, Table A-6 — Low-level requirements, coding standards, complexity limits | §5.4 — Detailed design per safety class, coding standards |
+| **Module Design** | Part 6 §8.4.4 / §8.4.5 (ISO 26262:2018) — MISRA C/C++, single entry/exit, complexity constraints, memory management | §5.2.3, Table A-6 — Low-level requirements, coding standards, complexity limits | §5.4 — Detailed design per safety class, coding standards |
 | **Unit Test** | Part 6 §6.7 — MC/DC coverage, variable-level fault injection, equivalence classes by ASIL | §6.4.4, Table A-7 — Structural coverage by DAL (MC/DC for A, decision for B, statement for C) | §5.5 — Unit verification per safety class, code review requirements |
 | **Hazard Analysis** | Part 3 §7, Part 9 §7 — HARA, FMEA/FTA, ASIL severity classification (S0–S3 × E1–E4 × C1–C3) | Failure condition classification (Catastrophic, Hazardous, Major, Minor, No Effect) via ARP 4761; safety assessment per §5.1 | §7 + ISO 14971 — Software risk management, safety classification (Class A–C), risk control measures |
 
@@ -491,89 +553,90 @@ specific domain.
 The roadmap is organized into three phases, reflecting the priority and
 dependency structure of the proposed changes.
 
-### Phase 1 — Fill Critical Gaps
+### Phase 1 — Fill Critical Gaps ✅ COMPLETE (v0.6.0)
 
-> **Focus:** Address the layers that currently have no governing standard and add
+> **Focus:** Address the layers that previously had no governing standard and add
 > the cross-cutting quality model.
 
-| Action | Layer(s) Affected | Standard(s) | Description |
-|--------|-------------------|-------------|-------------|
-| **1.1** Add quality attribute taxonomy to requirements | Requirements | ISO/IEC 25010:2023 | Add a validation step to `requirements.md` that checks whether non-functional requirements cover relevant 25010 characteristics. Add quality-attribute categories to the requirements template. |
-| **1.2** Add V&V governance to acceptance testing | Acceptance Test | IEEE 1012:2016, ISO/IEC 25010:2023 | Add entry/exit criteria, validation activity definitions, and quality-in-use acceptance criteria to `acceptance.md`. Update the acceptance template to include V&V traceability and quality characteristic coverage. |
-| **1.3** Add architecture evaluation | Architecture Design | ISO/IEC 42030:2019 | Add an evaluation step to `architecture-design.md` that assesses the architecture against quality attribute scenarios and stakeholder concerns. Add trade-off documentation to the architecture template. |
+| Action | Layer(s) Affected | Standard(s) | Status |
+|--------|-------------------|-------------|--------|
+| **1.1** Add quality attribute taxonomy to requirements | Requirements | ISO/IEC 25010:2023 | ✅ Done — Step 6 "Quality Characteristics Coverage" added to `requirements.md` |
+| **1.2** Add V&V governance to acceptance testing | Acceptance Test | IEEE 1012:2016, ISO/IEC 25010:2023 | ✅ Done — Steps 6c (V&V validation) and 6d (quality-in-use) added to `acceptance.md` |
+| **1.3** Add architecture evaluation | Architecture Design | ISO/IEC 42030:2019 | ✅ Done — Step 5.5 "Architecture Evaluation (ISO 42030)" added to `architecture-design.md` |
 
-### Phase 2 — Strengthen Existing Layers
+### Phase 2 — Strengthen Existing Layers ✅ COMPLETE (v0.6.0)
 
 > **Focus:** Add complementary standards to layers that already have a
 > best-practice baseline, deepening their rigor.
 
-| Action | Layer(s) Affected | Standard(s) | Description |
-|--------|-------------------|-------------|-------------|
-| **2.1** Add quality attributes to system design | System Design | ISO/IEC 25010:2023 | Extend `system-design.md` to require explicit mapping of design decisions to 25010 quality characteristics. |
-| **2.2** Add V&V coverage to system testing | System Test | IEEE 1012:2016 | Add a coverage analysis step to `system-test.md` that verifies every requirement has an associated V&V activity. |
-| **2.3** Add lifecycle process basis to module design | Module Design | ISO/IEC/IEEE 12207:2017 | Add 12207 Clause 8 process guidance to `module-design.md` as the general-purpose baseline, keeping DO-178C/ISO 26262 as safety extensions. |
-| **2.4** Formalize review process | Peer Review | IEEE 1028:2008, ISO/IEC 20246:2017 | Add review type selection, role definitions, defect taxonomy, and follow-up verification to `peer-review.md`. |
+| Action | Layer(s) Affected | Standard(s) | Status |
+|--------|-------------------|-------------|--------|
+| **2.1** Add quality attributes to system design | System Design | ISO/IEC 25010:2023 | ✅ Done — Step 6 "ISO 25010 Quality Attribute Cross-Check" added to `system-design.md` |
+| **2.2** Add V&V coverage to system testing | System Test | IEEE 1012:2016 | ✅ Done — Step 7 "IEEE 1012 V&V Coverage Gate (§5.5)" added to `system-test.md` |
+| **2.3** Add lifecycle process basis to module design | Module Design | ISO/IEC/IEEE 12207:2017 | ✅ Done — §4.0 preamble (ISO 12207 §8.4.4) added to `module-design.md` |
+| **2.4** Formalize review process | Peer Review | IEEE 1028:2008, ISO/IEC 20246:2017 | ✅ Done — Step 2.5 review-type selection (IEEE 1028) and Step 4 defect taxonomy (ISO 20246) added to `peer-review.md` |
 
-### Phase 3 — Complete the Framework
+### Phase 3 — Complete the Framework ✅ COMPLETE (v0.6.0)
 
 > **Focus:** Add standards to supporting commands (audit, traceability, impact
 > analysis) and ensure end-to-end consistency.
 
-| Action | Layer(s) Affected | Standard(s) | Description |
-|--------|-------------------|-------------|-------------|
-| **3.1** Add V&V traceability analysis | Traceability | IEEE 1012:2016 | Extend `trace.md` to verify that each requirement is covered by an appropriate V&V method (not just a test link). |
-| **3.2** Add documentation completeness checks | Traceability, Audit Report | ISO/IEC/IEEE 15289:2019 | Add content validation against 15289 information item requirements to the traceability and audit commands. |
-| **3.3** Formalize audit methodology | Audit Report | IEEE 1028:2008, ISO 19011:2018 | Add audit process governance to `audit-report.md`: planning, evidence collection, finding classification, and corrective action tracking. |
-| **3.4** Add CM governance to audits and impact analysis | Audit Report, Impact Analysis | IEEE 828 | Add configuration audit (FCA/PCA) capabilities to `audit-report.md` and formalize the change evaluation process in `impact-analysis.md`. |
+| Action | Layer(s) Affected | Standard(s) | Status |
+|--------|-------------------|-------------|--------|
+| **3.1** Add V&V traceability analysis | Traceability | IEEE 1012:2016 | ✅ Done — V&V method coverage check added to `trace.md` |
+| **3.2** Add documentation completeness checks | Traceability, Audit Report | ISO/IEC/IEEE 15289:2019 | ✅ Done — Information-item completeness section added to both commands |
+| **3.3** Formalize audit methodology | Audit Report | ISO 19011:2018 | ✅ Done — Audit principles, finding classification, corrective action tracking added to `audit-report.md` |
+| **3.4** Add CM governance to audits and impact analysis | Audit Report, Impact Analysis | IEEE 828-2012 | ✅ Done — FCA/PCA audit steps added to `audit-report.md`; configuration control section added to `impact-analysis.md` |
+| **3.5** Add FMEA baseline to hazard analysis | Hazard Analysis | IEC 60812:2018 | ✅ Done — Step 4.0 FMEA procedure (IEC 60812:2018 §6 ordered steps) added to `hazard-analysis.md` |
+| **3.6** Add unit-test V&V gate | Unit Test | IEEE 1012:2016 | ✅ Done — Step 8 "IEEE 1012 V&V Coverage Gate (§5.7)" added to `unit-test.md` |
+| **3.7** Add integration-test V&V gate | Integration Test | IEEE 1012:2016 | ✅ Done — Step 7 "IEEE 1012 V&V Coverage Gate (§5.6)" added to `integration-test.md` |
+| **3.8** Add test result documentation standard | Test Results | ISO/IEC 29119-3:2013 | ✅ Done — Test Status/Completion Report fields referenced in `test-results.md` |
 
 ---
 
-## 4. Vision — Final Outcomes
+## 4. Vision — Achieved Outcomes (v0.6.0)
 
-When all three phases are complete, the spec-kit V-Model extension will achieve
-the following outcomes:
+All three phases are complete. The spec-kit V-Model extension has achieved the
+following outcomes:
 
 ### Every V-Cycle Layer Has a Governing Standard
 
-The current state has three layers with no explicit best-practice standard
-(Acceptance Test, Audit Report, Impact Analysis) and two layers governed only by
-safety standards (Module Design, Traceability). After implementation, **every
-layer** will have at least one best-practice standard, with safety extensions
-layered on top.
+Every layer now has at least one best-practice standard, with safety extensions
+layered on top. The three previously unstandarded layers (Acceptance Test, Audit
+Report, Impact Analysis) are now fully covered.
 
 ### Quality Attributes Are First-Class Citizens
 
-ISO/IEC 25010:2023 will be woven through four layers (Requirements, Acceptance,
+ISO/IEC 25010:2023 is woven through four layers (Requirements, Acceptance,
 System Design, Architecture), ensuring that non-functional quality is treated
 with the same rigor as functional correctness. Every requirement specification
-will systematically consider performance, security, reliability, interaction
+systematically considers performance, security, reliability, interaction
 capability, flexibility, maintainability, compatibility, functional suitability,
 and safety.
 
 ### Describe→Evaluate Loop for Architecture
 
-With ISO 42030 complementing IEEE 42010, architecture descriptions will not only
-be well-structured but also formally evaluated against stakeholder concerns and
+With ISO 42030 complementing IEEE 42010, architecture descriptions are not only
+well-structured but also formally evaluated against stakeholder concerns and
 quality scenarios before downstream design work begins.
 
 ### V&V as an Overarching Framework
 
-IEEE 1012 will provide a V&V umbrella across acceptance testing, system testing,
-and traceability — ensuring that the distinction between verification and
-validation is maintained and that coverage analysis goes beyond simple test
-linkage.
+IEEE 1012 provides a V&V umbrella across acceptance testing, system testing,
+integration testing, unit testing, and traceability — ensuring that the
+distinction between verification and validation is maintained and that coverage
+analysis goes beyond simple test linkage.
 
 ### Formal Review & Audit Processes
 
-IEEE 1028 and ISO/IEC 20246 will formalize the peer-review and audit processes
+IEEE 1028 and ISO/IEC 20246 formalize the peer-review and audit processes
 with recognized roles, procedures, and metrics — making the AI-assisted review
 outputs auditable and defensible.
 
 ### Best-Practice First, Safety Second
 
-The extension's architecture will cleanly separate general best-practice
-standards (applicable to all projects) from safety-specific extensions (activated
-per domain). This means:
+The extension cleanly separates general best-practice standards (applicable to
+all projects) from safety-specific extensions (activated per domain). This means:
 
 - A startup building a web application benefits from IEEE 29148, IEEE 1016, ISO
   29119, ISO 25010, and IEEE 1012 without any safety overhead.
@@ -587,33 +650,33 @@ incrementally composable.
 
 ---
 
-## 5. Summary
+## 5. Summary (v0.6.0 — Phase B Complete)
 
-The spec-kit V-Model extension is built on a solid foundation of **7 best-practice
-standards** and **8 safety-specific standards**. This analysis identified **9 new
-best-practice standards** that would fill gaps, deepen rigor, and complete the
-framework.
+The spec-kit V-Model extension is built on a comprehensive foundation of
+**19 best-practice standards** and **7 safety-specific standards** — 26 total.
+Phase B (v0.6.0) integrated **11 new best-practice standards** that filled all
+remaining gaps, deepened rigor across every layer, and extended coverage to
+previously unstandarded commands.
 
-The key insight is structural: the extension already cleanly separates
-best-practice concerns from safety extensions. The proposed enhancements
-preserve and strengthen this architecture — adding cross-cutting quality
-attributes (ISO 25010), filling the acceptance-test gap (IEEE 1012), completing
-the architecture describe→evaluate cycle (ISO 42030), and formalizing review and
+The key insight is structural: the extension cleanly separates best-practice
+concerns from safety extensions. The Phase B enhancements preserved and
+strengthened this architecture — adding cross-cutting quality attributes
+(ISO 25010), filling the acceptance-test gap (IEEE 1012), completing the
+architecture describe→evaluate cycle (ISO 42030), and formalizing review and
 audit processes (IEEE 1028, ISO 20246, ISO 19011).
 
-### Summary: 9 New Standards, Prioritized
+### Summary: All 11 New Standards — Implemented ✅
 
-| # | Standard | Scope | Layers It Improves | Priority |
-|---|---------|-------|---------------------|----------|
-| 1 | **ISO/IEC 25010:2023** | Product Quality Model (9 characteristics) | Requirements, Acceptance, System Design, Architecture | 🔴 High — cross-cutting quality taxonomy, fills NFR gap |
-| 2 | **IEEE 1012:2016** | Verification & Validation | Acceptance ★, System Test, Traceability | 🔴 High — fills the only layer with zero standard |
-| 3 | **ISO/IEC 42030:2019** | Architecture Evaluation | Architecture Design | 🔴 High — completes IEEE 42010 describe→evaluate |
-| 4 | **IEEE 1028:2008** | Software Reviews & Audits | Peer Review, Audit Report | 🟡 Medium — formalizes review/audit process |
-| 5 | **ISO/IEC 20246:2017** | Work Product Reviews | Peer Review | 🟡 Medium — modern, lightweight alternative to 1028 |
-| 6 | **ISO/IEC/IEEE 12207:2017** | Software Lifecycle Processes | Module Design | 🟡 Medium — adds best-practice basis beyond safety |
-| 7 | **ISO/IEC/IEEE 15289:2019** | Lifecycle Information Items | Traceability, Audit Report | 🟡 Medium — validates documentation completeness |
-| 8 | **IEEE 828** | Configuration Management | Audit Report, Impact Analysis | 🟢 Lower — useful but CM tooling often covers this |
-| 9 | **ISO 19011:2018** | Auditing Management Systems | Audit Report | 🟢 Lower — valuable for formal audit programs |
-
-> ★ Acceptance Test is the highest-priority gap: it is the only V-Cycle layer
-> with no governing standard today.
+| # | Standard | Scope | Layers Improved | Status |
+|---|---------|-------|-----------------|--------|
+| 1 | **ISO/IEC 25010:2023** | Product Quality Model (9 characteristics) | Requirements, Acceptance, System Design, Architecture | ✅ |
+| 2 | **IEEE 1012:2016** | Verification & Validation | Acceptance, System Test, Integration Test, Unit Test, Traceability | ✅ |
+| 3 | **ISO/IEC 42030:2019** | Architecture Evaluation | Architecture Design | ✅ |
+| 4 | **IEC 60812:2018** | FMEA Procedure | Hazard Analysis | ✅ |
+| 5 | **IEEE 1028:2008** | Software Reviews & Audits | Peer Review, Audit Report | ✅ |
+| 6 | **ISO/IEC 20246:2017** | Work Product Reviews | Peer Review | ✅ |
+| 7 | **ISO/IEC/IEEE 12207:2017** | Software Lifecycle Processes | Module Design | ✅ |
+| 8 | **IEEE 828-2012** | Configuration Management | Audit Report, Impact Analysis | ✅ |
+| 9 | **ISO 19011:2018** | Auditing Management Systems | Audit Report | ✅ |
+| 10 | **ISO/IEC/IEEE 15289:2019** | Lifecycle Information Items | Traceability, Audit Report | ✅ |
+| 11 | **ISO/IEC 29119-3:2013** | Software Testing — Test Documentation | Test Results | ✅ |
