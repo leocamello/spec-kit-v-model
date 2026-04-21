@@ -5,6 +5,14 @@
 **Status**: Draft
 **Source**: `specs/002-system-design-testing/v-model/requirements.md`
 
+**Evolution History (Phase B — Standards Enrichment):** This document was evolved from its original 13-component design to incorporate ISO/IEC 25010:2023 quality attribute analysis (Step 6). Lifecycle suspect analysis was performed on all SYS components against the deprecated parent requirements per `commands/system-design.md` Step 3 (Lifecycle Rules):
+
+- **REQ-035** `[DEPRECATED — Superseded by REQ-038]`: Lifecycle check — no SYS component lists REQ-035 as a parent. SYS-001 traces to superseding REQ-038 (system-design command with generic overlay framing). No SUSPECT action needed.
+- **REQ-036** `[DEPRECATED — Superseded by REQ-039]`: Lifecycle check — no SYS component lists REQ-036 as a parent. SYS-003 traces to superseding REQ-039 (system-test command with generic overlay framing). No SUSPECT action needed.
+- **REQ-CN-001** `[DEPRECATED — Superseded by REQ-042]`: Lifecycle check — no SYS component lists REQ-CN-001 as a parent. SYS-001 and SYS-003 trace to superseding REQ-042 (domain-agnostic default behaviour). No SUSPECT action needed.
+
+All 13 SYS components confirmed **ACTIVE**. No re-parenting or deprecation cascades required.
+
 ## Overview
 
 This system design decomposes the 53 active requirements (3 deprecated) for the System Design ↔ System Testing feature into 13 system components organized across the extension's artifact types: two AI command prompts, two output templates, two deterministic validation scripts (Bash + PowerShell), two matrix builder extensions (Bash + PowerShell), a trace command extension, a Python ID validator extension, an extension manifest update, a CI evaluation extension, and a backward compatibility guard. The decomposition follows the natural artifact boundaries established in v0.1.0 — commands orchestrate AI generation, templates constrain output structure, scripts perform deterministic validation and matrix building, and the manifest registers capabilities. The core system design command (SYS-001) reads `requirements.md` and produces an IEEE 1016-compliant `system-design.md` with four mandatory views (Decomposition, Dependency, Interface, Data Design), assigning `SYS-NNN` identifiers with many-to-many REQ↔SYS traceability. The core system test command (SYS-003) reads `system-design.md` and produces an ISO 29119-compliant `system-test.md` with `STP-NNN-X` and `STS-NNN-X#` identifiers, applying named test techniques anchored to specific design views. System coverage validation (SYS-005/SYS-006) performs forward coverage (REQ→SYS), backward coverage (SYS→STP), and orphan detection. Matrix B (SYS-007/SYS-008) extends the existing build-matrix infrastructure with REQ→SYS→STP→STS traceability. Both commands support domain overlay loading via the assembly protocol, using generic IEEE 1016/ISO 29119 framing in base form.
