@@ -1308,3 +1308,140 @@ None — module is self-contained
 ## Uncovered Modules
 
 None — full coverage achieved.
+
+---
+
+## Coverage Gate (IEEE 1012:2016 / ISO/IEC/IEEE 29119-4:2021)
+
+### Script Validation
+
+`validate-module-coverage.sh specs/004-module-unit/v-model` — **PASS**
+
+```
+=== Module-Level Coverage Validation ===
+
+Totals: 17 ARCH | 24 MOD (0 external) | 40 UTPs | 110 UTSs
+ARCH → MOD coverage: 17/17 (100%)
+MOD → UTP coverage: 24/24 (100%) [excluding 0 external]
+UTP → UTS coverage: 40/40 (100%)
+
+✅ Full module-level coverage — all architecture modules decomposed, all testable modules have unit tests.
+```
+
+1. **Forward coverage**: every ARCH-NNN has at least one MOD-NNN — ✅ 17/17 (100%)
+2. **Backward coverage**: every non-`[EXTERNAL]` MOD-NNN has at least one UTP-NNN-X — ✅ 24/24 (100%)
+
+### IEEE 1012:2016 §5.7 V&V Completeness Check
+
+3. **Every `MOD-NNN` (excluding `[EXTERNAL]`) has at least one `UTP-NNN-X` test case** — ✅ PASS
+
+   | Module | UTP(s) |
+   |--------|--------|
+   | MOD-001 | UTP-001-A, UTP-001-B |
+   | MOD-002 | UTP-002-A, UTP-002-B |
+   | MOD-003 | UTP-003-A, UTP-003-B |
+   | MOD-004 | UTP-004-A |
+   | MOD-005 | UTP-005-A |
+   | MOD-006 | UTP-006-A, UTP-006-B |
+   | MOD-007 | UTP-007-A, UTP-007-B |
+   | MOD-008 | UTP-008-A, UTP-008-B |
+   | MOD-009 | UTP-009-A, UTP-009-B |
+   | MOD-010 | UTP-010-A |
+   | MOD-011 | UTP-011-A |
+   | MOD-012 | UTP-012-A, UTP-012-B |
+   | MOD-013 | UTP-013-A, UTP-013-B |
+   | MOD-014 | UTP-014-A, UTP-014-B |
+   | MOD-015 | UTP-015-A |
+   | MOD-016 | UTP-016-A, UTP-016-B |
+   | MOD-017 | UTP-017-A, UTP-017-B |
+   | MOD-018 | UTP-018-A |
+   | MOD-019 | UTP-019-A, UTP-019-B |
+   | MOD-020 | UTP-020-A, UTP-020-B |
+   | MOD-021 | UTP-021-A |
+   | MOD-022 | UTP-022-A |
+   | MOD-023 | UTP-023-A, UTP-023-B |
+   | MOD-024 | UTP-024-A, UTP-024-B |
+
+   No `[EXTERNAL]` modules — all 24 modules are testable and have UTP coverage. No `[V&V GAP]` entries.
+
+4. **Every `UTP-NNN-X` has at least one `UTS-NNN-X#` executable scenario** — ✅ PASS (40/40)
+
+   | UTP | UTS Count | UTS IDs |
+   |-----|-----------|---------|
+   | UTP-001-A | 3 | UTS-001-A1, UTS-001-A2, UTS-001-A3 |
+   | UTP-001-B | 3 | UTS-001-B1, UTS-001-B2, UTS-001-B3 |
+   | UTP-002-A | 3 | UTS-002-A1, UTS-002-A2, UTS-002-A3 |
+   | UTP-002-B | 1 | UTS-002-B1 |
+   | UTP-003-A | 3 | UTS-003-A1, UTS-003-A2, UTS-003-A3 |
+   | UTP-003-B | 2 | UTS-003-B1, UTS-003-B2 |
+   | UTP-004-A | 3 | UTS-004-A1, UTS-004-A2, UTS-004-A3 |
+   | UTP-005-A | 2 | UTS-005-A1, UTS-005-A2 |
+   | UTP-006-A | 3 | UTS-006-A1, UTS-006-A2, UTS-006-A3 |
+   | UTP-006-B | 3 | UTS-006-B1, UTS-006-B2, UTS-006-B3 |
+   | UTP-007-A | 3 | UTS-007-A1, UTS-007-A2, UTS-007-A3 |
+   | UTP-007-B | 3 | UTS-007-B1, UTS-007-B2, UTS-007-B3 |
+   | UTP-008-A | 2 | UTS-008-A1, UTS-008-A2 |
+   | UTP-008-B | 3 | UTS-008-B1, UTS-008-B2, UTS-008-B3 |
+   | UTP-009-A | 3 | UTS-009-A1, UTS-009-A2, UTS-009-A3 |
+   | UTP-009-B | 2 | UTS-009-B1, UTS-009-B2 |
+   | UTP-010-A | 3 | UTS-010-A1, UTS-010-A2, UTS-010-A3 |
+   | UTP-011-A | 3 | UTS-011-A1, UTS-011-A2, UTS-011-A3 |
+   | UTP-012-A | 3 | UTS-012-A1, UTS-012-A2, UTS-012-A3 |
+   | UTP-012-B | 3 | UTS-012-B1, UTS-012-B2, UTS-012-B3 |
+   | UTP-013-A | 3 | UTS-013-A1, UTS-013-A2, UTS-013-A3 |
+   | UTP-013-B | 2 | UTS-013-B1, UTS-013-B2 |
+   | UTP-014-A | 2 | UTS-014-A1, UTS-014-A2 |
+   | UTP-014-B | 2 | UTS-014-B1, UTS-014-B2 |
+   | UTP-015-A | 3 | UTS-015-A1, UTS-015-A2, UTS-015-A3 |
+   | UTP-016-A | 3 | UTS-016-A1, UTS-016-A2, UTS-016-A3 |
+   | UTP-016-B | 2 | UTS-016-B1, UTS-016-B2 |
+   | UTP-017-A | 3 | UTS-017-A1, UTS-017-A2, UTS-017-A3 |
+   | UTP-017-B | 2 | UTS-017-B1, UTS-017-B2 |
+   | UTP-018-A | 3 | UTS-018-A1, UTS-018-A2, UTS-018-A3 |
+   | UTP-019-A | 3 | UTS-019-A1, UTS-019-A2, UTS-019-A3 |
+   | UTP-019-B | 3 | UTS-019-B1, UTS-019-B2, UTS-019-B3 |
+   | UTP-020-A | 3 | UTS-020-A1, UTS-020-A2, UTS-020-A3 |
+   | UTP-020-B | 3 | UTS-020-B1, UTS-020-B2, UTS-020-B3 |
+   | UTP-021-A | 3 | UTS-021-A1, UTS-021-A2, UTS-021-A3 |
+   | UTP-022-A | 3 | UTS-022-A1, UTS-022-A2, UTS-022-A3 |
+   | UTP-023-A | 3 | UTS-023-A1, UTS-023-A2, UTS-023-A3 |
+   | UTP-023-B | 2 | UTS-023-B1, UTS-023-B2 |
+   | UTP-024-A | 4 | UTS-024-A1, UTS-024-A2, UTS-024-A3, UTS-024-A4 |
+   | UTP-024-B | 4 | UTS-024-B1, UTS-024-B2, UTS-024-B3, UTS-024-B4 |
+
+   All 40 test cases have at least one executable UTS scenario. No runnable gap detected.
+
+5. **No `MOD-NNN` is left without any V&V activity** — ✅ PASS
+
+   All 24 non-`[EXTERNAL]` modules have at least one UTP. No `[V&V GAP: MOD-NNN has no unit-level V&V activity — IEEE 1012:2016 §5.7]` entries required.
+
+6. **Every UTP declares an ISO 29119-4 technique** — ✅ PASS (40/40)
+
+   All 40 test cases declare a valid ISO 29119-4 technique in their `**Technique**:` field:
+
+   | Technique | Count | UTPs |
+   |-----------|-------|------|
+   | Statement & Branch Coverage | 24 | UTP-001-A, UTP-002-A, UTP-003-A, UTP-004-A, UTP-005-A, UTP-006-A, UTP-007-A, UTP-008-A, UTP-009-A, UTP-010-A, UTP-011-A, UTP-012-A, UTP-013-A, UTP-014-A, UTP-015-A, UTP-016-A, UTP-017-A, UTP-018-A, UTP-019-A, UTP-020-A, UTP-021-A, UTP-022-A, UTP-023-A, UTP-024-A |
+   | Equivalence Partitioning | 7 | UTP-003-B, UTP-007-B, UTP-014-B, UTP-016-B, UTP-017-B, UTP-019-B, UTP-024-B |
+   | Boundary Value Analysis | 4 | UTP-008-B, UTP-009-B, UTP-012-B, UTP-020-B |
+   | Strict Isolation | 3 | UTP-002-B, UTP-013-B, UTP-023-B |
+   | State Transition Testing | 2 | UTP-001-B, UTP-006-B |
+
+   No missing technique declaration detected.
+
+### Coverage Gate Result: ✅ PASS
+
+All six coverage gate checks passed. This unit test plan satisfies the IEEE 1012:2016 §5.7 V&V completeness requirements and the ISO/IEC/IEEE 29119-4:2021 technique mandates.
+
+---
+
+## Governing Standards
+
+This unit test plan is governed by the following standards:
+
+| Standard | Full Name | Role in this Plan |
+|----------|-----------|-------------------|
+| **ISO/IEC/IEEE 29119-4:2021** | Software and Systems Engineering — Software Testing — Part 4: Test Techniques | Primary test technique standard: defines the five mandatory white-box unit test techniques (Statement & Branch Coverage, Boundary Value Analysis, Equivalence Partitioning, State Transition Testing, Strict Isolation), their application criteria per module view, and the Arrange/Act/Assert scenario format used in all UTS scenarios |
+| **IEEE 1012:2016** | IEEE Standard for System, Software, and Hardware Verification and Validation | V&V governance: ensures every module has at least one white-box V&V activity (Coverage Gate §5.7); defines unit testing as a verification activity confirming that each module implements its design correctly; prescribes entry/exit criteria for unit test activities |
+
+> **Domain extensions:** If a domain overlay is loaded (Safety-Critical Techniques), additional structural coverage techniques (e.g., MC/DC per ISO 26262-6 §9.4.4 by ASIL, DO-178C §6.4.4.2 coverage objectives by DAL, IEC 62304 §5.5.3 unit testing by safety class) are applied on top of the ISO 29119-4 base techniques. No domain overlay was active for this plan.
