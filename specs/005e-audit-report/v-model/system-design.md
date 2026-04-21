@@ -2,7 +2,7 @@
 
 **Feature Branch**: `feature/005e-audit-report`
 **Created**: 2026-04-05
-**Updated**: 2026-04-05
+**Updated**: 2026-04-21
 **Status**: Approved
 **Source**: `specs/005e-audit-report/v-model/requirements.md`
 
@@ -211,6 +211,31 @@ SYS-008 (CLI Entry Point)
 
 ---
 
+## Quality Attribute Cross-Check (ISO/IEC 25010:2023)
+
+This section verifies that the design adequately addresses the ISO/IEC 25010:2023 quality characteristics applicable to the audit-report command — a safety-critical document used as regulatory compliance evidence for FDA/FAA/ISO assessors.
+
+### Applicable Quality Characteristics (§6.1)
+
+| Quality Characteristic | ISO/IEC 25010 Ref | Applicable SYS Components | Design Evidence | Status |
+|------------------------|-------------------|--------------------------|-----------------|--------|
+| Functional Suitability — Completeness of evidence collection | §4.2.1 | SYS-001, SYS-002, SYS-003, SYS-004, SYS-005, SYS-006 | SYS-001 discovers all 11 V-Model artifact types enumerated in REQ-001 (requirements.md, acceptance-plan.md, system-design.md, system-test.md, architecture-design.md, integration-test.md, module-design.md, unit-test.md, hazard-analysis.md, traceability-matrix.md, waivers.md). SYS-002 extracts all traceability matrices (A/B/C/D/H). SYS-003 extracts all HAZ-NNN hazard entries. SYS-004 identifies all anomaly types (❌ Failed, ⏭️ Skipped, Critical/Major peer-review findings). SYS-005 computes compliance status from the full anomaly set. Forward coverage: all 28 REQ-NNN IDs map to at least one SYS-NNN component (100%). | ✅ Covered |
+| Reliability — Reproducibility (same repository state → same report) | §4.2.2 | SYS-001, SYS-006, SYS-008 | REQ-NF-001 mandates 100% determinism; REQ-CN-001 prohibits AI and LLM (no stochastic outputs). SYS-001 derives all artifact metadata via `git log` — deterministic given a fixed Git history. SYS-006 implements deterministic Markdown rendering: identical inputs always yield identical reports. Dependency View documents failure propagation paths for all 10 inter-component relationships, providing explicit fault tolerance rationale. | ✅ Covered |
+| Performance Efficiency — Report generation time for large repositories | §4.2.3 | SYS-006 | REQ-NF-003 establishes a measurable performance budget: complete report generation in under 30 seconds for projects with up to 500 V-Model IDs. SYS-006 implements this constraint. All intermediate data structures are held in-memory (no disk I/O during processing); only the final report write and Git metadata queries are I/O operations. Resource utilisation is bounded by repository size. | ✅ Covered |
+| Security — Access control for sensitive compliance data | §4.2.5 | SYS-006, SYS-007, SYS-008 | Data Design View documents all protection mechanisms: the Audit Report (SYS-006) is protected at rest by the target directory's filesystem permissions (OS-level access control); JSON output (SYS-007) is transient stdout, secured by the calling process/CI pipeline; all intermediate data is in-memory only and does not persist beyond the process lifetime; no sensitive data is written to intermediate files. The requirements do not mandate encryption at rest; access control relies on OS filesystem permissions and CI pipeline configuration. | ✅ Covered |
+| Maintainability — Adding new regulatory output formats without changing evidence collection | §4.2.7 | SYS-001–SYS-008 | The Decomposition View partitions the system into eight single-responsibility modules with clean separation between evidence collection (SYS-001–SYS-005) and output rendering (SYS-006, SYS-007). Adding a new regulatory output format (e.g., PDF, SARIF, IETF RFC 9518 JSON-SEV) requires only a new Serializer module analogous to SYS-007, with zero changes to evidence collection components. All inter-module interfaces are explicitly contracted in the Interface View, ensuring that new output modules can be wired in at the SYS-008 dispatch level without modifying upstream components. | ✅ Covered |
+| Safety — Audit report must never omit mandatory evidence items (IEEE 828-2012 FCA/PCA, ISO 19011:2018 nonconformity classification) | §4.2.9 | SYS-003, SYS-005, SYS-008 | SYS-005 enforces exit code 2 for missing required artifacts (requirements.md, traceability-matrix.md per REQ-017). SYS-004 classifies unwaived anomalies as BLOCKING and SYS-005 enforces exit code 1, preventing silent pass-through of failed evidence. **However, no SYS component enforces completeness of mandatory regulatory evidence per IEEE 828-2012 FCA/PCA checklists (Physical Configuration Audit / Functional Configuration Audit mandatory items) or ISO 19011:2018 nonconformity classification scheme (major nonconformity / minor nonconformity / observation). The `--regulatory-context` argument (SYS-008) accepts any string but performs no validation against a known set of standards, so mandatory items for a declared regulatory context are not enforced. Furthermore, hazard-analysis.md is treated as optional by SYS-003 and SYS-005 even when a safety-critical regulatory context (FDA 21 CFR Part 11, FAA DO-178C, ISO 26262) is declared via `--regulatory-context`.** | ⚠️ QUALITY GAP — see QG-001 |
+
+### Quality Gap Action Items (§6.2)
+
+| Gap ID | ISO 25010 Ref | Characteristic | Gap Description | Affected SYS |
+|--------|---------------|----------------|-----------------|--------------|
+| QG-001 | §4.2.9 | Safety | No SYS component enforces completeness of mandatory regulatory evidence items. The `--regulatory-context` value (SYS-008, REQ-013) is not validated against a known standards registry. IEEE 828-2012 FCA/PCA required evidence items are not checked. ISO 19011:2018 nonconformity classification (major / minor / observation) is not applied to anomaly severity. hazard-analysis.md is optional (SYS-003 returns null if absent) even when a safety-critical regulatory context is active — this means the audit report can pass with exit code 0 while omitting a mandatory safety evidence item. | SYS-003, SYS-005, SYS-008 |
+
+`[QUALITY GAP: ISO 25010 §4.2.9 — Safety: no SYS component enforces completeness of mandatory regulatory evidence items per IEEE 828-2012 FCA/PCA checklists or ISO 19011:2018 nonconformity classification; hazard-analysis.md is treated as optional by SYS-003 and SYS-005 even when a safety-critical regulatory context is declared via --regulatory-context (SYS-008/REQ-013). Resolution: add a Regulatory Context Validator component or extend SYS-005 to enforce context-specific mandatory artifact lists.]`
+
+---
+
 ## Coverage Summary
 
 | Metric | Count |
@@ -219,6 +244,8 @@ SYS-008 (CLI Entry Point)
 | Total Parent Requirements Covered | 28 / 28 (100%) |
 | Components per Type | Module: 8 |
 | **Forward Coverage (REQ→SYS)** | **100%** |
+| ISO 25010 Quality Characteristics Analysed | 6 |
+| Quality Gaps Flagged | 1 (QG-001: Safety — mandatory evidence completeness not enforced) |
 
 ## Derived Requirements
 
