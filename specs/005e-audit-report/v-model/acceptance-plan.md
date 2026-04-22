@@ -612,3 +612,66 @@ Given a waivers.md with WAV-001 containing Artifact, Type, Justification, and Ap
 When the audit-report command parses waivers
 Then all four fields SHALL be extracted for WAV-001
 ```
+
+---
+
+## V&V Distinction (IEEE 1012:2016)
+
+Per `commands/acceptance.md` Step 6c, each ATP test case is classified as **Verification** (built right — conforms to spec) or **Validation** (right product — meets stakeholder need) per IEEE 1012:2016.
+
+### Classification Table
+
+| ATP ID | Requirement | V&V Classification | Rationale |
+|--------|-------------|-------------------|-----------|
+| ATP-001-A | REQ-001 Artifact Discovery | Verification | Confirms script behavior matches the specified list of discoverable files — a conformance check against the spec. |
+| ATP-002-A | REQ-002 Git Metadata | Verification | Confirms 7-char SHA and ISO 8601 date format match the specification contract. |
+| ATP-003-A | REQ-003 Artifact Inventory Table | Verification | Confirms Markdown table structure and required column names match the specification. |
+| ATP-004-A | REQ-004 Matrix Embedding | Verification | Confirms all traceability matrices are embedded with execution status columns preserved. |
+| ATP-005-A | REQ-005 Coverage Analysis | Verification | Confirms coverage metrics computation algorithm matches specification. |
+| ATP-006-A | REQ-006 Hazard Summary | Verification | Confirms HAZ entries are extracted and rendered per specification. |
+| ATP-007-A | REQ-007 Anomaly Identification | Verification | Confirms that ❌ Failed and ⏭️ Skipped statuses are detected as specified. |
+| ATP-008-A | REQ-008 Waiver Parsing | Verification | Confirms WAV-NNN heading regex and **Artifact**: field extraction match specification. |
+| ATP-009-A | REQ-009 Anomaly-Waiver Cross-Referencing | Verification + Validation | Verifies cross-referencing logic matches spec (Verification) AND validates that the resulting Waived/BLOCKING classification correctly represents an auditor's release decision model (Validation). |
+| ATP-010-A | REQ-010 RELEASE READY | Verification + Validation | Verifies three-state compliance logic matches spec (Verification) AND validates that ✅ RELEASE READY satisfies an auditor's expectation of release readiness (Validation — the report serves its intended purpose). |
+| ATP-010-B | REQ-010 RELEASE CANDIDATE | Verification + Validation | Same dual classification as ATP-010-A — RELEASE CANDIDATE is a Validation concern because it must satisfy auditor acceptance of all-waived deviations. |
+| ATP-010-C | REQ-010 NOT READY | Verification + Validation | The ❌ NOT READY status is the strongest Validation test: it confirms the product correctly prevents accidental release — a direct stakeholder-safety concern. |
+| ATP-011-A | REQ-011 Executive Summary | Validation | Verifies the executive summary contains the fields auditors need to determine release readiness at a glance — a stakeholder-utility test, not merely a format check. |
+| ATP-012-A | REQ-012 Signature Block | Verification | Confirms signature block structure matches specification format. |
+| ATP-013-A | REQ-013 Metadata Arguments | Verification | Confirms argument parsing behavior matches the CLI specification. |
+| ATP-014-A | REQ-014 Output Path | Verification | Confirms file output path behavior matches specification. |
+| ATP-015-A | REQ-015 Exit Code 0 (READY) | Verification | Confirms exit code 0 matches the specified RELEASE READY condition. |
+| ATP-015-B | REQ-015 Exit Code 0 (CANDIDATE) | Verification | Confirms exit code 0 for RELEASE CANDIDATE path. |
+| ATP-016-A | REQ-016 Exit Code 1 | Verification + Validation | Verifies exit code matches spec (Verification) AND validates that CI pipelines are correctly blocked from deploying (Validation — the core safety gate). |
+| ATP-017-A | REQ-017 Exit Code 2 | Verification | Confirms configuration error detection matches specification. |
+| ATP-018-A | REQ-018 JSON Output | Verification | Confirms JSON structure and field names match specification. |
+| ATP-019-A | REQ-019 Orphaned Waivers | Verification | Confirms orphan detection logic matches specification. |
+| ATP-020-A | REQ-020 Human-Readable Summary | Verification | Confirms stderr summary content and format match specification. |
+| ATP-NF-001-A | REQ-NF-001 Deterministic Output | Verification | Confirms byte-identical output across repeated runs — a correctness property. |
+| ATP-IF-001-A | REQ-IF-001 Bash CLI Syntax | Verification | Confirms Bash argument parsing contract matches specification. |
+| ATP-IF-002-A | REQ-IF-002 PowerShell CLI Syntax | Verification | Confirms PowerShell parameter parsing contract matches specification. |
+| ATP-CN-001-A | REQ-CN-001 No AI | Verification | Confirms absence of LLM/AI calls by source code inspection. |
+| ATP-CN-003-A | REQ-CN-003 Waiver Format | Verification | Confirms waiver field extraction matches the structured format specification. |
+
+### V&V Independence Recommendation
+
+Per IEEE 1012:2016 §5.3, test cases that exercise compliance gating decisions should be executed by an **independent verifier** — a tester who did not author the script under test. The following ATP test cases carry the highest regulatory risk and SHOULD be executed independently:
+
+| ATP ID | Rationale for Independence |
+|--------|-----------------------------|
+| ATP-009-A | Cross-referencing logic directly determines Waived/BLOCKING classification — the core audit gate |
+| ATP-010-A, ATP-010-B, ATP-010-C | Compliance status computation is the primary go/no-go release signal |
+| ATP-016-A | Exit code 1 blocking behavior prevents inadvertent releases in CI pipelines |
+
+---
+
+## Quality-in-Use Acceptance Criteria (ISO 25010:2023)
+
+Per `commands/acceptance.md` Step 6d, the audit-report command is evaluated against ISO/IEC 25010:2023 Quality-in-Use characteristics, assessing fitness for purpose from the user's perspective in their actual context of use.
+
+| Quality-in-Use Characteristic | ISO 25010 Ref | Acceptance Criterion | Measurement Method | Pass Condition |
+|-------------------------------|--------------|---------------------|-------------------|----------------|
+| **Effectiveness** — Can users achieve their goal completely and accurately? | §4.1.1 | An audit engineer can determine release readiness from the generated report within 5 minutes, without needing to open any source V-Model artifacts | User review task: provide a release audit report to an auditor unfamiliar with the project; measure time to reach a release decision | Auditor reaches a definitive decision (READY / NOT READY / CANDIDATE) in < 5 minutes with no additional file access |
+| **Efficiency** — Resources expended relative to goal achievement | §4.1.2 | Command completes in under 30 seconds for a project with up to 500 V-Model IDs | Automated timing: `time build-audit-report.sh <vmodel-dir>` with a 500-ID test fixture | Wall-clock time < 30 seconds (per REQ-NF-003) |
+| **Satisfaction** — Positive attitudes and comfort of use | §4.1.3 | Audit engineers report the report format is clear and usable for regulatory submission | Post-use survey: "Would you submit this report as part of a regulatory compliance package?" | ≥ 80% positive responses from a pilot group of ≥ 3 audit engineers |
+| **Freedom from Risk** — Risk mitigation (economic, health, safety, environmental) | §4.1.4 | The ❌ NOT READY status with exit code 1 prevents accidental release of software with unresolved anomalies in CI pipelines | Integration test: CI pipeline configured with `audit-report` as a gate; confirm pipeline blocks on exit code 1 | CI pipeline terminates without deploying when exit code is 1 |
+| **Context Coverage** — Completeness across intended contexts of use | §4.1.5 | The generated report is useful and complete for all 3 target regulatory contexts: ISO 26262 (automotive), DO-178C (aerospace), IEC 62304 (medical) | Create a test report for each regulatory context using `--regulatory-context`; assess completeness of content for each standard | Report contains all required evidence sections for each regulatory context; no section is empty or placeholder-only |

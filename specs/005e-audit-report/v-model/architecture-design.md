@@ -221,3 +221,54 @@ sequenceDiagram
 | ARCH modules by Type | Component: 10 |
 | Cross-Cutting Modules | 0 |
 | **Forward Coverage (SYS→ARCH)** | **100%** |
+
+---
+
+## Architecture Evaluation (ISO 42030:2019 + ISO 25010:2023)
+
+This section performs a scenario-based fitness-for-purpose evaluation per ISO/IEC 42030:2019, completing the IEEE 42010 "describe" → ISO 42030 "evaluate" cycle. Quality characteristics are referenced by name per ISO/IEC 25010:2023.
+
+### Quality Attribute Justification (ISO/IEC 25010:2023)
+
+For each of the 10 architecture modules, the primary quality characteristic driving its design is documented alongside the trade-off accepted.
+
+| ARCH ID | Architecture Decision | Primary Quality Characteristic (ISO 25010:2023) | Trade-off Accepted |
+|---------|----------------------|------------------------------------------------|---------------------|
+| ARCH-001 | Argument parsing via a `getopts`-style loop (Bash) and `param()` block (PowerShell); validates required arg and file existence before any pipeline step | Reliability — Fault Tolerance §4.2.2 ↑; Functional Suitability — Completeness §4.2.1 ↑ | Strict validation fails fast on missing or invalid directories; this sacrifices leniency for predictability — a deliberate trade of Flexibility §4.2.8 for Reliability §4.2.2 |
+| ARCH-002 | Hardcoded ordered list of 11 expected V-Model filenames; Git `log -1` metadata extraction per file | Reliability — Faultlessness §4.2.2 ↑; Functional Suitability — Completeness §4.2.1 ↑ | Hardcoded filename list sacrifices Flexibility §4.2.8 (cannot discover non-standard artifact names) for Reliability §4.2.2 (no accidental file inclusion) |
+| ARCH-003 | Line-by-line `## Matrix X` heading delimited parsing; coverage metrics computed inline | Functional Suitability — Correctness §4.2.1 ↑; Maintainability — Analysability §4.2.7 ↑ | Heading-based section delimitation couples ARCH-003 to the exact heading format in `traceability-matrix.md`; heading changes cause silent zero-extraction |
+| ARCH-004 | `| HAZ-` pattern scan to locate FMEA table; aggregate stats computed in-pass | Reliability — Fault Tolerance §4.2.2 ↑; Functional Suitability §4.2.1 ↑ | Null return on absent hazard file is a controlled optional path, not a failure; downstream ARCH-008 renders the "no hazard analysis" message deterministically |
+| ARCH-005 | Matrix row scan for `❌ Failed` and `⏭️ Skipped` status emoji; optional peer-review glob for Critical/Major findings | Functional Suitability — Completeness §4.2.1 ↑; Safety — Risk Identification §4.2.9 ↑ | Unicode emoji matching is locale-sensitive; CI environments with non-UTF-8 locales may fail to match status columns — mitigated by REQ-NF-002 (standard toolchain requirement) |
+| ARCH-006 | Regex split on `### WAV-NNN` headings; field extraction by `**Artifact**:` pattern | Reliability — Faultlessness §4.2.2 ↑; Maintainability — Modifiability §4.2.7 ↑ | Regex-based field extraction is brittle against whitespace variations in the waiver format; REQ-CN-003 mitigates this by mandating a strict waivers.md schema |
+| ARCH-007 | Artifact-ID lookup in waiver map; BLOCKING count drives exit code; orphan detection via set difference | Safety — Risk Identification §4.2.9 ↑; Reliability — Faultlessness §4.2.2 ↑ | All-or-nothing waiver matching (exact artifact ID) sacrifices Flexibility §4.2.8 (no fuzzy matching) for Safety §4.2.9 (no anomaly can pass undetected through ambiguous matching) |
+| ARCH-008 | Template-fill via `printf`/string interpolation; all 7 sections assembled as strings; write to output path; summary to stderr | Functional Suitability — Completeness §4.2.1 ↑; Interaction Capability §4.2.4 ↑ | String concatenation assembly is simple and dependency-free; trade-off is that formatting errors produce malformed Markdown rather than an explicit error, requiring post-generation review |
+| ARCH-009 | `python3 -m json.tool` (Bash) / `ConvertTo-Json` (PowerShell) for JSON formatting; activated only when `--json` flag is set | Compatibility — Interoperability §4.2.6 ↑; Flexibility — Adaptability §4.2.8 ↑ | Optional JSON path relies on Python 3.x being available (per REQ-NF-002); PowerShell and Bash paths produce structurally identical JSON to enable cross-platform CI tooling |
+| ARCH-010 | Sequential single-threaded pipeline orchestration; no parallelism; propagates exit code from ARCH-007 | Reliability — Faultlessness §4.2.2 ↑; Maintainability — Analysability §4.2.7 ↑ | Sequential execution eliminates race conditions and inter-component state corruption at the cost of Performance Efficiency §4.2.3 (no parallel I/O); acceptable given the 30-second budget of REQ-NF-003 |
+
+### Fitness-for-Purpose Scenario Analysis (ISO 42030:2019 §6)
+
+Evaluation of the architecture against top stakeholder concerns per ISO/IEC 42030:2019 §6.3.
+
+| Quality Scenario | Stimulus | Environment | Response | Measure | Architecture Modules | Verdict |
+|-----------------|---------|-------------|----------|---------|---------------------|---------|
+| **Reliability — Deterministic compliance status**: The cross-reference engine must produce identical compliance status for identical inputs on any CI runner | Repeated invocation of ARCH-007 with the same anomaly list and waiver map | Standard CI runner (Bash 4+, Git, Python 3.x); no external state beyond the V-Model directory | ARCH-007 executes set-lookup and count operations with no random or time-dependent inputs | Exit code and compliance status string are byte-identical across repeated runs and across Linux/macOS/Windows CI runners | ARCH-006 (deterministic waiver map), ARCH-007 (set-lookup, no randomness), ARCH-010 (sequential, no shared state) | ✅ Addressed — ARCH-006 and ARCH-007 are stateless functions; ARCH-010 enforces single-threaded execution |
+| **Performance — Report generation under 30 seconds for 500-ID projects**: The pipeline must complete within the budget defined in REQ-NF-003 | `build-audit-report.sh` invoked against a V-Model directory with 500 IDs spread across 5 matrices | Standard CI runner with Git history; Python 3.x available for JSON formatting | The pipeline executes all 10 ARCH modules sequentially and writes the report file | Wall-clock time < 30 seconds | ARCH-002 (11 `git log -1` calls = dominant I/O cost), ARCH-003 (line-by-line parse of one file), ARCH-010 (sequential orchestration) | ✅ Addressed — 11 Git log calls are the dominant cost; on modern CI runners each call is < 100ms, totalling < 1.5s; Markdown parsing is O(n) in file size |
+| **Maintainability — Adding a new regulatory context requires zero script changes**: A new `--regulatory-context` value must not require modifying the script | User passes `--regulatory-context "AS9100D"` to the command | No configuration file exists for the new context | ARCH-001 accepts the value; ARCH-008 writes it into the executive summary template without validation | New regulatory context appears correctly in the report; no error or warning is emitted | ARCH-001 (passthrough argument), ARCH-008 (template interpolation without validation) | ✅ Addressed — `--regulatory-context` is a free-text string passed through by ARCH-001 and interpolated by ARCH-008 without enumeration; any string is accepted. Trade-off: no validation means misspelled contexts produce incorrect reports silently |
+
+### Sensitivity and Trade-off Points
+
+**Sensitivity Points** (where a small change significantly affects one or more quality characteristics):
+
+1. **ARCH-005 — Unicode emoji status matching**: ARCH-005 matches matrix row anomalies by detecting the Unicode characters `❌` and `⏭️` in status columns. A CI environment running with a non-UTF-8 locale or a text editor that substitutes similar-looking characters (e.g., replacing `❌` U+274C with `✗` U+2717) would cause ARCH-005 to silently miss anomalies, producing a false RELEASE READY status. This is a Safety §4.2.9 sensitivity point.
+
+2. **ARCH-006 — WAV-NNN heading regex coupling**: ARCH-006's `### WAV-NNN` heading regex is tightly coupled to REQ-CN-003's waiver format. A project that uses `## WAV-NNN` (two hashes) or `WAV-001:` (colon-style) instead of `### WAV-NNN` would cause all waivers to be silently undetected, turning all anomalies into BLOCKING status. This is a Reliability §4.2.2 and Safety §4.2.9 sensitivity point.
+
+3. **ARCH-008 — No section-render validation**: ARCH-008 assembles the 7-section report via string concatenation without structural validation. If any upstream component returns null or an empty data structure, ARCH-008 renders an empty section without error. Auditors receiving a report with empty sections may not detect the missing content. This is a Functional Suitability §4.2.1 sensitivity point.
+
+**Trade-off Points** (where improving one characteristic degrades another):
+
+1. **All-or-nothing waiver matching (ARCH-007) — Safety ↑ vs. Flexibility ↓**: Exact artifact-ID matching in the waiver cross-reference maximises Safety §4.2.9 (no anomaly escapes through ambiguous matching) at the cost of Flexibility §4.2.8. A waiver covering `SCN-001-A` does NOT automatically cover `SCN-001-A1` or `SCN-001-A2`. Each scenario ID must be waived individually, which is more work but prevents accidental over-broad waivers.
+
+2. **Hardcoded filename list (ARCH-002) — Reliability ↑ vs. Adaptability ↓**: The fixed list of 11 expected V-Model filenames in ARCH-002 ensures no unexpected files are included in the inventory, improving Reliability §4.2.2. The trade-off is Flexibility §4.2.8: teams that use non-standard artifact filenames (e.g., `system-requirements.md` instead of `requirements.md`) receive no discovery coverage and no warning that their files were not found.
+
+3. **No output validation (ARCH-008) — Performance ↑ vs. Functional Suitability ↓**: Skipping post-assembly structural validation in ARCH-008 keeps the pipeline fast (Performance Efficiency §4.2.3 ↑) but accepts the risk of malformed reports when upstream components fail silently. Adding a post-render section-count check would detect missing sections at the cost of additional processing time.

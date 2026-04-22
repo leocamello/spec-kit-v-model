@@ -9,6 +9,39 @@
 
 This document defines the detailed module designs (MOD-NNN) that implement each architecture module. Each MOD specifies function-level pseudocode, input/output contracts, and error handling. These are implemented 1:1 in both Bash and PowerShell.
 
+## §4.0 ISO/IEC/IEEE 12207:2017 Software Design Process Preamble
+
+This module design follows ISO/IEC/IEEE 12207:2017 §8.4.4 (Software Detailed Design process). The process is applied to produce the `MOD-NNN` specifications in this document.
+
+### Process Inputs (§8.4.4 Inputs)
+
+| Input | Source | Description |
+|-------|--------|-------------|
+| Functional requirements | `specs/005e-audit-report/v-model/requirements.md` | REQ-001–REQ-020, REQ-NF-001–REQ-NF-003, REQ-IF-001–REQ-IF-002, REQ-CN-001–REQ-CN-003 |
+| System design | `specs/005e-audit-report/v-model/system-design.md` | SYS-001–SYS-008 component decomposition defining scope and data flow |
+| Architecture design | `specs/005e-audit-report/v-model/architecture-design.md` | ARCH-001–ARCH-010 module decomposition with interface contracts and logical views |
+
+### Process Outputs (§8.4.4 Outputs)
+
+| Output | Description |
+|--------|-------------|
+| Module specifications (MOD-NNN) | Each module is specified with: function signature (typed inputs/outputs), pseudocode (algorithm), and error handling |
+| Interface definitions | Input/output contracts per module, specifying types, valid ranges, and error paths |
+| Implementation target mapping | Each MOD maps to source files: `scripts/bash/build-audit-report.sh` and `scripts/powershell/Build-Audit-Report.ps1` |
+
+### Process Activities (§8.4.4 Activities)
+
+| Activity | ISO 12207 §8.4.4 Ref | Implementation in This Document |
+|----------|---------------------|--------------------------------|
+| Decompose each architecture module into implementable function units | §8.4.4.1 | Each ARCH-NNN is decomposed into one MOD-NNN with a named function and typed parameters |
+| Define module interface (inputs, outputs, types, ranges) | §8.4.4.1 | **Inputs** and **Outputs** fields in each MOD-NNN specification |
+| Define algorithm or processing logic | §8.4.4.3 | **Pseudocode** block (fenced ```` ```pseudocode ``` ```` or ```` ``` ```` ) in each MOD-NNN |
+| Identify error conditions and response | §8.4.4.4 | **Error Handling** field in each MOD-NNN |
+
+> **Note**: This feature uses a pragmatic V-Model level for module-design detail. Full §8.4.4 compliance with typed internal data structures (§8.4.4.2) is deferred to the implementation phase; the pseudocode blocks define local variables implicitly. All 11 MOD-NNN modules satisfy §8.4.4.1 (typed interface), §8.4.4.3 (algorithm), and §8.4.4.4 (error conditions) requirements.
+
+---
+
 ## Module Designs
 
 ### Module: MOD-001 (parse_cli_args)

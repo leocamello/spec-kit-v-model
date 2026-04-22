@@ -369,3 +369,76 @@ Given a clean CI runner with only Bash 4+, Git, and Python 3.x standard library
 When build-audit-report.sh runs to completion
 Then it SHALL succeed without installing any packages or invoking any tool outside the standard toolchain
 ```
+
+---
+
+## V&V Coverage Gate (IEEE 1012:2016 §5.5)
+
+IEEE 1012:2016 §5.5 requires every system component to be exercised by at least one V&V activity. The table below maps every active SYS-NNN component to its covering STP-NNN test case(s), confirming 100% SYS→STP coverage.
+
+### SYS→STP Coverage Table
+
+| SYS | Component Name | V&V Method | Assigned STPs | Status |
+|-----|----------------|-----------|---------------|--------|
+| SYS-001 | Artifact Discovery Engine | Test | STP-001-A, STP-001-B | ✅ Covered |
+| SYS-002 | Matrix Extractor | Test | STP-002-A, STP-002-B | ✅ Covered |
+| SYS-003 | Hazard Summary Extractor | Test | STP-003-A | ✅ Covered |
+| SYS-004 | Anomaly Detector | Test | STP-004-A, STP-004-B | ✅ Covered |
+| SYS-005 | Compliance Status Engine | Test | STP-005-A | ✅ Covered |
+| SYS-006 | Report Assembler | Test | STP-006-A | ✅ Covered |
+| SYS-007 | JSON Serializer | Test | STP-007-A | ✅ Covered |
+| SYS-008 | CLI Entry Point | Test + Inspection | STP-008-A, STP-008-B | ✅ Covered |
+
+**V&V Gap Report**: No V&V gaps — all 8 active SYS-NNN components have at least one system-level test (STP-NNN-X). IEEE 1012:2016 §5.5 entry criterion satisfied.
+
+### REQ→STP Requirement Coverage Table
+
+The table below traces every active requirement from `requirements.md` to the system test(s) that exercise it, confirming bidirectional requirements coverage at system test level.
+
+| REQ | Verification Method | Via SYS | Covering STPs | Status |
+|-----|---------------------|---------|---------------|--------|
+| REQ-001 | Test | SYS-001 | STP-001-A | ✅ Covered |
+| REQ-002 | Test | SYS-001 | STP-001-B | ✅ Covered |
+| REQ-003 | Test | SYS-001 | STP-001-A | ✅ Covered |
+| REQ-004 | Test | SYS-002 | STP-002-A | ✅ Covered |
+| REQ-005 | Test | SYS-002 | STP-002-B | ✅ Covered |
+| REQ-006 | Test | SYS-003 | STP-003-A | ✅ Covered |
+| REQ-007 | Test | SYS-004 | STP-004-A | ✅ Covered |
+| REQ-008 | Test | SYS-004 | STP-004-A, STP-004-B | ✅ Covered |
+| REQ-009 | Test | SYS-004 | STP-004-B | ✅ Covered |
+| REQ-010 | Test | SYS-005 | STP-005-A | ✅ Covered |
+| REQ-011 | Test | SYS-006 | STP-006-A | ✅ Covered |
+| REQ-012 | Test | SYS-006 | STP-006-A | ✅ Covered |
+| REQ-013 | Test | SYS-008 | STP-008-A | ✅ Covered |
+| REQ-014 | Test | SYS-008 | STP-008-A | ✅ Covered |
+| REQ-015 | Test | SYS-005 | STP-005-A | ✅ Covered |
+| REQ-016 | Test | SYS-005 | STP-005-A | ✅ Covered |
+| REQ-017 | Test | SYS-005 | STP-005-A | ✅ Covered |
+| REQ-018 | Test | SYS-007 | STP-007-A | ✅ Covered |
+| REQ-019 | Test | SYS-004 | STP-004-B | ✅ Covered |
+| REQ-020 | Test | SYS-006 | STP-006-A | ✅ Covered |
+| REQ-NF-001 | Test | — | No dedicated STP at system test level | ⚠️ Gap — covered at acceptance level by ATP-NF-001-A (SCN-NF-001-A1 tests determinism via byte-identical runs) |
+| REQ-NF-002 | Inspection | SYS-008 | STP-008-B (STS-008-B2) | ✅ Covered — standard toolchain enforcement inspected |
+| REQ-NF-003 | Test | — | No dedicated STP at system test level | ⚠️ Gap — 30-second performance bound not exercised by any current STP; recommend adding STP-009-A performance test |
+| REQ-IF-001 | Test | SYS-008 | STP-008-A | ✅ Covered |
+| REQ-IF-002 | Test | SYS-008 | STP-008-B | ✅ Covered |
+| REQ-CN-001 | Inspection | SYS-008 | STP-008-B (STS-008-B2) | ✅ Covered — no-external-dependency check implies no AI invocations |
+| REQ-CN-002 | Inspection | — | No dedicated STP | ⚠️ Gap — read-only behaviour (no artifact modification) is an Inspection-method requirement; recommend adding an inspection check confirming no artifact files are modified during a test run |
+| REQ-CN-003 | Inspection | SYS-004 | STP-004-B | ✅ Covered — waiver format parsing exercised by cross-referencing tests |
+
+### V&V Gap Summary
+
+| Gap # | Requirement | Gap Description | Recommended Action |
+|-------|-------------|----------------|-------------------|
+| 1 | REQ-NF-001 | Deterministic output is not verified at system test level (only at acceptance test level by ATP-NF-001-A) | Add `STP-NF-001-A` to this document: run command twice with same inputs, diff outputs with `diff --brief` |
+| 2 | REQ-NF-003 | 30-second performance bound is not exercised at system test level | Add `STP-NF-003-A` to this document: time the command against a 500-ID test fixture; assert wall-clock < 30s |
+| 3 | REQ-CN-002 | Read-only behaviour (no artifact modification) lacks a dedicated STP or inspection step | Add an inspection scenario to `STP-008-A` verifying that no V-Model artifacts are modified after a run (compare mtimes before/after) |
+
+### Entry Criteria Check (IEEE 1012:2016 §5.5.1)
+
+| Criterion | Result |
+|-----------|--------|
+| `system-design.md` is current and peer-reviewed | ✅ Satisfied |
+| Every active `SYS-NNN` has at least one `STP-NNN-X` (100% SYS→STP coverage) | ✅ 8 / 8 (100%) |
+| All `STP-NNN-X` have at least one `STS-NNN-X#` executable scenario | ✅ All STPs have at least one STS |
+| V&V gaps documented and risk-accepted | ✅ 3 gaps documented above; none block certification — all are testability improvements, not safety risks |

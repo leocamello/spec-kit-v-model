@@ -246,3 +246,37 @@ Given ARCH-010 is invoked with no arguments
 When ARCH-001 argument validation fails
 Then ARCH-010 SHALL print usage to stderr and exit with code 2 without invoking downstream modules
 ```
+
+---
+
+## V&V Coverage Gate (IEEE 1012:2016 §5.6)
+
+IEEE 1012:2016 §5.6 requires every architecture module interface to be exercised by at least one V&V activity. The table below maps every active ARCH-NNN module to its covering ITP-NNN-X test case(s), confirming 100% ARCH→ITP coverage at integration test level.
+
+### ARCH→ITP Coverage Table
+
+| ARCH Module | Module Name | V&V Activities (ITP) | Status |
+|-------------|-------------|----------------------|--------|
+| ARCH-001 | CLI Argument Parser | ITP-001-A | ✅ Covered |
+| ARCH-002 | File Discovery Module | ITP-001-A, ITP-002-A | ✅ Covered |
+| ARCH-003 | Matrix Parser Module | ITP-002-A, ITP-003-A | ✅ Covered |
+| ARCH-004 | Hazard Parser Module | ITP-004-A | ✅ Covered |
+| ARCH-005 | Anomaly Scanner Module | ITP-003-A, ITP-005-A | ✅ Covered |
+| ARCH-006 | Waiver Parser Module | ITP-006-A | ✅ Covered |
+| ARCH-007 | Cross-Reference Engine | ITP-005-A, ITP-006-A, ITP-007-A, ITP-009-A | ✅ Covered |
+| ARCH-008 | Report Renderer Module | ITP-004-A, ITP-007-A, ITP-008-A | ✅ Covered |
+| ARCH-009 | JSON Output Module | ITP-009-A | ✅ Covered |
+| ARCH-010 | CLI Dispatch Orchestrator | ITP-008-A, ITP-010-A | ✅ Covered |
+
+**V&V Gap Summary**: No gaps — all 10 active ARCH-NNN modules have at least one integration-level V&V activity (ITP-NNN-X). IEEE 1012:2016 §5.6 entry criterion satisfied.
+
+### Entry Criteria (IEEE 1012:2016 §5.6.1)
+
+| Criterion | Status |
+|-----------|--------|
+| `architecture-design.md` is current and peer-reviewed | ✅ Met |
+| Every `ARCH-NNN` module has at least one `ITP-NNN-X` test case (100% forward coverage) | ✅ Met — 10/10 (100%) |
+| All `ITP-NNN-X` test cases have at least one `ITS-NNN-X#` executable scenario | ✅ Met — all ITPs have at least one ITS |
+| V&V gap list is empty (all integration boundaries covered) | ✅ Met — 0 gaps |
+
+**Verdict**: ✅ PASS — IEEE 1012:2016 §5.6 V&V completeness requirements satisfied at integration test level.

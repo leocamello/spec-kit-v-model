@@ -489,3 +489,53 @@ Same registry as UTP-011-A — all 10 sub-module functions are stubbed or spied.
 ## Uncovered Modules
 
 None — full coverage achieved.
+
+---
+
+## V&V Coverage Gate (IEEE 1012:2016 §5.7)
+
+IEEE 1012:2016 §5.7 requires every software module to be exercised by at least one V&V activity at unit test level. The table below maps every active MOD-NNN module to its covering UTP-NNN-X test case(s) and confirms that white-box (statement/branch) coverage is specified for the pipeline orchestration module.
+
+### MOD→UTP Coverage Table
+
+| MOD Module | Module Name | White-Box Coverage | V&V Activities (UTP) | Status |
+|------------|-------------|-------------------|----------------------|--------|
+| MOD-001 | parse_cli_args | Equivalence Partitioning + Boundary Value Analysis | UTP-001-A, UTP-001-B | ✅ Covered |
+| MOD-002 | discover_artifacts | Equivalence Partitioning + Interface Testing | UTP-002-A, UTP-002-B | ✅ Covered |
+| MOD-003 | parse_matrix_file | Equivalence Partitioning + Boundary Value Analysis | UTP-003-A, UTP-003-B | ✅ Covered |
+| MOD-004 | compute_coverage_metrics | Equivalence Partitioning | UTP-004-A | ✅ Covered |
+| MOD-005 | parse_hazards | Equivalence Partitioning | UTP-005-A | ✅ Covered |
+| MOD-006 | scan_anomalies | Equivalence Partitioning | UTP-006-A | ✅ Covered |
+| MOD-007 | parse_waivers | Equivalence Partitioning | UTP-007-A | ✅ Covered |
+| MOD-008 | cross_reference_anomalies | Decision Table | UTP-008-A | ✅ Covered |
+| MOD-009 | render_report | Equivalence Partitioning | UTP-009-A | ✅ Covered |
+| MOD-010 | render_json | Interface Testing | UTP-010-A | ✅ Covered |
+| MOD-011 | dispatch_pipeline | Statement & Branch Coverage + Strict Isolation | UTP-011-A, UTP-011-B | ✅ Covered |
+
+**V&V Gap Summary**: No gaps — all 11 active MOD-NNN modules have at least one unit-level V&V activity (UTP-NNN-X). IEEE 1012:2016 §5.7 entry criterion satisfied.
+
+### White-Box Coverage Confirmation
+
+MOD-011 (`dispatch_pipeline`) is the only module requiring explicit statement and branch coverage, as it is the top-level orchestrator whose branching logic (argument validation exit, `json_flag` branch, exit code propagation) directly determines system behavior. Coverage is confirmed by:
+
+| Branch | UTP Scenario | Coverage Status |
+|--------|-------------|-----------------|
+| parse_cli_args returns exit_code 2 → immediate abort (branch A true-path) | UTS-011-A2 | ✅ Covered |
+| parse_cli_args returns exit_code 0 → full pipeline executes (branch A false-path) | UTS-011-A1 | ✅ Covered |
+| json_flag=true → render_json invoked (branch B true-path) | UTS-011-A3 | ✅ Covered |
+| json_flag=false → render_json NOT invoked (branch B false-path) | UTS-011-A4 | ✅ Covered |
+| cross_reference returns exit_code 1 → dispatch propagates exit 1 (step-10 path) | UTS-011-A5 | ✅ Covered |
+
+All other modules (MOD-001 through MOD-010) use Equivalence Partitioning, Boundary Value Analysis, Interface Testing, or Decision Table techniques to achieve functional coverage appropriate for their algorithmic complexity. No additional statement/branch analysis is required for these modules as their logic is single-path or directly enumerated by the decision table.
+
+### Entry Criteria (IEEE 1012:2016 §5.7.1)
+
+| Criterion | Status |
+|-----------|--------|
+| `module-design.md` is current with ISO 12207:2017 §8.4.4 preamble | ✅ Met |
+| Every `MOD-NNN` module has at least one `UTP-NNN-X` test case (100% MOD→UTP coverage) | ✅ Met — 11/11 (100%) |
+| All `UTP-NNN-X` test cases have at least one `UTS-NNN-X#` executable scenario | ✅ Met — 15/15 (100%) |
+| White-box coverage specified for pipeline orchestration module (MOD-011) | ✅ Met — 5 branches covered by UTP-011-A scenarios |
+| V&V gap list is empty | ✅ Met — 0 gaps |
+
+**Verdict**: ✅ PASS — IEEE 1012:2016 §5.7 V&V completeness requirements satisfied at unit test level.
