@@ -7,7 +7,7 @@ description: What's available now in the V-Model Extension Pack, what's been shi
 
 The V-Model Extension Pack is actively developed. Here's where we are, where we've been, and where we're going.
 
-## Current Release: v0.5.0
+## Current Release: v0.6.0
 
 The extension provides **14 commands** covering four V-Model levels plus cross-cutting safety and quality concerns:
 
@@ -46,14 +46,21 @@ The extension provides **14 commands** covering four V-Model levels plus cross-c
 | **v0.3.0** | 2026-02-21 | `architecture-design`, `integration-test` commands, triple-matrix (A + B + C), CROSS-CUTTING module tag, consolidated fixture pattern |
 | **v0.4.0** | 2026-02-22 | `module-design`, `unit-test` commands, four-tier ID schema, quadruple-matrix (A + B + C + D), id-schema-guide documentation |
 | **v0.5.0** | 2026-04-06 | `hazard-analysis`, `impact-analysis`, `peer-review`, `test-results`, `audit-report` commands, Matrix H, 14 agent definitions, 4× test growth |
+| **v0.6.0** | 2026-04-23 | Domain Overlay Architecture (36 overlay files), ID Lifecycle Model (deprecation + suspect cascade), Standards Enrichment (26 standards, Phase B sections in all 11 commands), features 002–006 evolved |
 
 For detailed release notes, see the [Changelog](changelog.md).
 
 ## What's Next
 
-### Implementation Gating
+### Implementation Gating (M1 — Bridge Commands)
 
-Enforce that all upstream artifacts exist and pass coverage checks before implementation begins — preventing code from being written against incomplete or unverified specifications.
+The next milestone delivers three commands that read all V-Model artifacts and gate implementation behind verified specifications — preventing code from being written against incomplete or unverified artifact chains:
+
+- **`v-model.plan`** — Reads all V-Model artifacts and produces a structured implementation plan, ordering work by dependency and traceability
+- **`v-model.tasks`** — Breaks the implementation plan into concrete, traceable task items, each linked to specific requirements and design artifacts
+- **`v-model.implement`** — Reads the full artifact chain and scaffolds implementation, gating code generation behind verified coverage
+
+Together these commands close the loop: specifications flow down the V-Model, then bridge commands ensure implementation is grounded in verified, traceable artifacts. Code cannot proceed until coverage checks pass.
 
 ### Pre-built Regulatory Template Packs
 

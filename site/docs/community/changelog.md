@@ -9,6 +9,50 @@ All notable changes to the V-Model Extension Pack are documented here. The forma
 
 ---
 
+## v0.6.0 — Foundation Hardening — 2026-04-23
+
+### Changed — Domain Overlay Architecture
+
+- Decoupled all domain-specific safety content from 14 base commands into `commands/overlays/{iso_26262,do_178c,iec_62304}/` directories
+- Base commands now contain only best-practice standards (IEEE, ISO/IEC); safety-specific content (ASIL tables, DAL classifications, etc.) loaded at runtime via `domain:` in `v-model-config.yml`
+- Added `domain:` field to `config-template.yml` (values: empty, `iso_26262`, `do_178c`, `iec_62304`)
+- Added assembly protocol: domain loading step at the top of each command's System Prompt
+- Created 36 overlay files (12 commands × 3 domains) with `_domain.yml` manifests
+
+### Changed — ID Lifecycle Model
+
+- Extended formal ID lifecycle model to all 8 generative commands (previously only `acceptance` had partial support)
+- Added `[DEPRECATED — Superseded by {ID}]` and `[DEPRECATED — Withdrawn: <reason>]` syntax to all commands
+- Added suspect cascade: downstream items automatically marked `[SUSPECT — Parent {ID} deprecated]` when parent is deprecated
+- Each command now includes a "Lifecycle Rules" section governing evolution behavior
+
+### Changed — Standards Enrichment (Phase B)
+
+- Enriched all 11 base commands with explicit `## Governing Standards` sections
+- Integrated ISO/IEC 25010:2023 quality characteristics into requirements (NFR section) and system-design output
+- Integrated IEEE 1012:2016 V&V gates into acceptance, system-test, integration-test, and unit-test output
+- Integrated ISO/IEC 42030:2019 architecture evaluation into architecture-design output
+- Total standards referenced: 26 (17 best-practice + 9 safety-specific, up from 17)
+
+### Changed — Dogfooding
+
+- Evolved V-Model artifact chains for features 002–005e through ID lifecycle model
+- Created complete V-Model chain for feature 006 (foundation infrastructure)
+- All 89 structural evals updated to validate Phase B sections; 364 BATS tests still pass
+
+### Stats
+
+| Metric | Before (v0.5.0) | After (v0.6.0) |
+|--------|-------:|------:|
+| Commands | 14 | 14 |
+| Domain overlays | 0 | 36 |
+| Standards referenced | 17 | 26 |
+| Structural evals | 89 | 89 |
+| BATS tests | 364 | 364 |
+| Phase B sections in artifacts | 0 | 11 commands × 2+ sections |
+
+---
+
 ## v0.5.0 — 2026-04-06
 
 ### Added — New Commands

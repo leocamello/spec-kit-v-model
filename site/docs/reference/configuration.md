@@ -59,7 +59,59 @@ Controls safety-critical section generation across V-Model commands.
 
 ## Domain Effects by Command
 
-When a domain is set, commands generate **additional safety-critical sections** specific to the regulatory standard.
+When a domain is set, commands generate **additional safety-critical sections** specific to the regulatory standard. This is implemented via the **Domain Overlay Architecture** introduced in v0.6.0.
+
+### Overlay Assembly Protocol
+
+Setting `domain:` in `v-model-config.yml` triggers an assembly protocol at the start of each command's System Prompt:
+
+1. **Read** `v-model-config.yml` and detect the `domain:` field value
+2. **Locate** the matching overlay directory: `commands/overlays/{domain}/`
+3. **Load** the `_domain.yml` manifest — lists the applicable commands and the standard's classification system (ASIL, DAL, or Safety Class)
+4. **Inject** the domain-specific instruction file for that command (e.g., `commands/overlays/iso_26262/requirements.md`) into the relevant command sections
+5. **Generate** output with both best-practice and domain-specific content merged
+
+When `domain:` is empty, steps 2–4 are skipped and only best-practice content is generated.
+
+### Overlay Directory Structure
+
+```
+commands/overlays/
+├── iso_26262/
+│   ├── _domain.yml          ← manifest: domain name, classification system, applicable commands
+│   ├── requirements.md      ← ASIL allocation, derived safety requirements, safety mechanisms
+│   ├── acceptance.md        ← ASIL-dependent verification methods (Table 11), back-to-back testing
+│   ├── system-design.md     ← FFI, Restricted Complexity, safety mechanisms allocation
+│   ├── system-test.md       ← MC/DC targets, WCET verification, structural coverage by ASIL
+│   ├── architecture-design.md ← ASIL Decomposition, Defensive Programming, Temporal Constraints
+│   ├── integration-test.md  ← SIL/HIL Compatibility, Resource Contention
+│   ├── module-design.md     ← MISRA C/C++, Complexity Limits (≤ 10), Memory Management
+│   ├── unit-test.md         ← MC/DC Coverage, Variable-Level Fault Injection
+│   ├── hazard-analysis.md   ← HARA, ASIL severity classification (S×E×C)
+│   ├── trace.md             ← ASIL-dependent coverage, bidirectional traceability
+│   ├── peer-review.md       ← Review rigor by ASIL (walkthrough → formal inspection)
+│   ├── impact-analysis.md   ← Safety impact assessment, ASIL re-evaluation
+│   ├── audit-report.md      ← Functional safety audit, confirmation measures
+│   └── test-results.md      ← ASIL coverage metrics (Table 12), test evidence
+├── do_178c/
+│   └── ... (same structure — DAL A–E classification)
+└── iec_62304/
+    └── ... (same structure — Class A–C classification)
+```
+
+### Domain Content by Command Category
+
+| Command | ISO 26262 Adds | DO-178C Adds | IEC 62304 Adds |
+|---------|---------------|--------------|----------------|
+| `requirements` | ASIL allocation + decomposition, derived safety requirements, safety mechanisms | DAL traceability, derived requirements, robustness by DAL | Safety class–dependent rigor, risk analysis input |
+| `acceptance` | ASIL-dependent verification methods (Table 11), back-to-back testing | Requirements-based + robustness testing, structural coverage by DAL | Safety class test completeness, regression |
+| `system-design` | Freedom from Interference (FFI), Restricted Complexity, safety mechanisms allocation | Partitioning, data/control coupling, derived requirements | Architecture + risk control traceability |
+| `system-test` | MC/DC targets, WCET verification, structural coverage by ASIL | Structural coverage by DAL (A–C) | Testing by safety class |
+| `architecture-design` | ASIL Decomposition (Part 9 §5), Defensive Programming | DAL-driven verification, partitioning by DAL | Architecture by safety class, interface documentation |
+| `integration-test` | SIL/HIL Compatibility, Resource Contention, back-to-back | Hardware fidelity by DAL, integration verification | Integration testing by safety class |
+| `module-design` | MISRA C/C++, Complexity Limits (≤ 10), Memory Management | CERT-C, Single Entry/Exit, Complexity by DAL | Detailed design by safety class, coding standards |
+| `unit-test` | MC/DC Coverage, Variable-Level Fault Injection | Structural coverage by DAL, MC/DC for DAL A | Verification by safety class, robustness testing |
+| `hazard-analysis` | HARA, ASIL severity classification (S×E×C) | FHA, failure condition classification (ARP 4761) | Software safety classification A–C (ISO 14971) |
 
 ### `iso_26262` — Automotive (ISO 26262)
 

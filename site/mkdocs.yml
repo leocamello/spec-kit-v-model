@@ -126,6 +126,10 @@ nav:
       - "Level 4: Module Design ↔ Unit": guide/module-unit.md
       - Hazard Analysis: guide/hazard-analysis.md
       - Impact Analysis: guide/impact-analysis.md
+      - Domain Overlays: guide/domain-overlays.md
+      - ID Lifecycle: guide/id-lifecycle.md
+      - Standards Enrichment: guide/standards-enrichment.md
+      - Brownfield Evolution: guide/brownfield-evolution.md
       - Peer Review: guide/peer-review.md
       - Test Results: guide/test-results.md
       - Audit Report: guide/audit-report.md

@@ -63,6 +63,18 @@ graph LR
 
 From requirements to audit reports — every V-Model level is covered with dedicated commands for specification, design, testing, and verification.
 
+### :octicons-package-16: Domain Overlay Architecture
+
+Base commands contain only universal best-practice standards. Domain-specific safety content (ISO 26262 ASIL tables, DO-178C DAL classifications, IEC 62304 software classes) is loaded at runtime from `commands/overlays/` based on the `domain:` field in `v-model-config.yml`. Non-safety projects get no regulatory noise; safety-critical projects get precisely the right domain content — no cross-contamination.
+
+### :octicons-git-branch-16: ID Lifecycle Model
+
+Every V-Model ID supports a formal lifecycle: **ACTIVE → DEPRECATED / MODIFIED → SUSPECT**. When a requirement is deprecated, the entire downstream chain (acceptance tests, system design, architecture, module design, unit tests) is automatically marked `[SUSPECT]` pending review. Evolution is traceable — no silent overwrites, no orphaned test cases.
+
+### :octicons-law-16: Standards Enrichment
+
+All 11 base commands now include explicit `## Governing Standards` sections mapping each output to its governing IEEE/ISO/IEC standard. Quality characteristics (ISO/IEC 25010:2023), V&V coverage gates (IEEE 1012:2016), and architecture evaluation (ISO/IEC 42030:2019) are enforced as mandatory output sections — not optional guidance.
+
 ### :octicons-stack-16: 4 V-Model Levels
 
 Progressive traceability from the top of the V to the bottom:
