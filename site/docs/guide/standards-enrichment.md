@@ -11,9 +11,9 @@ Every V-Model command now includes explicit `## Governing Standards` sections th
 
 ## Overview
 
-Standards enrichment (Phase B, v0.6.0) addressed a gap: earlier command versions referenced standards in prose descriptions but didn't structure their output sections around them. A `system-design.md` command might mention "IEEE 1016" somewhere in its instructions, but the generated artifact didn't have a section explicitly cross-referencing its four views to the IEEE 1016 clauses that require them.
+Standards enrichment (v0.6.0) addressed a gap: earlier command versions referenced standards in prose descriptions but didn't structure their output sections around them. A `system-design.md` command might mention "IEEE 1016" somewhere in its instructions, but the generated artifact didn't have a section explicitly cross-referencing its four views to the IEEE 1016 clauses that require them.
 
-Phase B changed this for all 11 base commands. Each command now:
+The v0.6.0 release changed this for all 11 base commands. Each command now:
 
 1. Contains a `## Governing Standards` table listing every standard that governs the command's output
 2. Enforces standard-specific output sections (not just text references)
@@ -25,7 +25,7 @@ This matters for audits. When a certification authority asks "what standard gove
 
 ## Standards by V-Cycle Layer
 
-The following table shows the governing standards for each command layer. **Bold** standards were newly integrated in Phase B (v0.6.0). Safety extensions are delivered by domain overlays and are not listed here — see [Domain Overlay Architecture](domain-overlays.md).
+The following table shows the governing standards for each command layer. **Bold** standards were newly integrated in v0.6.0. Safety extensions are delivered by domain overlays and are not listed here — see [Domain Overlay Architecture](domain-overlays.md).
 
 | V-Cycle Layer | Command | Governing Standards |
 |---|---|---|
@@ -44,7 +44,7 @@ The following table shows the governing standards for each command layer. **Bold
 | **Test Results** | `test-results` | **ISO/IEC 29119-3:2013** |
 | **Traceability** | `trace` | **IEEE 1012:2016**, **ISO/IEC/IEEE 15289:2019**, IEEE 29148:2018 |
 
-**Total:** 26 unique standards (17 best-practice + 9 safety-specific). All 9 Phase B standards are now integrated into the base commands.
+**Total:** 26 unique standards (17 best-practice + 9 safety-specific). All 9 standards added in v0.6.0 are now integrated into the base commands.
 
 ---
 

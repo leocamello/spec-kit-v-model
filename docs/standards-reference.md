@@ -44,10 +44,10 @@ standards fall into two categories:
   safety and regulatory requirements (automotive, aviation, medical, industrial).
   They are activated per project configuration.
 
-> **Phase B complete (v0.6.0):** All 9 new best-practice standards proposed in
+> **Standards Enrichment complete (v0.6.0):** All 9 new best-practice standards proposed in
 > §2.1–2.2 have been integrated into the base commands. All 3 phases of the
 > Implementation Roadmap (§3) are complete. §1.1 and §1.2 below reflect the
-> current post-Phase-B state.
+> current post-v0.6.0 state.
 
 ### 1.1 Master List of All Standards Referenced
 
@@ -92,8 +92,8 @@ standards fall into two categories:
 
 ### 1.2 Standards Mapped to Each V-Cycle Layer
 
-> **Updated for v0.6.0 (Phase B complete).** Every column reflects the current
-> post-Phase-B state of the base commands. Safety extensions are delivered by
+> **Updated for v0.6.0 (Standards Enrichment complete).** Every column reflects the current
+> post-v0.6.0 state of the base commands. Safety extensions are delivered by
 > domain overlay files (`commands/overlays/{domain}/`).
 
 | V-Cycle Layer | Command | 🟢 Best Practice Standard | 🔴 Safety Extensions (§-sections) |
@@ -113,7 +113,7 @@ standards fall into two categories:
 | **Impact Analysis** | `impact-analysis.md` | **IEEE 828-2012** (§6.3 Configuration Control, CCB review) | ISO 26262-8 §8 (Safety-Impacted Item Assessment, ASIL Re-evaluation), DO-178C §7 (Change Control, Problem Reporting), IEC 62304 §6/§8 (Software Maintenance, CM by Safety Class) |
 | **Test Results** | `test-results.md` | **ISO/IEC 29119-3:2013** (Test Status Report §9.2, Test Completion Report §9.3) | ISO 26262-6 §6.7 Table 12 (ASIL Coverage Metrics), DO-178C §6.4/§11 (Test Evidence by DAL), IEC 62304 §5.5/§5.6/§5.7 (Test Results by Safety Class) |
 
-> **Bold** standards were added in Phase B (v0.6.0). Every layer now has at least
+> **Bold** standards were added in v0.6.0. Every layer now has at least
 > one explicit best-practice governing standard — the original goal of this
 > standards programme.
 
@@ -260,9 +260,9 @@ standards fall into two categories:
   constraints section, ensuring that security considerations are built into the
   design specification, not bolted on later.
 
-#### Phase B Additions (v0.6.0)
+#### Standards Enrichment Additions (v0.6.0)
 
-The following 11 standards were added in Phase B (v0.6.0). See §2.2 for the
+The following 11 standards were added in v0.6.0. See §2.2 for the
 full rationale on ISO/IEC 25010:2023, IEEE 1012:2016, ISO/IEC 42030:2019,
 ISO/IEC/IEEE 12207:2017, IEEE 1028:2008, ISO/IEC 20246:2017, IEEE 828-2012,
 ISO 19011:2018, and ISO/IEC/IEEE 15289:2019.
@@ -650,16 +650,16 @@ incrementally composable.
 
 ---
 
-## 5. Summary (v0.6.0 — Phase B Complete)
+## 5. Summary (v0.6.0 — Standards Enrichment Complete)
 
 The spec-kit V-Model extension is built on a comprehensive foundation of
 **19 best-practice standards** and **7 safety-specific standards** — 26 total.
-Phase B (v0.6.0) integrated **11 new best-practice standards** that filled all
+v0.6.0 integrated **11 new best-practice standards** that filled all
 remaining gaps, deepened rigor across every layer, and extended coverage to
 previously unstandarded commands.
 
 The key insight is structural: the extension cleanly separates best-practice
-concerns from safety extensions. The Phase B enhancements preserved and
+concerns from safety extensions. The v0.6.0 enhancements preserved and
 strengthened this architecture — adding cross-cutting quality attributes
 (ISO 25010), filling the acceptance-test gap (IEEE 1012), completing the
 architecture describe→evaluate cycle (ISO 42030), and formalizing review and

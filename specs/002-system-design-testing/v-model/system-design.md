@@ -5,7 +5,7 @@
 **Status**: Draft
 **Source**: `specs/002-system-design-testing/v-model/requirements.md`
 
-**Evolution History (Phase B — Standards Enrichment):** This document was evolved from its original 13-component design to incorporate ISO/IEC 25010:2023 quality attribute analysis (Step 6). Lifecycle suspect analysis was performed on all SYS components against the deprecated parent requirements per `commands/system-design.md` Step 3 (Lifecycle Rules):
+**Evolution History (Standards Enrichment):** This document was evolved from its original 13-component design to incorporate ISO/IEC 25010:2023 quality attribute analysis (Step 6). Lifecycle suspect analysis was performed on all SYS components against the deprecated parent requirements per `commands/system-design.md` Step 3 (Lifecycle Rules):
 
 - **REQ-035** `[DEPRECATED — Superseded by REQ-038]`: Lifecycle check — no SYS component lists REQ-035 as a parent. SYS-001 traces to superseding REQ-038 (system-design command with generic overlay framing). No SUSPECT action needed.
 - **REQ-036** `[DEPRECATED — Superseded by REQ-039]`: Lifecycle check — no SYS component lists REQ-036 as a parent. SYS-003 traces to superseding REQ-039 (system-test command with generic overlay framing). No SUSPECT action needed.

@@ -64,7 +64,7 @@ def validate_requirements(text: str) -> dict:
             issues.append("Missing 'Requirements' section")
 
         if not _section_exists(sections, "Quality Characteristics"):
-            issues.append("Missing 'Quality Characteristics Coverage' section (ISO/IEC 25010:2023 — Phase B)")
+            issues.append("Missing 'Quality Characteristics Coverage' section (ISO/IEC 25010:2023)")
 
     # Check for at least one REQ block
     req_pattern = re.compile(r"REQ-(?:[A-Z]+-)?[0-9]{3}")
@@ -113,7 +113,7 @@ def validate_acceptance_plan(text: str) -> dict:
         issues.append("Missing 'Coverage Summary' section")
 
     if not _section_exists(sections, "Governing Standards"):
-        issues.append("Missing 'Governing Standards' section (Phase B)")
+        issues.append("Missing 'Governing Standards' section")
 
     total_checks = 6
     failed = min(len(issues), total_checks)
@@ -184,9 +184,9 @@ def validate_system_design(text: str) -> dict:
         issues.append("No SYS-NNN identifiers found")
 
     if not _section_exists(sections, "Quality Attribute"):
-        issues.append("Missing 'Quality Attribute Coverage' section (ISO/IEC 25010:2023 — Phase B)")
+        issues.append("Missing 'Quality Attribute Coverage' section (ISO/IEC 25010:2023)")
     if not _section_exists(sections, "Governing Standards"):
-        issues.append("Missing 'Governing Standards' section (Phase B)")
+        issues.append("Missing 'Governing Standards' section")
 
     total_checks = 6
     failed = min(len(issues), total_checks)
@@ -217,9 +217,9 @@ def validate_system_test(text: str) -> dict:
         issues.append("Missing 'Coverage' section")
 
     if not _section_exists(sections, "V&V Coverage Gate"):
-        issues.append("Missing 'V&V Coverage Gate' section (IEEE 1012:2016 — Phase B)")
+        issues.append("Missing 'V&V Coverage Gate' section (IEEE 1012:2016)")
     if not _section_exists(sections, "Governing Standards"):
-        issues.append("Missing 'Governing Standards' section (Phase B)")
+        issues.append("Missing 'Governing Standards' section")
 
     total_checks = 5
     failed = min(len(issues), total_checks)
@@ -258,9 +258,9 @@ def validate_architecture_design(text: str) -> dict:
         issues.append("Missing 'Coverage' section")
 
     if not _section_exists(sections, "Architecture Evaluation"):
-        issues.append("Missing 'Architecture Evaluation' section (ISO/IEC 42030:2019 — Phase B)")
+        issues.append("Missing 'Architecture Evaluation' section (ISO/IEC 42030:2019)")
     if not _section_exists(sections, "Governing Standards"):
-        issues.append("Missing 'Governing Standards' section (Phase B)")
+        issues.append("Missing 'Governing Standards' section")
 
     total_checks = 8
     failed = min(len(issues), total_checks)
@@ -301,9 +301,9 @@ def validate_integration_test(text: str) -> dict:
             issues.append(f"Missing technique: '{technique}'")
 
     if not _section_exists(sections, "V&V Coverage Gate"):
-        issues.append("Missing 'V&V Coverage Gate' section (IEEE 1012:2016 — Phase B)")
+        issues.append("Missing 'V&V Coverage Gate' section (IEEE 1012:2016)")
     if not _section_exists(sections, "Governing Standards"):
-        issues.append("Missing 'Governing Standards' section (Phase B)")
+        issues.append("Missing 'Governing Standards' section")
 
     total_checks = 5 + len(techniques)
     failed = min(len(issues), total_checks)
@@ -348,7 +348,7 @@ def validate_module_design(text: str) -> dict:
         issues.append("Missing 'Coverage Summary' section")
 
     if not _section_exists(sections, "Governing Standards"):
-        issues.append("Missing 'Governing Standards' section (Phase B)")
+        issues.append("Missing 'Governing Standards' section")
 
     total_checks = 9
     failed = min(len(issues), total_checks)
@@ -402,7 +402,7 @@ def validate_unit_test(text: str) -> dict:
         issues.append("No Dependency & Mock Registry sections found")
 
     if not _section_exists(sections, "Governing Standards"):
-        issues.append("Missing 'Governing Standards' section (Phase B)")
+        issues.append("Missing 'Governing Standards' section")
 
     total_checks = 8
     failed = min(len(issues), total_checks)

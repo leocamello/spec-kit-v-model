@@ -46,7 +46,7 @@ The extension provides **14 commands** covering four V-Model levels plus cross-c
 | **v0.3.0** | 2026-02-21 | `architecture-design`, `integration-test` commands, triple-matrix (A + B + C), CROSS-CUTTING module tag, consolidated fixture pattern |
 | **v0.4.0** | 2026-02-22 | `module-design`, `unit-test` commands, four-tier ID schema, quadruple-matrix (A + B + C + D), id-schema-guide documentation |
 | **v0.5.0** | 2026-04-06 | `hazard-analysis`, `impact-analysis`, `peer-review`, `test-results`, `audit-report` commands, Matrix H, 14 agent definitions, 4× test growth |
-| **v0.6.0** | 2026-04-23 | Domain Overlay Architecture (36 overlay files), ID Lifecycle Model (deprecation + suspect cascade), Standards Enrichment (26 standards, Phase B sections in all 11 commands), features 002–006 evolved |
+| **v0.6.0** | 2026-04-23 | Domain Overlay Architecture (36 overlay files), ID Lifecycle Model (deprecation + suspect cascade), Standards Enrichment (26 standards, Governing Standards sections in all 11 commands), features 002–006 evolved |
 
 For detailed release notes, see the [Changelog](changelog.md).
 

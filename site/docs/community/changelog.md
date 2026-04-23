@@ -26,7 +26,7 @@ All notable changes to the V-Model Extension Pack are documented here. The forma
 - Added suspect cascade: downstream items automatically marked `[SUSPECT — Parent {ID} deprecated]` when parent is deprecated
 - Each command now includes a "Lifecycle Rules" section governing evolution behavior
 
-### Changed — Standards Enrichment (Phase B)
+### Changed — Standards Enrichment
 
 - Enriched all 11 base commands with explicit `## Governing Standards` sections
 - Integrated ISO/IEC 25010:2023 quality characteristics into requirements (NFR section) and system-design output
@@ -38,7 +38,7 @@ All notable changes to the V-Model Extension Pack are documented here. The forma
 
 - Evolved V-Model artifact chains for features 002–005e through ID lifecycle model
 - Created complete V-Model chain for feature 006 (foundation infrastructure)
-- All 89 structural evals updated to validate Phase B sections; 364 BATS tests still pass
+- All 89 structural evals updated to validate new standards sections; 364 BATS tests still pass
 
 ### Stats
 
@@ -49,7 +49,7 @@ All notable changes to the V-Model Extension Pack are documented here. The forma
 | Standards referenced | 17 | 26 |
 | Structural evals | 89 | 89 |
 | BATS tests | 364 | 364 |
-| Phase B sections in artifacts | 0 | 11 commands × 2+ sections |
+| Standards sections in artifacts | 0 | 11 commands × 2+ sections |
 
 ---
 
