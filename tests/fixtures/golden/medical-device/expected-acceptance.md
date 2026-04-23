@@ -148,3 +148,11 @@ inspection per IEC 62304 and ISO 15197 compliance obligations.
 | REQ-CN-001 | 3 (ATP-CN-001-A, ATP-CN-001-B, ATP-CN-001-C) | 3 (SCN-CN-001-A1, SCN-CN-001-B1, SCN-CN-001-C1) | ⬜ Untested |
 
 **Coverage: 100%** — All 5 requirements have test cases and scenarios (including negative/error paths).
+
+## Governing Standards
+
+| Standard | Scope | How Used |
+|---|---|---|
+| **IEEE 1012:2016** | System, software, and hardware V&V | Primary V&V framework: entry/exit criteria, validation vs. verification distinction, V&V traceability |
+| **ISO/IEC 25010:2023** | Systems and software quality models | Quality-in-use characteristics for acceptance criteria coverage |
+| **ISO/IEC/IEEE 29119-4:2021** | Test design techniques | BDD scenario structure, test case design patterns |

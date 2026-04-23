@@ -46,3 +46,11 @@ Each requirement has one or more test cases, and each test case has one or more 
 | REQ-003 | 1 (ATP-003-A) | 1 (SCN-003-A1) | ⬜ Untested |
 
 **Coverage: 100%** — All requirements have test cases.
+
+## Governing Standards
+
+| Standard | Scope | How Used |
+|---|---|---|
+| **IEEE 1012:2016** | System, software, and hardware V&V | Primary V&V framework: entry/exit criteria, validation vs. verification distinction, V&V traceability |
+| **ISO/IEC 25010:2023** | Systems and software quality models | Quality-in-use characteristics for acceptance criteria coverage |
+| **ISO/IEC/IEEE 29119-4:2021** | Test design techniques | BDD scenario structure, test case design patterns |

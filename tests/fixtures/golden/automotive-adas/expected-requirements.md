@@ -32,6 +32,15 @@
 **Rationale:** Excessive false activations erode driver trust, may cause rear-end collisions from unexpected deceleration, and constitute a safety hazard. This threshold aligns with industry benchmarks for production AEB systems and is required for ISO 26262 ASIL-D hazard analysis acceptance criteria.
 **Verification Method:** Analysis
 
+#### Quality Characteristics Coverage (ISO/IEC 25010:2023)
+
+| Quality Characteristic | Relevant Requirements | Notes |
+|------------------------|----------------------|-------|
+| Reliability | REQ-NF-001 | False positive rate and fault tolerance |
+| Performance Efficiency | REQ-001 | Sensor fusion at 20 Hz update rate |
+| Security | REQ-IF-001 | CAN-FD and Ethernet communication interfaces |
+| Safety | REQ-002, REQ-CN-001 | Emergency braking activation and fail-safe degradation |
+
 ### Interface Requirements
 
 #### REQ-IF-001: Sensor Fusion Data Interface
@@ -57,3 +66,11 @@
 | Interface | 1 |
 | Constraint | 1 |
 | **Total** | **5** |
+
+## Governing Standards
+
+| Standard | Scope | How Used |
+|---|---|---|
+| **IEEE 29148:2018** | Requirements engineering processes | Primary framework for requirement types, quality criteria, and traceability |
+| **ISO/IEC 25010:2023** | Systems and software quality models | Quality characteristics taxonomy for non-functional requirements |
+| **INCOSE Guide for Writing Requirements** | Requirement authoring best practices | 8-criterion quality validation checklist |

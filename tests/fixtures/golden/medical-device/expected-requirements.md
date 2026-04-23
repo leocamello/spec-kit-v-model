@@ -32,6 +32,15 @@
 **Rationale:** Measurement accuracy directly affects therapeutic decisions and patient safety. This requirement aligns with ISO 15197:2013 Section 6.3 accuracy criteria for blood glucose monitoring systems.
 **Verification Method:** Analysis
 
+#### Quality Characteristics Coverage (ISO/IEC 25010:2023)
+
+| Quality Characteristic | Relevant Requirements | Notes |
+|------------------------|----------------------|-------|
+| Reliability | REQ-NF-001 | Measurement accuracy and fault tolerance |
+| Performance Efficiency | REQ-001 | 5-minute sampling interval |
+| Security | REQ-IF-001 | Encrypted BLE communication |
+| Safety | REQ-002 | Alarm escalation prevents harm |
+
 ### Interface Requirements
 
 #### REQ-IF-001: Bluetooth Low Energy Connectivity
@@ -57,3 +66,11 @@
 | Interface | 1 |
 | Constraint | 1 |
 | **Total** | **5** |
+
+## Governing Standards
+
+| Standard | Scope | How Used |
+|---|---|---|
+| **IEEE 29148:2018** | Requirements engineering processes | Primary framework for requirement types, quality criteria, and traceability |
+| **ISO/IEC 25010:2023** | Systems and software quality models | Quality characteristics taxonomy for non-functional requirements |
+| **INCOSE Guide for Writing Requirements** | Requirement authoring best practices | 8-criterion quality validation checklist |

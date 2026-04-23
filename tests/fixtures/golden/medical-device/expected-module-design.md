@@ -776,3 +776,10 @@ typedef struct {
 | Total Parent Architecture Modules Covered | 11 / 11 (100%) |
 | Modules with Pseudocode | 11 / 11 (100%) |
 | **Forward Coverage (ARCH→MOD)** | **100%** |
+
+## Governing Standards
+
+| Standard | Full Name | Role in this Document |
+|----------|-----------|----------------------|
+| **IEEE 1016:2009** | IEEE Standard for Information Technology — Software Design Descriptions | Detailed design structure: algorithm specification, interface definition, data structure descriptions |
+| **ISO/IEC/IEEE 12207:2017** | Systems and Software Engineering — Software Life Cycle Processes | Lifecycle process governance (Clause 8.4 — Software Detailed Design): requirement allocation, algorithm specification completeness |

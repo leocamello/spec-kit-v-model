@@ -63,6 +63,9 @@ def validate_requirements(text: str) -> dict:
         if not _section_exists(sections, "Requirements"):
             issues.append("Missing 'Requirements' section")
 
+        if not _section_exists(sections, "Quality Characteristics"):
+            issues.append("Missing 'Quality Characteristics Coverage' section (ISO/IEC 25010:2023 — Phase B)")
+
     # Check for at least one REQ block
     req_pattern = re.compile(r"REQ-(?:[A-Z]+-)?[0-9]{3}")
     if not req_pattern.search(text):
@@ -71,7 +74,7 @@ def validate_requirements(text: str) -> dict:
     # Check heading hierarchy
     issues.extend(_check_heading_hierarchy(sections))
 
-    total_checks = 4  # header, content section, REQ block, heading hierarchy
+    total_checks = 5  # header, content section, quality characteristics, REQ block, heading hierarchy
     failed = min(len(issues), total_checks)
     score = max(0.0, 1.0 - failed / total_checks)
 
@@ -109,7 +112,10 @@ def validate_acceptance_plan(text: str) -> dict:
     if not _section_exists(sections, "Coverage Summary"):
         issues.append("Missing 'Coverage Summary' section")
 
-    total_checks = 5
+    if not _section_exists(sections, "Governing Standards"):
+        issues.append("Missing 'Governing Standards' section (Phase B)")
+
+    total_checks = 6
     failed = min(len(issues), total_checks)
     score = max(0.0, 1.0 - failed / total_checks)
 
@@ -177,7 +183,12 @@ def validate_system_design(text: str) -> dict:
     if not sys_pattern.search(text):
         issues.append("No SYS-NNN identifiers found")
 
-    total_checks = 4
+    if not _section_exists(sections, "Quality Attribute"):
+        issues.append("Missing 'Quality Attribute Coverage' section (ISO/IEC 25010:2023 — Phase B)")
+    if not _section_exists(sections, "Governing Standards"):
+        issues.append("Missing 'Governing Standards' section (Phase B)")
+
+    total_checks = 6
     failed = min(len(issues), total_checks)
     score = max(0.0, 1.0 - failed / total_checks)
 
@@ -205,7 +216,12 @@ def validate_system_test(text: str) -> dict:
     if not _section_exists(sections, "Coverage"):
         issues.append("Missing 'Coverage' section")
 
-    total_checks = 3
+    if not _section_exists(sections, "V&V Coverage Gate"):
+        issues.append("Missing 'V&V Coverage Gate' section (IEEE 1012:2016 — Phase B)")
+    if not _section_exists(sections, "Governing Standards"):
+        issues.append("Missing 'Governing Standards' section (Phase B)")
+
+    total_checks = 5
     failed = min(len(issues), total_checks)
     score = max(0.0, 1.0 - failed / total_checks)
 
@@ -241,7 +257,12 @@ def validate_architecture_design(text: str) -> dict:
     if not _section_exists(sections, "Coverage"):
         issues.append("Missing 'Coverage' section")
 
-    total_checks = 6
+    if not _section_exists(sections, "Architecture Evaluation"):
+        issues.append("Missing 'Architecture Evaluation' section (ISO/IEC 42030:2019 — Phase B)")
+    if not _section_exists(sections, "Governing Standards"):
+        issues.append("Missing 'Governing Standards' section (Phase B)")
+
+    total_checks = 8
     failed = min(len(issues), total_checks)
     score = max(0.0, 1.0 - failed / total_checks)
 
@@ -279,7 +300,12 @@ def validate_integration_test(text: str) -> dict:
         if technique.lower() not in text.lower():
             issues.append(f"Missing technique: '{technique}'")
 
-    total_checks = 3 + len(techniques)
+    if not _section_exists(sections, "V&V Coverage Gate"):
+        issues.append("Missing 'V&V Coverage Gate' section (IEEE 1012:2016 — Phase B)")
+    if not _section_exists(sections, "Governing Standards"):
+        issues.append("Missing 'Governing Standards' section (Phase B)")
+
+    total_checks = 5 + len(techniques)
     failed = min(len(issues), total_checks)
     score = max(0.0, 1.0 - failed / total_checks)
 
@@ -321,7 +347,10 @@ def validate_module_design(text: str) -> dict:
     if not _section_exists(sections, "Coverage"):
         issues.append("Missing 'Coverage Summary' section")
 
-    total_checks = 8
+    if not _section_exists(sections, "Governing Standards"):
+        issues.append("Missing 'Governing Standards' section (Phase B)")
+
+    total_checks = 9
     failed = min(len(issues), total_checks)
     score = max(0.0, 1.0 - failed / total_checks)
 
@@ -372,7 +401,10 @@ def validate_unit_test(text: str) -> dict:
     if not mock_registry.search(text):
         issues.append("No Dependency & Mock Registry sections found")
 
-    total_checks = 7
+    if not _section_exists(sections, "Governing Standards"):
+        issues.append("Missing 'Governing Standards' section (Phase B)")
+
+    total_checks = 8
     failed = min(len(issues), total_checks)
     score = max(0.0, 1.0 - failed / total_checks)
 

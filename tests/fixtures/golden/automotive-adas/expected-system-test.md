@@ -147,14 +147,31 @@ Test techniques are selected per ISO 29119-4 based on component type, risk profi
   * **Then** the Fault Manager commands SYS-004 to apply maximum braking (safe-state)
   * **And** logs DTC code 0xC003 (Dual Sensor Failure — Emergency Stop) to non-volatile memory
 
-## Coverage Summary
+## V&V Coverage Gate (IEEE 1012:2016)
 
-| SYS Component | Test Cases | Scenarios | Techniques Used |
-|---------------|-----------|-----------|-----------------|
-| SYS-001 | STP-001-A, STP-001-B | 3 | Boundary Value Analysis, Fault Injection |
+IEEE 1012:2016 §5.5 requires every system component to be exercised by at least one V&V activity. The table below confirms SYS→STP backward coverage for all active components.
+
+| SYS | Component Name | Assigned STPs | Status |
+|-----|----------------|---------------|--------|
+| SYS-001 | Glucose Sensor Interface | STP-001-A, STP-001-B | ✅ Covered |
+| SYS-002 | Signal Processing Engine | STP-002-A, STP-002-B | ✅ Covered |
+| SYS-003 | Alert Manager | STP-003-A, STP-003-B, STP-003-C | ✅ Covered |
+| SYS-004 | BLE Communication Module | STP-004-A, STP-004-B | ✅ Covered |
+| SYS-005 | Data Storage Manager | STP-005-A, STP-005-B | ✅ Covered |
+
+**V&V Gap Report**: No V&V gaps — all SYS-NNN components have at least one system-level test (STP-NNN-X). IEEE 1012:2016 §5.5 entry criterion satisfied.
+
+## Coverage Summary
 | SYS-002 | STP-002-A, STP-002-B | 3 | Boundary Value Analysis, Equivalence Partitioning |
 | SYS-003 | STP-003-A, STP-003-B | 3 | Boundary Value Analysis, Equivalence Partitioning |
 | SYS-004 | STP-004-A, STP-004-B, STP-004-C | 4 | Boundary Value Analysis, Fault Injection |
 | SYS-005 | STP-005-A, STP-005-B | 3 | Fault Injection |
 
 **Coverage: 100%** — All 5 system components have test cases and scenarios.
+
+## Governing Standards
+
+| Standard | Full Name | Role in this Document |
+|----------|-----------|----------------------|
+| **ISO/IEC/IEEE 29119** | Software and Systems Testing | Primary test standard: test techniques, test case structure, test scenario format |
+| **IEEE 1012:2016** | IEEE Standard for System, Software, and Hardware Verification and Validation | V&V governance: V&V Coverage Gate in §5.5; entry/exit criteria |

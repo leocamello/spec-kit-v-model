@@ -95,10 +95,31 @@ sequenceDiagram
 | ARCH-010 | SIL-0 | Export is non-safety-critical; input validation on date range parameters |
 | ARCH-011 | SIL-1 | Circular buffer with FIFO eviction; never blocks calling module (async write) |
 
-## Coverage Summary
+## Architecture Evaluation (ISO/IEC 42030:2019 / ISO/IEC 25010:2023)
 
-| Metric | Value |
-|--------|-------|
-| Total ARCH Modules | 11 |
+### Evaluation Scenarios
+
+| Scenario | Quality Concern (ISO 25010) | Architecture Response | Result |
+|----------|----------------------------|----------------------|--------|
+| Sensor disconnection during monitoring | Reliability (§4.2.2) | Stale-data alarm after 10-minute timeout; safe-state entry | ✅ Addressed |
+| BLE connection loss during alarm escalation | Reliability, Safety | SYS-003 fallback to on-device audible alarm only | ✅ Addressed |
+| High-frequency glucose readings | Performance Efficiency (§4.2.3) | Hardware abstraction layer enforces 5-minute minimum interval | ✅ Addressed |
+
+### Trade-off Assessment
+
+| Decision | Trade-off | Rationale |
+|----------|-----------|-----------|
+| Service-oriented decomposition | Flexibility vs. latency | Enables independent update of BLE stack; latency budget met by SPI 4 MHz |
+| Append-only data storage | Maintainability vs. storage cost | Audit trail for clinical review; 90-day rolling window bounds storage |
+
+## Coverage Summary
 | SYS Components Covered | 5 / 5 (100%) |
 | Cross-Cutting Modules | 1 (ARCH-011) |
+
+## Governing Standards
+
+| Standard | Full Name | Role in this Document |
+|----------|-----------|----------------------|
+| **IEEE 42010:2011** | Systems and Software Engineering — Architecture Description | Primary description standard: viewpoint definitions, architecture rationale |
+| **ISO/IEC 42030:2019** | Software, Systems and Enterprise — Architecture Evaluation | Architecture evaluation: scenario-based fitness-for-purpose analysis, trade-off assessment |
+| **ISO/IEC 25010:2023** | Systems and Software Quality Models | Quality attribute justification for architectural decisions |

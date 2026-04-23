@@ -141,9 +141,21 @@ Test techniques are selected per ISO 29119-4 to exercise interface contracts, da
   * **And** each entry has a monotonically increasing timestamp
   * **And** the Diagnostic Logger does not block any calling module (async write completes within 5 ms)
 
-## Coverage Summary
+## V&V Coverage Gate (IEEE 1012:2016)
 
-| ARCH Boundary | Test Cases | Scenarios | Techniques Used |
+IEEE 1012:2016 §5.6 requires every architecture module interface to be exercised by at least one V&V activity. The table below confirms ARCH→ITP backward coverage.
+
+| ARCH | Module Name | Assigned ITPs | Status |
+|------|-------------|---------------|--------|
+| ARCH-001 | Sensor Interface | ITP-001-A, ITP-001-B | ✅ Covered |
+| ARCH-002 | Signal Processing | ITP-002-A | ✅ Covered |
+| ARCH-003 | Alert Manager | ITP-003-A, ITP-003-B | ✅ Covered |
+| ARCH-004 | BLE Module | ITP-004-A, ITP-004-B | ✅ Covered |
+| ARCH-005 | Data Storage | ITP-005-A | ✅ Covered |
+
+**V&V Gap Report**: No V&V gaps — all ARCH-NNN interfaces have at least one integration test (ITP-NNN-X). IEEE 1012:2016 §5.6 entry criterion satisfied.
+
+## Coverage Summary
 |---------------|-----------|-----------|-----------------|
 | ARCH-001 → ARCH-002 | ITP-001-A, ITP-001-B | 3 | Interface Contract Testing, Interface Fault Injection |
 | ARCH-002 → ARCH-003 → ARCH-004 | ITP-002-A, ITP-002-B | 2 | Data Flow Testing, Interface Fault Injection |
@@ -154,3 +166,10 @@ Test techniques are selected per ISO 29119-4 to exercise interface contracts, da
 
 **Techniques**: Interface Contract Testing, Data Flow Testing, Interface Fault Injection, Concurrency & Race Condition Testing
 **Coverage: 100%** — All 11 architecture module boundaries have integration test cases.
+
+## Governing Standards
+
+| Standard | Full Name | Role in this Document |
+|----------|-----------|----------------------|
+| **ISO/IEC/IEEE 29119-4:2021** | Software and Systems Engineering — Software Testing — Part 4: Test Techniques | Primary test technique standard: Interface Contract Testing, Data Flow Testing, Fault Injection, Concurrency Testing |
+| **IEEE 1012:2016** | IEEE Standard for System, Software, and Hardware Verification and Validation | V&V governance: V&V Coverage Gate in §5.6; entry/exit criteria for integration test activities |

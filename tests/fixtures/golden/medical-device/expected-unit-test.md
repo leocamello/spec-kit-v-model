@@ -631,3 +631,10 @@ None — module is self-contained
 | Equivalence Partitioning | 7 | 32% |
 | Strict Isolation | 1 | 5% |
 | State Transition Testing | 5 | 23% |
+
+## Governing Standards
+
+| Standard | Full Name | Role in this Document |
+|----------|-----------|----------------------|
+| **ISO/IEC/IEEE 29119-4:2021** | Software and Systems Engineering — Software Testing — Part 4: Test Techniques | Primary test technique standard: white-box unit test techniques (Statement & Branch Coverage, BVA, Equivalence Partitioning, State Transition, Strict Isolation), Arrange/Act/Assert scenario format |
+| **IEEE 1012:2016** | IEEE Standard for System, Software, and Hardware Verification and Validation | V&V governance: Coverage Gate §5.7; ensures every module has at least one white-box V&V activity |

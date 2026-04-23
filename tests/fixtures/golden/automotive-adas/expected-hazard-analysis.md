@@ -124,3 +124,10 @@ receives a unique `HAZ-NNN` identifier and is linked to risk control measures (`
 ## Uncovered Components
 
 None — full coverage achieved.
+
+## Governing Standards
+
+| Standard | Full Name | Role in this Document |
+|----------|-----------|----------------------|
+| **ISO 26262-3:2018** | Road vehicles — Functional safety — Part 3: Concept phase | HARA: hazard identification, ASIL assignment, safety goals |
+| **IEC 60812:2018** | Failure modes and effects analysis (FMEA) | Systematic FMEA methodology: failure mode identification, severity classification, detectability rating |

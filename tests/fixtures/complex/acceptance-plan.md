@@ -136,3 +136,11 @@ NOTE: This fixture includes an orphaned test case (ATP-999-A) to test orphan det
 | REQ-CN-001 | 1 | 1 | ⬜ Untested |
 
 **Coverage: 100%** — All requirements have test cases. ATP-999-A is orphaned (no matching requirement).
+
+## Governing Standards
+
+| Standard | Scope | How Used |
+|---|---|---|
+| **IEEE 1012:2016** | System, software, and hardware V&V | Primary V&V framework: entry/exit criteria, validation vs. verification distinction, V&V traceability |
+| **ISO/IEC 25010:2023** | Systems and software quality models | Quality-in-use characteristics for acceptance criteria coverage |
+| **ISO/IEC/IEEE 29119-4:2021** | Test design techniques | BDD scenario structure, test case design patterns |

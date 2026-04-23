@@ -66,6 +66,16 @@ Each component traces to one or more parent requirements via the "Parent Require
 | HIGHWAY | Vehicle moving at 60–200 km/h (highway, high-speed roads) |
 | SENSOR_DEGRADED | One or more sensors reporting fault; system in fallback mode |
 
+## Quality Attribute Coverage (ISO/IEC 25010:2023)
+
+| Quality Characteristic | System Components Addressing It | Design Decision |
+|------------------------|--------------------------------|-----------------|
+| Reliability | SYS-001, SYS-002 | Redundant sensor sampling with CRC validation |
+| Performance Efficiency | SYS-001 | 5-minute sampling interval enforced at hardware abstraction layer |
+| Security | SYS-004 | BLE 5.0 encrypted GATT profile |
+| Safety | SYS-002, SYS-003 | Calibration bounds enforcement and alarm escalation |
+| Maintainability | SYS-005 | Modular data storage with CSV/PDF export interfaces |
+
 ## Coverage Summary
 
 | Metric | Value |
@@ -81,3 +91,10 @@ Each component traces to one or more parent requirements via the "Parent Require
 | REQ-DR-001 | The system SHALL maintain a maximum end-to-end latency of 50 ms from radar frame reception to brake command output | SYS-001, SYS-003, SYS-004 | Architectural constraint: TTC calculation and braking actuation must complete within one radar frame period to meet ASIL-D response time |
 | REQ-DR-002 | The system SHALL operate in single-sensor degraded mode (radar-only or camera-only) when one sensor subsystem fails, with automatic DTC logging | SYS-005 | Safety constraint: discovered during dependency analysis; complete AEB shutdown on single sensor failure is unacceptable for ASIL-D |
 | REQ-DR-003 | The system SHALL engage hydraulic backup braking within 10 ms when the brake-by-wire primary CAN bus is unavailable | SYS-004, SYS-005 | Safety constraint: brake-by-wire single point of failure requires mechanical fallback path |
+
+## Governing Standards
+
+| Standard | Full Name | Role in this Document |
+|----------|-----------|----------------------|
+| **IEEE 1016:2009** | IEEE Standard for Information Technology — Software Design Descriptions | Primary structure standard: four mandatory design views |
+| **ISO/IEC 25010:2023** | Systems and Software Quality Models | Quality attribute taxonomy applied in Quality Attribute Coverage section |

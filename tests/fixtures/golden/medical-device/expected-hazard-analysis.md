@@ -119,3 +119,10 @@ receives a unique `HAZ-NNN` identifier and is linked to risk control measures (`
 ## Uncovered Components
 
 None — full coverage achieved.
+
+## Governing Standards
+
+| Standard | Full Name | Role in this Document |
+|----------|-----------|----------------------|
+| **ISO 14971:2019** | Application of risk management to medical devices | Primary risk management framework: hazard identification, risk estimation, risk evaluation, risk control |
+| **IEC 62304:2006/AMD1:2015** | Medical device software — Software life cycle processes | Software safety classification and risk management integration |

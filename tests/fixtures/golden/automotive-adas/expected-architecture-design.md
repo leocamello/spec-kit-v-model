@@ -97,6 +97,23 @@ The end-to-end sensor-to-actuator path is ASIL-D. Decomposition applies:
 - **Fusion and decision** (ARCH-005 to ARCH-008): ASIL-D (no decomposition; single critical path with internal redundancy)
 - **Monitoring** (ARCH-009 to ARCH-011): ASIL-B(D) on monitoring, ASIL-D on watchdog (independent safety mechanism)
 
+## Architecture Evaluation (ISO/IEC 42030:2019 / ISO/IEC 25010:2023)
+
+### Evaluation Scenarios
+
+| Scenario | Quality Concern (ISO 25010) | Architecture Response | Result |
+|----------|----------------------------|----------------------|--------|
+| Sensor disconnection during monitoring | Reliability (§4.2.2) | Stale-data alarm after 10-minute timeout; safe-state entry | ✅ Addressed |
+| BLE connection loss during alarm escalation | Reliability, Safety | SYS-003 fallback to on-device audible alarm only | ✅ Addressed |
+| High-frequency glucose readings | Performance Efficiency (§4.2.3) | Hardware abstraction layer enforces 5-minute minimum interval | ✅ Addressed |
+
+### Trade-off Assessment
+
+| Decision | Trade-off | Rationale |
+|----------|-----------|-----------|
+| Service-oriented decomposition | Flexibility vs. latency | Enables independent update of BLE stack; latency budget met by SPI 4 MHz |
+| Append-only data storage | Maintainability vs. storage cost | Audit trail for clinical review; 90-day rolling window bounds storage |
+
 ## Coverage Summary
 
 | Metric | Value |
@@ -104,3 +121,11 @@ The end-to-end sensor-to-actuator path is ASIL-D. Decomposition applies:
 | Total ARCH Modules | 11 |
 | SYS Components Covered | 5 / 5 (100%) |
 | Cross-Cutting Modules | 1 (ARCH-011) |
+
+## Governing Standards
+
+| Standard | Full Name | Role in this Document |
+|----------|-----------|----------------------|
+| **IEEE 42010:2011** | Systems and Software Engineering — Architecture Description | Primary description standard: viewpoint definitions, architecture rationale |
+| **ISO/IEC 42030:2019** | Software, Systems and Enterprise — Architecture Evaluation | Architecture evaluation: scenario-based fitness-for-purpose analysis, trade-off assessment |
+| **ISO/IEC 25010:2023** | Systems and Software Quality Models | Quality attribute justification for architectural decisions |

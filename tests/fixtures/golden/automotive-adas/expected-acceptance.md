@@ -104,3 +104,11 @@ per ISO 26262 ASIL-D verification requirements.
 | REQ-CN-001 | 2 (ATP-CN-001-A, ATP-CN-001-B) | 2 (SCN-CN-001-A1, SCN-CN-001-B1) | ⬜ Untested |
 
 **Coverage: 100%** — All 5 requirements have test cases and scenarios.
+
+## Governing Standards
+
+| Standard | Scope | How Used |
+|---|---|---|
+| **IEEE 1012:2016** | System, software, and hardware V&V | Primary V&V framework: entry/exit criteria, validation vs. verification distinction, V&V traceability |
+| **ISO/IEC 25010:2023** | Systems and software quality models | Quality-in-use characteristics for acceptance criteria coverage |
+| **ISO/IEC/IEEE 29119-4:2021** | Test design techniques | BDD scenario structure, test case design patterns |
