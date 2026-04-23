@@ -55,17 +55,17 @@ setup() {
 # ============================================================
 
 @test "parity: linear downward REQ-001" {
-    run python3 "$PARITY_VALIDATOR" "$PROJECT_ROOT" --combo linear downward REQ-001 "tests/fixtures/impact/linear"
+    run python3 "$PARITY_VALIDATOR" "$PROJECT_ROOT" --combo linear downward REQ-001 "tests/fixtures/commands/impact-analysis/inputs/linear"
     assert_success
 }
 
 @test "parity: linear upward MOD-001" {
-    run python3 "$PARITY_VALIDATOR" "$PROJECT_ROOT" --combo linear upward MOD-001 "tests/fixtures/impact/linear"
+    run python3 "$PARITY_VALIDATOR" "$PROJECT_ROOT" --combo linear upward MOD-001 "tests/fixtures/commands/impact-analysis/inputs/linear"
     assert_success
 }
 
 @test "parity: linear full SYS-001" {
-    run python3 "$PARITY_VALIDATOR" "$PROJECT_ROOT" --combo linear full SYS-001 "tests/fixtures/impact/linear"
+    run python3 "$PARITY_VALIDATOR" "$PROJECT_ROOT" --combo linear full SYS-001 "tests/fixtures/commands/impact-analysis/inputs/linear"
     assert_success
 }
 
@@ -74,17 +74,17 @@ setup() {
 # ============================================================
 
 @test "parity: diamond downward REQ-001" {
-    run python3 "$PARITY_VALIDATOR" "$PROJECT_ROOT" --combo diamond downward REQ-001 "tests/fixtures/impact/diamond"
+    run python3 "$PARITY_VALIDATOR" "$PROJECT_ROOT" --combo diamond downward REQ-001 "tests/fixtures/commands/impact-analysis/inputs/diamond"
     assert_success
 }
 
 @test "parity: diamond upward MOD-002" {
-    run python3 "$PARITY_VALIDATOR" "$PROJECT_ROOT" --combo diamond upward MOD-002 "tests/fixtures/impact/diamond"
+    run python3 "$PARITY_VALIDATOR" "$PROJECT_ROOT" --combo diamond upward MOD-002 "tests/fixtures/commands/impact-analysis/inputs/diamond"
     assert_success
 }
 
 @test "parity: diamond full ARCH-004" {
-    run python3 "$PARITY_VALIDATOR" "$PROJECT_ROOT" --combo diamond full ARCH-004 "tests/fixtures/impact/diamond"
+    run python3 "$PARITY_VALIDATOR" "$PROJECT_ROOT" --combo diamond full ARCH-004 "tests/fixtures/commands/impact-analysis/inputs/diamond"
     assert_success
 }
 
@@ -93,17 +93,17 @@ setup() {
 # ============================================================
 
 @test "parity: disconnected downward REQ-001" {
-    run python3 "$PARITY_VALIDATOR" "$PROJECT_ROOT" --combo disconnected downward REQ-001 "tests/fixtures/impact/disconnected"
+    run python3 "$PARITY_VALIDATOR" "$PROJECT_ROOT" --combo disconnected downward REQ-001 "tests/fixtures/commands/impact-analysis/inputs/disconnected"
     assert_success
 }
 
 @test "parity: disconnected downward REQ-002" {
-    run python3 "$PARITY_VALIDATOR" "$PROJECT_ROOT" --combo disconnected downward REQ-002 "tests/fixtures/impact/disconnected"
+    run python3 "$PARITY_VALIDATOR" "$PROJECT_ROOT" --combo disconnected downward REQ-002 "tests/fixtures/commands/impact-analysis/inputs/disconnected"
     assert_success
 }
 
 @test "parity: disconnected upward MOD-001" {
-    run python3 "$PARITY_VALIDATOR" "$PROJECT_ROOT" --combo disconnected upward MOD-001 "tests/fixtures/impact/disconnected"
+    run python3 "$PARITY_VALIDATOR" "$PROJECT_ROOT" --combo disconnected upward MOD-001 "tests/fixtures/commands/impact-analysis/inputs/disconnected"
     assert_success
 }
 

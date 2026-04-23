@@ -2,7 +2,7 @@
 
 BeforeAll {
     $ScriptsDir = Resolve-Path (Join-Path $PSScriptRoot '../../scripts/powershell')
-    $FixturesDir = Resolve-Path (Join-Path $PSScriptRoot '../fixtures/golden-peer-review')
+    $FixturesDir = Resolve-Path (Join-Path $PSScriptRoot '../fixtures/commands/peer-review/inputs')
 }
 
 Describe 'Peer-Review-Check' {

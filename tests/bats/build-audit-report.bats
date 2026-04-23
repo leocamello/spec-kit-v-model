@@ -1,7 +1,7 @@
 load "test_helper"
 
 AUDIT_SCRIPT="$SCRIPTS_DIR/build-audit-report.sh"
-AR_FIXTURES="$FIXTURES_DIR/audit-report"
+AR_FIXTURES="$FIXTURES_DIR/commands/audit-report"
 
 # ============================================================
 # Setup / Teardown
@@ -23,7 +23,7 @@ setup_fixture() {
     init_git_repo "$TEST_TEMP_DIR"
     # Then copy fixture files and commit them separately
     mkdir -p "$dest"
-    cp "$AR_FIXTURES/$fixture_name/"* "$dest/"
+    cp "$AR_FIXTURES/inputs/$fixture_name/"* "$dest/"
     git -C "$TEST_TEMP_DIR" add v-model
     git -C "$TEST_TEMP_DIR" commit --quiet -m "Add fixture"
 }
@@ -349,8 +349,8 @@ setup_fixture() {
     # Use orphaned-waiver fixture (no hazard-analysis.md) in a custom path
     init_git_repo "$TEST_TEMP_DIR"
     mkdir -p "$TEST_TEMP_DIR/nohaz"
-    cp "$AR_FIXTURES/orphaned-waiver/requirements.md" "$TEST_TEMP_DIR/nohaz/"
-    cp "$AR_FIXTURES/orphaned-waiver/traceability-matrix.md" "$TEST_TEMP_DIR/nohaz/"
+    cp "$AR_FIXTURES/inputs/orphaned-waiver/requirements.md" "$TEST_TEMP_DIR/nohaz/"
+    cp "$AR_FIXTURES/inputs/orphaned-waiver/traceability-matrix.md" "$TEST_TEMP_DIR/nohaz/"
     git -C "$TEST_TEMP_DIR" add nohaz
     git -C "$TEST_TEMP_DIR" commit --quiet -m "Add fixture"
     bash "$AUDIT_SCRIPT" "$TEST_TEMP_DIR/nohaz" --output "$TEST_TEMP_DIR/report.md" 2>/dev/null

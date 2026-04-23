@@ -3,14 +3,14 @@
 BeforeAll {
     $ScriptsDir = Resolve-Path (Join-Path $PSScriptRoot '../../scripts/powershell')
     $AuditScript = Join-Path $ScriptsDir 'Build-Audit-Report.ps1'
-    $FixturesDir = Resolve-Path (Join-Path $PSScriptRoot '../fixtures/audit-report')
+    $FixturesDir = Resolve-Path (Join-Path $PSScriptRoot '../fixtures/commands/audit-report')
 
     # Helper: copy fixture into a git-initialised temp dir
     function Setup-Fixture {
         param([string]$FixtureName, [string]$TempDir, [string]$FixturesDir)
         $dest = Join-Path $TempDir 'v-model'
         New-Item -ItemType Directory -Path $dest -Force | Out-Null
-        Copy-Item "$FixturesDir/$FixtureName/*" $dest -Force
+        Copy-Item "$FixturesDir/inputs/$FixtureName/*" $dest -Force
         Push-Location $TempDir
         git init --quiet 2>$null
         git config user.email 'test@example.com' 2>$null

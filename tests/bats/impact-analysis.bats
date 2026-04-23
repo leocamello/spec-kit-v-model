@@ -37,8 +37,8 @@ assert normalize(actual) == normalize(golden), (
 " <<< "$output"
 }
 
-IMPACT_DIR="$FIXTURES_DIR/impact"
-GOLDEN_IMPACT="$FIXTURES_DIR/golden-impact"
+IMPACT_DIR="$FIXTURES_DIR/commands/impact-analysis/inputs"
+GOLDEN_IMPACT="$FIXTURES_DIR/commands/impact-analysis/expected"
 
 # ============================================================
 # Minimal fixture: downward, upward, full

@@ -1,6 +1,6 @@
 load "test_helper"
 
-PEER_REVIEW_FIXTURES="$FIXTURES_DIR/golden-peer-review"
+PEER_REVIEW_FIXTURES="$FIXTURES_DIR/commands/peer-review/inputs"
 
 # === Clean report (0 findings) ===
 

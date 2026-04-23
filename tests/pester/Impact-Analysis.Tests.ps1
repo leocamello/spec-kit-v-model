@@ -4,8 +4,8 @@ BeforeAll {
     $ScriptsDir = Resolve-Path (Join-Path $PSScriptRoot '../../scripts/powershell')
     $ProjectRoot = Resolve-Path (Join-Path $PSScriptRoot '../..')
     $FixturesDir = Resolve-Path (Join-Path $PSScriptRoot '../fixtures')
-    $ImpactDir = Join-Path $FixturesDir 'impact'
-    $GoldenDir = Join-Path $FixturesDir 'golden-impact'
+    $ImpactDir = Join-Path $FixturesDir 'commands/impact-analysis/inputs'
+    $GoldenDir = Join-Path $FixturesDir 'commands/impact-analysis/expected'
 
     function Invoke-Impact {
         param([string[]]$Params)

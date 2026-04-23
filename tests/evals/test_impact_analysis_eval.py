@@ -16,8 +16,8 @@ from deepeval.test_case import LLMTestCase
 from tests.evals.metrics.structural import StructuralImpactAnalysisMetric
 
 FIXTURES_DIR = pathlib.Path(__file__).parent.parent / "fixtures"
-GOLDEN_DIR = FIXTURES_DIR / "golden-impact"
-IMPACT_DIR = FIXTURES_DIR / "impact"
+GOLDEN_DIR = FIXTURES_DIR / "commands/impact-analysis/expected"
+IMPACT_DIR = FIXTURES_DIR / "commands/impact-analysis/inputs"
 SCRIPTS_DIR = pathlib.Path(__file__).parent.parent.parent / "scripts" / "bash"
 
 
@@ -114,10 +114,10 @@ class TestImpactAnalysisGoldenComparison:
         ("minimal", ["--upward", "MOD-001"], "upward-MOD-001.json", None),
         ("minimal", ["--full", "SYS-001"], "full-SYS-001.json", None),
         ("complex", ["--downward", "REQ-001"], "downward-REQ-001.json", None),
-        ("linear", ["--downward", "REQ-001"], "downward-REQ-001.json", "impact"),
-        ("diamond", ["--downward", "REQ-001"], "downward-REQ-001.json", "impact"),
-        ("disconnected", ["--downward", "REQ-001"], "downward-REQ-001.json", "impact"),
-        ("disconnected", ["--downward", "REQ-002"], "downward-REQ-002.json", "impact"),
+        ("linear", ["--downward", "REQ-001"], "downward-REQ-001.json", "commands/impact-analysis/inputs"),
+        ("diamond", ["--downward", "REQ-001"], "downward-REQ-001.json", "commands/impact-analysis/inputs"),
+        ("disconnected", ["--downward", "REQ-001"], "downward-REQ-001.json", "commands/impact-analysis/inputs"),
+        ("disconnected", ["--downward", "REQ-002"], "downward-REQ-002.json", "commands/impact-analysis/inputs"),
     ])
     def test_matches_golden(self, fixture, args, golden_file, vmodel_base):
         """Script output matches golden reference after normalization."""
