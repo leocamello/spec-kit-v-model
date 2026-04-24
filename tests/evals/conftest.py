@@ -109,6 +109,56 @@ def automotive_adas_hazard_analysis():
 
 
 @pytest.fixture
+def flight_warning_computer_input():
+    return (GOLDEN_DIR / "flight-warning-computer" / "input-spec.md").read_text()
+
+
+@pytest.fixture
+def flight_warning_computer_requirements():
+    return (GOLDEN_DIR / "flight-warning-computer" / "expected-requirements.md").read_text()
+
+
+@pytest.fixture
+def flight_warning_computer_acceptance():
+    return (GOLDEN_DIR / "flight-warning-computer" / "expected-acceptance.md").read_text()
+
+
+@pytest.fixture
+def flight_warning_computer_system_design():
+    return (GOLDEN_DIR / "flight-warning-computer" / "expected-system-design.md").read_text()
+
+
+@pytest.fixture
+def flight_warning_computer_system_test():
+    return (GOLDEN_DIR / "flight-warning-computer" / "expected-system-test.md").read_text()
+
+
+@pytest.fixture
+def flight_warning_computer_architecture_design():
+    return (GOLDEN_DIR / "flight-warning-computer" / "expected-architecture-design.md").read_text()
+
+
+@pytest.fixture
+def flight_warning_computer_integration_test():
+    return (GOLDEN_DIR / "flight-warning-computer" / "expected-integration-test.md").read_text()
+
+
+@pytest.fixture
+def flight_warning_computer_module_design():
+    return (GOLDEN_DIR / "flight-warning-computer" / "expected-module-design.md").read_text()
+
+
+@pytest.fixture
+def flight_warning_computer_unit_test():
+    return (GOLDEN_DIR / "flight-warning-computer" / "expected-unit-test.md").read_text()
+
+
+@pytest.fixture
+def flight_warning_computer_hazard_analysis():
+    return (GOLDEN_DIR / "flight-warning-computer" / "expected-hazard-analysis.md").read_text()
+
+
+@pytest.fixture
 def fixture_dir():
     """Return the base fixtures directory path."""
     return FIXTURES_DIR

@@ -189,3 +189,26 @@ class TestArchitectureDesignQuality:
             create_architecture_completeness_metric(threshold=0.7),
             create_view_quality_metric(threshold=0.7),
         ])
+
+    @pytest.mark.eval
+    def test_golden_fwc_architecture_completeness(
+        self, flight_warning_computer_system_design, flight_warning_computer_architecture_design
+    ):
+        """Golden FWC architecture design meets completeness bar."""
+        tc = LLMTestCase(
+            input=flight_warning_computer_system_design,
+            actual_output=flight_warning_computer_architecture_design,
+            expected_output=(
+                "A Kruchten 4+1 architecture design decomposing the FWC SYS "
+                "components into 9 ARCH modules (ARINC 429 Bus Driver, Label Age "
+                "Monitor, NCD Flag Checker, Warning Threshold Evaluator, Priority "
+                "Arbiter, Audio Alert Driver, Annunciator Controller, Stick Shaker "
+                "Driver, BITE Manager) with four architectural views, parent SYS "
+                "traceability, DO-178C DAL-A safety constraints, and cross-cutting "
+                "BITE concern."
+            ),
+        )
+        assert_test(tc, [
+            create_architecture_completeness_metric(threshold=0.7),
+            create_view_quality_metric(threshold=0.7),
+        ])

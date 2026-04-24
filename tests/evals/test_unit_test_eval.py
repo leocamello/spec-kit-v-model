@@ -206,3 +206,24 @@ class TestUnitTestQuality:
             create_unit_coverage_quality_metric(threshold=0.7),
             create_technique_appropriateness_metric(threshold=0.7),
         ])
+
+    @pytest.mark.eval
+    def test_golden_fwc_unit_test_quality(
+        self, flight_warning_computer_module_design, flight_warning_computer_unit_test
+    ):
+        """Golden FWC unit test meets coverage and technique quality bar."""
+        tc = LLMTestCase(
+            input=flight_warning_computer_module_design,
+            actual_output=flight_warning_computer_unit_test,
+            expected_output=(
+                "A unit test plan covering all FWC MOD modules with UTP/UTS test "
+                "cases using DO-178C DAL-A required coverage (MC/DC), white-box "
+                "testing with mock registries for ARINC 429 hardware I/O, and "
+                "Arrange/Act/Assert test scenarios for each module's warning logic "
+                "and BITE functions."
+            ),
+        )
+        assert_test(tc, [
+            create_unit_coverage_quality_metric(threshold=0.7),
+            create_technique_appropriateness_metric(threshold=0.7),
+        ])

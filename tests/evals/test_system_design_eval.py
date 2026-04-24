@@ -188,3 +188,24 @@ class TestSystemDesignQuality:
             create_design_completeness_metric(threshold=0.7),
             create_view_quality_metric(threshold=0.7),
         ])
+
+    @pytest.mark.eval
+    def test_golden_fwc_design_completeness(
+        self, flight_warning_computer_requirements, flight_warning_computer_system_design
+    ):
+        """Golden FWC system design meets decomposition completeness bar."""
+        tc = LLMTestCase(
+            input=flight_warning_computer_requirements,
+            actual_output=flight_warning_computer_system_design,
+            expected_output=(
+                "An IEEE 1016 system design decomposing all 5 FWC warning functions "
+                "into SYS-NNN components (Air Data Interface, Warning Logic Engine, "
+                "Output Control) with DO-178C DAL-A safety annotations, ARINC 429 "
+                "interface specifications, four architectural views, and derived "
+                "requirements."
+            ),
+        )
+        assert_test(tc, [
+            create_design_completeness_metric(threshold=0.7),
+            create_view_quality_metric(threshold=0.7),
+        ])

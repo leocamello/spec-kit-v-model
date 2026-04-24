@@ -210,3 +210,25 @@ class TestModuleDesignQuality:
             create_module_completeness_metric(threshold=0.7),
             create_logic_quality_metric(threshold=0.7),
         ])
+
+    @pytest.mark.eval
+    def test_golden_fwc_module_completeness(
+        self, flight_warning_computer_architecture_design, flight_warning_computer_module_design
+    ):
+        """Golden FWC module design meets completeness bar."""
+        tc = LLMTestCase(
+            input=flight_warning_computer_architecture_design,
+            actual_output=flight_warning_computer_module_design,
+            expected_output=(
+                "A module design decomposing all FWC ARCH modules (ARINC 429 Bus "
+                "Driver, Label Age Monitor, NCD Flag Checker, Warning Threshold "
+                "Evaluator, Priority Arbiter, Audio Alert Driver, Annunciator "
+                "Controller, Stick Shaker Driver, BITE Manager) into MOD-NNN "
+                "specifications with pseudocode, state machines, data structures, "
+                "error handling, and DO-178C DAL-A safety constraints for each."
+            ),
+        )
+        assert_test(tc, [
+            create_module_completeness_metric(threshold=0.7),
+            create_logic_quality_metric(threshold=0.7),
+        ])

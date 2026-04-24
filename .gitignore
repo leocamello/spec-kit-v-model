@@ -1,5 +1,7 @@
 # Local configuration overrides
 *-config.local.yml
+.env
+.env.local
 
 # Python
 __pycache__/

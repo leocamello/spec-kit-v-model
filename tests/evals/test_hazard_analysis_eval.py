@@ -249,3 +249,41 @@ class TestHazardAnalysisQuality:
             ),
         )
         assert_test(tc, [create_operational_state_metric(threshold=0.7)])
+
+    @pytest.mark.eval
+    def test_golden_fwc_fmea_completeness(
+        self, flight_warning_computer_hazard_analysis, flight_warning_computer_system_design
+    ):
+        """Golden FWC FMEA covers all SYS with DO-178C DAL-A rigor."""
+        tc = LLMTestCase(
+            input=flight_warning_computer_system_design,
+            actual_output=flight_warning_computer_hazard_analysis,
+            expected_output=(
+                "A comprehensive FMEA analyzing all 3 FWC SYS components (Air Data "
+                "Interface, Warning Logic Engine, Output Control) with 9+ failure "
+                "modes including bus timeout, stale data, threshold corruption, logic "
+                "faults, and output failures. Severity ratings reflect DO-178C DAL-A "
+                "catastrophic consequence classification for missed warning functions."
+            ),
+        )
+        assert_test(tc, [
+            create_fmea_completeness_metric(threshold=0.7),
+            create_severity_assessment_metric(threshold=0.7),
+        ])
+
+    @pytest.mark.eval
+    def test_golden_fwc_operational_states(
+        self, flight_warning_computer_hazard_analysis, flight_warning_computer_system_design
+    ):
+        """Golden FWC FMEA analyzes failures across avionics operational states."""
+        tc = LLMTestCase(
+            input=flight_warning_computer_system_design,
+            actual_output=flight_warning_computer_hazard_analysis,
+            expected_output=(
+                "Hazard analysis covering FWC operational states (POWER_ON_SELF_TEST, "
+                "MONITORING, DEGRADED, MAINTENANCE) with failure modes analyzed per "
+                "state, ensuring DO-178C DAL-A Catastrophic/Major failure conditions "
+                "are mitigated in each state."
+            ),
+        )
+        assert_test(tc, [create_operational_state_metric(threshold=0.7)])

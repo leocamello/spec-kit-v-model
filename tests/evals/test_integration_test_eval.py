@@ -210,3 +210,25 @@ class TestIntegrationTestQuality:
             create_integration_coverage_quality_metric(threshold=0.7),
             create_technique_appropriateness_metric(threshold=0.7),
         ])
+
+    @pytest.mark.eval
+    def test_golden_fwc_integration_quality(
+        self, flight_warning_computer_architecture_design, flight_warning_computer_integration_test
+    ):
+        """Golden FWC integration test meets coverage and technique quality bar."""
+        tc = LLMTestCase(
+            input=flight_warning_computer_architecture_design,
+            actual_output=flight_warning_computer_integration_test,
+            expected_output=(
+                "An integration test plan covering all FWC ARCH module boundaries "
+                "with ITP/ITS test cases using DO-178C-appropriate techniques "
+                "(Interface Contract Testing for ARINC 429 data paths, Data Flow "
+                "Testing for warning command chains, Interface Fault Injection for "
+                "bus timeout and NCD flag scenarios, Concurrency & Race Condition "
+                "Testing for simultaneous warning activations)."
+            ),
+        )
+        assert_test(tc, [
+            create_integration_coverage_quality_metric(threshold=0.7),
+            create_technique_appropriateness_metric(threshold=0.7),
+        ])

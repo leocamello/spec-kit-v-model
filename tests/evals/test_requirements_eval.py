@@ -118,3 +118,22 @@ class TestRequirementsQuality:
         )
         metric = create_requirements_quality_metric(threshold=0.7)
         assert_test(tc, [metric])
+
+    @pytest.mark.eval
+    def test_golden_fwc_requirements_quality(
+        self, flight_warning_computer_requirements, flight_warning_computer_input
+    ):
+        """FWC golden requirements meet IEEE 29148 quality bar."""
+        tc = LLMTestCase(
+            input=flight_warning_computer_input,
+            actual_output=flight_warning_computer_requirements,
+            expected_output=(
+                "Requirements for the Flight Warning Computer covering 5 warning "
+                "functions (overspeed, stall, altitude alerting, GPWS, attitude limit) "
+                "with DO-178C DAL-A criticality annotations, REQ-NNN IDs, NFRs covering "
+                "activation latency and MC/DC coverage, and interface requirements for "
+                "ARINC 429 / ADIRU integration."
+            ),
+        )
+        metric = create_requirements_quality_metric(threshold=0.7)
+        assert_test(tc, [metric])

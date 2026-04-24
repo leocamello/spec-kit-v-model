@@ -212,3 +212,24 @@ class TestSystemTestQuality:
             create_test_coverage_quality_metric(threshold=0.7),
             create_technique_appropriateness_metric(threshold=0.7),
         ])
+
+    @pytest.mark.eval
+    def test_golden_fwc_system_test_quality(
+        self, flight_warning_computer_system_design, flight_warning_computer_system_test
+    ):
+        """Golden FWC system test meets coverage and technique quality bar."""
+        tc = LLMTestCase(
+            input=flight_warning_computer_system_design,
+            actual_output=flight_warning_computer_system_test,
+            expected_output=(
+                "A system test plan covering all 3 FWC SYS components (Air Data "
+                "Interface, Warning Logic Engine, Output Control) with STP/STS test "
+                "cases using DO-178C-appropriate techniques including MC/DC coverage "
+                "analysis, structural coverage criteria, and avionics safety "
+                "verification scenarios."
+            ),
+        )
+        assert_test(tc, [
+            create_test_coverage_quality_metric(threshold=0.7),
+            create_technique_appropriateness_metric(threshold=0.7),
+        ])

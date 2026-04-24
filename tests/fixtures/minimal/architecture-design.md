@@ -23,18 +23,21 @@ sequenceDiagram
 ## Interface View (API Contracts)
 
 ### ARCH-001: Sensor Driver
-- **Inputs:** I2C bus address, polling interval
-- **Outputs:** `SensorReading { value: float, timestamp: ISO8601, unit: string }`
+- **Protocol:** I2C (400 kHz fast mode)
+- **Inputs:** `uint8 i2c_address` (0x00–0x7F), `uint32 polling_interval_ms` (100–60000)
+- **Outputs:** `SensorReading { value: float32, timestamp: ISO8601, unit: string }`
 - **Exceptions:** `I2CTimeoutError`, `InvalidReadingError`
 
 ### ARCH-002: Alert Evaluator
-- **Inputs:** `SensorReading`, threshold configuration
+- **Protocol:** In-process function call
+- **Inputs:** `SensorReading`, `ThresholdConfig { low: float32, high: float32, unit: string }`
 - **Outputs:** `AlertEvent { level: enum(INFO|WARN|CRITICAL), message: string }`
 - **Exceptions:** `ThresholdConfigError`
 
 ### ARCH-003: Display Controller
-- **Inputs:** `AlertEvent`, status data
-- **Outputs:** Rendered display frame
+- **Protocol:** SPI (10 MHz), 16-bit RGB565 framebuffer
+- **Inputs:** `AlertEvent`, `StatusData { label: string, value: string }`
+- **Outputs:** `FrameResult { width: uint16, height: uint16, format: enum(RGB565), rendered: bool }`
 - **Exceptions:** `DisplayHardwareError`
 
 ### ARCH-004: Logger [CROSS-CUTTING]

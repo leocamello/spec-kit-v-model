@@ -129,3 +129,21 @@ class TestAcceptanceQuality:
         )
         metric = create_bdd_quality_metric(threshold=0.7)
         assert_test(tc, [metric])
+
+    @pytest.mark.eval
+    def test_golden_fwc_bdd_quality(
+        self, flight_warning_computer_acceptance, flight_warning_computer_requirements
+    ):
+        """FWC golden acceptance plan meets BDD quality bar."""
+        tc = LLMTestCase(
+            input=flight_warning_computer_requirements,
+            actual_output=flight_warning_computer_acceptance,
+            expected_output=(
+                "BDD acceptance tests for the FWC covering all 5 warning function "
+                "requirements (overspeed, stall, altitude alerting, GPWS, attitude limit) "
+                "with ATP/SCN IDs, Given/When/Then scenarios, and DO-178C DAL-A coverage "
+                "criteria."
+            ),
+        )
+        metric = create_bdd_quality_metric(threshold=0.7)
+        assert_test(tc, [metric])

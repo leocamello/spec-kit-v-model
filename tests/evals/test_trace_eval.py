@@ -6,12 +6,30 @@ tests cover most cases. LLM-as-judge evaluates narrative quality of the
 traceability analysis sections.
 """
 
+import re
+
 import pytest
 from deepeval import assert_test
 from deepeval.test_case import LLMTestCase
 
 from tests.evals.metrics.structural import StructuralIDMetric
 from tests.evals.metrics.traceability import create_traceability_metric
+
+
+def _strip_non_traceability_sections(acceptance_text: str) -> str:
+    """Remove sections not relevant to REQ→ATP→SCN traceability evaluation.
+
+    Strips '## Governing Standards' and '## Coverage Summary' sections to
+    reduce payload size for the LLM judge.  Full content is preserved for
+    structural (deterministic) tests.
+    """
+    # Remove from ## Governing Standards to end-of-file (always the last section)
+    text = re.sub(r"\n## Governing Standards.*", "", acceptance_text, flags=re.DOTALL)
+    # Remove ## Coverage Summary section (may appear before Governing Standards)
+    text = re.sub(
+        r"\n## Coverage Summary.*?(?=\n## |\Z)", "", text, flags=re.DOTALL
+    )
+    return text.rstrip()
 
 
 # ---------------------------------------------------------------------------
@@ -67,7 +85,9 @@ class TestTraceQuality:
         self, medical_device_requirements, medical_device_acceptance
     ):
         """Medical-device golden artifacts meet traceability quality bar."""
-        combined = medical_device_requirements + "\n" + medical_device_acceptance
+        combined = medical_device_requirements + "\n" + _strip_non_traceability_sections(
+            medical_device_acceptance
+        )
         tc = LLMTestCase(
             input="Trace the CBGMS requirements to acceptance tests",
             actual_output=combined,
@@ -85,7 +105,9 @@ class TestTraceQuality:
         self, automotive_adas_requirements, automotive_adas_acceptance
     ):
         """Automotive-adas golden artifacts meet traceability quality bar."""
-        combined = automotive_adas_requirements + "\n" + automotive_adas_acceptance
+        combined = automotive_adas_requirements + "\n" + _strip_non_traceability_sections(
+            automotive_adas_acceptance
+        )
         tc = LLMTestCase(
             input="Trace the AEB requirements to acceptance tests",
             actual_output=combined,
@@ -93,6 +115,26 @@ class TestTraceQuality:
                 "A complete traceability chain where every REQ maps to at least "
                 "one ATP with BDD scenarios, covering all 5 requirements for the "
                 "automatic emergency braking system with no gaps or orphans."
+            ),
+        )
+        metric = create_traceability_metric(threshold=0.7)
+        assert_test(tc, [metric])
+
+    @pytest.mark.eval
+    def test_fwc_traceability_quality(
+        self, flight_warning_computer_requirements, flight_warning_computer_acceptance
+    ):
+        """FWC golden artifacts meet traceability quality bar."""
+        combined = flight_warning_computer_requirements + "\n" + _strip_non_traceability_sections(
+            flight_warning_computer_acceptance
+        )
+        tc = LLMTestCase(
+            input="Trace the FWC requirements to acceptance tests",
+            actual_output=combined,
+            expected_output=(
+                "A complete traceability chain where every FWC REQ maps to at least "
+                "one ATP with BDD scenarios, covering all 5 warning function "
+                "requirements and interface/NFR requirements with no gaps or orphans."
             ),
         )
         metric = create_traceability_metric(threshold=0.7)
