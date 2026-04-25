@@ -353,8 +353,8 @@ Describe 'Build-Audit-Report' {
         It 'shows no hazard analysis when absent' {
             $nohaz = Join-Path $TempDir 'nohaz'
             New-Item -ItemType Directory -Path $nohaz -Force | Out-Null
-            Copy-Item "$FixturesDir/orphaned-waiver/requirements.md" $nohaz
-            Copy-Item "$FixturesDir/orphaned-waiver/traceability-matrix.md" $nohaz
+            Copy-Item "$FixturesDir/inputs/orphaned-waiver/requirements.md" $nohaz
+            Copy-Item "$FixturesDir/inputs/orphaned-waiver/traceability-matrix.md" $nohaz
             Push-Location $TempDir
             git init --quiet 2>$null
             git config user.email 'test@example.com' 2>$null
