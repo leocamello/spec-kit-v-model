@@ -878,7 +878,9 @@ linearization point.
 | ITP-017-A | ARCH-020 | Stub returning canned per-harness coverage JSON | Avoids running the actual four test stacks in this layer |
 | ITP-018-A | ARCH-020 (for git invocation) | Spy on `git commit` invocation | Asserts annotated message text without producing real commits in test repo |
 | ITP-019-A, ITP-019-B | Real filesystem | Fixture `feature_dir` trees committed under `tests/fixtures/feature-dirs/` | Real Markdown parsing must be exercised |
+| ITP-019-C | Real OS threads/processes + real filesystem | `threading.Barrier` (or `multiprocessing.Barrier`) coordinates N concurrent readers (ITS-019-C1); a sibling thread/process drives a real ARCH-021 atomic-writer in a tight loop against the reader (ITS-019-C2); a coordinated dual-writer harness invokes two real ARCH-021 writes against two distinct files in lock-step (ITS-019-C3) | A mocked filesystem cannot verify the read-during-rename invariant — real OS rename semantics are required (HAZ-023 mitigation) |
 | ITP-020-A, ITP-020-B, ITP-020-D | Real subprocess | Helper scripts shipped in `tests/scripts/` | Subprocess capture semantics must be tested end-to-end |
+| ITP-020-C | Mixed: real subprocess for ITS-020-C1; direct file read for ITS-020-C2/C3 | (i) Malformed-YAML stdout helper script in `tests/scripts/` for ITS-020-C1 (subprocess path through ARCH-020); (ii) malformed-YAML fixtures under `tests/fixtures/v-model-config/malformed/` (e.g., `tab-indent.yml`, `unclosed-mapping.yml`, `non-printable-byte.yml`) consumed directly by ARCH-011 for ITS-020-C2; (iii) `domain-empty.yml` fixture for ITS-020-C3 | ITS-020-C2/C3 straddle the ARCH-020 / ARCH-011 boundary — the subprocess machinery of ARCH-020 is NOT on the call path; tests target ARCH-011's direct file read (HAZ-024 mitigation) |
 | ITP-021-A, ITP-021-B, ITP-021-D | Real filesystem (tmp) | Real OS rename + signal-controlled child process for ITP-021-D | Atomicity contract is OS-level — cannot be mocked |
 
 ---
@@ -931,20 +933,20 @@ exercised by at least one V&V activity at the integration test layer.
 | Metric | Count |
 |--------|-------|
 | Total Architecture Modules (ARCH) | 21 (21 active, 0 deprecated) |
-| Total Test Cases (ITP) | 40 |
-| Total Scenarios (ITS) | 68 |
+| Total Test Cases (ITP) | 42 |
+| Total Scenarios (ITS) | 74 |
 | Modules with ≥1 ITP | 21 / 21 (100%) (active items only) |
-| Test Cases with ≥1 ITS | 40 / 40 (100%) |
+| Test Cases with ≥1 ITS | 42 / 42 (100%) |
 | **Overall Coverage (ARCH→ITP)** | **100%** |
 
 ### Technique Distribution
 
 | Technique | Test Cases | Percentage |
 |-----------|-----------|------------|
-| Interface Contract Testing | 21 | 52.5% |
-| Interface Fault Injection | 14 | 35.0% |
-| Data Flow Testing | 2 | 5.0% |
-| Concurrency & Race Condition Testing | 3 | 7.5% |
+| Interface Contract Testing | 21 | 50.0% |
+| Interface Fault Injection | 15 | 35.7% |
+| Data Flow Testing | 2 | 4.8% |
+| Concurrency & Race Condition Testing | 4 | 9.5% |
 
 ## Uncovered Modules
 

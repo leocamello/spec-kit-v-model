@@ -440,9 +440,14 @@ stateDiagram-v2
     GENERATE_TESTS --> VERIFY
     VERIFY --> FAIL : hallucination
     VERIFY --> COMMIT
-    COMMIT --> [*]
-    FAIL --> [*]
+    COMMIT --> REPORT
+    FAIL --> REPORT
+    REPORT --> [*]
 ```
+
+> Both terminal paths (success and failure) flow through `REPORT` so that
+> the structured stdout summary (ARCH-016 / MOD-021) is always emitted —
+> matching the MOD-001 / MOD-003 pattern. Only `REPORT` may transition to `[*]`.
 
 #### Internal Data Structures
 

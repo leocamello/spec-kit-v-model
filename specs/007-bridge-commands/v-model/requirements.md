@@ -124,7 +124,7 @@ This document formalizes the requirements for adding three bridge commands to th
 
 ---
 
-**Total Requirements**: 43 (43 active, 0 deprecated)
-**By Category**: Functional: 29 | Non-Functional: 6 | Interface: 4 | Constraint: 4
-**By Priority**: P1: 36 | P2: 7 | P3: 0
-**By Verification Method**: Test: 34 | Inspection: 7 | Analysis: 2 | Demonstration: 0
+**Total Requirements**: 44 (44 active, 0 deprecated)
+**By Category**: Functional: 29 | Non-Functional: 6 | Interface: 5 | Constraint: 4
+**By Priority**: P1: 37 | P2: 7 | P3: 0
+**By Verification Method**: Test: 35 | Inspection: 7 | Analysis: 2 | Demonstration: 0

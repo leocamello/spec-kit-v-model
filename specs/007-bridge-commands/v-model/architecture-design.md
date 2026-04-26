@@ -270,7 +270,7 @@ sequenceDiagram
 | Input | `generation_plan` | struct | as above | also requires test-plan artifacts |
 | Output | `test_set` | list[(path, content)] | absolute paths + UTF-8 content | covers unit / integration / system / acceptance levels |
 | Exception | `MalformedTestPlan` | raised | text + artifact path + line | when an input test-plan artifact (`unit-test.md`, `integration-test.md`, `system-test.md`, `acceptance-plan.md`) cannot be parsed or omits a mandatory field; propagated to ARCH-004 fail-closed |
-| Exception | `IOError` | from ARCH-021 | text + path | propagated unchanged when atomic-write of an emitted test file fails (e.g., target directory missing, disk full, permission denied); aborts the run before ARCH-009 is invoked |
+| Exception | `IOError` | from ARCH-021 | text + path | raised by ARCH-021 in pipeline Stage 7 (after ARCH-009 returns `valid: true`) when atomic-write of an emitted test file fails (e.g., target directory missing, disk full, permission denied); aborts the run during the write phase, after verification has already passed. ARCH-006 itself never writes to disk — the (`path`, `content`) tuples it returns to ARCH-004 are passed through ARCH-009 first, then handed to ARCH-021 for atomic write. This row documents the exception that propagates back through ARCH-006's call frame, not a failure mode of ARCH-006 itself. |
 
 ### ARCH-007: Pre-Implementation Gate Coordinator
 
@@ -342,6 +342,8 @@ sequenceDiagram
 |-----------|------|------|--------|-------------|
 | Input | `upstream_doc` | string | canonical Markdown | e.g. a `plan.md` |
 | Output | `EnrichmentReport` | struct | `{enriched: bool, missing_metadata_keys: [str]}` | `enriched: false` ⟹ ARCH-003 / ARCH-004 will populate from V-Model artifacts directly |
+| Exception | `UpstreamParseError` | raised | text + path + line | when `upstream_doc` is not valid UTF-8 Markdown or cannot be parsed for enrichment markers (truncated input, unexpected schema variant, non-UTF-8 byte sequence); propagated to ARCH-003 fail-closed |
+| Error-recovery | (none — fail-open on metadata absence) | — | — | a successfully parsed `upstream_doc` whose enrichment metadata is merely absent yields `EnrichmentReport{enriched: false, missing_metadata_keys: [...]}`; this is NOT an error and the Hybrid path proceeds via the fallback branch in ARCH-003 / ARCH-004. Only structural parse failure raises `UpstreamParseError`. |
 
 ### ARCH-015: Hook Registrar
 
