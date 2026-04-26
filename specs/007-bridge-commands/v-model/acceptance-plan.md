@@ -386,6 +386,20 @@ This document defines the Acceptance Test Plan for the three bridge commands (`v
   * **When** `/speckit.v-model.implement` runs
   * **Then** the generated unit-test file for that MOD contains at least the MC/DC-required test cases for the three independent conditions
 
+##### Test Case: ATP-024-B (Configured-but-unloadable overlay fails closed without partial application)
+**Description:** Verify that when a domain overlay is *configured* (i.e., `v-model-config.yml` exists and declares a `domain:` value) but the overlay cannot be loaded — file unreadable, schema invalid, declared `domain:` value not registered, or required overlay-specific resources missing — `/speckit.v-model.implement` aborts with a non-zero exit code, emits an explicit error identifying the overlay-load failure, and writes no source or test files. Verifies SYS-008 / SYS-003 fail-closed behaviour at the user-acceptance boundary, mitigating HAZ-015 (Critical: configured domain not applied → silent regulatory regression). Pre-loaded by `impact-analysis/critical-hazard-verification-profile.md`; raised by peer-review finding PRF-ATP-001.
+**Validation Condition:** Process exits non-zero, stderr/structured-summary names the overlay-load failure category (parse/registration/resource), and the working tree is byte-identical to its pre-invocation state.
+**Expected Result:** Non-zero exit, no partial generation, error message attributable to the overlay-load failure, working tree unmodified.
+
+* **User Scenario: SCN-024-B1**
+  * **Given** a feature with `v-model-config.yml` present and declaring `domain: do_178c, dal: A`, but the overlay's required schema file (e.g., the MC/DC obligation pack) is absent or syntactically invalid
+  * **When** `/speckit.v-model.implement` runs
+  * **Then** the process exits non-zero, the structured stdout summary reports `overlay-load-failure` (not `domain: none`), no source or test files are written, and the working tree remains byte-identical to its pre-invocation state
+* **User Scenario: SCN-024-B2**
+  * **Given** a feature with `v-model-config.yml` present declaring `domain: <unregistered_domain_name>` (a value SYS-008 does not recognise)
+  * **When** `/speckit.v-model.implement` runs
+  * **Then** the process exits non-zero, the error attributes the failure to the unregistered domain (NOT silently downgrading to base behaviour), and no source or test files are written
+
 #### Requirement Validation: REQ-025 (Idempotency — ≥95% structural identity on re-run)
 
 ##### Test Case: ATP-025-A (Re-run produces structurally equivalent output)

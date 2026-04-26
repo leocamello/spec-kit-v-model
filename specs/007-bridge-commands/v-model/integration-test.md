@@ -697,6 +697,34 @@ preventing partial `ArtifactSet` from reaching downstream callers.
   * **When** ARCH-001 invokes `load_artifacts(feature_dir)` on ARCH-019
   * **Then** ARCH-019 raises `MalformedArtifact{path, reason}` and ARCH-001 receives no `ArtifactSet` at all (no partial struct with nullable failures — the contract is fatal)
 
+#### Test Case: ITP-019-C (Concurrent and write-then-immediately-read race contract)
+
+**Technique**: Concurrency & Race Condition Testing
+**Target View**: Process View / Interface View
+**Description**: Verifies that ARCH-019 returns a coherent `ArtifactSet`
+when invoked concurrently by multiple callers and when invoked
+*immediately after* a sibling component (ARCH-005 / ARCH-006 / ARCH-021)
+has written to the same `feature_dir`, with no torn reads, partial-file
+observations, or interleaved content from in-flight writes. Mitigates
+HAZ-023 (Critical: race condition in bridge state where ARCH-019 reads
+artifacts mid-write by ARCH-005/006/021, producing a partial
+`ArtifactSet` that propagates downstream as silent corruption).
+Pre-loaded by `impact-analysis/critical-hazard-verification-profile.md`;
+raised by peer-review finding PRF-ITP-001.
+
+* **Integration Scenario: ITS-019-C1**
+  * **Given** a `feature_dir` containing a complete V-Model artifact set, and N=8 worker threads (or processes) each prepared to invoke `load_artifacts(feature_dir)` simultaneously
+  * **When** all N workers invoke ARCH-019 concurrently against the same `feature_dir` (synchronised by a shared barrier so the calls overlap maximally)
+  * **Then** every worker receives an `ArtifactSet` that is field-for-field equal to every other worker's result, no worker observes a `MalformedArtifact` exception attributable to read interleaving, and the `vmodel_id_set` derived from any worker's result is identical to the set derived from a single-threaded baseline call
+* **Integration Scenario: ITS-019-C2**
+  * **Given** a `feature_dir` and a paired writer (ARCH-021 atomic-write primitive) that is producing or updating an artifact file (e.g., `traceability-matrix.md`) on a tight loop
+  * **When** ARCH-019 invokes `load_artifacts(feature_dir)` while the writer is in flight (the read is initiated *between* the writer's tmp-write and rename steps and *between* successive write cycles)
+  * **Then** ARCH-019 either (a) observes the pre-write state in full, or (b) observes the post-write state in full — never a torn intermediate state — for every read attempt across ≥100 iterations; any read that would otherwise observe a partial file MUST raise `MalformedArtifact` rather than silently return a half-parsed struct
+* **Integration Scenario: ITS-019-C3**
+  * **Given** a `feature_dir` where two different sibling writers are simultaneously updating two *different* artifact files (e.g., ARCH-005 writing a target source file and ARCH-021 writing the structured summary)
+  * **When** ARCH-019 invokes `load_artifacts(feature_dir)` while both writers are in flight
+  * **Then** the returned `ArtifactSet` reflects a consistent ordering — for each file, either the pre- or post-write state, never an interleaving of the two — and the contract holds even when the two writers operate on artifacts that are mutually referenced (cross-file ID dependencies)
+
 ---
 
 ### Module Verification: ARCH-020 [CROSS-CUTTING] (Subprocess Runner)
@@ -731,6 +759,35 @@ distinct from a non-zero exit code (which is a normal `RunResult`).
   * **Given** a script that writes binary data to stdout
   * **When** ARCH-020 attempts to decode the output
   * **Then** ARCH-020 raises `SubprocessFailure` (binary output rejected per contract) — preventing non-UTF-8 bytes from reaching ARCH-007's JSON parser
+
+#### Test Case: ITP-020-C (Malformed YAML / corrupted-config fault propagation)
+
+**Technique**: Interface Fault Injection
+**Target View**: Interface View
+**Description**: Verifies that when a subprocess invoked by ARCH-020 emits
+malformed YAML (or other structured-config payload) on stdout — or when
+an upstream config file consumed by such a subprocess is itself
+malformed — the failure is surfaced to the caller as a typed parse
+error (`MalformedConfigPayload` / `OverlayParseError`) rather than
+silently coerced into an empty / default config struct. Mitigates
+HAZ-024 (Critical: malformed `v-model-config.yml` parsed as empty
+overlay → SYS-008 silently downgrades to base behaviour, defeating the
+configured domain). Pre-loaded by
+`impact-analysis/critical-hazard-verification-profile.md`; raised by
+peer-review finding PRF-ITP-002.
+
+* **Integration Scenario: ITS-020-C1**
+  * **Given** a script that emits malformed YAML on stdout (e.g., unbalanced braces, mixed indentation, a mapping key with no value, or a duplicated top-level key per YAML 1.2 §5.4)
+  * **When** ARCH-007 / ARCH-011 invokes ARCH-020 expecting a structured payload
+  * **Then** the malformed-YAML failure is surfaced to the caller as a typed parse exception (e.g., `MalformedConfigPayload{exit_code, snippet, parser_error}`) — NOT silently converted to `{}` (empty config) and NOT silently substituted by a default — and the caller can attribute the run abort to a parse failure rather than a missing config
+* **Integration Scenario: ITS-020-C2**
+  * **Given** a `v-model-config.yml` file on disk that is syntactically malformed (e.g., a tab character where YAML requires spaces, or a stray non-printable byte at the file head)
+  * **When** ARCH-011 (Domain Overlay Loader) reads the file directly (not via subprocess) and attempts to parse it
+  * **Then** ARCH-011 raises `OverlayParseError` carrying the parser diagnostic and line number, ARCH-004 propagates the exception fail-closed, the structured stdout summary names the parse failure (NOT `domain: none`), and SYS-008 does NOT silently downgrade to base behaviour (HAZ-024 mitigation gate)
+* **Integration Scenario: ITS-020-C3**
+  * **Given** a `v-model-config.yml` whose top-level YAML parses successfully but whose `domain:` value is the empty string, `null`, or omitted while the file is otherwise well-formed
+  * **When** ARCH-011 reads the file
+  * **Then** ARCH-011 distinguishes "file-absent" (legitimate no-overlay path) from "file-present-but-domain-unset" (configuration error) — the latter raises `OverlayParseError` so SYS-003 fails closed rather than silently degrading to base behaviour
 
 #### Test Case: ITP-020-D (Stream interleaving under heavy output)
 

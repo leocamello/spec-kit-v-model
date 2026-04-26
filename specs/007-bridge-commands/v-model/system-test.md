@@ -380,6 +380,11 @@ resource-usage thresholds (e.g., WCET) apply to this test plan.
   * **When** SYS-007 is invoked to splice new content
   * **Then** SYS-007 returns a conflict result, the file on disk remains byte-identical to its pre-call state, and a diff report describing the overlap is written to stdout
 
+* **System Scenario: STS-007-B2**
+  * **Given** an existing target source file in which a single V-Model-managed region marker is corrupted — the begin marker (e.g., `// region-v-model-begin: MOD-007`) is present but the matching end marker (e.g., `// region-v-model-end: MOD-007`) is missing or malformed (truncated suffix, mismatched MOD-id, or one of the two delimiter sigils altered) — and the user has authored content **between** the marker and the next plausible end-of-region anchor
+  * **When** SYS-003 invokes SYS-007 to re-splice generated content for that MOD
+  * **Then** SYS-007 detects the marker corruption, aborts before any write, returns a `RegionConflict` (or equivalent fault result) that names the corrupted marker and its line number, the file on disk remains byte-identical to its pre-call state (no truncation, no overwrite of user-authored content between the corrupted markers), and the structured stdout summary attributes the failure to region-marker corruption (NOT to a generic write failure). Mitigates HAZ-014 (Critical: user-authored region overwritten on re-run because corrupted markers cause SYS-007 to misidentify the managed-region boundary). Pre-loaded by `impact-analysis/critical-hazard-verification-profile.md`; raised by peer-review finding PRF-STP-001.
+
 ---
 
 ### Component Verification: SYS-008 (Domain Overlay Adapter)
