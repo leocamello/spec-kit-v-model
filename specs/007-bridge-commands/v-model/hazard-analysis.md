@@ -125,8 +125,8 @@ between `SYS` components, so they warrant dedicated entries.
 | Severity | Count | Percentage |
 |----------|-------|------------|
 | Catastrophic | 0 | 0% |
-| Critical | 9 | 36% |
-| Serious | 7 | 28% |
+| Critical | 8 | 32% |
+| Serious | 8 | 32% |
 | Minor | 9 | 36% |
 | Negligible | 0 | 0% |
 
@@ -136,8 +136,8 @@ between `SYS` components, so they warrant dedicated entries.
 |------------|-------|------------|
 | Unacceptable | 0 | 0% |
 | Undesirable | 9 | 36% |
-| Tolerable | 7 | 28% |
-| Acceptable | 9 | 36% |
+| Tolerable | 8 | 32% |
+| Acceptable | 8 | 32% |
 
 ### Residual Risk Distribution (after mitigation applied)
 
