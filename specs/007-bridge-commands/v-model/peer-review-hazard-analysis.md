@@ -1,164 +1,118 @@
 # Peer Review — hazard-analysis.md
 
 **Reviewer**: AI Peer Review (spec-kit V-Model)
-**Date**: 2025-07-29
-**Artifact**: hazard-analysis.md (25 HAZ)
+**Date**: 2026-04-27
+**Artifact**: hazard-analysis.md (25 HAZ active, 0 deprecated, 0 suspect — 22 system-level + 3 architecture-level progressive-deepening)
 **Standard**: IEC 60812:2018 + ISO 14971:2019 — Inspection class (IEEE 1028:2008 §4)
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| Critical | 3 |
-| Major | 5 |
-| Minor | 2 |
-| Observation | 0 |
-| **Total Findings** | **10** |
+| Critical | 0 |
+| Major | 0 |
+| Minor | 1 |
+| Observation | 3 |
+| **Total Findings** | **4** |
 
 ## Findings
 
-### PRF-HAZ-001 — Unverified SYS-002 / SYS-009 Component Coverage
-
-| Field | Value |
-|-------|-------|
-| **Severity** | Critical |
-| **Location** | Coverage Summary (§ Components with ≥1 HAZ) |
-| **Description** | The hazard register (22 system-level + 3 architecture-level entries) claims 100% SYS coverage (14/14). However, the FMEA table explicitly assigns hazards only to 12 distinct SYS components. SYS-002 (Tasks Synthesizer) appears **only** in row 1 of the Progressive Deepening section (HAZ-025 / SYS-012 / ARCH-021 — a Structured Summary Reporter race condition); no system-level hazard directly addresses SYS-002 failure modes. SYS-009 (Hazard-Driven Task Emitter) is never mentioned in the FMEA table. The claim "14 / 14 (100%)" is incorrect. |
-| **Recommendation** | Audit the FMEA table and coverage logic: (a) If SYS-002 and SYS-009 require no dedicated hazard (e.g., failures are subsumed under SYS-002→SYS-009 dependency chain or delegated entirely to SYS-014 mitigation), explicitly state this rationale in the Coverage Summary, and correct the count to 12/14 active coverage. (b) If SYS-002 and SYS-009 are exposed to independent hazards, add rows to the system-level FMEA table. (c) If the count is correct, provide the HAZ-NNN entries that justify it. This is a blocking issue for Inspection-class review: coverage claims must be verifiable. |
-
-### PRF-HAZ-002 — REQ-999 Traceability Claim Unresolved
-
-| Field | Value |
-|-------|-------|
-| **Severity** | Critical |
-| **Location** | HAZ-007 Mitigation column: "REQ-NF-002, REQ-NF-002, SYS-006" and impact-analysis/critical-hazards.md upstream suspects (line 57) |
-| **Description** | The Mitigation column for HAZ-007 (Value failure: hallucinated `// Implements` comments on SYS-003) references "REQ-NF-002" twice in the same cell and omits REQ-023 (which appears in the requirement set). More critically, the impact-analysis report lists REQ-999 as an upstream suspect (line 57) — a phantom test fixture per the task briefing. The hazard-analysis.md does not directly reference REQ-999, but the presence of REQ-999 in the impact analysis implies a structural inconsistency: either REQ-999 is a phantom and should not appear in any traceability chain, or it is a real requirement and should be documented. The current state is ambiguous. |
-| **Recommendation** | (a) Verify that REQ-999 is a phantom and remove it from the impact-analysis/critical-hazards.md upstream suspects list. (b) Audit all HAZ mitigation cells to confirm they reference only active REQs (REQ-001 through REQ-NF-006) or SYS-NNN. Use a script to extract all REQ/SYS IDs from the mitigation column and validate against the requirements.md active set. (c) If REQ-023 should be in HAZ-007 mitigation, add it. This is blocking for Inspection class: all references must be resolvable. |
-
-### PRF-HAZ-003 — Matrix H Coverage Verification Incomplete
-
-| Field | Value |
-|-------|-------|
-| **Severity** | Critical |
-| **Location** | Coverage Summary; traceability-matrix.md Matrix H |
-| **Description** | The hazard-analysis.md lists 25 total HAZ entries (22 system-level + 3 architecture-level). The Coverage Summary correctly reports the severity and risk distributions. However, the rubric task briefing states: "Verify counts match the FMEA table — flag any mismatch as Major." The traceability-matrix.md file was partially viewed but Matrix H (the HAZ→ATP coverage) was not examined in detail. The briefing notes state "Matrix H must be 100%" per ISO 14971 §5.4 (each identified hazard must have traceable mitigation verification). If Matrix H shows any HAZ with zero ATP (test case) assignments, that is a Major finding (hazard without verification path). The present review cannot confirm Matrix H coverage without examining the full matrix. However, given the Inspection-class rigor and the explicit requirement in the task briefing, this must be verified before artifact approval. |
-| **Recommendation** | (a) Run a traceability query: for each HAZ-NNN, extract the corresponding mitigation REQ/SYS, trace upstream to ATP via Matrix A/B, and confirm 100% HAZ→ATP coverage. (b) If any HAZ has zero ATP assignments, escalate as Major. (c) Provide an explicit Matrix H HAZ coverage report appended to this review or embedded in the hazard-analysis.md file. This verification is a gate criterion for Inspection-class release. |
-
-### PRF-HAZ-004 — Severity Justification Incomplete for Non-Critical Serious Hazards
-
-| Field | Value |
-|-------|-------|
-| **Severity** | Major |
-| **Location** | HAZ-002 (Serious, Remote), HAZ-003 (Serious, Remote), HAZ-005 (Serious, Remote), HAZ-008 (Serious, Remote), HAZ-011 (Serious, Remote), HAZ-017 (Serious, Remote), HAZ-021 (Serious, Remote) |
-| **Description** | Seven "Serious" hazards are classified as "Remote" likelihood. Per ISO 14971 §5.4, each severity/likelihood combination must include explicit justification explaining why the hazard, despite being "Serious" (moderate injury or significant degradation requiring medical attention), is "Remote" (unlikely but possible). The FMEA entries describe failure modes and mitigations but do NOT justify the likelihood assignment. For example, HAZ-002 (Downstream `speckit.tasks` fails or silently drops traceability metadata) is Serious/Remote — why is downstream failure unlikely? Because the enrichment encoder is deterministic? Because spec-kit-core's parser is robust? The justification must be explicit to allow auditors to verify the risk rating is sound. |
-| **Recommendation** | (a) For each Serious/Remote hazard, add a "Likelihood Justification" column or expand the Effect description to include the rationale for Remote classification. (b) Consider examples: HAZ-002 might justify "Remote" as "The additive-enrichment encoder is deterministic and tested; spec-kit-core v0.7.0 parser is stable and used in production; failure would require both a code defect AND a malformed input, estimated <0.1% occurrence rate over system lifetime." (c) Re-review the likelihood assignments: if any appear unjustified or overly optimistic, escalate to Major or revise to Occasional. |
-
-### PRF-HAZ-005 — Residual Risk "Acceptable" Claim Lacks Residual Evaluation Detail
-
-| Field | Value |
-|-------|-------|
-| **Severity** | Major |
-| **Location** | Residual Risk column; all 25 HAZ entries show either "Tolerable" or "Acceptable" residual risk |
-| **Description** | Per ISO 14971 §5.5 (Residual Risk Evaluation), after applying mitigation, the residual risk must be evaluated and justified. The FMEA table provides Mitigation entries (e.g., "REQ-023, REQ-NF-002, SYS-006 (Hallucination Guard pre-commit verification)") but does NOT include explicit residual-risk reasoning. A mitigation entry alone does not prove residual risk is reduced. For example, HAZ-009 (False-negative gate: reports `passed` when matrices incomplete) is Critical/Remote/Undesirable with mitigation "REQ-016, REQ-17, REQ-NF-004, REQ-CN-002" and residual risk "Tolerable". Why is invoking existing scripts sufficient to reduce a Critical undesirable risk to Tolerable? Because the scripts are deterministic and CI-tested? Because a merge gate enforces the gate evaluation? The rationale must be explicit. |
-| **Recommendation** | (a) Add a "Residual Risk Justification" column that explains how each mitigation (REQ/SYS) reduces the risk from its initial level to its residual level. Example for HAZ-009: "Residual risk is Tolerable because REQ-NF-004 ensures 100% pass-rate verification; scripts are deterministic and already CI-validated; merge gate enforces gate result; residual exposure is bounded to a narrow window (code defect in gate logic), estimated at <1% residual likelihood given test coverage." (b) For any Residual Risk marked "Acceptable" without a corresponding mitigation (or only a warning/log mitigation), escalate to Major: acceptance without evidence is a gate violation. (c) Perform a risk-acceptability workshop and sign-off by risk owner (if applicable per project governance). |
-
-### PRF-HAZ-006 — No Operational State Analysis Despite Multiple Stateful Components
-
-| Field | Value |
-|-------|-------|
-| **Severity** | Major |
-| **Location** | Operational States Reference (§ 64-70); Hazard Register (all rows) |
-| **Description** | The operational states section notes: "No operational states are defined in system-design.md — using implicit `NORMAL` state for all hazard entries." This is insufficient rigor for Inspection class. The system is stateful: SYS-003 (Implementation Engine) has at least two implicit states: DRY-RUN (--no-commit flag) and COMMITTING (live generation). SYS-014 (Commit Annotator) operates only in COMMITTING state. Several hazards are state-dependent: HAZ-014 (Region-marker corruption) cannot occur in DRY-RUN; HAZ-022 (Commit ID suffix not appended) cannot occur without COMMITTING. By collapsing all states into NORMAL, the hazard analysis loses the ability to distinguish state-dependent mitigations. For example, a user might accept HAZ-014 risk in NORMAL state but require enhanced Region Manager logic only when COMMITTING. Per IEC 60812 §6.2 (Analysis of Different Operational States), this is a completeness gap. |
-| **Recommendation** | (a) Extract explicit operational states from system-design.md (Dependency View) and acceptance-plan.md (BDD scenarios): identify at least NORMAL/DRY-RUN/COMMITTING/ERROR states. (b) For each state, re-run the FMEA: which hazards are possible in each state? Which mitigations are active per-state? (c) Create a state-transition table showing how each hazard is triggered and mitigated across state boundaries. (d) Update the Operational States Reference table to list all states + hazard count per state. This is a completeness issue; if deemed low-risk by risk owner, document the assumption in the Coverage Summary. |
-
-### PRF-HAZ-007 — Hallucination Guard (SYS-006) Assumed Deterministic Without Specification
-
-| Field | Value |
-|-------|-------|
-| **Severity** | Major |
-| **Location** | HAZ-012 (False-negative: Hallucination Guard misses an invalid reference), HAZ-013 (False-positive: Hallucination Guard rejects valid ID) |
-| **Description** | HAZ-012 and HAZ-013 address false-negative and false-positive outcomes of the Hallucination Guard (SYS-006). The mitigation for HAZ-012 states "REQ-23, REQ-NF-002, SYS-013 (compliance harness blocks merge on eval failure)" — this shifts the residual risk from SYS-006 internal correctness to CI harness validation. However, the hazard-analysis.md does not specify the Hallucination Guard algorithm. ISO 14971 §5.3 (HARA design input) requires that risk controls reference design specifications. If SYS-006 is an LLM-assisted validator (e.g., "ask the LLM if the generated ID exists in the V-Model"), the false-negative rate is not "Remote" — it depends on LLM accuracy. If SYS-006 is a deterministic regex parser, the rate is lower. The absence of a specification means the residual risk cannot be validated. HAZ-007 (hallucinated comments) note: "Occasional" likelihood is intentional per domain notes, driving SYS-006 development — this is documented. But SYS-006's own failure modes (HAZ-012/013) lack this detail. |
-| **Recommendation** | (a) Add a design specification section to system-design.md describing SYS-006 algorithm (deterministic ID-set parser vs. LLM-assisted validation vs. hybrid). (b) Update HAZ-012/013 mitigations to reference this spec: "REQ-NF-002 requires zero hallucinations; SYS-006 implements [ALGORITHM]; structural-eval coverage is 100% per test suite." (c) If SYS-006 relies on LLM evaluation, document the LLM accuracy model and adjust HAZ-012 likelihood accordingly. (d) For Inspection class, this specification is a gate criterion. |
-
-### PRF-HAZ-008 — Missing Hazard for Domain Overlay Adapter Silent Downgrade (SYS-008)
+### PRF-HAZ-001 — Likelihood Justification Table Excludes the Sole Serious/Occasional Hazard
 
 | Field | Value |
 |-------|-------|
 | **Severity** | Minor |
-| **Location** | SYS-008 (Domain Overlay Adapter); no dedicated system-level HAZ |
-| **Description** | HAZ-024 (Architecture-level: Protocol failure — malformed v-model-config.yml parsed as empty overlay) is correctly classified as Critical/Remote/Undesirable and addresses the SYS-008 failure mode. However, at the system level, there is no corresponding entry analyzing the case where v-model-config.yml exists but is correctly formatted for a domain that SYS-003 does not support (e.g., a custom domain not yet implemented). The current HAZ-024 mitigation ("ARCH-020 contract: schema validation MUST raise on parse failure") assumes any non-parse failure is handled by SYS-003 fail-closed. This is reasonable but should be explicitly enumerated as a low-risk assumption or added as a Minor system-level hazard with "Acceptable" risk. |
-| **Recommendation** | (a) Either add a Minor system-level hazard: "HAZ-026: Domain overlay configured for unsupported domain is silently downgraded; SYS-003 Severity=Minor, Likelihood=Remote, Risk=Acceptable; Mitigation: REQ-24, domain registry validation" — OR (b) add a note in the Coverage Summary: "SYS-008 failure modes are covered by HAZ-024 (architecture-level); system-level degradation to base behaviour is acceptable because fail-closed policy in SYS-003 prevents regulatory violations." This is minor; Acceptable risk either way, but Inspection class requires explicit rationale. |
+| **Location** | § "Likelihood Justification" (preamble + table); HAZ-007 (Serious / Occasional / Undesirable) |
+| **Description** | The new "Likelihood Justification" section (added in Pass A/B/C remediation for old PRF-HAZ-004) is scoped — both in its preamble ("seven Serious-classified hazards rated Remote") and in its table — to Serious/Remote pairings only. HAZ-007 is the *only* Serious hazard in the register that is rated **Occasional** rather than Remote, and its initial Risk Level is consequently **Undesirable** — the highest pre-mitigation risk class held by any Serious entry. ISO 14971 §5.4 requires every Severity/Likelihood pairing to be justified, and IEC 60812 §6 makes the same requirement for FMEA. The HAZ-007 row asserts "Occasional" without a likelihood rationale anywhere in the artifact. The Residual Risk Justification row for HAZ-007 explains the *post-mitigation* reasoning (regex parser correctness, UTP-006 coverage) but not why the *pre-mitigation* likelihood is Occasional in the first place. Defect type (ISO/IEC 20246 §6.3): **Incomplete** — the justification analysis is partially specified. |
+| **Recommendation** | Either (a) broaden the Likelihood Justification preamble and table to include HAZ-007 with explicit reasoning (e.g., "LLM-generated `// Implements <ID>` comments inherit the underlying model's hallucination base-rate, which empirical literature places in the 1–5 % range per generated identifier — placing the failure mode in the Occasional band by construction; this rating is the design driver for SYS-006"), or (b) add the rationale inline in the HAZ-007 row (additional sentence in the Effect column or a new "Likelihood Rationale" column applied just to HAZ-007). Option (a) is preferred for symmetry with the existing seven Serious/Remote entries. |
 
-### PRF-HAZ-009 — HAZ-001 Likelihood "Remote" Appears Inconsistent with REQ-008 Design
-
-| Field | Value |
-|-------|-------|
-| **Severity** | Minor |
-| **Location** | HAZ-001 (SYS-001 function failure) |
-| **Description** | HAZ-001 describes SYS-001 (Plan Synthesizer) aborting without producing plan.md. The failure mode is classified Severity=Minor, Likelihood=Remote. However, REQ-008 explicitly requires graceful degradation when optional V-Model artifacts are missing — "complete successfully with a non-zero warning indicator in its summary." This design choice treats the absence of artifacts as non-fatal. But the hazard assumes the plan synthesizer aborts on a functional failure (e.g., out-of-memory, uncaught exception), not on missing optional inputs. The hazard description conflates two distinct scenarios: (1) a logic error causing abort (which is indeed Remote if the code is tested), and (2) graceful missing-artifact handling (which is Frequent if the feature is used without all optional artifacts). The Likelihood judgment is correct for scenario (1), but the distinction should be explicit. |
-| **Recommendation** | (a) Rename HAZ-001 description to clarify it addresses only logic/runtime failures, not graceful missing-artifact degradation. Example: "Function failure: `v-model.plan` aborts on an uncaught exception or resource exhaustion, without producing `plan.md`" — explicitly excludes the graceful missing-artifact case. (b) Consider adding a separate hazard (or rationale note) for the missing-artifact scenario: "If optional artifacts are missing, REQ-008 ensures graceful degradation; this is handled by design, not by risk mitigation. Residual risk = Acceptable." This is a Minor issue; the current classification is defensible but would benefit from clarity. |
-
-### PRF-HAZ-010 — Progress Deepening Section Lacks Cross-Architecture Interface Detail
+### PRF-HAZ-002 — HAZ-008 / HAZ-014 State Scoping to COMMITTING Only Lacks Documented Rationale
 
 | Field | Value |
 |-------|-------|
 | **Severity** | Observation |
-| **Location** | Progressive Deepening (Architecture-Level) — HAZ-023, HAZ-024, HAZ-025 |
-| **Description** | The three architecture-level hazards correctly address interface failures (race condition between SYS-006 and SYS-003 file writes; protocol failure in SYS-008 domain overlay parsing; race condition in Structured Summary Reporter). These are valuable risk identifications. However, IEC 60812 §6 (Progressive Analysis) recommends that architecture-level entries be linked back to their system-level counterparts. HAZ-023 is clearly a refinement of HAZ-012 (SYS-006 false-negative); HAZ-024 refines HAZ-015 (Domain-not-applied); HAZ-025 relates to SYS-012 (Summary Reporter). The link is implicit but not documented. |
-| **Recommendation** | (a) Add a "Related System-Level HAZ" column or link to the architecture-level FMEA table showing which system-level hazard each architecture-level entry refines. Example: HAZ-023 → HAZ-007 (hallucinated IDs) + HAZ-012 (false-negative detection). (b) This is informational; no action required if the dependencies are deemed clear. This is an Observation for future clarity improvements. |
+| **Location** | HAZ-008 (Idempotency failure, COMMITTING); HAZ-014 (Region-marker corruption, COMMITTING); cross-reference to system-design.md § "Operational States" State Definitions |
+| **Description** | Per the system-design State Definitions table (lines 178–181), the DRY-RUN state activates SYS-003, SYS-006, **SYS-007**, and SYS-012. SYS-007 (Source Region Manager) — the component named in HAZ-014's mitigation and implicit in HAZ-008's idempotency contract — is therefore active in both DRY-RUN and COMMITTING. Yet HAZ-008 ("re-run regenerates source code with <95% structural identity") and HAZ-014 ("region-marker corruption: user-authored content overwritten") are both tagged **COMMITTING** only. The defensible argument is that DRY-RUN writes go to a temp scratch path (per the State Definitions: "Files under repo working tree may be touched only when emitted to a temp scratch path") so user code cannot be silently overwritten and idempotency churn cannot manifest as user-visible review noise. This rationale is correct but is not documented anywhere in hazard-analysis.md. An auditor reading the artifact in isolation would have to infer the scoping from the state definitions. Defect type: **Incomplete**. |
+| **Recommendation** | Add a short rationale either (a) as an inline note under the Operational States Reference table (e.g., "HAZ-008 / HAZ-014 are scoped to COMMITTING because SYS-007's DRY-RUN scratch-path writes do not touch the working tree and therefore cannot manifest as user-visible churn or content loss"), or (b) as parenthetical clarifications in the Operational State column of those two rows (e.g., "COMMITTING (DRY-RUN excluded — scratch-path writes only)"). |
+
+### PRF-HAZ-003 — Residual Risk Justification for HAZ-022 Treats "Occasional" Likelihood as a Permanent Property
+
+| Field | Value |
+|-------|-------|
+| **Severity** | Observation |
+| **Location** | HAZ-022 row in Hazard Register; Residual Risk Justification row for HAZ-022 |
+| **Description** | HAZ-022 is the only Minor/**Occasional** entry in the register (initial Risk = Tolerable, residual Risk = Tolerable — i.e., mitigation does *not* reduce the risk class). The Residual Risk Justification row reads: "the commit-message-template logic is the most defect-prone code in v0.7.0; residual is held at Tolerable by the warning + fallback." This is a candid and useful disclosure, but it implicitly accepts the Occasional likelihood as a steady-state property of v0.7.0 rather than as a temporary condition warranting follow-up risk reduction. ISO 14971 §5.5 expects residual risk that is *not improved* by mitigation to either (a) carry an As-Low-As-Reasonably-Practicable (ALARP) statement or (b) trigger a documented risk-acceptance decision. Neither is present. Defect type: **Incomplete** (informational only — Tolerable residual is acceptable per the project's risk matrix without sign-off). |
+| **Recommendation** | Add a one-sentence ALARP statement to the HAZ-022 residual-risk row, e.g.: "Residual Tolerable is accepted As-Low-As-Reasonably-Practicable: the only further reduction would be to harden the commit-message-template logic (not in v0.7.0 scope); the SYS-012 warning + REQ-021 in-file fallback render the audit gap recoverable." Optionally, raise a follow-up issue to refactor the template logic in a future release and link it from this row. |
+
+### PRF-HAZ-004 — Operational State Distribution Table Could Cross-Reference State Definitions
+
+| Field | Value |
+|-------|-------|
+| **Severity** | Observation |
+| **Location** | § "Coverage Summary" → "Operational State Distribution" table |
+| **Description** | The Operational State Distribution table (NORMAL=15, DRY-RUN=2, COMMITTING=8, ERROR=2 — total 27 due to dual-tagging of HAZ-006/007) is correct and the dual-tagging note is helpful. However, the table lists state *counts* without listing *which* HAZs fall into each state. This makes the per-state coverage non-auditable from this section alone — an auditor must scan the full Hazard Register (lines 83–104) and the Progressive Deepening table (lines 116–118) and tally manually to verify the counts. Defect type: **Incomplete** (informational). |
+| **Recommendation** | Append a column (or sub-rows) to the Operational State Distribution table listing the HAZ IDs per state, e.g.: "NORMAL — HAZ-001/002/003/004/005/009/010/011/015/016/017/018/019/021/024 (15)"; "DRY-RUN — HAZ-006/007 (2)"; "COMMITTING — HAZ-006/007/008/012/013/014/022/023 (8)"; "ERROR — HAZ-020/025 (2)". This makes the count line-of-sight verifiable and reduces auditor effort. |
 
 ---
 
-## Verification Checklist (§4.9 + §4.10 Applied)
+## Verification Checklist (§4.8 + §4.10 Applied)
 
-### §4.9 Hazard Analysis (FMEA — ISO 14971)
+### §4.8 Hazard Analysis (FMEA — IEC 60812:2018 + ISO 14971:2019)
 
-- ✅ **Severity Justification**: Present but incomplete for Serious/Remote hazards (PRF-HAZ-004)
-- ⚠️ **Mitigation Completeness**: All HAZ have mitigations, but REQ/SYS traceability requires verification (PRF-HAZ-002, PRF-HAZ-003)
-- ⚠️ **Operational State Coverage**: Implicit NORMAL state only; missing DRY-RUN/COMMITTING analysis (PRF-HAZ-006)
-- ✅ **Residual Risk Assessment**: Present but lacks explicit justification (PRF-HAZ-005)
-- ❌ **SYS Coverage**: 14/14 coverage claim is incorrect (PRF-HAZ-001)
+- ✅ **Severity Justification**: Implicit through Severity Scale + Risk Matrix; reasonable given failure modes. (Minor gap on HAZ-007 Likelihood — see PRF-HAZ-001.)
+- ✅ **Mitigation Completeness**: Every HAZ has at least one REQ-NNN or SYS-NNN mitigation; HAZ-007 mitigation duplicate REQ-NF-002 fixed; REQ-023 added.
+- ✅ **Operational State Coverage**: Authoritative state model now defined in `system-design.md § "Operational States (IEEE 1016 §5.2 Behavioural View)"`; every HAZ row carries an explicit Operational State; dual-state tagging (HAZ-006/007) handled correctly. (Minor scoping clarity gap — see PRF-HAZ-002.)
+- ✅ **Residual Risk Assessment**: New "Residual Risk Justification" section provides per-hazard residual mechanism for all 25 HAZs. (One ALARP polish — see PRF-HAZ-003.)
+- ✅ **SYS Coverage**: 14/14 active SYS components covered. SYS-001 (HAZ-001/002/003), SYS-002 (HAZ-004/005), SYS-003 (HAZ-006/007/008), SYS-004 (HAZ-009/010), SYS-005 (HAZ-011), SYS-006 (HAZ-012/013/023), SYS-007 (HAZ-014), SYS-008 (HAZ-015/024), SYS-009 (HAZ-016), SYS-010 (HAZ-017/018), SYS-011 (HAZ-019), SYS-012 (HAZ-020/025), SYS-013 (HAZ-021), SYS-014 (HAZ-022) — claim "14 / 14 (100%)" verified by enumeration.
+- ✅ **Progressive Deepening**: New "Progressive Deepening Cross-References" table makes the architecture-level → system-level refinement relationships explicit (HAZ-023→HAZ-007/012; HAZ-024→HAZ-015; HAZ-025→HAZ-020).
+- ✅ **Coverage Summary internal consistency**: Severity (Critical=8, Serious=8, Minor=9 → 25 ✓); Risk Level (Undesirable=9, Tolerable=8, Acceptable=8 → 25 ✓); Residual Risk (Tolerable=9, Acceptable=16 → 25 ✓); Operational State (15+2+8+2=27, matches 25 distinct + 2 dual-tagged HAZ ✓).
 
 ### §4.10 Lifecycle Validation
 
-- ✅ **No Deprecated Items**: No HAZ marked `[DEPRECATED]`
-- ✅ **No Unresolved Suspects**: No HAZ tagged `[SUSPECT]`
-- ⚠️ **Upstream Traceability**: REQ-999 phantom appears in impact-analysis (PRF-HAZ-002)
-- ✅ **Coverage Exclusion**: No deprecated HAZ in coverage counts
+- ✅ **No Deprecated Items**: No HAZ marked `[DEPRECATED]`.
+- ✅ **No Unresolved Suspects**: No HAZ tagged `[SUSPECT]`.
+- ✅ **Coverage Exclusion**: No deprecated HAZ in coverage counts (none exist).
+- ✅ **Mitigation references resolvable**: All mitigation cells reference REQ-NNN, REQ-NF-NNN, REQ-IF-NNN, REQ-CN-NNN, or SYS-NNN identifiers conforming to the canonical patterns; no phantom IDs in this artifact (REQ-999 audit, raised in Pass 1, was an impact-analysis concern outside this artifact's scope and is not present here).
 
 ---
 
-## Critical and Major Items Summary
+## Delta vs Pass 1 (informational only — no bearing on current findings)
 
-| Finding ID | Severity | Item | Status |
-|-----------|----------|------|--------|
-| PRF-HAZ-001 | Critical | SYS-002/SYS-009 coverage mismatch (14/14 claim vs. 12 in FMEA) | **Blocks release** |
-| PRF-HAZ-002 | Critical | REQ-999 phantom traceability + duplicate mitigation reference | **Blocks release** |
-| PRF-HAZ-003 | Critical | Matrix H (HAZ→ATP) coverage verification incomplete | **Blocks release** |
-| PRF-HAZ-004 | Major | Severity justification incomplete for Serious/Remote hazards | Must address before approval |
-| PRF-HAZ-005 | Major | Residual risk justification absent; "Acceptable" claims unvalidated | Must address before approval |
-| PRF-HAZ-006 | Major | No operational state analysis (missing DRY-RUN, COMMITTING) | Must address before approval |
-| PRF-HAZ-007 | Major | SYS-006 algorithm unspecified; HAZ-012/013 residual risk unjustified | Must address before approval |
-| PRF-HAZ-008 | Minor | Missing explicit hazard or rationale for unsupported domain case | Clarify before approval |
-| PRF-HAZ-009 | Minor | HAZ-001 likelihood reasoning conflates distinct failure scenarios | Clarify before approval |
-| PRF-HAZ-010 | Observation | Progressive Deepening links to system-level HAZ implicit | Informational; future improvement |
+Pass 1 produced 3 Critical + 5 Major + 2 Minor + 0 Observation = 10 findings. The current artifact addresses every one of them:
+
+| Old Finding | Old Severity | Status in Current Artifact |
+|-------------|--------------|----------------------------|
+| PRF-HAZ-001 (SYS-002/SYS-009 coverage gap) | Critical | **Resolved** — SYS-002 covered by HAZ-004/005, SYS-009 by HAZ-016, all 14 SYS verified by enumeration |
+| PRF-HAZ-002 (REQ-999 phantom + duplicate REQ-NF-002) | Critical | **Resolved within scope** — HAZ-007 mitigation now reads "REQ-023, REQ-NF-002, SYS-006" (duplicate fixed, REQ-023 added); REQ-999 was an impact-analysis concern, out of scope here |
+| PRF-HAZ-003 (Matrix H verification incomplete) | Critical | **Out of scope for hazard-analysis.md** — Matrix H verification belongs to traceability-matrix.md peer review |
+| PRF-HAZ-004 (Severity justification for Serious/Remote) | Major | **Resolved** — new "Likelihood Justification" section covers all 7 Serious/Remote entries |
+| PRF-HAZ-005 (Residual risk justification absent) | Major | **Resolved** — new "Residual Risk Justification" section covers all 25 HAZs |
+| PRF-HAZ-006 (No operational-state analysis) | Major | **Resolved** — state model authoritative in system-design.md; every HAZ row tagged with state(s) |
+| PRF-HAZ-007 (SYS-006 algorithm unspecified) | Major | **Resolved** — SYS-006 algorithm specification added to system-design.md; HAZ-012/013 mitigations now reference it |
+| PRF-HAZ-008 (Unsupported-domain rationale missing) | Minor | **Resolved** — Coverage Summary blockquote documents fail-closed rationale via HAZ-015 + REQ-024 |
+| PRF-HAZ-009 (HAZ-001 conflation) | Minor | **Resolved** — HAZ-001 description narrowed to logic/runtime failures with explicit exclusion of graceful missing-artifact case (REQ-008) |
+| PRF-HAZ-010 (Implicit progressive-deepening links) | Observation | **Resolved** — new "Progressive Deepening Cross-References" section makes refinement relationships explicit |
+
+New findings surfaced in Pass 2:
+
+- PRF-HAZ-001 (Minor) — Likelihood Justification scope excludes the sole Serious/Occasional hazard (HAZ-007). Surfaced because the Pass-A/B/C remediation built the new section around the seven Serious/Remote entries explicitly, leaving HAZ-007 outside the scope despite holding the highest initial Risk Level among Serious entries.
+- PRF-HAZ-002 (Observation) — HAZ-008/HAZ-014 COMMITTING-only state scoping is correct but undocumented. Surfaced now that the Operational State column is mandatory and auditors can compare per-HAZ state to the State Definitions table.
+- PRF-HAZ-003 (Observation) — HAZ-022 lacks an ALARP statement for its no-improvement residual. Surfaced now that the Residual Risk Justification table makes the "no reduction" case visible (residual = initial = Tolerable).
+- PRF-HAZ-004 (Observation) — Operational State Distribution table reports counts without HAZ enumeration. Surfaced now that the table exists and merits richer per-state visibility.
 
 ---
 
 ## Compliance Assessment
 
-**Review Type** (IEEE 1028:2008): **Inspection** — high-risk artifact requiring maximized defect detection.
+**Review Type** (IEEE 1028:2008): **Inspection** — high-risk artifact (`hazard-analysis.md`) where defect detection must be maximised; Inspection-class rigor applied per the Step 2.5 selection rule.
 
-**Governing Standard**: IEC 60812:2018 + ISO 14971:2019 Functional Safety FMEA.
+**Governing Standard**: IEC 60812:2018 (FMEA) + ISO 14971:2019 (risk matrix and residual-risk evaluation).
 
-**Artifact Status**: ⛔ **NOT READY FOR APPROVAL** — 3 Critical + 5 Major findings must be resolved.
+**Artifact Status**: ✅ **READY FOR APPROVAL** — zero Critical, zero Major findings. Pass-A/B/C remediation effectively closed every blocking and significant finding from Pass 1. Remaining issues are 1 Minor (likelihood-justification scope) and 3 Observations (clarity / auditor-friendliness improvements). None block release.
+
+**CI Exit Code**: Exit 2 (warning) — Minor findings only, no Critical/Major.
 
 **Recommended Next Steps**:
-1. Resolve PRF-HAZ-001 (coverage audit) and PRF-HAZ-002 (traceability cleanup).
-2. Complete Matrix H verification (PRF-HAZ-003) and include report.
-3. Address Major findings (PRF-HAZ-004 through PRF-HAZ-007).
-4. Clarify Minor findings (PRF-HAZ-008, PRF-HAZ-009).
-5. Re-run peer review on corrected artifact.
-6. Escalate to risk owner for sign-off once all Critical and Major findings are closed.
-
-**CI Exit Code**: Exit 1 (blocking merge) — Critical and Major findings present.
+1. Address PRF-HAZ-001 (Minor) by extending the Likelihood Justification scope to include HAZ-007.
+2. Apply PRF-HAZ-002, PRF-HAZ-003, PRF-HAZ-004 (Observations) in a follow-up polish pass — none are blocking.
+3. Re-run peer review after the Minor fix to confirm clean (Exit 0) state.

@@ -1,8 +1,8 @@
 # Peer Review — system-design.md
 
 **Reviewer**: AI Peer Review (spec-kit V-Model)
-**Date**: 2025-07-21
-**Artifact**: system-design.md (14 SYS)
+**Date**: 2026-04-27
+**Artifact**: system-design.md (14 SYS — 14 active, 0 deprecated, 0 suspect)
 **Standard**: IEEE 1016:2009
 **Review Type**: Technical Review (IEEE 1028:2008 §5)
 
@@ -12,28 +12,62 @@
 |----------|-------|
 | Critical | 0 |
 | Major | 0 |
-| Minor | 0 |
+| Minor | 3 |
 | Observation | 1 |
-| **Total Findings** | **1** |
+| **Total Findings** | **4** |
 
 ## Item Inventory
 
 - **Active Components**: 14 (SYS-001 through SYS-014)
 - **Deprecated Components**: 0
 - **Suspect Components**: 0
-- **Coverage**: All 43 active requirements traced to at least one SYS component (100%)
-- **Derived Requirements**: None (every SYS component traces to explicit REQ entries)
+- **Forward Coverage (REQ→SYS)**: 43 / 43 active requirements (100%)
+- **4 Mandatory IEEE 1016 Views**: Decomposition (§5.1), Dependency (§5.2), Interface (§5.3), Data Design (§5.4) — all present
+- **Supplementary Views**: Operational States (Behavioural), SYS-006 Algorithm Specification, Quality Attribute Coverage (ISO/IEC 25010:2023)
+
+## Pass-1 Remediation Status
+
+| Pass-1 Finding | Severity (P1) | Status in Pass 2 |
+|----------------|---------------|------------------|
+| PRF-SYS-001 — Operational State Coverage Recommendation | Observation | **Resolved.** A dedicated "Operational States (Behavioural View)" section has been added between the Data Design View and the SYS-006 Algorithm Specification, defining four states (NORMAL / DRY-RUN / COMMITTING / ERROR) with an entry-condition table, an ASCII state-transition diagram, and per-state mitigation notes. The new section is properly cross-referenced from `hazard-analysis.md`. The pass-1 observation is retired. New defects discovered inside the added section are recorded below as fresh findings. |
 
 ## Findings
 
-### PRF-SYS-001 — Operational State Coverage Recommendation
+### PRF-SYS-001 — Operational States section cites a non-existent IEEE 1016 clause
+
+| Field | Value |
+|-------|-------|
+| **Severity** | Minor |
+| **Location** | Section heading: "Operational States (IEEE 1016 §5.2 Behavioural View)" (line 166) |
+| **Description** | The new section is labelled "IEEE 1016 §5.2 Behavioural View". IEEE 1016:2009 §5.2 is the *Dependency description* viewpoint — the same clause already used (correctly) by the Dependency View at line 54. IEEE 1016:2009 does not define a clause titled "Behavioural View" at §5.2; the standard treats behavioural/state content via the broader §5 design viewpoints framework (typically realised as a supplementary State viewpoint). The current label simultaneously (a) duplicates the §5.2 reference, and (b) misattributes a clause title. Defect type: **Wrong** (ISO/IEC 20246:2017 §6.3) — incorrect standard citation. |
+| **Recommendation** | Re-label the heading to one of: "Operational States (IEEE 1016 §5 — Supplementary Behavioural Viewpoint)", or "Operational States (Behavioural View — IEEE 1016 design-viewpoints framework)". The §5.2 citation should remain exclusive to the Dependency View. |
+
+### PRF-SYS-002 — NORMAL state: entry condition includes `v-model.implement` but Active SYS Components omits SYS-003
+
+| Field | Value |
+|-------|-------|
+| **Severity** | Minor |
+| **Location** | State Definitions table — NORMAL row (line 178) |
+| **Description** | The NORMAL row's *Triggering / Entry Condition* column explicitly enumerates `v-model.implement (initial phase before write barrier)` as a valid entry into NORMAL. However, the *Active SYS Components* column for NORMAL lists only SYS-001, SYS-002, SYS-004, SYS-005, SYS-008, SYS-009, SYS-010, SYS-011, SYS-013 (and "SYS-006 in its preparation phase"). SYS-003 (Implementation Engine) is absent — yet by the entry condition it MUST be the active driver of `v-model.implement`'s initial phase in NORMAL. This is an internal contradiction within a single row of the state-definitions table. Defect type: **Inconsistent** (ISO/IEC 20246:2017 §6.3). |
+| **Recommendation** | Add `SYS-003 (pre-write-barrier phase)` to the Active SYS Components cell for NORMAL, mirroring the bracketed annotation used for SYS-006. Alternatively, narrow the entry-condition column to remove the `v-model.implement` reference and document the implement-initial phase as its own state. |
+
+### PRF-SYS-003 — ERROR→NORMAL transition is semantically ambiguous (process exit vs. state recovery)
+
+| Field | Value |
+|-------|-------|
+| **Severity** | Minor |
+| **Location** | State-Transition Diagram, line 208: `Any state ── on failure / signal ──▶ ERROR ── after summary flush ──▶ NORMAL` |
+| **Description** | The diagram models ERROR as recoverable, transitioning back to NORMAL "after summary flush". In reality, the ERROR state is defined (line 181) as "any command exit path with non-zero exit code", which terminates the process — there is no in-process return to NORMAL. The transition arrow conflates two distinct concepts: (a) the post-error housekeeping (SYS-012 summary emission) that completes inside the dying process, and (b) the *next* invocation of a bridge command, which is a fresh process and a separate state-machine instance. As drawn, the diagram suggests recoverable behaviour the system does not actually provide, which would mislead a reader cross-referencing this diagram for hazard-analysis (HAZ rows that depend on whether ERROR is terminal or recoverable). Defect type: **Ambiguous** (ISO/IEC 20246:2017 §6.3). |
+| **Recommendation** | Either (a) make ERROR a terminal state in the diagram (`ERROR ──▶ [process exit]` — no arrow back to NORMAL), and add a textual note that a subsequent invocation re-enters NORMAL as a new process; or (b) introduce an explicit `EXIT` pseudo-state and route all terminal paths (NORMAL-completion, COMMITTING-success, ERROR) into it. Update the per-state mitigation note (line 219) accordingly so that the "best-effort summary emission" is described as occurring during the ERROR→EXIT transition rather than ERROR→NORMAL. |
+
+### PRF-SYS-004 — State-definitions table lacks an explicit Exit / Transition-Trigger column
 
 | Field | Value |
 |-------|-------|
 | **Severity** | Observation |
-| **Location** | System Design (global) |
-| **Description** | The system design does not declare explicit operational states for key components. For example, SYS-003 (Implementation Engine) could benefit from explicit DRY-RUN vs COMMITTING states, and SYS-001/SYS-002 could declare IDLE vs PROCESSING states. While the current design is functional and complete against all 14 mandatory and non-functional requirements, explicit operational states would enable richer failure-mode analysis (FMEA) in future iterations and would support more granular contract definition in the Interface View. Note: The hazard-analysis.md artifact identified this as a design observation. This is not a defect in the current system design; it is a quality enhancement opportunity for increased observability and testability. |
-| **Recommendation** | Consider adding an optional "Operational States" subsection to a future design iteration, mapping each SYS component to its observable states (e.g., `SYS-003: {PRE_GATE, GENERATING, COMMITTING, COMPLETE, FAILED}`). This would support clearer dependency failure semantics and richer traceability from system test scenarios to design-level state machines. This enhancement is deferred to a future maintenance cycle and does not block the current release. |
+| **Location** | State Definitions table (lines 176–181) |
+| **Description** | The four-state table provides Definition, Entry Condition, and Active Components columns, but no per-state *Exit Condition / Transition Trigger* column. Exit conditions are only inferable from the ASCII diagram. For a behavioural view used as the authoritative source by `hazard-analysis.md` (per the section's own rationale), having entry and exit conditions co-located in the table — rather than split across a table and a diagram — would make state determinism mechanically auditable and would simplify HAZ-row cross-referencing. Defect type: **Incomplete** (ISO/IEC 20246:2017 §6.3) — informational only because the diagram does cover the transitions. |
+| **Recommendation** | Add a fifth column "Exit / Transition Trigger" listing, per state: NORMAL → {DRY-RUN on `--no-commit` after gate-pass; COMMITTING on default after gate-pass; ERROR on any uncaught failure}; DRY-RUN → {NORMAL on completion; ERROR on failure}; COMMITTING → {NORMAL on commit success; ERROR on failure}; ERROR → {EXIT after summary flush}. This redundancy with the ASCII diagram is intentional and conventional for behavioural views (e.g., UML state-table notation). |
 
 ---
 
@@ -41,60 +75,36 @@
 
 ### Coverage Metrics
 
-| Metric | Result | Finding |
-|--------|--------|---------|
-| **4 Mandatory IEEE 1016 Views** | ✓ Present | Decomposition (§5.1), Dependency (§5.2), Interface (§5.3), Data Design (§5.4) all populated with appropriate detail |
-| **REQ Traceability (SYS→REQ)** | ✓ 100% | All 14 active SYS components trace to 43 unique active requirements; no orphaned components |
-| **Interface Error Handling** | ✓ Complete | Every external and internal interface specifies error handling strategy (abort, propagate, warn, or best-effort) |
-| **Derived Requirements** | ✓ None | Document explicitly declares "None — every component traces to one or more existing `REQ-NNN`" |
-| **Lifecycle Completeness** | ✓ Compliant | Zero deprecated items, zero suspect items, zero orphaned deprecation chains |
-| **Dependency View Integrity** | ✓ Sound | All 10 internal dependencies documented with explicit failure impacts; fail-closed policy enforced for SYS-003 gate and hallucination checks |
-| **Data Design Completeness** | ✓ Complete | All data entities documented with storage, protection, and retention; no sensitive data flows identified |
-| **Quality Attribute Coverage** | ✓ Mapped | All seven ISO/IEC 25010:2023 characteristics addressed; no coverage gaps flagged in the artifact |
+| Metric | Result | Notes |
+|--------|--------|-------|
+| **4 Mandatory IEEE 1016 Views** | ✓ Present | Decomposition, Dependency, Interface, Data Design — all populated with appropriate detail |
+| **Supplementary Behavioural View** | ✓ Present (with defects above) | Operational States section added in pass C; satisfies the structural requirement of an enumerated state model with transition diagram and mitigation mapping |
+| **REQ Traceability (SYS→REQ)** | ✓ 100% | 14 active SYS → 43 unique active REQs; no orphans |
+| **Interface Error Handling** | ✓ Complete | All 7 external + 13 internal interfaces specify error semantics |
+| **Algorithm Specification (SYS-006)** | ✓ Present | Pseudocode + properties table + out-of-scope clauses; supports HAZ-007/012/013 likelihood claims |
+| **Derived Requirements** | ✓ None | Explicitly declared "None"; no implicit derivations |
+| **Lifecycle Completeness** | ✓ Compliant | Zero deprecated, zero suspect, zero orphaned cascades |
+| **Quality Attribute Coverage** | ✓ Mapped | All seven ISO/IEC 25010:2023 characteristics addressed |
+
+### Lifecycle Validation (Section 4.10)
+
+- **Deprecation syntax**: N/A — zero deprecated items.
+- **Unresolved suspects**: None.
+- **Coverage exclusion**: N/A — no deprecated items affect coverage computation.
+- **Orphaned deprecation chains**: N/A — no deprecated parents.
+
+No lifecycle defects identified.
 
 ### Standards Compliance
 
-- **IEEE 1016:2009**: All five design model elements present (Decomposition, Dependency, Interface, Data Design, Quality Attribute Coverage)
-- **IEEE 1028:2008 §5 (Technical Review)**: Entry criteria met (artifact complete, review focus is defect detection); exit criteria will be met on document disposition
-- **ISO/IEC 20246:2017 (Review Technique)**: Automated first-pass technical review; defect taxonomy applied
-
-### Architectural Quality
-
-**Strengths**:
-1. Clear separation of concerns: command business logic (SYS-001/002/003) decoupled from cross-cutting services (SYS-005, SYS-010, SYS-012)
-2. Explicit fail-closed safety semantics for critical gates (SYS-004, SYS-006)
-3. Comprehensive interface contracts with explicit error handling for all 12 documented interfaces
-4. Strong traceability: 43/43 requirements covered, no orphaned requirements
-5. User-friendly region preservation (SYS-007) for hybrid development paths
-
-**Risk Mitigations Present**:
-- SYS-004: Pre-implementation gate prevents incomplete traceability matrices from reaching code generation
-- SYS-006: Hallucination Guard prevents malformed traceability comments in commits
-- SYS-007: Source Region Manager allows safe re-runs without overwriting user code
-- SYS-013: Quality & Process Compliance Harness enforces 100% four-stack test coverage (BATS, Pester, structural eval, LLM eval)
-
-### No Defects Identified
-
-This artifact passed all deterministic validators. No Critical, Major, or Minor findings were identified. The design is coherent, traceable, and ready for implementation review.
+- **IEEE 1016:2009**: All four mandatory design views present; supplementary behavioural and quality-attribute viewpoints added; one citation defect noted (PRF-SYS-001).
+- **IEEE 1028:2008 §5 (Technical Review)**: Entry criteria met (artifact complete, defect-detection focus); exit criteria met (all findings logged with severity, location, description, recommendation).
+- **ISO/IEC 20246:2017**: Defect taxonomy applied (Wrong, Inconsistent, Ambiguous, Incomplete used in this pass).
 
 ---
 
 ## Conclusion
 
-**Status**: Review Complete
+The artifact has materially improved since pass 1: the previously-flagged operational-state observation is resolved by a dedicated Behavioural View, and the SYS-006 Algorithm Specification continues to provide the deterministic-control evidence consumed by `hazard-analysis.md`. The four mandatory IEEE 1016 views remain complete and traceable. No Critical or Major defects were identified in this pass; the three Minor findings concentrate on the newly-added Operational States section (incorrect §5.2 citation, NORMAL-state internal inconsistency, and ambiguous ERROR-recovery semantics in the transition diagram), and one Observation suggests tabulating per-state exit triggers to harden the behavioural-view's machine-auditability.
 
-The system-design.md artifact demonstrates mature technical quality:
-- ✓ All mandatory IEEE 1016 views present and coherent
-- ✓ 100% REQ traceability (14 SYS → 43 REQ)
-- ✓ Complete error handling specification for all interfaces
-- ✓ Zero lifecycle defects (no orphaned, deprecated, or suspect items)
-- ✓ Explicit fail-safe behavior for safety-critical operations
-
-One observation was identified regarding optional operational state declarations, which represents a design enhancement opportunity rather than a defect. This observation is informational and does not impact release readiness.
-
-**CI Exit Code**: 0 (No Critical or Major findings; Observation-only review passes baseline quality gates)
-
-**Recommended Next Steps**:
-1. System-design.md is approved for downstream architecture review and module-design decomposition
-2. Proceed to module-design.md peer review to verify that all 14 SYS components are decomposed into concrete MOD-NNN modules
-3. (Optional, deferred): In future maintenance iterations, consider adding operational-state diagrams to enhance observability and FMEA depth
+**CI Exit Code**: 2 (Minor findings only; no Critical/Major — non-blocking warning).
