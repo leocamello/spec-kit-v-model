@@ -285,7 +285,7 @@ FUNCTION tasks_orchestrator.run(feature_dir: Path, arguments: str = "") -> int:
 stateDiagram-v2
     [*] --> LOAD
     LOAD --> DETECT : artifact_set populated
-    LOAD --> FAIL : requirements.md absent
+    LOAD --> FAIL : requirements.md absent / MalformedArtifact
     DETECT --> BUILD
     BUILD --> HAZARD_ENRICH
     HAZARD_ENRICH --> FAIL : MalformedHazardAnalysis
@@ -293,9 +293,14 @@ stateDiagram-v2
     TRACE_ENRICH --> VALIDATE
     VALIDATE --> FAIL : SchemaValidationError
     VALIDATE --> WRITE
-    WRITE --> [*]
-    FAIL --> [*]
+    WRITE --> REPORT
+    FAIL --> REPORT
+    REPORT --> [*]
 ```
+
+> Both terminal paths (success and failure) flow through `REPORT` so that
+> the structured stdout summary (ARCH-016 / MOD-021) is always emitted —
+> matching the MOD-001 pattern. Only `REPORT` may transition to `[*]`.
 
 #### Internal Data Structures
 

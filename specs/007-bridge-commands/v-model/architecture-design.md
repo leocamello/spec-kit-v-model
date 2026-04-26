@@ -269,6 +269,8 @@ sequenceDiagram
 |-----------|------|------|--------|-------------|
 | Input | `generation_plan` | struct | as above | also requires test-plan artifacts |
 | Output | `test_set` | list[(path, content)] | absolute paths + UTF-8 content | covers unit / integration / system / acceptance levels |
+| Exception | `MalformedTestPlan` | raised | text + artifact path + line | when an input test-plan artifact (`unit-test.md`, `integration-test.md`, `system-test.md`, `acceptance-plan.md`) cannot be parsed or omits a mandatory field; propagated to ARCH-004 fail-closed |
+| Exception | `IOError` | from ARCH-021 | text + path | propagated unchanged when atomic-write of an emitted test file fails (e.g., target directory missing, disk full, permission denied); aborts the run before ARCH-009 is invoked |
 
 ### ARCH-007: Pre-Implementation Gate Coordinator
 
@@ -293,8 +295,9 @@ sequenceDiagram
 | Direction | Name | Type | Format | Constraints |
 |-----------|------|------|--------|-------------|
 | Input | `generated_files` | list[(path, content)] | UTF-8 | parsed for `// Implements <ID>` (and language-equivalent) comments |
-| Input | `vmodel_id_set` | set[string] | canonical IDs from ARCH-019 | the authoritative ID universe |
-| Output | `VerifyResult` | struct | `{valid: bool, hallucinations: [{file, line, id}]}` | `valid` ⟺ `len(hallucinations) == 0` |
+| Input | `vmodel_id_set` | set[string] | canonical IDs from ARCH-019 | the authoritative ID universe; constructed by ARCH-019 from the V-Model artifact set per the SYS-006 algorithm specification (system-design.md § "SYS-006 Algorithm Specification") |
+| Output | `VerifyResult` | struct | `{valid: bool, hallucinations: [{file, line, id}]}` | `valid` ⟺ `len(hallucinations) == 0`. Field `hallucinations[*].file` is the absolute path; `line` is 1-indexed; `id` is the verbatim claimed identifier as it appeared in the comment. |
+| Determinism | (intrinsic) | — | — | ARCH-009 is a pure function of `(generated_files, vmodel_id_set)`; no I/O, no LLM call, no clock, no randomness. Same inputs ⟹ same outputs across hosts and runs. See system-design.md § "SYS-006 Algorithm Specification" for the regex and complexity contract. |
 
 ### ARCH-010: Source Region Splicer
 
@@ -330,6 +333,8 @@ sequenceDiagram
 | Input | `doc` | string | canonical Markdown | schema is selected by call site (`validate_plan_schema` or `validate_tasks_schema`) |
 | Output | `ValidationResult` | struct | `{valid: bool, errors: [{section, line, message}]}` | strict against the pinned spec-kit-core schema |
 | Output | `pinned_version` | string | semver | reported in run summary |
+| Exception | `SchemaValidationError` | raised | text + section + line | wraps `ValidationResult` when callers prefer exception-style flow (ARCH-001, ARCH-003); equivalent to `ValidationResult{valid: false}` and carries the same error list. See ARCH-001 sequence (line 226) for the propagated semantics. |
+| Error-recovery | (none — fail-closed) | — | — | ARCH-013 NEVER attempts to mutate, repair, or downgrade `doc`. Callers MUST abort on any non-`valid` result and MUST NOT invoke ARCH-002 / ARCH-021 to write a non-conformant artifact. The reduced-enrichment fallback (ARCH-014) is a SEPARATE upstream-document path and does NOT bypass ARCH-013 on the output side. |
 
 ### ARCH-014: Reduced-Enrichment Fallback
 
