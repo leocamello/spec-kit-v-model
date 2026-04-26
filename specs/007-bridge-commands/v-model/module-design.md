@@ -1128,7 +1128,7 @@ N/A — Stateless
 
 **Parent Architecture Modules**: ARCH-015
 **Target Source File(s)**: `src/v_model_extension/hooks/registrar.py`
-**Implements REQ:** REQ-IF-003, REQ-NF-006
+**Implements REQ:** REQ-IF-003, REQ-IF-005, REQ-NF-006
 
 #### Algorithmic / Logic View
 

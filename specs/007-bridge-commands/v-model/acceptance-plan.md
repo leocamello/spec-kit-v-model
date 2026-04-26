@@ -578,17 +578,29 @@ This document defines the Acceptance Test Plan for the three bridge commands (`v
   * **When** the schema-checker validates against the pinned `tasks-template.md` and the `[P]` placement check runs
   * **Then** both checks report pass
 
-#### Requirement Validation: REQ-IF-003 (Hooks registered for `v-model.implement` and `v-model.requirements`)
+#### Requirement Validation: REQ-IF-003 (Implement-side hooks registered)
 
-##### Test Case: ATP-IF-003-A (`extensions.yml` registers required hooks)
-**Description:** Verify the required hook entries exist in `.specify/extensions.yml`.
-**Validation Condition:** Parsing `.specify/extensions.yml` reveals: an `after_specify` hook calling `v-model.requirements`; a `before_implement` hook calling `v-model.trace`; an `after_implement` hook calling `v-model.trace`.
-**Expected Result:** All three entries present.
+##### Test Case: ATP-IF-003-A (`extensions.yml` registers `before_implement` and `after_implement` hooks)
+**Description:** Verify the implement-side hook entries exist in `.specify/extensions.yml`.
+**Validation Condition:** Parsing `.specify/extensions.yml` reveals: a `before_implement` hook calling `v-model.trace`; an `after_implement` hook calling `v-model.trace`.
+**Expected Result:** Both entries present.
 
 * **User Scenario: SCN-IF-003-A1**
   * **Given** the `.specify/extensions.yml` file at HEAD of `feature/007-bridge-commands`
   * **When** the YAML is parsed
-  * **Then** the parsed hook table contains entries `after_specify → v-model.requirements`, `before_implement → v-model.trace`, and `after_implement → v-model.trace`
+  * **Then** the parsed hook table contains entries `before_implement → v-model.trace` and `after_implement → v-model.trace`
+
+#### Requirement Validation: REQ-IF-005 (`/speckit.v-model.requirements` reachable via `after_specify`)
+
+##### Test Case: ATP-IF-005-A (`extensions.yml` registers `after_specify` hook)
+**Description:** Verify the `after_specify` hook entry exists in `.specify/extensions.yml`.
+**Validation Condition:** Parsing `.specify/extensions.yml` reveals an `after_specify` hook calling `v-model.requirements`.
+**Expected Result:** Entry present.
+
+* **User Scenario: SCN-IF-005-A1**
+  * **Given** the `.specify/extensions.yml` file at HEAD of `feature/007-bridge-commands`
+  * **When** the YAML is parsed
+  * **Then** the parsed hook table contains the entry `after_specify → v-model.requirements`
 
 #### Requirement Validation: REQ-IF-004 (Summary format matches existing commands)
 

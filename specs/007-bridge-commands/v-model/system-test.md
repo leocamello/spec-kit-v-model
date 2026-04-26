@@ -493,7 +493,7 @@ resource-usage thresholds (e.g., WCET) apply to this test plan.
 
 ### Component Verification: SYS-011 (Hook Registrar)
 
-**Parent Requirements**: REQ-IF-003, REQ-NF-006
+**Parent Requirements**: REQ-IF-003, REQ-IF-005, REQ-NF-006
 
 #### Test Case: STP-011-A (Hook entries are registered without modifying the existing hook infrastructure)
 
@@ -606,7 +606,7 @@ STP. Below is the per-REQ-category mapping that confirms IEEE 1012:2016 §5.5.
 |--------------|---------------------|------------------------------------|
 | Functional REQs (REQ-001 … REQ-029) | Test (27 of 29) / Inspection (REQ-021) / — | STP coverage on the parent SYS component(s); REQ-021 is exercised by STP-014-A and audited by inspection |
 | Non-Functional REQs (REQ-NF-001 … REQ-NF-006) | Analysis (REQ-NF-001) / Test (4) / Inspection (REQ-NF-006) | REQ-NF-001 covered by STP-013-A (analysis activity codified as test); REQ-NF-002 by STP-006-A/B; REQ-NF-003 by STP-005-A; REQ-NF-004 by STP-004-B; REQ-NF-005 by STP-001-B; REQ-NF-006 by STP-011-A and audit |
-| Interface REQs (REQ-IF-001 … REQ-IF-004) | Test (3) / Inspection (REQ-IF-004) | REQ-IF-001 by STP-001-A + STP-005-A; REQ-IF-002 by STP-002-A + STP-005-A; REQ-IF-003 by STP-011-A; REQ-IF-004 by STP-012-A |
+| Interface REQs (REQ-IF-001 … REQ-IF-005) | Test (4) / Inspection (REQ-IF-004) | REQ-IF-001 by STP-001-A + STP-005-A; REQ-IF-002 by STP-002-A + STP-005-A; REQ-IF-003 by STP-011-A; REQ-IF-004 by STP-012-A; REQ-IF-005 by STP-011-A |
 | Constraint REQs (REQ-CN-001 … REQ-CN-004) | Inspection (all 4) | REQ-CN-001 by STP-010-A (audit step STS-010-A3); REQ-CN-002 by STP-004-A (audit step STS-004-A2); REQ-CN-003 by STP-013-B; REQ-CN-004 by STP-013-B |
 
 **V&V gap list**: empty. No `[V&V GAP]` flags raised.

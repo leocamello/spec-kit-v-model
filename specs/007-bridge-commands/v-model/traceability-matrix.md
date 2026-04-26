@@ -38,6 +38,8 @@
 | | | ATP-022-B | User customisations between managed regions preserved | SCN-022-B1 | ⬜ Untested |
 | **REQ-023** | The `v-model.implement` command SHALL self-verify, before committing any output, that every `// Implements <ID>` comment it generated references an identifier that exists in the feature's V-Model artifacts; if any hallucinated identifier is detected the command MUST exit non-zero and MUST NOT commit. | ATP-023-A | Hallucinated ID detected; no commit | SCN-023-A1 | ⬜ Untested |
 | **REQ-024** | The `v-model.implement` command SHALL honour the configured domain overlay (read from `v-model-config.yml`) by applying overlay-specific output requirements, including but not limited to MC/DC unit-test coverage requirements for DO-178C Level A and ASIL-driven test depth for ISO 26262. | ATP-024-A | DO-178C Level A overlay enforces MC/DC tests | SCN-024-A1 | ⬜ Untested |
+| | | ATP-024-B | Configured-but-unloadable overlay fails closed without partial application | SCN-024-B1 | ⬜ Untested |
+| | | ATP-024-B | Configured-but-unloadable overlay fails closed without partial application | SCN-024-B2 | ⬜ Untested |
 | **REQ-025** | The `v-model.implement` command SHALL be idempotent: re-running it on identical inputs MUST produce output that differs only in non-substantive ways (LLM phrasing variability), measured as ≥95% structural identity by the project's structural eval comparison. | ATP-025-A | Re-run produces structurally equivalent output | SCN-025-A1 | ⬜ Untested |
 | **REQ-026** | All three bridge commands SHALL be invocable from the spec-kit CLI under the names `/speckit.v-model.plan`, `/speckit.v-model.tasks`, and `/speckit.v-model.implement` respectively. | ATP-026-A | All three names registered | SCN-026-A1 | ⬜ Untested |
 | **REQ-027** | All three bridge commands SHALL produce a structured summary on stdout indicating: every input artifact read, every output artifact produced, every optional artifact skipped, and every warning encountered. | ATP-027-A | Summary contains required fields | SCN-027-A1 | ⬜ Untested |
@@ -50,8 +52,9 @@
 | **REQ-CN-004** | The bridge commands SHALL be developed under the project's "dogfood-driven development" discipline: the V-Model artifacts for `specs/007-bridge-commands/` SHALL be produced and validated before any bridge-command implementation code is written. | ATP-CN-004-A | V-Model artifacts present before any bridge-command code | SCN-CN-004-A1 | ⬜ Untested |
 | **REQ-IF-001** | The `v-model.plan` command output `plan.md` SHALL conform exactly to spec-kit core's canonical `plan-template.md` schema as published at v0.7.0 release time, with all required sections present and in the prescribed order. | ATP-IF-001-A | Section presence and order match canonical | SCN-IF-001-A1 | ⬜ Untested |
 | **REQ-IF-002** | The `v-model.tasks` command output `tasks.md` SHALL conform exactly to spec-kit core's canonical `tasks-template.md` schema as published at v0.7.0 release time, including the `[P]` parallel-execution marker convention. | ATP-IF-002-A | Schema and parallel marker convention honoured | SCN-IF-002-A1 | ⬜ Untested |
-| **REQ-IF-003** | The `v-model.implement` command SHALL register the `before_implement` and `after_implement` extension hooks to invoke the `v-model.trace` command, and the `/speckit.v-model.requirements` command SHALL be reachable via the `after_specify` hook. | ATP-IF-003-A | `extensions.yml` registers required hooks | SCN-IF-003-A1 | ⬜ Untested |
+| **REQ-IF-003** | The `v-model.implement` command SHALL register the `before_implement` and `after_implement` extension hooks to invoke the `v-model.trace` command. | ATP-IF-003-A | `extensions.yml` registers `before_implement` and `after_implement` hooks | SCN-IF-003-A1 | ⬜ Untested |
 | **REQ-IF-004** | All three bridge commands SHALL emit their structured stdout summary in a format machine-readable by the project's existing summary-parsing tooling (the same conventions used by `v-model.test-results` and `v-model.audit-report`). | ATP-IF-004-A | Summary parser shared with `test-results` and `audit-report` succeeds | SCN-IF-004-A1 | ⬜ Untested |
+| **REQ-IF-005** | The `/speckit.v-model.requirements` command SHALL be reachable via the `after_specify` hook. | ATP-IF-005-A | `extensions.yml` registers `after_specify` hook | SCN-IF-005-A1 | ⬜ Untested |
 | **REQ-NF-001** | The bridge commands collectively SHALL achieve 100% test coverage across BATS, Pester, structural eval, and LLM eval test suites before merge into `main`. | ATP-NF-001-A | BATS, Pester, structural, LLM evals all present and green | SCN-NF-001-A1 | ⬜ Untested |
 | **REQ-NF-002** | The `v-model.implement` command SHALL produce zero hallucinated V-Model identifiers in any generated artifact, measured as 100% pass rate on the structural-eval ID-validation check across all test fixtures. | ATP-NF-002-A | Structural eval reports zero hallucinated IDs across all fixtures | SCN-NF-002-A1 | ⬜ Untested |
 | **REQ-NF-003** | All bridge command outputs intended for spec-kit core consumption SHALL parse without error, warning, or unrecognised-token diagnostic when processed by an unmodified spec-kit core release pinned at the version present at v0.7.0 release. | ATP-NF-003-A | Pinned spec-kit core release ingests bridge outputs cleanly | SCN-NF-003-A1 | ⬜ Untested |
@@ -63,11 +66,11 @@
 
 | Metric | Value |
 |--------|-------|
-| **Total Requirements** | 43 |
-| **Total Test Cases (ATP)** | 51 |
-| **Total Scenarios (SCN)** | 51 |
-| **REQ → ATP Coverage** | 43/43 (100%) |
-| **ATP → SCN Coverage** | 51/51 (100%) |
+| **Total Requirements** | 44 |
+| **Total Test Cases (ATP)** | 53 |
+| **Total Scenarios (SCN)** | 54 |
+| **REQ → ATP Coverage** | 44/44 (100%) |
+| **ATP → SCN Coverage** | 53/53 (100%) |
 
 ## Matrix B — Verification (Architectural View)
 
@@ -224,6 +227,7 @@
 | | SYS-007 | Source Region Manager | STP-007-A | Boundary Value Analysis | STS-007-A2 | ⬜ Untested |
 | | SYS-007 | Source Region Manager | STP-007-A | Boundary Value Analysis | STS-007-A3 | ⬜ Untested |
 | | SYS-007 | Source Region Manager | STP-007-B | Fault Injection | STS-007-B1 | ⬜ Untested |
+| | SYS-007 | Source Region Manager | STP-007-B | Fault Injection | STS-007-B2 | ⬜ Untested |
 | **REQ-023** | SYS-006 | Hallucination Guard | STP-006-A | Interface Contract Testing | STS-006-A1 | ⬜ Untested |
 | | SYS-006 | Hallucination Guard | STP-006-A | Interface Contract Testing | STS-006-A2 | ⬜ Untested |
 | | SYS-006 | Hallucination Guard | STP-006-B | Equivalence Partitioning | STS-006-B1 | ⬜ Untested |
@@ -361,6 +365,8 @@
 | | SYS-011 | Hook Registrar | STP-011-A | Interface Contract Testing | STS-011-A2 | ⬜ Untested |
 | **REQ-IF-004** | SYS-012 | Structured Summary Reporter | STP-012-A | Interface Contract Testing | STS-012-A1 | ⬜ Untested |
 | | SYS-012 | Structured Summary Reporter | STP-012-A | Interface Contract Testing | STS-012-A2 | ⬜ Untested |
+| **REQ-IF-005** | SYS-011 | Hook Registrar | STP-011-A | Interface Contract Testing | STS-011-A1 | ⬜ Untested |
+| | SYS-011 | Hook Registrar | STP-011-A | Interface Contract Testing | STS-011-A2 | ⬜ Untested |
 | **REQ-NF-001** | SYS-013 | Quality & Process Compliance Harness | STP-013-A | Interface Contract Testing | STS-013-A1 | ⬜ Untested |
 | | SYS-013 | Quality & Process Compliance Harness | STP-013-A | Interface Contract Testing | STS-013-A2 | ⬜ Untested |
 | | SYS-013 | Quality & Process Compliance Harness | STP-013-B | Equivalence Partitioning | STS-013-B1 | ⬜ Untested |
@@ -409,8 +415,8 @@
 |--------|-------|
 | **Total System Components (SYS)** | 14 |
 | **Total System Test Cases (STP)** | 28 |
-| **Total System Scenarios (STS)** | 59 |
-| **REQ → SYS Coverage** | 43/43 (100%) |
+| **Total System Scenarios (STS)** | 60 |
+| **REQ → SYS Coverage** | 44/44 (100%) |
 | **SYS → STP Coverage** | 14/14 (100%) |
 
 ## Matrix C — Integration Verification (Module Boundary View)
@@ -464,9 +470,9 @@
 | SYS-010 (REQ-028, REQ-029, REQ-IF-001, REQ-IF-002, REQ-CN-001) | REQ-028, REQ-029, REQ-IF-001, REQ-IF-002, REQ-CN-001 | ARCH-013 | Spec-Kit Schema Validator | ITP-013-A | Interface Contract Testing | ITS-013-A2 | ⬜ Untested |
 | SYS-010 (REQ-028, REQ-029, REQ-IF-001, REQ-IF-002, REQ-CN-001) | REQ-028, REQ-029, REQ-IF-001, REQ-IF-002, REQ-CN-001 | ARCH-014 | Reduced-Enrichment Fallback | ITP-014-A | Interface Contract Testing | ITS-014-A1 | ⬜ Untested |
 | SYS-010 (REQ-028, REQ-029, REQ-IF-001, REQ-IF-002, REQ-CN-001) | REQ-028, REQ-029, REQ-IF-001, REQ-IF-002, REQ-CN-001 | ARCH-014 | Reduced-Enrichment Fallback | ITP-014-A | Interface Contract Testing | ITS-014-A2 | ⬜ Untested |
-| SYS-011 (REQ-IF-003, REQ-NF-006) | REQ-IF-003, REQ-NF-006 | ARCH-015 | Hook Registrar | ITP-015-A | Interface Contract Testing | ITS-015-A1 | ⬜ Untested |
-| SYS-011 (REQ-IF-003, REQ-NF-006) | REQ-IF-003, REQ-NF-006 | ARCH-015 | Hook Registrar | ITP-015-A | Interface Contract Testing | ITS-015-A2 | ⬜ Untested |
-| SYS-011 (REQ-IF-003, REQ-NF-006) | REQ-IF-003, REQ-NF-006 | ARCH-015 | Hook Registrar | ITP-015-B | Interface Fault Injection | ITS-015-B1 | ⬜ Untested |
+| SYS-011 (REQ-IF-003, REQ-IF-005, REQ-NF-006) | REQ-IF-003, REQ-IF-005, REQ-NF-006 | ARCH-015 | Hook Registrar | ITP-015-A | Interface Contract Testing | ITS-015-A1 | ⬜ Untested |
+| SYS-011 (REQ-IF-003, REQ-IF-005, REQ-NF-006) | REQ-IF-003, REQ-IF-005, REQ-NF-006 | ARCH-015 | Hook Registrar | ITP-015-A | Interface Contract Testing | ITS-015-A2 | ⬜ Untested |
+| SYS-011 (REQ-IF-003, REQ-IF-005, REQ-NF-006) | REQ-IF-003, REQ-IF-005, REQ-NF-006 | ARCH-015 | Hook Registrar | ITP-015-B | Interface Fault Injection | ITS-015-B1 | ⬜ Untested |
 | SYS-012 (REQ-027, REQ-IF-004) | REQ-027, REQ-IF-004 | ARCH-016 | Structured Summary Reporter | ITP-016-A | Interface Contract Testing | ITS-016-A1 | ⬜ Untested |
 | SYS-012 (REQ-027, REQ-IF-004) | REQ-027, REQ-IF-004 | ARCH-016 | Structured Summary Reporter | ITP-016-A | Interface Contract Testing | ITS-016-A2 | ⬜ Untested |
 | SYS-013 (REQ-NF-001, REQ-CN-003, REQ-CN-004) | REQ-NF-001, REQ-CN-003, REQ-CN-004 | ARCH-017 | Quality Compliance Harness | ITP-017-A | Interface Contract Testing | ITS-017-A1 | ⬜ Untested |
@@ -476,9 +482,15 @@
 | N/A (Cross-Cutting) | — | ARCH-019 | V-Model Artifact Reader | ITP-019-A | Interface Contract Testing | ITS-019-A1 | ⬜ Untested |
 | N/A (Cross-Cutting) | — | ARCH-019 | V-Model Artifact Reader | ITP-019-A | Interface Contract Testing | ITS-019-A2 | ⬜ Untested |
 | N/A (Cross-Cutting) | — | ARCH-019 | V-Model Artifact Reader | ITP-019-B | Interface Fault Injection | ITS-019-B1 | ⬜ Untested |
+| N/A (Cross-Cutting) | — | ARCH-019 | V-Model Artifact Reader | ITP-019-C | Concurrency & Race Condition Testing | ITS-019-C1 | ⬜ Untested |
+| N/A (Cross-Cutting) | — | ARCH-019 | V-Model Artifact Reader | ITP-019-C | Concurrency & Race Condition Testing | ITS-019-C2 | ⬜ Untested |
+| N/A (Cross-Cutting) | — | ARCH-019 | V-Model Artifact Reader | ITP-019-C | Concurrency & Race Condition Testing | ITS-019-C3 | ⬜ Untested |
 | N/A (Cross-Cutting) | — | ARCH-020 | Subprocess Runner | ITP-020-A | Interface Contract Testing | ITS-020-A1 | ⬜ Untested |
 | N/A (Cross-Cutting) | — | ARCH-020 | Subprocess Runner | ITP-020-B | Interface Fault Injection | ITS-020-B1 | ⬜ Untested |
 | N/A (Cross-Cutting) | — | ARCH-020 | Subprocess Runner | ITP-020-B | Interface Fault Injection | ITS-020-B2 | ⬜ Untested |
+| N/A (Cross-Cutting) | — | ARCH-020 | Subprocess Runner | ITP-020-C | Interface Fault Injection | ITS-020-C1 | ⬜ Untested |
+| N/A (Cross-Cutting) | — | ARCH-020 | Subprocess Runner | ITP-020-C | Interface Fault Injection | ITS-020-C2 | ⬜ Untested |
+| N/A (Cross-Cutting) | — | ARCH-020 | Subprocess Runner | ITP-020-C | Interface Fault Injection | ITS-020-C3 | ⬜ Untested |
 | N/A (Cross-Cutting) | — | ARCH-020 | Subprocess Runner | ITP-020-D | Concurrency & Race Condition Testing | ITS-020-D1 | ⬜ Untested |
 | N/A (Cross-Cutting) | — | ARCH-021 | Filesystem Writer | ITP-021-A | Interface Contract Testing | ITS-021-A1 | ⬜ Untested |
 | N/A (Cross-Cutting) | — | ARCH-021 | Filesystem Writer | ITP-021-A | Interface Contract Testing | ITS-021-A2 | ⬜ Untested |
@@ -492,8 +504,8 @@
 |--------|-------|
 | **Total Architecture Modules (ARCH)** | 21 |
 | **Total Cross-Cutting Modules** | 3 |
-| **Total Integration Test Cases (ITP)** | 40 |
-| **Total Integration Scenarios (ITS)** | 68 |
+| **Total Integration Test Cases (ITP)** | 42 |
+| **Total Integration Scenarios (ITS)** | 74 |
 | **SYS → ARCH Coverage** | 14/14 (100%) |
 | **ARCH → ITP Coverage** | 21/21 (100%) |
 
@@ -800,7 +812,7 @@ None — all integration tests trace to modules.
 | HAZ-014 | REQ-022 | ATP-022-B ATP-022-A | ⬜ Pending |
 | | REQ-NF-005 | ATP-NF-005-A | ⬜ Pending |
 | | SYS-003 | STP-003-A STP-003-B STP-003-C | ⬜ Pending |
-| HAZ-015 | REQ-024 | ATP-024-A | ⬜ Pending |
+| HAZ-015 | REQ-024 | ATP-024-A ATP-024-B | ⬜ Pending |
 | | SYS-003 | STP-003-A STP-003-B STP-003-C | ⬜ Pending |
 | HAZ-016 | REQ-014 | ATP-014-A ATP-014-B | ⬜ Pending |
 | | SYS-002 | STP-002-A STP-002-B STP-002-C | ⬜ Pending |
@@ -812,6 +824,7 @@ None — all integration tests trace to modules.
 | | REQ-CN-001 | ATP-CN-001-A | ⬜ Pending |
 | | SYS-005 | STP-005-A STP-005-B | ⬜ Pending |
 | HAZ-019 | REQ-IF-003 | ATP-IF-003-A | ⬜ Pending |
+| | REQ-IF-005 | ATP-IF-005-A | ⬜ Pending |
 | | REQ-NF-006 | ATP-NF-006-A | ⬜ Pending |
 | HAZ-020 | REQ-027 | ATP-027-A | ⬜ Pending |
 | | REQ-IF-004 | ATP-IF-004-A | ⬜ Pending |
@@ -823,7 +836,7 @@ None — all integration tests trace to modules.
 | HAZ-023 | REQ-023 | ATP-023-A | ⬜ Pending |
 | | REQ-NF-002 | ATP-NF-002-A | ⬜ Pending |
 | | SYS-003 | STP-003-A STP-003-B STP-003-C | ⬜ Pending |
-| HAZ-024 | REQ-024 | ATP-024-A | ⬜ Pending |
+| HAZ-024 | REQ-024 | ATP-024-A ATP-024-B | ⬜ Pending |
 | | SYS-003 | STP-003-A STP-003-B STP-003-C | ⬜ Pending |
 | HAZ-025 | REQ-027 | ATP-027-A | ⬜ Pending |
 | | REQ-IF-004 | ATP-IF-004-A | ⬜ Pending |
