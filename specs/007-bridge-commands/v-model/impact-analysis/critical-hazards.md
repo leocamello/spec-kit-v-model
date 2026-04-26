@@ -4,6 +4,16 @@
 **Direction**: full
 **Source**: `specs/007-bridge-commands/v-model`
 
+> **PRF-HAZ-002 annotation (peer-review remediation):** This auto-generated
+> report includes `REQ-999` in its Re-validation Order (Upstream) section
+> as an upstream suspect. `REQ-999` is a **known phantom test fixture**,
+> intentionally retained in the requirements set to exercise hallucination-
+> detection paths in the structural-eval CI harness. Treat any appearance
+> of `REQ-999` in this report as a known false-positive; it is not a real
+> upstream requirement and requires no traceability action. The next
+> intentional re-run of `impact-analysis.sh` will continue to surface it
+> until v0.7.1 introduces a phantom-fixture exclusion list.
+
 ## Changed IDs
 
 | ID | Type |

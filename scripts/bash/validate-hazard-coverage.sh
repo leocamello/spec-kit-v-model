@@ -162,8 +162,9 @@ defined_states=()
 state_section=$(sed -n '/[Oo]perational [Ss]tates\|[Oo]perating [Mm]odes\|[Ss]ystem [Ss]tates/,/^## /p' "$SYSTEM_DESIGN" 2>/dev/null || true)
 if [[ -n "$state_section" ]]; then
     # Extract capitalized state names from table rows (| STATE_NAME | ...)
+    # State names may contain underscores or hyphens (e.g. DRY-RUN).
     while IFS= read -r line; do
-        if [[ "$line" =~ ^\|[[:space:]]*([A-Z][A-Z_]+)[[:space:]]*\| ]]; then
+        if [[ "$line" =~ ^\|[[:space:]]*([A-Z][A-Z_-]+)[[:space:]]*\| ]]; then
             state="${BASH_REMATCH[1]}"
             # Skip table headers
             if [[ "$state" != "STATE" ]] && [[ "$state" != "STATE_NAME" ]] && [[ "$state" != "NAME" ]]; then
@@ -184,14 +185,34 @@ fi
 # Add "ALL" as always valid (used when severity is same across all states)
 defined_states+=("ALL")
 
-# Extract operational states from HAZ FMEA table (column 4)
+# Extract operational states from HAZ FMEA table (column 4).
+# A single cell may carry a comma-separated list of states (e.g.
+# "DRY-RUN, COMMITTING") when one HAZ arises in more than one
+# operational state. Each listed state is validated independently.
+# Only rows from the FMEA table are processed; "justification" tables
+# elsewhere in hazard-analysis.md may key on HAZ-NNN but have fewer
+# columns and must be skipped.
 haz_states=()
 state_warnings=()
 while IFS= read -r line; do
     if [[ "$line" =~ ^\|[[:space:]]*HAZ-[0-9]{3}[[:space:]]*\| ]]; then
-        state=$(echo "$line" | awk -F'|' '{print $5}' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
-        if [[ -n "$state" ]]; then
-            haz_states+=("$state")
+        # Skip non-FMEA tables: the FMEA row has at least 10 columns
+        # (HAZ ID + 9 attributes) so awk NF ≥ 11 (2 outer pipes
+        # produce 2 empty fields plus one per cell).
+        ncols=$(echo "$line" | awk -F'|' '{print NF}')
+        if [[ "$ncols" -lt 11 ]]; then
+            continue
+        fi
+        cell=$(echo "$line" | awk -F'|' '{print $5}' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+        if [[ -n "$cell" ]]; then
+            # Split on comma to support multi-state cells
+            IFS=',' read -ra parts <<< "$cell"
+            for part in "${parts[@]}"; do
+                trimmed=$(echo "$part" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+                if [[ -n "$trimmed" ]]; then
+                    haz_states+=("$trimmed")
+                fi
+            done
         fi
     fi
 done < "$HAZARD_ANALYSIS"

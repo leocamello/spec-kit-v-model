@@ -807,8 +807,12 @@ None — all integration tests trace to modules.
 | | REQ-CN-001 | ATP-CN-001-A | ⬜ Pending |
 | HAZ-012 | REQ-023 | ATP-023-A | ⬜ Pending |
 | | REQ-NF-002 | ATP-NF-002-A | ⬜ Pending |
+| | SYS-006 | STP-006-A STP-006-B | ⬜ Pending |
+| | SYS-006 | STP-006-A STP-006-B | ⬜ Pending |
 | | SYS-013 | STP-013-A STP-013-B | ⬜ Pending |
 | HAZ-013 | REQ-023 | ATP-023-A | ⬜ Pending |
+| | SYS-006 | STP-006-A STP-006-B | ⬜ Pending |
+| | SYS-006 | STP-006-A STP-006-B | ⬜ Pending |
 | HAZ-014 | REQ-022 | ATP-022-B ATP-022-A | ⬜ Pending |
 | | REQ-NF-005 | ATP-NF-005-A | ⬜ Pending |
 | | SYS-003 | STP-003-A STP-003-B STP-003-C | ⬜ Pending |
