@@ -590,18 +590,6 @@ This document defines the Acceptance Test Plan for the three bridge commands (`v
   * **When** the YAML is parsed
   * **Then** the parsed hook table contains entries `before_implement → v-model.trace` and `after_implement → v-model.trace`
 
-#### Requirement Validation: REQ-IF-005 (`/speckit.v-model.requirements` reachable via `after_specify`)
-
-##### Test Case: ATP-IF-005-A (`extensions.yml` registers `after_specify` hook)
-**Description:** Verify the `after_specify` hook entry exists in `.specify/extensions.yml`.
-**Validation Condition:** Parsing `.specify/extensions.yml` reveals an `after_specify` hook calling `v-model.requirements`.
-**Expected Result:** Entry present.
-
-* **User Scenario: SCN-IF-005-A1**
-  * **Given** the `.specify/extensions.yml` file at HEAD of `feature/007-bridge-commands`
-  * **When** the YAML is parsed
-  * **Then** the parsed hook table contains the entry `after_specify → v-model.requirements`
-
 #### Requirement Validation: REQ-IF-004 (Summary format matches existing commands)
 
 ##### Test Case: ATP-IF-004-A (Summary parser shared with `test-results` and `audit-report` succeeds)
@@ -613,6 +601,18 @@ This document defines the Acceptance Test Plan for the three bridge commands (`v
   * **Given** the structured stdout summaries produced by `v-model.plan`, `v-model.tasks`, and `v-model.implement` on a fixture run
   * **When** the existing summary-parsing tool is invoked on each summary
   * **Then** the parser exits 0 and produces a non-empty parsed object for each summary
+
+#### Requirement Validation: REQ-IF-005 (`/speckit.v-model.requirements` reachable via `after_specify`)
+
+##### Test Case: ATP-IF-005-A (`extensions.yml` registers `after_specify` hook)
+**Description:** Verify the `after_specify` hook entry exists in `.specify/extensions.yml`.
+**Validation Condition:** Parsing `.specify/extensions.yml` reveals an `after_specify` hook calling `v-model.requirements`.
+**Expected Result:** Entry present.
+
+* **User Scenario: SCN-IF-005-A1**
+  * **Given** the `.specify/extensions.yml` file at HEAD of `feature/007-bridge-commands`
+  * **When** the YAML is parsed
+  * **Then** the parsed hook table contains the entry `after_specify → v-model.requirements`
 
 ---
 
@@ -672,11 +672,11 @@ This document defines the Acceptance Test Plan for the three bridge commands (`v
 
 | Metric | Count |
 |--------|-------|
-| Total Requirements (REQ) | 43 (43 active, 0 deprecated) |
-| Total Test Cases (ATP) | 51 (51 active, 0 deprecated, 0 suspect) |
-| Total Scenarios (SCN) | 51 |
-| Active Requirements with ≥1 ATP | 43 / 43 (100%) |
-| Test Cases with ≥1 SCN | 51 / 51 (100%) |
+| Total Requirements (REQ) | 44 (44 active, 0 deprecated) |
+| Total Test Cases (ATP) | 53 (53 active, 0 deprecated, 0 suspect) |
+| Total Scenarios (SCN) | 54 |
+| Active Requirements with ≥1 ATP | 44 / 44 (100%) |
+| Test Cases with ≥1 SCN | 53 / 53 (100%) |
 | **Overall Coverage** | **100%** (active items only) |
 
 **Validation Status**: ✅ Full Coverage (pending deterministic validation by `validate-requirement-coverage.sh`)

@@ -262,6 +262,7 @@ sequenceDiagram
 | Input | `generation_plan` | struct | `{modules[], language_per_module, target_paths}` | every entry has a `MOD-NNN` and a Target Source File |
 | Output | `file_set` | list[(path, content)] | absolute paths + UTF-8 content | every emitted file contains ≥1 `// Implements <ID>` (language-appropriate) comment |
 | Exception | `RegionConflict` | from ARCH-010 | propagated | aborts before any file is written |
+| Exception | `IOError` | from ARCH-021 | text + path | raised by ARCH-021 in pipeline Stage 7 (after ARCH-009 returns `valid: true`) when atomic-write of an emitted source file fails (target dir missing, disk full, permission denied); aborts the run during the write phase, after verification has already passed. ARCH-005 itself never writes to disk — the (`path`, `content`) tuples it returns to ARCH-004 are passed through ARCH-009 first, then handed to ARCH-021 for atomic write. This row documents the exception that propagates back through ARCH-005's call frame, not a failure mode of ARCH-005 itself. |
 
 ### ARCH-006: Test Generator
 
@@ -333,7 +334,7 @@ sequenceDiagram
 | Input | `doc` | string | canonical Markdown | schema is selected by call site (`validate_plan_schema` or `validate_tasks_schema`) |
 | Output | `ValidationResult` | struct | `{valid: bool, errors: [{section, line, message}]}` | strict against the pinned spec-kit-core schema |
 | Output | `pinned_version` | string | semver | reported in run summary |
-| Exception | `SchemaValidationError` | raised | text + section + line | wraps `ValidationResult` when callers prefer exception-style flow (ARCH-001, ARCH-003); equivalent to `ValidationResult{valid: false}` and carries the same error list. See ARCH-001 sequence (line 226) for the propagated semantics. |
+| Exception | `SchemaValidationError` | raised | text + section + line | wraps `ValidationResult` when callers prefer exception-style flow (ARCH-001, ARCH-003); equivalent to `ValidationResult{valid: false}` and carries the same error list. See ARCH-001 § Interface View "SchemaValidationError" exception row for the propagated semantics. |
 | Error-recovery | (none — fail-closed) | — | — | ARCH-013 NEVER attempts to mutate, repair, or downgrade `doc`. Callers MUST abort on any non-`valid` result and MUST NOT invoke ARCH-002 / ARCH-021 to write a non-conformant artifact. The reduced-enrichment fallback (ARCH-014) is a SEPARATE upstream-document path and does NOT bypass ARCH-013 on the output side. |
 
 ### ARCH-014: Reduced-Enrichment Fallback
@@ -367,6 +368,7 @@ sequenceDiagram
 | Input | `feature_dir` | path | absolute path | |
 | Output | `CoverageReport` | struct | `{bats: pct, pester: pct, structural_eval: pct, llm_eval: pct, merge_gate: "allow"\|"block"}` | `merge_gate == "allow"` ⟺ every harness reports 100% |
 | Output | `AuditReport` | struct | `{deferred_capability_violations: [], dogfood_discipline_ok: bool}` | for REQ-CN-003 / REQ-CN-004 audit steps |
+| Exception | `SubprocessFailure` | from ARCH-020 | text + harness name + exit code | propagated to caller; `merge_gate` left undefined when this is raised — caller must treat as a fail-closed condition equivalent to `merge_gate:"block"`. |
 
 ### ARCH-018: Commit Annotator
 
@@ -430,6 +432,16 @@ sequenceDiagram
 | 6 | ARCH-009 | `list[(path, final_content)]` + `vmodel_id_set` | Verify every `// Implements <ID>` references a real ID | `VerifyResult` (must be `valid: true` to proceed) |
 | 7 | ARCH-021 | `list[(path, final_content)]` | Atomic write | source files on disk |
 | 8 | ARCH-018 | base commit message + `vmodel_id_set` | Append ID suffix; invoke `git commit` | annotated commit in Git history |
+
+### Error and Abort Paths
+
+| Condition | Effect |
+|-----------|--------|
+| ARCH-013 returns `valid:false` at Stage 6 (tasks flow) | ARCH-003 raises `SchemaValidationError`; Stage 7 NOT executed; no `tasks.md` written. |
+| ARCH-009 returns `valid:false` at Stage 6 (source flow) | ARCH-004 raises `HallucinationDetected`; Stages 7–8 NOT executed; no source files written; no commit produced. |
+| ARCH-021 raises `IOError` at Stage 7 (source flow) | ARCH-004 propagates; no commit at Stage 8; partial files left in tmp namespace per ARCH-021 atomic semantics. |
+| ARCH-007 returns `passed:false` at Stage 3 (source flow) | Upstream caller aborts before Stage 4; no plan/task generation proceeds. |
+| ARCH-014 raises `UpstreamParseError` at Stage 2 (tasks flow) | ARCH-003 propagates fail-closed; Stages 3–7 NOT executed; no `tasks.md` written. |
 
 ---
 

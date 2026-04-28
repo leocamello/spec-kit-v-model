@@ -244,9 +244,13 @@ FUNCTION tasks_orchestrator.run(feature_dir: Path, arguments: str = "") -> int:
         enrichment_report = NULL
         IF upstream_plan IS NOT NULL:
             enrichment_report = MOD-019.detect_enrichment(upstream_plan)
+            // enrichment_report is opaque transport for diagnostics only;
+            // it drives no behavioural variant in MOD-003 or MOD-004.
+            IF enrichment_report IS NOT NULL AND NOT enrichment_report.enriched:
+                log_warning(f"Reduced-enrichment path — upstream lacks {enrichment_report.missing_metadata_keys}; downstream traceability derived directly from V-Model artifact set per ARCH-014")
 
         // Phase: BUILD
-        tasks = MOD-004.build_tdd_task_list(artifact_set, enrichment_report)
+        tasks = MOD-004.build_tdd_task_list(artifact_set)
 
         // Phase: HAZARD-ENRICH
         IF artifact_set.hazard_analysis IS NOT NULL:
@@ -330,8 +334,7 @@ stateDiagram-v2
 
 ```pseudocode
 FUNCTION build_tdd_task_list(
-    artifact_set: ArtifactSet,
-    enrichment_report: EnrichmentReport | None
+    artifact_set: ArtifactSet
 ) -> list[Task]:
     tasks = []
     // Per the TDD ordering invariant: unit-tests → impl → integration → system → acceptance
@@ -673,7 +676,6 @@ FUNCTION evaluate_gate(feature_dir: Path) -> GateResult:
             run = MOD-026.run_subprocess([script_path, *args, "--json"], cwd=REPO_ROOT)
             payload = parse_json(run.stdout)
             pct = payload.get("coverage_pct", 100 IF run.exit_code == 0 ELSE 0)
-            matrices[matrix_key] = max(matrices.get(matrix_key, 0), 0)
             matrices[matrix_key] = min(matrices.get(matrix_key, 100), pct)
             IF pct < 100:
                 gap_lines.append(f"{script_path}: {payload.get('gaps', [])}")
@@ -695,14 +697,14 @@ N/A — Stateless
 | Name | Type | Size/Constraints | Initialization | Description |
 |------|------|------------------|----------------|-------------|
 | `SCRIPTS` | `list[tuple]` | exactly 7 | const | Script invocation table |
-| `matrices` | `dict[str, float]` | ≤ 5 keys (A, B, C, D, H) | empty | Per-matrix min coverage |
+| `matrices` | `dict[str, float]` | 4 keys (A, B, C, D) | empty | Per-matrix min coverage |
 | `gap_lines` | `list[str]` | bounded by `len(SCRIPTS)` | empty | Aggregate gap text |
 
 #### Error Handling & Return Codes
 
 | Error Condition | Error Code / Exception | Architecture Contract | Recovery |
 |----------------|------------------------|-----------------------|----------|
-| `SubprocessFailure` from MOD-026 | catch + convert to `passed=false` | ARCH-007 contract: NEVER raise; fail-closed via `GateResult` | Append failure text to `gap_report` |
+| `SubprocessFailure` from MOD-026 | catch + convert to `passed=false` | ARCH-007 contract: NEVER raise; fail-closed via `GateResult` | Set `matrices[matrix_key] = 0` (which forces the final `passed` flag to false via the ALL-equals-100 invariant); append failure text to `gap_report`; do NOT re-raise. |
 | Any script returns `pct < 100` | aggregate into `gap_report` | ARCH-007 contract: `passed ⟺ every matrix is 100` | None — caller (MOD-005) fail-closes |
 
 ---

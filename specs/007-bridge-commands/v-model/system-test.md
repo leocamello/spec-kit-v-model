@@ -625,7 +625,7 @@ STP. Below is the per-REQ-category mapping that confirms IEEE 1012:2016 §5.5.
 |--------|-------|
 | Total System Components (SYS) | 14 (14 active, 0 deprecated) |
 | Total Test Cases (STP) | 28 |
-| Total Scenarios (STS) | 59 |
+| Total Scenarios (STS) | 60 |
 | Components with ≥1 STP | 14 / 14 (100%) (active items only) |
 | Test Cases with ≥1 STS | 28 / 28 (100%) |
 | **Overall Coverage (SYS→STP)** | **100%** |

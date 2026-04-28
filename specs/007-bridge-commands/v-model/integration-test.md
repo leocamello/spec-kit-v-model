@@ -285,7 +285,7 @@ from ARCH-010 aborts ARCH-005 before any file is written through ARCH-021.
 * **Integration Scenario: ITS-005-B1**
   * **Given** the second of three target files has overlapping V-Model-managed-region markers
   * **When** ARCH-010 raises `RegionConflict` for that file
-  * **Then** ARCH-005 propagates the exception, ARCH-021 is NEVER invoked for ANY of the three files (including the first one that would have spliced cleanly), and the `file_set` is never returned to ARCH-004
+  * **Then** ARCH-005 propagates the exception, ARCH-021 is NEVER invoked for ANY of the three files (including the first one that would have spliced cleanly), and the `file_set` is never returned to ARCH-004. ARCH-021's rename syscall is never reached because ARCH-005 evaluates all three splices in-memory before any disk write; therefore no tmp files are produced, and the cleanup contract from ITP-021-D is not exercised in this scenario.
 
 #### Test Case: ITP-005-C (Module-design → source code data flow)
 

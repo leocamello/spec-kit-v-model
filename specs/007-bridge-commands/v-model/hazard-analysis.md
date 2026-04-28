@@ -120,9 +120,9 @@ between `SYS` components, so they warrant dedicated entries.
 ## Likelihood Justification (PRF-HAZ-004)
 
 Per ISO 14971 §5.4, every Severity/Likelihood pairing in the Hazard Register
-must be justified, especially for the seven Serious-classified hazards rated
-Remote. Justifications below explain *why* each Serious failure mode is
-unlikely to materialise in practice. Likelihoods on Critical and Minor
+must be justified, especially for hazards rated at Serious/Remote and
+Serious/Occasional. Justifications below explain *why* each such failure mode
+has the stated likelihood in practice. Likelihoods on Critical and Minor
 hazards are not re-stated here (Critical hazards' justification is implicit in
 their Tolerable-after-mitigation residual risk; Minor hazards do not require
 the same rigour per ISO 14971 risk-acceptability principles).
@@ -132,6 +132,7 @@ the same rigour per ISO 14971 risk-acceptability principles).
 | **HAZ-002** | Serious | Remote | The additive-enrichment encoder (SYS-005) produces only HTML comments interleaved with canonical Markdown; spec-kit-core v0.7.0 parser is stable and production-tested on thousands of plans; failure would require *both* a defect in the encoder AND a parser regression. Estimated frequency: <0.1% over system lifetime. |
 | **HAZ-003** | Serious | Remote | REQ-008 mandates a non-zero warning indicator in the structured summary on missing optional artifacts; the indicator is parsed deterministically by SYS-012. Failure would require a defect in the summary emitter that drops the warning silently — a single, narrow code path that is exercised by acceptance scenarios SCN-008-A1/A2. |
 | **HAZ-005** | Serious | Remote | TDD ordering and `[P]` placement are produced by deterministic templating logic (SYS-002); the canonical `tasks-template.md` schema (REQ-IF-002) pins the placement convention. Failure would require a regression in the templating engine that escapes the schema-conformance test in `validate-system-coverage.sh`. |
+| **HAZ-007** | Serious | Occasional | LLM-generated `// Implements <ID>` comments inherit the underlying model's hallucination base-rate, empirically observed in the 1–5% range per generated identifier — placing this failure mode in the Occasional band by construction. This rating is the design driver behind SYS-006 (Hallucination Guard): the guard exists precisely because the Occasional likelihood is too high to accept without a deterministic verification step. |
 | **HAZ-008** | Serious | Remote | Source-region identity is anchored to deterministic markers managed by SYS-007; the structural-identity check is verified by ATP-008-A on every implementation re-run. Failure requires a defect in the marker-management logic AND a marker-collision case. |
 | **HAZ-011** | Serious | Remote | The enrichment encoder writes only HTML comments at well-defined insertion anchors; mutating Markdown structure (e.g., shifting heading levels) would require a defect that bypasses the additive-only contract enforced by SYS-005's unit tests (UTP-005). REQ-CN-001 ("MUST NOT modify spec-kit core") is structurally enforced by the build-time check. |
 | **HAZ-017** | Serious | Remote | Round-trip property (REQ-029) is verified end-to-end by SCN-IF-001-A1 and SCN-IF-002-A1 on every CI run; the pinned spec-kit-core v0.7.0 schema does not drift between releases by definition; failure requires a defect in the compatibility layer (SYS-010) that escapes structural eval. |

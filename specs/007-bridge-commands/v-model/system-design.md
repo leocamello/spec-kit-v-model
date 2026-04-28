@@ -163,7 +163,7 @@ required.
 
 ---
 
-## Operational States (IEEE 1016 §5.2 Behavioural View)
+## Operational States (Behavioural View — IEEE 1016 §5 Design Viewpoints Framework)
 
 > **Rationale:** ISO 14971 §5.4 and IEC 60812:2018 §6.2 require that hazard
 > analysis distinguish operational states because risk controls and failure
@@ -175,7 +175,7 @@ required.
 
 | State | Definition | Triggering / Entry Condition | Active SYS Components |
 |-------|-----------|------------------------------|----------------------|
-| NORMAL | Default operating state for read-only / analysis / planning operations: spec ingestion, plan/task synthesis, gate evaluation, hook registration, configuration parsing. No mutation of source files outside the V-Model artifact directory. | Process start for any of `v-model.plan`, `v-model.tasks`, `v-model.requirements`, `v-model.trace`, `v-model.implement` (initial phase before write barrier). | SYS-001, SYS-002, SYS-004, SYS-005, SYS-008, SYS-009, SYS-010, SYS-011, SYS-013 (and SYS-006 in its preparation phase) |
+| NORMAL | Default operating state for read-only / analysis / planning operations: spec ingestion, plan/task synthesis, gate evaluation, hook registration, configuration parsing. No mutation of source files outside the V-Model artifact directory. | Process start for any of `v-model.plan`, `v-model.tasks`, `v-model.requirements`, `v-model.trace`, `v-model.implement` (initial phase before write barrier). | SYS-001, SYS-002, SYS-003 (pre-write-barrier phase), SYS-004, SYS-005, SYS-008, SYS-009, SYS-010, SYS-011, SYS-013 (and SYS-006 in its preparation phase) |
 | DRY-RUN | `v-model.implement` invoked with `--no-commit`: source generation runs end-to-end (Implementation Engine, Region Manager, Hallucination Guard) but the post-write commit barrier is suppressed. Files under repo working tree may be touched only when emitted to a temp scratch path; no `git commit` is invoked. | `v-model.implement --no-commit` after gate-pass. | SYS-003 (no-commit mode), SYS-006, SYS-007, SYS-012 |
 | COMMITTING | `v-model.implement` invoked without `--no-commit`: full write-and-commit barrier is active, including SYS-007 region-marker mutation, SYS-006 hallucination guard pre-commit verification, and SYS-014 commit-message annotation. | `v-model.implement` (default) after gate-pass and after the optional `--no-commit` flag is absent. | SYS-003 (commit mode), SYS-006, SYS-007, SYS-012, SYS-014 |
 | ERROR | Any command exit path with non-zero exit code: structured-summary emission must complete on this path (REQ-027) and CI gating (SYS-013) must classify the run as failed. | Uncaught exception, gate failure, hallucination-guard rejection, or signal interruption from any of the above states. | SYS-012 (must flush summary), SYS-013 (gate classifier) |
@@ -205,8 +205,11 @@ required.
                     │     NORMAL      │
                     └─────────────────┘
 
-  Any state ──── on failure / signal ────▶ ERROR ──── after summary flush ────▶ NORMAL
+  Any state ──── on failure / signal ────▶ ERROR ──── after summary flush ────▶ [process exit]
 ```
+
+> **Note:** ERROR is terminal — the process exits after SYS-012 best-effort summary emission.
+> A subsequent invocation re-enters NORMAL as a fresh process and a new state-machine instance.
 
 ### State-Dependent Mitigation Notes
 
@@ -217,7 +220,8 @@ required.
   commit-suffix annotation) are the only state-restricted controls; they are
   trivially inactive in DRY-RUN and NORMAL.
 - ERROR-state mitigation is the structured-summary best-effort emission
-  contract (REQ-027, REQ-IF-004); no failure path may exit silently.
+  contract (REQ-027, REQ-IF-004); summary emission occurs during the
+  ERROR→[process exit] transition and no failure path may exit silently.
 
 ---
 
