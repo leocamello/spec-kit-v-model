@@ -7,7 +7,7 @@
 
 ## Overview
 
-This document defines the Acceptance Test Plan for the three bridge commands (`v-model.plan`, `v-model.tasks`, `v-model.implement`) and their cross-cutting requirements. Every requirement in `requirements.md` (43 active REQs across Functional, Non-Functional, Interface, and Constraint categories) has at least one Test Case (ATP), and every Test Case has at least one BDD-style executable User Scenario (SCN).
+This document defines the Acceptance Test Plan for the three bridge commands (`v-model.plan`, `v-model.tasks`, `v-model.implement`) and their cross-cutting requirements. Every requirement in `requirements.md` (44 active REQs across Functional, Non-Functional, Interface, and Constraint categories) has at least one Test Case (ATP), and every Test Case has at least one BDD-style executable User Scenario (SCN).
 
 ## ID Schema
 
@@ -680,7 +680,7 @@ This document defines the Acceptance Test Plan for the three bridge commands (`v
 | **Overall Coverage** | **100%** (active items only) |
 
 **Validation Status**: ✅ Full Coverage (pending deterministic validation by `validate-requirement-coverage.sh`)
-**Generated**: 2026-04-26
+**Generated**: 2026-04-30
 **Validated by**: `validate-requirement-coverage.sh` (deterministic) — to run post-write
 
 ## Uncovered Requirements

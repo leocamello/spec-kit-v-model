@@ -242,6 +242,8 @@ sequenceDiagram
 | Output | exit code | int | 0 \| 1 | 0 on success; 1 on schema or hazard-enrichment failure |
 | Output | side-effect | file | `feature_dir/tasks.md` | always emitted on exit 0 |
 | Exception | `HazardEnrichmentError` | propagated | text | when ARCH-012 raises and `hazard-analysis.md` is present |
+| Exception | `SchemaValidationError` | propagated | text + section | when ARCH-013 returns `{valid: false}` |
+| Exception | `UpstreamParseError` | propagated | text + path + line | when ARCH-014 cannot parse the upstream document for enrichment markers; fail-closed per ARCH-014 contract |
 
 ### ARCH-004: Implementation Orchestrator
 
@@ -254,6 +256,7 @@ sequenceDiagram
 | Exception | `GateFailure` | propagated | gap report | when ARCH-007 returns `{passed: false}` |
 | Exception | `HallucinationDetected` | propagated | list of `(file, line, id)` | when ARCH-009 returns `{valid: false}` |
 | Exception | `RegionConflict` | propagated | diff report | when ARCH-010 detects overlapping markers |
+| Exception | `IOError` | propagated | text + path | from ARCH-021 atomic write at Stage 7; aborts the run during the write phase, after ARCH-009 verification has already passed |
 
 ### ARCH-005: Code Generator
 

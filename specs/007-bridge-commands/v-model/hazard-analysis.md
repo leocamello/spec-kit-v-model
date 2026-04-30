@@ -123,8 +123,7 @@ Per ISO 14971 §5.4, every Severity/Likelihood pairing in the Hazard Register
 must be justified, especially for hazards rated at Serious/Remote and
 Serious/Occasional. Justifications below explain *why* each such failure mode
 has the stated likelihood in practice. Likelihoods on Critical and Minor
-hazards are not re-stated here (Critical hazards' justification is implicit in
-their Tolerable-after-mitigation residual risk; Minor hazards do not require
+hazards are not re-stated here (Critical hazards' likelihoods are conservatively bounded by the Risk Acceptability Matrix — any Critical/Occasional or Critical/Probable pairing would be Intolerable pre-mitigation and is therefore excluded by design from the register; only Critical/Remote pairings appear, and their pre-mitigation likelihood is justified inline by the Triggering Condition column of the Hazard Register itself. Minor hazards do not require
 the same rigour per ISO 14971 risk-acceptability principles).
 
 | HAZ ID | Severity | Likelihood | Justification |
