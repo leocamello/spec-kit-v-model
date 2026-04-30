@@ -1,7 +1,9 @@
 # Peer Review — requirements.md
 
 **Reviewer**: AI Peer Review (spec-kit V-Model)
-**Date**: 2026-04-21
+**Date**: 2026-04-30
+**Pass**: 4
+**HEAD**: fb8ad2b (branch `feature/007-bridge-commands`)
 **Artifact**: requirements.md (44 REQ — 44 active, 0 deprecated, 0 suspect)
 **Review Type**: Inspection (IEEE 1028 §4)
 **Standard**: INCOSE Guide for Writing Requirements
@@ -12,9 +14,9 @@
 |----------|-------|
 | Critical | 0 |
 | Major | 0 |
-| Minor | 1 |
+| Minor | 0 |
 | Observation | 1 |
-| **Total Findings** | **2** |
+| **Total Findings** | **1** |
 
 ### Item Inventory
 
@@ -36,61 +38,55 @@
 | Test | 35 | ✓ |
 | Inspection | 7 | ✓ |
 | Analysis | 2 | ✓ |
+| Demonstration | 0 | ✓ |
+
+All counts independently verified by grep against artifact body (commit fb8ad2b). Footer aggregates confirmed correct in all five dimensions (Total, Category, Priority, Verification Method, Demonstration).
 
 ## Findings
 
-### PRF-REQ-001 — Open-ended enumeration ("including but not limited to") in REQ-024
-
-| Field | Value |
-|-------|-------|
-| **Severity** | Minor |
-| **Location** | REQ-024 |
-| **Description** | REQ-024 reads: "...by applying overlay-specific output requirements, **including but not limited to** MC/DC unit-test coverage requirements for DO-178C Level A and ASIL-driven test depth for ISO 26262." Per INCOSE Guide for Writing Requirements (R8 — Avoid open-ended/non-verifiable lists) the phrase "including but not limited to" makes the requirement set unbounded: a verification engineer cannot enumerate the full pass condition because the requirement explicitly disclaims completeness. Defect type per ISO/IEC 20246:2017 §6.3: **Ambiguous** (untestable boundary). |
-| **Recommendation** | Either (a) replace the open-ended list with the exhaustive set of overlay-driven obligations the v0.7.0 release commits to (e.g., "MC/DC for DO-178C Level A; ASIL-D test depth for ISO 26262; …"), or (b) split REQ-024 into one parent requirement ("...SHALL honour the configured domain overlay...") plus N atomic child requirements, one per overlay-specific obligation, each independently testable. The latter is preferred because it lets each obligation accrue its own verification evidence. |
-
-### PRF-REQ-002 — Transient PRF IDs embedded in requirement rationale
+### PRF-REQ-001 — Transient PRF IDs embedded in requirement rationale (carried forward)
 
 | Field | Value |
 |-------|-------|
 | **Severity** | Observation |
 | **Location** | REQ-IF-003, REQ-IF-005 |
-| **Description** | Both REQ-IF-003 and REQ-IF-005 still contain the parenthetical `; split from prior compound REQ-IF-003 per PRF-REQ-001` in their Rationale fields. Per the peer-review rubric's Operating Constraints, PRF-{ARTIFACT}-NNN IDs are explicitly **stateless and transient** — they are regenerated from scratch on every review and have no persistence across runs. Anchoring durable requirement rationale to a transient ID makes the rationale text immediately stale: in this Pass-3 review, PRF-REQ-001 refers to a different finding (the REQ-024 open-ended list), so the cross-reference embedded in the requirement is already inaccurate. Per ISO/IEC 20246:2017 §6.3 the defect type is **Inconsistent** (rationale text references an ID that no longer points to the original finding). This is documentation hygiene, not a quality defect in the requirement itself. |
-| **Recommendation** | Replace the PRF cross-reference with a stable provenance pointer such as the commit hash (`split from prior compound REQ-IF-003 in commit 6f9fcb6`) or simply drop the parenthetical — the git history of `requirements.md` is already the authoritative audit trail for the split. Apply the same convention to any future requirement rationale that needs to reference past review activity. |
+| **Description** | Both REQ-IF-003 and REQ-IF-005 retain the parenthetical `; split from prior compound REQ-IF-003 per PRF-REQ-001` in their Rationale fields. The staleness of this cross-reference has now compounded across passes: in Pass-4 there is no PRF-REQ-001 at all (the REQ-024 Minor was closed), so the embedded ID is a dangling reference. Per the peer-review rubric's Operating Constraints, PRF-{ARTIFACT}-NNN IDs are stateless and transient — they are regenerated from scratch each pass and carry no persistence guarantee. Defect type per ISO/IEC 20246:2017 §6.3: **Inconsistent** (rationale text anchors on a transient ID that no longer resolves to any finding). This is documentation hygiene only; the requirement statements themselves are unaffected. |
+| **Recommendation** | Remove or replace the PRF cross-reference with a stable, durable provenance pointer. Preferred options in descending order: (a) cite the commit hash that performed the split (e.g., `split from prior compound REQ-IF-003 in commit 6f9fcb6`); (b) simply drop the parenthetical — the git log for `requirements.md` is the authoritative audit trail. Apply the same convention to any future requirement rationale that needs to reference past review activity. |
 
 ## Review Observations
 
-### Pass-2 Remediation Verification
+### Pass-3 Remediation Verification
 
-| Pass-2 Finding | Pass-2 Severity | Status in Pass-3 |
+| Pass-3 Finding | Pass-3 Severity | Status in Pass-4 |
 |---|---|---|
-| PRF-REQ-001 — Stale aggregate counts in footer summary contradict body | Major | **RESOLVED** in commit cd24f25. Footer now reads `Total Requirements: 44 (44 active, 0 deprecated)`, `By Category: Functional: 29 \| Non-Functional: 6 \| Interface: 5 \| Constraint: 4`, `By Priority: P1: 37 \| P2: 7 \| P3: 0`, `By Verification Method: Test: 35 \| Inspection: 7 \| Analysis: 2`. Independently re-counted body: 29 functional + 6 NF + 5 IF + 4 CN = 44 active; 7 P2 (REQ-005, REQ-006, REQ-008, REQ-013, REQ-021, REQ-NF-005, REQ-IF-004) → 37 P1; 7 Inspection + 2 Analysis → 35 Test. All four footer aggregates now agree with the body. |
-| PRF-REQ-002 — Open-ended enumeration in REQ-024 | Minor | **STILL PRESENT** — re-flagged as Pass-3 PRF-REQ-001 with identical defect description and recommendation. |
-| PRF-REQ-003 — Transient PRF IDs embedded in REQ-IF-003 / REQ-IF-005 rationale | Observation | **STILL PRESENT** — re-flagged as Pass-3 PRF-REQ-002. The cross-reference is now demonstrably stale because Pass-3's PRF-REQ-001 refers to a different finding (REQ-024), confirming the original Observation. |
+| PRF-REQ-001 — Open-ended enumeration ("including but not limited to") in REQ-024 | Minor | **CLOSED** in commit fb8ad2b. "including but not limited to" replaced with "for example"; a durable authoritative-source clause appended: "the authoritative overlay-specific output requirement set is defined in each overlay's manifest under `commands/overlays/{domain}/_domain.yml`." The inline examples remain illustrative, but the pass condition is now bounded: a verifier enumerates obligations from the manifest and checks each one. The requirement is testable. Defect resolved per INCOSE R8. |
+| PRF-REQ-002 — Transient PRF IDs embedded in REQ-IF-003 / REQ-IF-005 rationale | Observation | **STILL PRESENT** — re-flagged as Pass-4 PRF-REQ-001. The cross-reference is now additionally stale in that Pass-4 carries no PRF-REQ-001 at all (the REQ-024 Minor is closed), so the embedded reference is fully dangling. |
 
 ### Strengths Carried Forward
 
-- **Document self-consistency**: Footer aggregates match body counts in all four dimensions (Total, Category, Priority, Verification Method).
+- **Document self-consistency**: Footer aggregates match body counts in all five dimensions (Total, Category, Priority, Verification Method, Demonstration).
 - **Complete priority assignment**: All 44 active requirements carry P1/P2/P3.
 - **Precise quantifiers**: ≥95% structural identity (REQ-025), 100% pass rate (REQ-NF-002, REQ-NF-004), zero hallucinated IDs.
+- **REQ-024 testability restored**: Authoritative overlay-manifest clause provides a bounded, enumerable pass condition for domain-overlay compliance.
 - **No INCOSE banned words**: No "user-friendly", "fast", "robust", "seamless", "intuitive", "reasonable", "significant", "adequate", "minimal", "multiple", "several", "many", "few".
 - **No TBD markers**.
 - **Lifecycle discipline**: Zero deprecated items, zero suspect tags, zero orphaned children.
-- **Atomicity**: 44/44 are well-formed atomic statements; the prior compound (REQ-IF-003) remains correctly split.
+- **Atomicity**: 44/44 are well-formed atomic statements.
 
 ### Compliance with Rubric
 
 **§4.1 Atomicity**: 44/44 ✓
-**§4.1 Testability**: 43/44 ✓ (1 Minor — REQ-024 open-ended list)
-**§4.1 Unambiguity**: 43/44 ✓ (1 Minor — REQ-024)
+**§4.1 Testability**: 44/44 ✓ (Pass-3 Minor on REQ-024 closed)
+**§4.1 Unambiguity**: 44/44 ✓
 **§4.1 Completeness**: 44/44 ✓
 **§4.1 Priority Assignment**: 44/44 ✓
 **§4.1 No Subjective Language**: 44/44 ✓
 **§4.10 Deprecation Syntax**: N/A (0 deprecated)
 **§4.10 Unresolved Suspects**: 0/0 ✓
 **§4.10 Orphaned Children**: N/A (0 deprecated parents)
-**Document Self-Consistency** (header counts ↔ body): ✓ (Pass-2 Major closed in commit cd24f25)
+**Document Self-Consistency** (header counts ↔ body): ✓
 
 ---
 
-**CI Exit Code**: 2 (Minor finding present, no Critical or Major — warning only).
-**Recommendation**: Address PRF-REQ-001 (close the open-ended list in REQ-024) at next convenient edit; PRF-REQ-002 is an observation that may be cleaned up opportunistically. With the Pass-2 Major now resolved, the artifact is no longer release-blocked by peer-review findings. Re-run the review after edits — both findings should disappear.
+**CI Exit Code**: 1 (Observation only — informational, not blocking).
+**Recommendation**: APPROVED-WITH-COMMENTS. Zero Critical, Major, or Minor findings. One Observation (PRF-REQ-001): remove the stale `per PRF-REQ-001` PRF cross-reference from REQ-IF-003 and REQ-IF-005 rationale at the next opportunistic edit. The artifact is release-ready; the Observation does not block merge.
