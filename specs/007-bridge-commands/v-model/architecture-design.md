@@ -223,7 +223,7 @@ sequenceDiagram
 | Output | stdout summary | text | ARCH-016 format | always emitted |
 | Output | side-effects | files | written to `feature_dir/` | `plan.md`, `data-model.md`, `contracts/`, `quickstart.md`, `research.md` (subset when optional inputs absent) |
 | Exception | `EnrichmentError` | propagated | text + stack | when ARCH-008 raises |
-| Exception | `SchemaValidationError` | propagated | text + section | when ARCH-013 returns `{valid: false}` |
+| Exception | `SchemaValidationError` | propagated | text + section + line | when ARCH-013 returns `{valid: false}` |
 
 ### ARCH-002: Canonical Artifact Emitter
 
@@ -242,7 +242,7 @@ sequenceDiagram
 | Output | exit code | int | 0 \| 1 | 0 on success; 1 on schema or hazard-enrichment failure |
 | Output | side-effect | file | `feature_dir/tasks.md` | always emitted on exit 0 |
 | Exception | `HazardEnrichmentError` | propagated | text | when ARCH-012 raises and `hazard-analysis.md` is present |
-| Exception | `SchemaValidationError` | propagated | text + section | when ARCH-013 returns `{valid: false}` |
+| Exception | `SchemaValidationError` | propagated | text + section + line | when ARCH-013 returns `{valid: false}` |
 | Exception | `UpstreamParseError` | propagated | text + path + line | when ARCH-014 cannot parse the upstream document for enrichment markers; fail-closed per ARCH-014 contract |
 
 ### ARCH-004: Implementation Orchestrator
@@ -443,7 +443,7 @@ sequenceDiagram
 | ARCH-013 returns `valid:false` at Stage 6 (tasks flow) | ARCH-003 raises `SchemaValidationError`; Stage 7 NOT executed; no `tasks.md` written. |
 | ARCH-009 returns `valid:false` at Stage 6 (source flow) | ARCH-004 raises `HallucinationDetected`; Stages 7–8 NOT executed; no source files written; no commit produced. |
 | ARCH-021 raises `IOError` at Stage 7 (source flow) | ARCH-004 propagates; no commit at Stage 8; partial files left in tmp namespace per ARCH-021 atomic semantics. |
-| ARCH-007 returns `passed:false` at Stage 3 (source flow) | Upstream caller aborts before Stage 4; no plan/task generation proceeds. |
+| ARCH-007 returns `passed:false` at Stage 2 (source flow) | Upstream caller aborts before Stage 3; no plan/task generation proceeds. |
 | ARCH-014 raises `UpstreamParseError` at Stage 2 (tasks flow) | ARCH-003 propagates fail-closed; Stages 3–7 NOT executed; no `tasks.md` written. |
 
 ---

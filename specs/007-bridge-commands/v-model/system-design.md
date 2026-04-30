@@ -183,34 +183,30 @@ required.
 ### State-Transition Diagram
 
 ```
-                    ┌─────────────────┐
-                    │     NORMAL      │
-                    └─────────┬───────┘
-                              │
-                ┌─────────────┴─────────────┐
-                │                           │
-       v-model.implement            v-model.implement
-        --no-commit                   (default)
-                │                           │
-                ▼                           ▼
-        ┌───────────────┐         ┌──────────────────┐
-        │   DRY-RUN     │         │   COMMITTING     │
-        └───────┬───────┘         └────────┬─────────┘
-                │                          │
-       on completion                on success
-                │                          │
-                └─────────────┬────────────┘
-                              ▼
-                    ┌─────────────────┐
-                    │  NORMAL (exit)  │
-                    └─────────┬───────┘
-                              ▼
-                       [process exit]
+                          ┌─────────────────┐
+                          │     NORMAL      │
+                          └────────┬────────┘
+                                   │
+        ┌──────────────────────────┼──────────────────────────┐
+        │                          │                          │
+  v-model.implement         v-model.implement         non-implement commands
+   --no-commit                (default)              (plan / tasks / requirements / trace)
+        │                          │                          │
+        ▼                          ▼                          │
+┌───────────────┐         ┌──────────────────┐                │
+│   DRY-RUN     │         │   COMMITTING     │                │
+└───────┬───────┘         └────────┬─────────┘                │
+        │                          │                          │
+  on completion              on success                 on completion
+        │                          │                          │
+        └─────────────┬────────────┴──────────────────────────┘
+                      ▼
+               [process exit]
 
   Any state ──── on failure / signal ────▶ ERROR ──── after summary flush ────▶ [process exit]
 ```
 
-> **Note:** Both terminal paths exit the process — ERROR exits after SYS-012 best-effort summary emission, and successful completion (DRY-RUN or COMMITTING → NORMAL) exits cleanly after the success-path summary. A subsequent invocation re-enters NORMAL as a fresh process and a new state-machine instance.
+> **Note:** Both terminal paths exit the process — ERROR exits after SYS-012 best-effort summary emission; successful completion exits cleanly after the success-path summary, regardless of whether NORMAL was the only state visited (non-implement commands) or transited via DRY-RUN/COMMITTING (implement command). A subsequent invocation re-enters NORMAL as a fresh process and a new state-machine instance.
 
 ### State-Dependent Mitigation Notes
 
