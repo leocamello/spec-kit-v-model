@@ -2,1558 +2,1572 @@
 
 **Feature Branch**: `feature/007-bridge-commands`
 **Created**: 2026-04-26
+**Reworked**: 2026-05-01 (paradigm-drift correction per `drift-diff-plan.md`)
 **Status**: Draft
 **Source**: `specs/007-bridge-commands/v-model/architecture-design.md`
+**Standards**: IEEE 1016:2009 §5 (Software Design Description), ISO/IEC/IEEE 12207:2017 §8.4.4 (Software Detailed Design Process)
 
 ## Overview
 
 This document decomposes the 21 architecture modules from
 `architecture-design.md` into 27 low-level module designs (`MOD-001` …
-`MOD-027`). Each `MOD-NNN` is a single Python function (or, for the three
-orchestrators, a `run()` entry point with phase-driven internal state)
-detailed enough that implementation is a translation exercise — no further
-design decisions are required.
+`MOD-027`). Each `MOD-NNN` is realised in the project's actual delivery
+paradigm — **LLM prompt sections inside Markdown command files**,
+**POSIX shell scripts**, **declarative YAML configuration consumed by
+Spec Kit Core**, or a **deferred-risk note** carried for traceability
+only. There is no Python runtime, no in-process orchestrator class, and
+no runtime function-call graph: orchestration logic lives in the LLM
+prompt; deterministic checks live in shell; registration is declarative
+YAML; in-process abstractions that exist only to bridge a Python
+implementation (artifact reader, subprocess runner, filesystem writer,
+Python-level CI harness wrapper) are dropped because the chosen
+paradigm has no use for them.
 
-Most ARCHs decompose 1 : 1 to a single MOD; the four ARCHs whose contracts
-expose more than one callable surface decompose 1 : N — ARCH-005
-(dispatcher + per-module renderer), ARCH-006 (dispatcher + per-level
-renderer), ARCH-008 (plan enrichment + tasks enrichment), ARCH-013 (plan
-schema + tasks schema), and ARCH-019 (artifact loader + ID-set extractor).
-This decomposition matches each entry in the Architecture Interface View
-to one MOD function signature, satisfying ISO/IEC/IEEE 12207:2017 §8.4.4.3
-(formal interface definition per module).
+The realisation classes follow the paradigm-drift audit
+(`drift-diff-plan.md`):
 
-The runtime model remains **single-threaded sequential per command
-invocation**, so no MOD has inter-invocation state. The three
-orchestrators (MOD-001, MOD-003, MOD-005) carry within-run phase state
-expressive enough to warrant a state diagram (Step 5.2); the other 24
-MODs are stateless pure functions and use the bypass string.
+- **`NEW-PROMPT-SECTION`** — a named section inside a `commands/<name>.md`
+  prompt file (with YAML frontmatter declaring `description`,
+  `handoffs`, and a `scripts:` entry pointing at one Bash + PowerShell
+  pair). The contract is encoded as preconditions / expected sub-sections
+  / post-conditions the LLM must produce, plus the error path it must
+  follow.
+- **`NEW-SHELL`** — a POSIX shell script under `scripts/bash/<name>.sh`
+  (with a `scripts/powershell/<Name>.ps1` mirror), invoked either from a
+  command's `scripts:` frontmatter or via `bash <script>` from inside
+  the LLM-orchestrated flow.
+- **`REUSE-CORE`** — declarative YAML payload added to `extension.yml`
+  at the repository root; registration is performed by Spec Kit Core's
+  `CommandRegistrar` class in `src/specify_cli/extensions.py`
+  (lines 579–884). This feature ships no new registration code.
+- **`DROP-recharacterized`** — the module's responsibility is dissolved
+  by the chosen paradigm (LLM reads Markdown natively, shell calls
+  shell natively, atomic write is a 3-line `mktemp` + `mv` cliché, the
+  CI quality harness is a GitHub Actions workflow). The MOD identifier
+  is preserved as a deferred-risk note for forward traceability and
+  carries no functional contract.
 
-No domain overlay is loaded for this feature (`v-model-config.yml` absent
-at the repository root); only base IEEE 1016:2009 / ISO/IEC/IEEE
-12207:2017 §8.4.4 sections are populated. The MISRA / Memory Management /
-Single Entry-Exit safety-critical sections are omitted entirely.
+The runtime model is **single-shell, sequential per command invocation**
+(see `architecture-design.md` §Process View). No MOD has inter-invocation
+state. Concurrent runs against the same `feature_dir` are explicitly
+out of scope for v0.7.0; SYS-013 / `architecture-design.md` §Concurrent-
+Write Safety records this as a paradigm-level deferred risk note.
+
+No domain overlay is loaded for this feature (`v-model-config.yml`
+absent at the repository root); only the base IEEE 1016:2009 / ISO/IEC/
+IEEE 12207:2017 §8.4.4 sections are populated. The MISRA / Memory
+Management / Single Entry-Exit safety-critical sections are omitted
+entirely.
 
 ## ID Schema
 
-- **Module Design**: `MOD-NNN` — sequential identifier (3-digit zero-padded), independent of ARCH numbering.
-- **Parent Architecture Modules**: Comma-separated `ARCH-NNN` list per MOD (many-to-many; authoritative for traceability — coverage validators use this field, not ID parsing).
-- **Target Source File(s)**: Comma-separated repository-relative paths.
-- Example: `MOD-007` with Parent Architecture Modules `ARCH-005` — module is the per-module renderer of the Code Generator.
+- **Module Design**: `MOD-NNN` — sequential identifier (3-digit
+  zero-padded), independent of ARCH numbering.
+- **Parent Architecture Modules**: comma-separated `ARCH-NNN` list per
+  MOD (many-to-many; authoritative for traceability — coverage
+  validators use this field, not ID parsing).
+- **Classification**: one of `NEW-PROMPT-SECTION`, `NEW-SHELL`,
+  `REUSE-CORE`, `DROP-recharacterized`.
+- **Target Source File(s)**: repository-relative path to the realising
+  artifact (a `commands/*.md` section anchor, a `scripts/bash/*.sh`
+  script, `extension.yml`, or `[NO RUNTIME ARTIFACT — DEFERRED]`).
+- **Implements REQ / Traced From**: comma-separated list of
+  `REQ-NNN`, `SYS-NNN`, `ARCH-NNN`, `HAZ-NNN` identifiers; every cited
+  identifier is verified to exist in `requirements.md`,
+  `system-design.md`, `architecture-design.md`, or `hazard-analysis.md`
+  respectively.
 
 ## Module Map (Summary Index)
 
-| MOD | Function | Parent ARCH | Target Source File |
-|-----|----------|-------------|--------------------|
-| MOD-001 | `plan_orchestrator.run` | ARCH-001 | `src/v_model_extension/commands/plan.py` |
-| MOD-002 | `emit_canonical_outputs` | ARCH-002 | `src/v_model_extension/emit/canonical.py` |
-| MOD-003 | `tasks_orchestrator.run` | ARCH-003 | `src/v_model_extension/commands/tasks.py` |
-| MOD-004 | `build_tdd_task_list` | ARCH-003 | `src/v_model_extension/tasks/sequencer.py` |
-| MOD-005 | `implement_orchestrator.run` | ARCH-004 | `src/v_model_extension/commands/implement.py` |
-| MOD-006 | `generate_code` (dispatcher) | ARCH-005 | `src/v_model_extension/codegen/generator.py` |
-| MOD-007 | `render_module_source` | ARCH-005 | `src/v_model_extension/codegen/renderer.py` |
-| MOD-008 | `generate_tests` (dispatcher) | ARCH-006 | `src/v_model_extension/testgen/generator.py` |
-| MOD-009 | `render_test_file_for_level` | ARCH-006 | `src/v_model_extension/testgen/renderer.py` |
-| MOD-010 | `evaluate_gate` | ARCH-007 | `src/v_model_extension/gate/coordinator.py` |
-| MOD-011 | `embed_enrichment` | ARCH-008 | `src/v_model_extension/enrich/encoder.py` |
-| MOD-012 | `embed_traceability_comments` | ARCH-008 | `src/v_model_extension/enrich/encoder.py` |
-| MOD-013 | `verify_ids` | ARCH-009 | `src/v_model_extension/guard/hallucination.py` |
-| MOD-014 | `splice_managed_regions` | ARCH-010 | `src/v_model_extension/codegen/splicer.py` |
-| MOD-015 | `apply_overlay` | ARCH-011 | `src/v_model_extension/overlay/loader.py` |
-| MOD-016 | `enrich_with_hazards` | ARCH-012 | `src/v_model_extension/tasks/hazards.py` |
-| MOD-017 | `validate_plan_schema` | ARCH-013 | `src/v_model_extension/schema/validator.py` |
-| MOD-018 | `validate_tasks_schema` | ARCH-013 | `src/v_model_extension/schema/validator.py` |
-| MOD-019 | `detect_enrichment` | ARCH-014 | `src/v_model_extension/schema/fallback.py` |
-| MOD-020 | `register_hooks` | ARCH-015 | `src/v_model_extension/hooks/registrar.py` |
-| MOD-021 | `emit_summary` | ARCH-016 | `src/v_model_extension/report/summary.py` |
-| MOD-022 | `compute_coverage_report` | ARCH-017 | `src/v_model_extension/quality/harness.py` |
-| MOD-023 | `annotate_commit` | ARCH-018 | `src/v_model_extension/git/annotator.py` |
-| MOD-024 | `load_artifacts` | ARCH-019 [CC] | `src/v_model_extension/io/artifact_reader.py` |
-| MOD-025 | `extract_id_set` | ARCH-019 [CC] | `src/v_model_extension/io/artifact_reader.py` |
-| MOD-026 | `run_subprocess` | ARCH-020 [CC] | `src/v_model_extension/io/subprocess_runner.py` |
-| MOD-027 | `atomic_write` | ARCH-021 [CC] | `src/v_model_extension/io/fs_writer.py` |
+| MOD | Name | Classification | Target Source File |
+|-----|------|----------------|--------------------|
+| MOD-001 | Plan Synthesis Orchestrator | NEW-PROMPT-SECTION | `commands/plan.md` §Execution Flow |
+| MOD-002 | Canonical Output Emitter | NEW-PROMPT-SECTION | `commands/plan.md` §Output Artifacts |
+| MOD-003 | Tasks Synthesis Orchestrator | NEW-PROMPT-SECTION | `commands/tasks.md` §Execution Flow |
+| MOD-004 | TDD Task List Builder | NEW-PROMPT-SECTION | `commands/tasks.md` §TDD Ordering |
+| MOD-005 | Implementation Orchestrator | NEW-PROMPT-SECTION | `commands/implement.md` §Execution Flow |
+| MOD-006 | Code Generator (per-MOD dispatch) | NEW-PROMPT-SECTION | `commands/implement.md` §Code Generation |
+| MOD-007 | Module Source Renderer | NEW-PROMPT-SECTION | `commands/implement.md` §Traceability Comments |
+| MOD-008 | Test Generator (per-level dispatch) | NEW-PROMPT-SECTION | `commands/implement.md` §Test Generation |
+| MOD-009 | Per-Level Test Renderer | NEW-PROMPT-SECTION | `commands/implement.md` §Test Levels |
+| MOD-010 | Pre-Implementation Gate Coordinator | NEW-SHELL | `scripts/bash/run-v-model-gate.sh` |
+| MOD-011 | Plan Enrichment Encoder | NEW-PROMPT-SECTION | `commands/plan.md` §Enrichment |
+| MOD-012 | Tasks Traceability Comment Encoder | NEW-PROMPT-SECTION | `commands/tasks.md` §Traceability Comments |
+| MOD-013 | Hallucination Guard | NEW-SHELL | `scripts/bash/validate-implements-ids.sh` |
+| MOD-014 | Source Region Splicer | NEW-SHELL | `scripts/bash/splice-managed-regions.sh` |
+| MOD-015 | Domain Overlay Adapter | NEW-PROMPT-SECTION | `commands/implement.md` §Domain Overlay |
+| MOD-016 | Hazard-Driven Task Enricher | NEW-PROMPT-SECTION | `commands/tasks.md` §Hazard Enrichment |
+| MOD-017 | Plan Schema Validator | NEW-SHELL | `scripts/bash/validate-core-schema.sh` (`--plan`) |
+| MOD-018 | Tasks Schema Validator | NEW-SHELL | `scripts/bash/validate-core-schema.sh` (`--tasks`) |
+| MOD-019 | Hybrid Path Enrichment Detector | NEW-PROMPT-SECTION | `commands/tasks.md` §Hybrid Path Detection |
+| MOD-020 | Hook Registrar | REUSE-CORE | `extension.yml` (3 YAML entries) |
+| MOD-021 | Structured Summary Reporter | NEW-PROMPT-SECTION | `commands/plan.md`, `commands/tasks.md`, `commands/implement.md` §Structured Summary |
+| MOD-022 | Quality Compliance Harness | DROP-recharacterized | `[NO RUNTIME ARTIFACT — DEFERRED]` |
+| MOD-023 | Commit Annotator | NEW-PROMPT-SECTION | `commands/implement.md` §Commit Annotation |
+| MOD-024 | V-Model Artifact Loader | DROP-recharacterized | `[NO RUNTIME ARTIFACT — DEFERRED]` |
+| MOD-025 | Canonical ID-Set Extractor | NEW-SHELL | `scripts/bash/validate-implements-ids.sh` (inline `grep`) |
+| MOD-026 | Subprocess Runner | DROP-recharacterized | `[NO RUNTIME ARTIFACT — DEFERRED]` |
+| MOD-027 | Atomic Filesystem Writer | DROP-recharacterized | `[NO RUNTIME ARTIFACT — DEFERRED]` |
 
 ## Module Designs
 
-### Module: MOD-001 (Plan Synthesis Orchestrator — `run`)
+---
 
-**Parent Architecture Modules**: ARCH-001
-**Target Source File(s)**: `src/v_model_extension/commands/plan.py`
-**Implements REQ:** REQ-001, REQ-002, REQ-003, REQ-004, REQ-005, REQ-006, REQ-008, REQ-026, REQ-027, REQ-NF-005, REQ-IF-001
+### MOD-001 — Plan Synthesis Orchestrator
 
-#### Algorithmic / Logic View
+| Field | Value |
+|-------|-------|
+| Classification | NEW-PROMPT-SECTION |
+| Target Source File | `commands/plan.md` §Execution Flow |
+| Traced From | REQ-001, REQ-002, REQ-003, REQ-004, REQ-005, REQ-006, REQ-008, REQ-026, REQ-027, REQ-NF-005, REQ-IF-001; SYS-001; ARCH-001 |
 
-```pseudocode
-FUNCTION plan_orchestrator.run(feature_dir: Path, arguments: str = "") -> int:
-    summary = RunResult()
-    TRY:
-        // Phase: LOAD
-        artifact_set = MOD-024.load_artifacts(feature_dir)
-        summary.inputs_read.append(artifact_set.populated_paths())
-        IF artifact_set.requirements IS NULL:
-            summary.fatal_errors.append("requirements.md required")
-            MOD-021.emit_summary(summary)
-            RETURN 1
+**Description**: The LLM-orchestrator section of `commands/plan.md` that
+drives `/speckit.v-model.plan` end-to-end. Following the same vocabulary
+used by `commands/audit-report.md` and `commands/test-results.md`, the
+section names every input artifact the LLM must read, the
+deterministic helpers it must invoke, the output sections it must
+produce, and the structured summary it must emit on every exit path.
 
-        // Phase: SYNTHESIZE
-        canonical = synthesize_plan_skeleton(artifact_set)
-        metadata  = build_enrichment_metadata(artifact_set)
+**Responsibilities**:
+- Invoke Spec Kit Core's `setup-plan.sh` (via the `scripts:` frontmatter
+  on `commands/plan.md`) to materialise the canonical artifact
+  skeleton.
+- Read every V-Model artifact present in `feature_dir/v-model/` as
+  Markdown — natively, no parser.
+- Refuse to proceed when `requirements.md` is absent (emit
+  `fatal_errors[]` via §Structured Summary, exit 1).
+- Drive the §Enrichment (MOD-011), §Output Artifacts (MOD-002), and
+  §Structured Summary (MOD-021) sub-sections in sequence.
+- Invoke `scripts/bash/validate-core-schema.sh --plan <path>` (MOD-017)
+  before declaring an emitted artifact final.
 
-        // Phase: ENRICH
-        enriched_plan = MOD-011.embed_enrichment(canonical, metadata)
+**Pseudocode / Structural Sketch** (prompt outline):
 
-        // Phase: VALIDATE
-        result = MOD-017.validate_plan_schema(enriched_plan)
-        IF NOT result.valid:
-            summary.fatal_errors.append(format_schema_error(result))
-            MOD-021.emit_summary(summary)
-            RETURN 1
+```
+## Execution Flow
 
-        // Phase: EMIT
-        outputs = build_canonical_outputs(artifact_set, enriched_plan)
-        written = MOD-002.emit_canonical_outputs(feature_dir, outputs)
-        summary.outputs_produced = written
-        summary.artifacts_skipped = outputs.absent_field_names()
+1. Run `bash scripts/bash/setup-plan.sh` (Spec Kit Core) and read its
+   stdout for skeleton paths.
+2. Read each V-Model artifact present in `<feature_dir>/v-model/`
+   as Markdown. If `requirements.md` is absent → emit
+   §Structured Summary with `fatal_errors: ["requirements.md required"]`,
+   exit 1.
+3. Synthesise the canonical `plan.md` body per the v0.7.0 schema
+   (§Output Artifacts contract).
+4. Apply §Enrichment (MOD-011) — inject `<!-- vmodel:traces ... -->`
+   HTML comment block immediately after the document title.
+5. For each candidate output: write via the inline `mktemp` + `mv`
+   pattern, then run `bash scripts/bash/validate-core-schema.sh
+   --plan <path>`. Non-zero ⇒ delete the candidate, emit
+   §Structured Summary with `fatal_errors[]`, exit 1.
+6. Emit §Structured Summary (MOD-021) listing inputs_read[],
+   outputs_produced[], artifacts_skipped[], warnings[]. Exit 0.
 
-        // Phase: REPORT
-        MOD-021.emit_summary(summary)
-        RETURN 0
-    EXCEPT EnrichmentError AS e:
-        summary.fatal_errors.append(str(e))
-        MOD-021.emit_summary(summary)
-        RETURN 1
-    EXCEPT MalformedArtifact AS e:
-        summary.fatal_errors.append(f"{e.path}: {e.reason}")
-        MOD-021.emit_summary(summary)
-        RETURN 1
+## LLM-checkable preconditions
+- `commands/plan.md` frontmatter declares
+  `scripts: { sh: scripts/bash/validate-core-schema.sh, ps: ... }`.
+- `<feature_dir>/v-model/requirements.md` exists.
+
+## Expected output sections (in order)
+- §Execution Flow, §Output Artifacts, §Enrichment,
+  §Structured Summary.
 ```
 
-#### State Machine View
+**Dependencies**:
+- `commands/plan.md` (host file).
+- Spec Kit Core: `scripts/bash/setup-plan.sh`,
+  `scripts/bash/check-prerequisites.sh`,
+  `scripts/bash/common.sh`.
+- `scripts/bash/validate-core-schema.sh` (MOD-017).
+- §Enrichment (MOD-011), §Output Artifacts (MOD-002),
+  §Structured Summary (MOD-021).
 
-```mermaid
-stateDiagram-v2
-    [*] --> LOAD
-    LOAD --> SYNTHESIZE : artifact_set populated
-    LOAD --> FAIL : requirements.md absent / MalformedArtifact
-    SYNTHESIZE --> ENRICH
-    ENRICH --> FAIL : EnrichmentError
-    ENRICH --> VALIDATE
-    VALIDATE --> FAIL : SchemaValidationError
-    VALIDATE --> EMIT
-    EMIT --> REPORT
-    FAIL --> REPORT
-    REPORT --> [*]
-```
-
-#### Internal Data Structures
-
-| Name | Type | Size/Constraints | Initialization | Description |
-|------|------|------------------|----------------|-------------|
-| `summary` | `RunResult` | 5 string-list fields | empty | Accumulated for ARCH-016 |
-| `artifact_set` | `ArtifactSet` | 10 nullable fields | from MOD-024 | Loaded V-Model artifacts |
-| `metadata` | `EnrichmentMetadata` | dict | derived | Trace chains + optional sections |
-| `outputs` | `CanonicalOutputs` | 5 fields (4 nullable) | derived | Per-field nullability drives selective emission |
-| `written` | `list[Path]` | ≥ 1 entry | from MOD-002 | Audit trail |
-
-#### Error Handling & Return Codes
-
-| Error Condition | Error Code / Exception | Architecture Contract | Recovery |
-|----------------|------------------------|-----------------------|----------|
-| `requirements.md` absent | exit 1 + `summary.fatal_errors` | ARCH-001 contract: requires REQUIREMENTS to exist | None — fail-closed |
-| `MalformedArtifact` from MOD-024 | exit 1 + summary | ARCH-019 → ARCH-001 | Log path + reason |
-| `EnrichmentError` from MOD-011 | exit 1 + summary | ARCH-008 → ARCH-001 | Log; emit summary on failure path |
-| `SchemaValidationError` (validate returns `valid: false`) | exit 1 + summary | ARCH-013 → ARCH-001 | Log section + line; do NOT call MOD-002 |
+**Verification**: BATS end-to-end test invoking the rendered
+`commands/plan.md` against a fixture `feature_dir`; LLM structural-eval
+in `tests/evals/` asserting the four expected sections are present in
+canonical order.
 
 ---
 
-### Module: MOD-002 (`emit_canonical_outputs`)
+### MOD-002 — Canonical Output Emitter
 
-**Parent Architecture Modules**: ARCH-002
-**Target Source File(s)**: `src/v_model_extension/emit/canonical.py`
-**Implements REQ:** REQ-001, REQ-008, REQ-026, REQ-IF-001
+| Field | Value |
+|-------|-------|
+| Classification | NEW-PROMPT-SECTION |
+| Target Source File | `commands/plan.md` §Output Artifacts |
+| Traced From | REQ-001, REQ-008, REQ-026, REQ-IF-001; SYS-001; ARCH-002 |
 
-#### Algorithmic / Logic View
+**Description**: Prompt section that names every canonical spec-kit-core
+output the LLM must write and the inline `mktemp` + `mv` write pattern
+it must use.
 
-```pseudocode
-FUNCTION emit_canonical_outputs(feature_dir: Path, outputs: CanonicalOutputs) -> list[Path]:
-    written = []
-    IF outputs.plan IS NOT NULL:
-        path = feature_dir / "plan.md"
-        MOD-027.atomic_write(path, outputs.plan)
-        written.append(path)
-    IF outputs.data_model IS NOT NULL:
-        path = feature_dir / "data-model.md"
-        MOD-027.atomic_write(path, outputs.data_model)
-        written.append(path)
-    FOR each contract IN outputs.contracts:
-        path = feature_dir / "contracts" / contract.filename
-        MOD-027.atomic_write(path, contract.content)
-        written.append(path)
-    IF outputs.quickstart IS NOT NULL:
-        path = feature_dir / "quickstart.md"
-        MOD-027.atomic_write(path, outputs.quickstart)
-        written.append(path)
-    IF outputs.research IS NOT NULL:
-        path = feature_dir / "research.md"
-        MOD-027.atomic_write(path, outputs.research)
-        written.append(path)
-    RETURN written
+**Responsibilities**:
+- Enumerate the five canonical outputs: `plan.md`, `data-model.md`,
+  `contracts/<name>.md`, `quickstart.md`, `research.md`.
+- For each output, list the required spec-kit-core v0.7.0 sections.
+- Specify the atomic-write cliché:
+  `tmp=$(mktemp -p "$(dirname "$f")"); printf '%s' "$content" > "$tmp"; mv "$tmp" "$f"`.
+- When an upstream input is absent, the LLM MUST skip the corresponding
+  output and append the file name to `artifacts_skipped[]` in the
+  §Structured Summary.
+
+**Pseudocode / Structural Sketch** (prompt outline):
+
+```
+## Output Artifacts
+
+For each artifact in {plan.md, data-model.md, contracts/<name>.md,
+quickstart.md, research.md}:
+  - Verify required sections per the v0.7.0 schema fixture.
+  - Render canonical body.
+  - Write via inline `mktemp -p "$(dirname "$target")"` + `mv` pair.
+  - Append the resolved path to `outputs_produced[]`.
+  - On any write failure, propagate as `fatal_errors[]` and exit 1.
+
+If a required upstream input is `null`, skip the output and append the
+filename to `artifacts_skipped[]` (graceful degradation per REQ-008).
 ```
 
-#### State Machine View
+**Dependencies**:
+- `commands/plan.md` (host file).
+- `scripts/bash/validate-core-schema.sh` (MOD-017) — invoked by
+  MOD-001 before this section's emission.
 
-N/A — Stateless
-
-#### Internal Data Structures
-
-| Name | Type | Size/Constraints | Initialization | Description |
-|------|------|------------------|----------------|-------------|
-| `written` | `list[Path]` | 0 ≤ len ≤ 4 + len(contracts) | empty | Accumulator |
-| `outputs` | `CanonicalOutputs` | 5 fields (4 nullable + 1 list) | param | Per-field nullability drives selective emission |
-
-#### Error Handling & Return Codes
-
-| Error Condition | Error Code / Exception | Architecture Contract | Recovery |
-|----------------|------------------------|-----------------------|----------|
-| `IOError` raised by MOD-027 mid-emission | re-raise unmodified | ARCH-002 contract: propagate `IOError` to caller | None — partial-write tmp file is cleaned up by MOD-027; the partial path is NOT included in `written` |
+**Verification**: BATS test asserting (a) the five expected files are
+written when all inputs present, (b) the skipped subset is populated
+correctly when an input is absent, (c) atomic-rename semantics —
+killing the LLM mid-emission leaves either the prior content or the
+new content, never a partial file.
 
 ---
 
-### Module: MOD-003 (Tasks Synthesis Orchestrator — `run`)
+### MOD-003 — Tasks Synthesis Orchestrator
 
-**Parent Architecture Modules**: ARCH-003
-**Target Source File(s)**: `src/v_model_extension/commands/tasks.py`
-**Implements REQ:** REQ-009, REQ-010, REQ-011, REQ-013, REQ-014, REQ-026, REQ-027, REQ-NF-005, REQ-IF-002
+| Field | Value |
+|-------|-------|
+| Classification | NEW-PROMPT-SECTION |
+| Target Source File | `commands/tasks.md` §Execution Flow |
+| Traced From | REQ-009, REQ-010, REQ-011, REQ-013, REQ-014, REQ-026, REQ-027, REQ-NF-005, REQ-IF-002; SYS-002; ARCH-003 |
 
-#### Algorithmic / Logic View
+**Description**: The LLM-orchestrator section of `commands/tasks.md`
+that drives `/speckit.v-model.tasks` end-to-end.
 
-```pseudocode
-FUNCTION tasks_orchestrator.run(feature_dir: Path, arguments: str = "") -> int:
-    summary = RunResult()
-    TRY:
-        // Phase: LOAD
-        artifact_set = MOD-024.load_artifacts(feature_dir)
-        summary.inputs_read.append(artifact_set.populated_paths())
-        IF artifact_set.requirements IS NULL:
-            summary.fatal_errors.append("requirements.md required")
-            MOD-021.emit_summary(summary)
-            RETURN 1
+**Responsibilities**:
+- Read every V-Model artifact present plus any `plan.md` (V-Model-
+  enriched or core-only).
+- Invoke §Hybrid Path Detection (MOD-019) to decide whether upstream
+  enrichment is present.
+- Drive §TDD Ordering (MOD-004), §Hazard Enrichment (MOD-016),
+  §Traceability Comments (MOD-012), and §Structured Summary (MOD-021).
+- Invoke `scripts/bash/validate-core-schema.sh --tasks <path>`
+  (MOD-018) before atomically writing `tasks.md`.
 
-        // Phase: DETECT (Hybrid path)
-        upstream_plan = read_optional(feature_dir / "plan.md")
-        enrichment_report = NULL
-        IF upstream_plan IS NOT NULL:
-            enrichment_report = MOD-019.detect_enrichment(upstream_plan)
-            // enrichment_report is opaque transport for diagnostics only;
-            // it drives no behavioural variant in MOD-003 or MOD-004.
-            IF enrichment_report IS NOT NULL AND NOT enrichment_report.enriched:
-                log_warning(f"Reduced-enrichment path — upstream lacks {enrichment_report.missing_metadata_keys}; downstream traceability derived directly from V-Model artifact set per ARCH-014")
+**Pseudocode / Structural Sketch** (prompt outline):
 
-        // Phase: BUILD
-        tasks = MOD-004.build_tdd_task_list(artifact_set)
+```
+## Execution Flow
 
-        // Phase: HAZARD-ENRICH
-        IF artifact_set.hazard_analysis IS NOT NULL:
-            tasks = MOD-016.enrich_with_hazards(tasks, artifact_set.hazard_analysis)
+1. Run `bash scripts/bash/check-prerequisites.sh` (Spec Kit Core).
+2. Read V-Model artifacts + optional `plan.md`.
+3. §Hybrid Path Detection (MOD-019): grep upstream `plan.md` for
+   `<!-- vmodel:traces`. If absent ⇒ derive traceability directly from
+   V-Model artifacts.
+4. §TDD Ordering (MOD-004): build the ordered task list
+   (unit-test → impl → integration → system → acceptance).
+5. §Hazard Enrichment (MOD-016): if `hazard-analysis.md` present,
+   raise mitigation-task priority and emit one verification task per
+   `HAZ-NNN`.
+6. §Traceability Comments (MOD-012): inject
+   `<!-- traces-to: MOD → ARCH → SYS → REQ -->` after each task line.
+7. Write candidate `tasks.md` via inline `mktemp` + `mv`.
+8. Run `bash scripts/bash/validate-core-schema.sh --tasks tasks.md`.
+   Non-zero ⇒ delete candidate, emit `fatal_errors[]`, exit 1.
+9. Emit §Structured Summary (MOD-021), exit 0.
 
-        // Phase: TRACE-ENRICH
-        traces = derive_trace_chains(artifact_set, tasks)
-        enriched_doc = MOD-012.embed_traceability_comments(render_tasks_md(tasks), traces)
+## LLM-checkable preconditions
+- `<feature_dir>/v-model/requirements.md` exists.
+- `commands/tasks.md` frontmatter declares
+  `scripts: { sh: scripts/bash/validate-core-schema.sh, ps: ... }`.
 
-        // Phase: VALIDATE
-        result = MOD-018.validate_tasks_schema(enriched_doc)
-        IF NOT result.valid:
-            summary.fatal_errors.append(format_schema_error(result))
-            MOD-021.emit_summary(summary)
-            RETURN 1
-
-        // Phase: WRITE
-        path = feature_dir / "tasks.md"
-        MOD-027.atomic_write(path, enriched_doc)
-        summary.outputs_produced.append(path)
-        MOD-021.emit_summary(summary)
-        RETURN 0
-    EXCEPT MalformedHazardAnalysis AS e:
-        summary.fatal_errors.append(f"HazardEnrichmentError: {e}")
-        MOD-021.emit_summary(summary)
-        RETURN 1
-    EXCEPT MalformedArtifact AS e:
-        summary.fatal_errors.append(f"{e.path}: {e.reason}")
-        MOD-021.emit_summary(summary)
-        RETURN 1
+## Expected output sections (in order)
+- §Execution Flow, §Hybrid Path Detection, §TDD Ordering,
+  §Hazard Enrichment, §Traceability Comments, §Structured Summary.
 ```
 
-#### State Machine View
+**Dependencies**:
+- `commands/tasks.md` (host file).
+- Spec Kit Core: `scripts/bash/check-prerequisites.sh`.
+- `scripts/bash/validate-core-schema.sh` (MOD-018).
+- §Hybrid Path Detection (MOD-019), §TDD Ordering (MOD-004),
+  §Hazard Enrichment (MOD-016), §Traceability Comments (MOD-012),
+  §Structured Summary (MOD-021).
 
-```mermaid
-stateDiagram-v2
-    [*] --> LOAD
-    LOAD --> DETECT : artifact_set populated
-    LOAD --> FAIL : requirements.md absent / MalformedArtifact
-    DETECT --> BUILD
-    BUILD --> HAZARD_ENRICH
-    HAZARD_ENRICH --> FAIL : MalformedHazardAnalysis
-    HAZARD_ENRICH --> TRACE_ENRICH
-    TRACE_ENRICH --> VALIDATE
-    VALIDATE --> FAIL : SchemaValidationError
-    VALIDATE --> WRITE
-    WRITE --> REPORT
-    FAIL --> REPORT
-    REPORT --> [*]
-```
-
-> Both terminal paths (success and failure) flow through `REPORT` so that
-> the structured stdout summary (ARCH-016 / MOD-021) is always emitted —
-> matching the MOD-001 pattern. Only `REPORT` may transition to `[*]`.
-
-#### Internal Data Structures
-
-| Name | Type | Size/Constraints | Initialization | Description |
-|------|------|------------------|----------------|-------------|
-| `tasks` | `list[Task]` | bounded by `len(MODs) * 4` (~120 typical) | empty | TDD-ordered task list |
-| `enrichment_report` | `EnrichmentReport \| None` | 2 fields | `None` | Hybrid-path detection result |
-| `traces` | `list[TraceChain]` | bounded by `len(tasks)` | derived | MOD→ARCH→SYS→REQ chains |
-| `enriched_doc` | `str` | UTF-8 Markdown | from MOD-012 | Final tasks.md content |
-
-#### Error Handling & Return Codes
-
-| Error Condition | Error Code / Exception | Architecture Contract | Recovery |
-|----------------|------------------------|-----------------------|----------|
-| `MalformedHazardAnalysis` from MOD-016 | exit 1 + summary | ARCH-012 → ARCH-003: propagate as `HazardEnrichmentError` | Log line; do NOT call MOD-018 |
-| `SchemaValidationError` from MOD-018 | exit 1 + summary | ARCH-013 → ARCH-003 | Log; do NOT write tasks.md |
+**Verification**: BATS end-to-end test against a fixture `feature_dir`
+with and without `hazard-analysis.md` present; LLM structural-eval
+asserting the six expected sections appear in canonical order.
 
 ---
 
-### Module: MOD-004 (`build_tdd_task_list`)
+### MOD-004 — TDD Task List Builder
 
-**Parent Architecture Modules**: ARCH-003
-**Target Source File(s)**: `src/v_model_extension/tasks/sequencer.py`
-**Implements REQ:** REQ-009, REQ-010, REQ-013
+| Field | Value |
+|-------|-------|
+| Classification | NEW-PROMPT-SECTION |
+| Target Source File | `commands/tasks.md` §TDD Ordering |
+| Traced From | REQ-009, REQ-010, REQ-013; SYS-002; ARCH-003 |
 
-#### Algorithmic / Logic View
+**Description**: Prompt section that specifies the TDD ordering
+invariant (unit-test → impl → integration → system → acceptance) and
+the `[P]` parallel-execution marker rule for independent modules.
 
-```pseudocode
-FUNCTION build_tdd_task_list(
-    artifact_set: ArtifactSet
-) -> list[Task]:
-    tasks = []
-    // Per the TDD ordering invariant: unit-tests → impl → integration → system → acceptance
-    FOR each MOD IN artifact_set.module_design.modules:
-        tasks.append(Task(kind="unit_test_write",   target=MOD.id, parents=MOD.parent_archs))
-    FOR each MOD IN artifact_set.module_design.modules:
-        tasks.append(Task(kind="implement",         target=MOD.id, parents=MOD.parent_archs))
-    FOR each ITP IN artifact_set.integration_test.test_cases:
-        tasks.append(Task(kind="integration_test_write", target=ITP.id, parents=ITP.parent_arch))
-    FOR each STP IN artifact_set.system_test.test_plans:
-        tasks.append(Task(kind="system_test_write", target=STP.id, parents=STP.parent_sys))
-    FOR each ATP IN artifact_set.acceptance_plan.test_plans:
-        tasks.append(Task(kind="acceptance_test_write", target=ATP.id, parents=ATP.parent_req))
-    RETURN tasks
+**Responsibilities**:
+- For each `MOD-NNN` in `module-design.md`, emit a `unit_test_write`
+  task before any `implement` task.
+- For each `ITP-NNN` in `integration-test.md`, emit a
+  `integration_test_write` task after all `implement` tasks.
+- For each `STP-NNN`/`STS-NNN` in `system-test.md`, emit a
+  `system_test_write` task.
+- For each `ATP-NNN` in `acceptance-plan.md`, emit an
+  `acceptance_test_write` task.
+- Apply `[P]` to tasks whose parent ARCHs are disjoint and whose
+  Target Source Files do not overlap.
+
+**Pseudocode / Structural Sketch** (prompt outline):
+
+```
+## TDD Ordering
+
+For each MOD in module-design.md:
+  - emit `T-<n>: write unit tests for MOD-NNN` (parents: MOD's ARCHs)
+  - emit `T-<n+1>: implement MOD-NNN`            (parents: MOD's ARCHs)
+For each ITP in integration-test.md:
+  - emit `T-<n>: write integration test ITP-NNN` (parent: ITP's ARCH)
+For each STP in system-test.md:
+  - emit `T-<n>: write system test STP-NNN`     (parent: STP's SYS)
+For each ATP in acceptance-plan.md:
+  - emit `T-<n>: write acceptance test ATP-NNN` (parent: ATP's REQ)
+
+Mark a task `[P]` iff its parents are disjoint from every preceding
+unmarked task in the same level AND no Target Source File overlap.
 ```
 
-#### State Machine View
+**Dependencies**:
+- `commands/tasks.md` (host file).
+- §Execution Flow (MOD-003) which invokes this section.
 
-N/A — Stateless
-
-#### Internal Data Structures
-
-| Name | Type | Size/Constraints | Initialization | Description |
-|------|------|------------------|----------------|-------------|
-| `tasks` | `list[Task]` | bounded by sum of artifact list sizes | empty | TDD-ordered output |
-| `Task` | `dataclass` | `kind, target, parents, priority` | per row | Single task |
-
-#### Error Handling & Return Codes
-
-| Error Condition | Error Code / Exception | Architecture Contract | Recovery |
-|----------------|------------------------|-----------------------|----------|
-| Required artifact field is `None` | propagate `KeyError` to caller (MOD-003) | ARCH-003 contract requires upstream artifacts present at gate time — the artifact-presence check is the caller's responsibility | None — caller fail-closes |
+**Verification**: LLM structural-eval asserting the four-tier ordering
+appears in the rendered `tasks.md` for a fixture artifact set, plus a
+property assertion that no `implement` task precedes its sibling
+`unit_test_write`.
 
 ---
 
-### Module: MOD-005 (Implementation Orchestrator — `run`)
+### MOD-005 — Implementation Orchestrator
 
-**Parent Architecture Modules**: ARCH-004
-**Target Source File(s)**: `src/v_model_extension/commands/implement.py`
-**Implements REQ:** REQ-015, REQ-018, REQ-019, REQ-020, REQ-021, REQ-022, REQ-024, REQ-025, REQ-026, REQ-027, REQ-NF-005
+| Field | Value |
+|-------|-------|
+| Classification | NEW-PROMPT-SECTION |
+| Target Source File | `commands/implement.md` §Execution Flow |
+| Traced From | REQ-015, REQ-018, REQ-019, REQ-020, REQ-021, REQ-022, REQ-024, REQ-025, REQ-026, REQ-027, REQ-NF-005; SYS-003; ARCH-004 |
 
-#### Algorithmic / Logic View
+**Description**: The LLM-orchestrator section of `commands/implement.md`
+that drives `/speckit.v-model.implement` end-to-end with hard ordering
+gate → generate → verify → commit, fail-closed at every step.
 
-```pseudocode
-FUNCTION implement_orchestrator.run(feature_dir: Path, arguments: str = "") -> int:
-    summary = RunResult()
-    TRY:
-        // Phase: LOAD
-        artifact_set = MOD-024.load_artifacts(feature_dir)
-        summary.inputs_read.append(artifact_set.populated_paths())
+**Responsibilities**:
+- Invoke `scripts/bash/check-prerequisites.sh` (Spec Kit Core).
+- Invoke `scripts/bash/run-v-model-gate.sh <feature_dir>` (MOD-010);
+  non-zero exit ⇒ abort before any generation.
+- Drive §Domain Overlay (MOD-015) — read `v-model-config.yml` if
+  present.
+- Drive §Code Generation (MOD-006) and §Test Generation (MOD-008).
+- Invoke `scripts/bash/validate-implements-ids.sh <feature_dir>`
+  (MOD-013) before commit; non-zero ⇒ abort.
+- Drive §Commit Annotation (MOD-023) and §Structured Summary (MOD-021).
 
-        // Phase: GATE (REQ-016, REQ-017 — fail-closed)
-        gate = MOD-010.evaluate_gate(feature_dir)
-        IF NOT gate.passed:
-            summary.fatal_errors.append(f"GateFailure: {gate.gap_report}")
-            MOD-021.emit_summary(summary)
-            RETURN 1
+**Pseudocode / Structural Sketch** (prompt outline):
 
-        // Phase: OVERLAY
-        plan = build_generation_plan(artifact_set)
-        config = read_optional_yaml(REPO_ROOT / "v-model-config.yml")
-        plan = MOD-015.apply_overlay(plan, config)
+```
+## Execution Flow
 
-        // Phase: GENERATE (code, then tests; both produced before verification)
-        file_set = MOD-006.generate_code(plan)
-        test_set = MOD-008.generate_tests(plan, artifact_set)
+1. `bash scripts/bash/check-prerequisites.sh`
+2. `bash scripts/bash/run-v-model-gate.sh <feature_dir>` (MOD-010)
+   non-zero ⇒ §Structured Summary fatal_errors[], exit 1.
+3. §Domain Overlay (MOD-015): if `v-model-config.yml` exists, parse
+   `domain:` and apply additive overlay rules to subsequent generation.
+   Malformed YAML ⇒ exit 1.
+4. §Code Generation (MOD-006): for each MOD in module-design.md,
+   render Target Source File via §Traceability Comments (MOD-007) and
+   `bash scripts/bash/splice-managed-regions.sh` (MOD-014); write via
+   inline `mktemp` + `mv`. Splicer non-zero ⇒ exit 1.
+5. §Test Generation (MOD-008): emit unit/integration/system/acceptance
+   tests via §Test Levels (MOD-009).
+6. `bash scripts/bash/validate-implements-ids.sh <feature_dir>`
+   (MOD-013). Non-zero ⇒ exit 1 BEFORE any commit.
+7. §Commit Annotation (MOD-023): `git commit -m "<msg> — <ID>, <ID>"`.
+8. §Structured Summary (MOD-021), exit 0.
 
-        // Phase: VERIFY (REQ-023 — pre-commit hallucination guard)
-        all_files = file_set + test_set
-        id_set = MOD-025.extract_id_set(artifact_set)
-        verify_result = MOD-013.verify_ids(all_files, id_set)
-        IF NOT verify_result.valid:
-            summary.fatal_errors.append(f"HallucinationDetected: {verify_result.hallucinations}")
-            MOD-021.emit_summary(summary)
-            RETURN 1
+## LLM-checkable preconditions
+- All four V-Model test plans + `module-design.md` exist in
+  `<feature_dir>/v-model/`.
+- `commands/implement.md` frontmatter declares
+  `scripts: { sh: scripts/bash/run-v-model-gate.sh, ps: ... }`.
 
-        // Phase: COMMIT (REQ-021)
-        ids = derive_ids_from(plan)
-        message = build_base_commit_message(plan)
-        MOD-023.annotate_commit(message, ids)
-        summary.outputs_produced = [f.path FOR f IN all_files]
-        MOD-021.emit_summary(summary)
-        RETURN 0
-    EXCEPT RegionConflict AS e:
-        summary.fatal_errors.append(f"RegionConflict: {e.diff_report}")
-        MOD-021.emit_summary(summary)
-        RETURN 1
-    EXCEPT OverlayParseError AS e:
-        summary.fatal_errors.append(f"OverlayParseError: {e}")
-        MOD-021.emit_summary(summary)
-        RETURN 1
+## Expected output sections (in order)
+- §Execution Flow, §Domain Overlay, §Code Generation,
+  §Traceability Comments, §Test Generation, §Test Levels,
+  §Commit Annotation, §Structured Summary.
 ```
 
-#### State Machine View
+**Dependencies**:
+- `commands/implement.md` (host file).
+- Spec Kit Core: `scripts/bash/check-prerequisites.sh`.
+- `scripts/bash/run-v-model-gate.sh` (MOD-010),
+  `scripts/bash/validate-implements-ids.sh` (MOD-013),
+  `scripts/bash/splice-managed-regions.sh` (MOD-014).
+- §Domain Overlay (MOD-015), §Code Generation (MOD-006),
+  §Traceability Comments (MOD-007), §Test Generation (MOD-008),
+  §Test Levels (MOD-009), §Commit Annotation (MOD-023),
+  §Structured Summary (MOD-021).
 
-```mermaid
-stateDiagram-v2
-    [*] --> LOAD
-    LOAD --> GATE
-    GATE --> FAIL : passed=false
-    GATE --> OVERLAY
-    OVERLAY --> FAIL : OverlayParseError
-    OVERLAY --> GENERATE_CODE
-    GENERATE_CODE --> FAIL : RegionConflict
-    GENERATE_CODE --> GENERATE_TESTS
-    GENERATE_TESTS --> VERIFY
-    VERIFY --> FAIL : hallucination
-    VERIFY --> COMMIT
-    COMMIT --> REPORT
-    FAIL --> REPORT
-    REPORT --> [*]
-```
-
-> Both terminal paths (success and failure) flow through `REPORT` so that
-> the structured stdout summary (ARCH-016 / MOD-021) is always emitted —
-> matching the MOD-001 / MOD-003 pattern. Only `REPORT` may transition to `[*]`.
-
-#### Internal Data Structures
-
-| Name | Type | Size/Constraints | Initialization | Description |
-|------|------|------------------|----------------|-------------|
-| `gate` | `GateResult` | `{passed: bool, gap_report: str, matrices: dict}` | from MOD-010 | Pre-impl gate result |
-| `plan` | `GenerationPlan` | `{modules: list, language_per_module: dict, target_paths: list}` | derived | Drives generators |
-| `file_set` | `list[(Path, str)]` | bounded by `len(plan.modules)` | from MOD-006 | Generated source |
-| `test_set` | `list[(Path, str)]` | bounded by sum of test artifact sizes | from MOD-008 | Generated tests |
-| `id_set` | `set[str]` | union of all V-Model IDs | from MOD-025 | Authoritative set for verify |
-
-#### Error Handling & Return Codes
-
-| Error Condition | Error Code / Exception | Architecture Contract | Recovery |
-|----------------|------------------------|-----------------------|----------|
-| `GateResult.passed == false` | exit 1 + summary | ARCH-007 → ARCH-004 fail-closed | Skip GENERATE/VERIFY/COMMIT |
-| `RegionConflict` from MOD-006 (via MOD-014) | exit 1 + summary | ARCH-010 → ARCH-005 → ARCH-004 | Skip GENERATE_TESTS, VERIFY, COMMIT |
-| `verify_result.valid == false` | exit 1 + summary | ARCH-009 → ARCH-004 | Skip COMMIT (files written stay on disk per ITS-004-B2) |
-| `OverlayParseError` from MOD-015 | exit 1 + summary | ARCH-011 → ARCH-004 | Skip downstream phases |
+**Verification**: BATS end-to-end test exercising the full flow;
+explicit fail-closed assertions for {gate-fail, splicer-conflict,
+hallucination-detected}; LLM structural-eval over the eight expected
+sections.
 
 ---
 
-### Module: MOD-006 (`generate_code` — dispatcher)
+### MOD-006 — Code Generator (per-MOD dispatch)
 
-**Parent Architecture Modules**: ARCH-005
-**Target Source File(s)**: `src/v_model_extension/codegen/generator.py`
-**Implements REQ:** REQ-018, REQ-022, REQ-024
+| Field | Value |
+|-------|-------|
+| Classification | NEW-PROMPT-SECTION |
+| Target Source File | `commands/implement.md` §Code Generation |
+| Traced From | REQ-018, REQ-022, REQ-024; SYS-003; ARCH-005 |
 
-#### Algorithmic / Logic View
+**Description**: Prompt section that instructs the LLM to walk the MOD
+table in `module-design.md` and emit source code into the path declared
+by each MOD's Target Source File.
 
-```pseudocode
-FUNCTION generate_code(plan: GenerationPlan) -> list[(Path, str)]:
-    file_set = []
-    FOR each module IN plan.modules:
-        target_path = plan.target_paths[module.id]
-        language    = plan.language_per_module[module.id]
-        // Render the new generated content for this module
-        new_content = MOD-007.render_module_source(module, language)
-        // Splice into existing file (or create from single managed region)
-        final_content = MOD-014.splice_managed_regions(target_path, new_content, language)
-        file_set.append((target_path, final_content))
-    RETURN file_set
+**Responsibilities**:
+- For each `MOD-NNN`, resolve Target Source File and target language
+  from the MOD row.
+- Render new content per §Traceability Comments (MOD-007).
+- Pipe new content through
+  `bash scripts/bash/splice-managed-regions.sh <target> <new> <lang>`
+  (MOD-014) — splicer non-zero ⇒ abort the whole orchestrator before
+  any write.
+- Write via inline `mktemp` + `mv` cliché.
+
+**Pseudocode / Structural Sketch** (prompt outline):
+
+```
+## Code Generation
+
+For each MOD in module-design.md (skip DROP-recharacterized rows):
+  language  := <derived from Target Source File extension>
+  new_body  := § Traceability Comments header + rendered body
+  spliced   := bash scripts/bash/splice-managed-regions.sh \
+                 <target_source_file> <(echo "$new_body") <language>
+  if exit != 0: emit fatal_errors[], exit 1.
+  Write `spliced` via inline `mktemp` + `mv`.
 ```
 
-#### State Machine View
+**Dependencies**:
+- `commands/implement.md` (host file).
+- `scripts/bash/splice-managed-regions.sh` (MOD-014).
+- §Traceability Comments (MOD-007).
 
-N/A — Stateless
-
-#### Internal Data Structures
-
-| Name | Type | Size/Constraints | Initialization | Description |
-|------|------|------------------|----------------|-------------|
-| `file_set` | `list[(Path, str)]` | bounded by `len(plan.modules)` | empty | Accumulated output |
-
-#### Error Handling & Return Codes
-
-| Error Condition | Error Code / Exception | Architecture Contract | Recovery |
-|----------------|------------------------|-----------------------|----------|
-| `RegionConflict` from MOD-014 | re-raise unmodified | ARCH-005 contract: abort BEFORE any file written | Caller (MOD-005) fail-closes |
+**Verification**: BATS test asserting (a) each emitted file contains at
+least one `Implements <ID>` comment, (b) splicer-conflict aborts before
+any write, (c) idempotency on a second run (≥95% structural identity
+per REQ-025).
 
 ---
 
-### Module: MOD-007 (`render_module_source`)
+### MOD-007 — Module Source Renderer
 
-**Parent Architecture Modules**: ARCH-005
-**Target Source File(s)**: `src/v_model_extension/codegen/renderer.py`
-**Implements REQ:** REQ-018, REQ-024
+| Field | Value |
+|-------|-------|
+| Classification | NEW-PROMPT-SECTION |
+| Target Source File | `commands/implement.md` §Traceability Comments |
+| Traced From | REQ-018, REQ-024; SYS-003; ARCH-005 |
 
-#### Algorithmic / Logic View
+**Description**: Prompt section that specifies the comment syntax per
+language and the rule that every generated MOD body MUST be preceded by
+at least one `Implements <ID>` comment naming the MOD plus each parent
+ARCH.
 
-```pseudocode
-FUNCTION render_module_source(module: ModuleSpec, language: str) -> str:
-    comment_prefix = LANGUAGE_COMMENT[language]   // e.g. "#" for python/sh, "//" for ts/c
-    lines = []
-    // Traceability comment (REQ-018: every generated artifact contains its parent ID)
-    lines.append(f"{comment_prefix} Implements {module.id}")
-    FOR each parent IN module.parent_archs:
-        lines.append(f"{comment_prefix} Implements {parent}")
-    // Body: render the function signature + pseudocode-derived body
-    lines.append(render_signature(module, language))
-    lines.append(render_body_from_pseudocode(module.algorithmic_view, language))
-    RETURN "\n".join(lines)
+**Responsibilities**:
+- Define the language→comment-prefix mapping (`#` for shell / python /
+  yaml / powershell, `//` for typescript / c, `<!-- ... -->` for
+  Markdown / HTML).
+- Emit one `Implements <MOD-NNN>` comment plus one
+  `Implements <ARCH-NNN>` comment per parent ARCH at the top of every
+  generated region.
 
-CONSTANT LANGUAGE_COMMENT = {
-    "python": "#",
-    "shell":  "#",
-    "powershell": "#",
-    "typescript": "//",
-    "c":      "//",
-    "yaml":   "#",
-}
+**Pseudocode / Structural Sketch** (prompt outline):
+
+```
+## Traceability Comments
+
+Comment syntax per language:
+  shell, python, yaml, powershell : `#`
+  typescript, c                   : `//`
+  markdown, html                  : `<!-- ... -->`
+
+For every generated region in §Code Generation:
+  emit `<comment_prefix> Implements <MOD-NNN>` on the first line,
+  then one `<comment_prefix> Implements <ARCH-NNN>` per parent ARCH.
 ```
 
-#### State Machine View
+**Dependencies**:
+- `commands/implement.md` (host file).
+- §Code Generation (MOD-006) which consumes this section.
 
-N/A — Stateless
-
-#### Internal Data Structures
-
-| Name | Type | Size/Constraints | Initialization | Description |
-|------|------|------------------|----------------|-------------|
-| `LANGUAGE_COMMENT` | `dict[str, str]` | exactly 6 entries | const | Language→comment-prefix map |
-| `lines` | `list[str]` | bounded by body size | empty | Rendered file content |
-
-#### Error Handling & Return Codes
-
-| Error Condition | Error Code / Exception | Architecture Contract | Recovery |
-|----------------|------------------------|-----------------------|----------|
-| `KeyError` on `LANGUAGE_COMMENT[language]` | re-raise as `UnsupportedLanguageError(language)` | ARCH-005 implicit: language must be in supported set | None — fail-closed (caller skips this module) |
+**Verification**: LLM structural-eval asserting comment syntax is
+correct per language; BATS assertion that
+`scripts/bash/validate-implements-ids.sh` exits 0 for the rendered
+tree.
 
 ---
 
-### Module: MOD-008 (`generate_tests` — dispatcher)
+### MOD-008 — Test Generator (per-level dispatch)
 
-**Parent Architecture Modules**: ARCH-006
-**Target Source File(s)**: `src/v_model_extension/testgen/generator.py`
-**Implements REQ:** REQ-019, REQ-020
+| Field | Value |
+|-------|-------|
+| Classification | NEW-PROMPT-SECTION |
+| Target Source File | `commands/implement.md` §Test Generation |
+| Traced From | REQ-019, REQ-020; SYS-003; ARCH-006 |
 
-#### Algorithmic / Logic View
+**Description**: Prompt section that instructs the LLM to walk the four
+V-Model test artifacts (`unit-test.md`, `integration-test.md`,
+`system-test.md`, `acceptance-plan.md`) and emit one test file per
+test case.
 
-```pseudocode
-FUNCTION generate_tests(plan: GenerationPlan, artifact_set: ArtifactSet) -> list[(Path, str)]:
-    test_set = []
-    levels = [
-        ("unit",        artifact_set.unit_test,        plan.test_dirs.unit),
-        ("integration", artifact_set.integration_test, plan.test_dirs.integration),
-        ("system",      artifact_set.system_test,      plan.test_dirs.system),
-        ("acceptance",  artifact_set.acceptance_plan,  plan.test_dirs.acceptance),
-    ]
-    FOR each (level_name, plan_artifact, target_dir) IN levels:
-        IF plan_artifact IS NULL:
-            CONTINUE  // graceful degradation — caller (MOD-005) reports skip via summary
-        rendered = MOD-009.render_test_file_for_level(level_name, plan_artifact, target_dir)
-        test_set.extend(rendered)
-    RETURN test_set
+**Responsibilities**:
+- For each level in {unit, integration, system, acceptance}: read the
+  corresponding test plan; if absent, skip silently and append the
+  artifact name to `artifacts_skipped[]`.
+- For each test case in the plan, dispatch to §Test Levels (MOD-009).
+
+**Pseudocode / Structural Sketch** (prompt outline):
+
+```
+## Test Generation
+
+For each (level, artifact, target_dir) in:
+  (unit,        unit-test.md,        tests/<harness>/unit/),
+  (integration, integration-test.md, tests/<harness>/integration/),
+  (system,      system-test.md,      tests/<harness>/system/),
+  (acceptance,  acceptance-plan.md,  tests/<harness>/acceptance/):
+  if artifact absent: append to artifacts_skipped[], continue.
+  Render per §Test Levels (MOD-009).
 ```
 
-#### State Machine View
+**Dependencies**:
+- `commands/implement.md` (host file).
+- §Test Levels (MOD-009).
 
-N/A — Stateless
-
-#### Internal Data Structures
-
-| Name | Type | Size/Constraints | Initialization | Description |
-|------|------|------------------|----------------|-------------|
-| `levels` | `list[tuple]` | exactly 4 | per call | Iteration source |
-| `test_set` | `list[(Path, str)]` | bounded by sum of artifact sizes | empty | Accumulator |
-
-#### Error Handling & Return Codes
-
-| Error Condition | Error Code / Exception | Architecture Contract | Recovery |
-|----------------|------------------------|-----------------------|----------|
-| Test plan artifact `None` | continue (skip level) | ARCH-006 graceful degradation per ITS-006-A2 | Skip silently; summary records skip via MOD-021 caller path |
+**Verification**: BATS test confirming graceful skip when a test
+artifact is absent; LLM structural-eval that all four levels are
+exercised when present.
 
 ---
 
-### Module: MOD-009 (`render_test_file_for_level`)
+### MOD-009 — Per-Level Test Renderer
 
-**Parent Architecture Modules**: ARCH-006
-**Target Source File(s)**: `src/v_model_extension/testgen/renderer.py`
-**Implements REQ:** REQ-019, REQ-020
+| Field | Value |
+|-------|-------|
+| Classification | NEW-PROMPT-SECTION |
+| Target Source File | `commands/implement.md` §Test Levels |
+| Traced From | REQ-019, REQ-020; SYS-003; ARCH-006 |
 
-#### Algorithmic / Logic View
+**Description**: Prompt section mapping each V-Model test level to its
+target test directory and asserting that every emitted test file
+references its source test-plan ID via an `Implements <ID>` comment.
 
-```pseudocode
-FUNCTION render_test_file_for_level(
-    level_name: str,
-    plan_artifact: ParsedTestPlan,
-    target_dir: Path
-) -> list[(Path, str)]:
-    rendered = []
-    FOR each test_case IN plan_artifact.test_cases:
-        path = target_dir / f"test_{test_case.id.lower()}.py"
-        lines = []
-        lines.append(f"# Implements {test_case.id}")    // REQ-018 traceability
-        FOR each scenario IN test_case.scenarios:
-            lines.append(render_scenario_as_test_function(scenario, level_name))
-        rendered.append((path, "\n".join(lines)))
-    RETURN rendered
+**Responsibilities**:
+- Map level → directory: `unit` → `tests/bats/unit/` (or `tests/pester/`
+  on Windows mirror), `integration` → `tests/bats/integration/`,
+  `system` → `tests/bats/system/`, `acceptance` → `tests/bats/acceptance/`.
+- Emit one test file per `UTP-NNN` / `ITP-NNN` / `STP-NNN` / `ATP-NNN`,
+  with `# Implements <ID>` (BATS) or `// Implements <ID>` (TypeScript)
+  comment as the first non-shebang line.
+
+**Pseudocode / Structural Sketch** (prompt outline):
+
+```
+## Test Levels
+
+Per-level target directory map:
+  unit        → tests/bats/unit/
+  integration → tests/bats/integration/
+  system      → tests/bats/system/
+  acceptance  → tests/bats/acceptance/
+
+For each test case (TC) at a level:
+  path := <target_dir>/test_<lower(TC.id)>.bats
+  body := `#!/usr/bin/env bats\n# Implements <TC.id>\n` + scenarios
+  Write via inline `mktemp` + `mv`.
 ```
 
-#### State Machine View
+**Dependencies**:
+- `commands/implement.md` (host file).
+- §Test Generation (MOD-008) which dispatches into this section.
 
-N/A — Stateless
-
-#### Internal Data Structures
-
-| Name | Type | Size/Constraints | Initialization | Description |
-|------|------|------------------|----------------|-------------|
-| `rendered` | `list[(Path, str)]` | bounded by `len(test_cases)` | empty | Per-level output |
-
-#### Error Handling & Return Codes
-
-| Error Condition | Error Code / Exception | Architecture Contract | Recovery |
-|----------------|------------------------|-----------------------|----------|
-| `target_dir` does not exist | propagate `FileNotFoundError` | ARCH-006 implicit precondition: project test dirs exist | None — caller (MOD-005) fail-closes |
+**Verification**: BATS smoke test that every emitted test file is
+syntactically valid and contains the expected `Implements` comment.
 
 ---
 
-### Module: MOD-010 (`evaluate_gate`)
+### MOD-010 — Pre-Implementation Gate Coordinator
 
-**Parent Architecture Modules**: ARCH-007
-**Target Source File(s)**: `src/v_model_extension/gate/coordinator.py`
-**Implements REQ:** REQ-016, REQ-017, REQ-NF-004, REQ-CN-002
+| Field | Value |
+|-------|-------|
+| Classification | NEW-SHELL |
+| Target Source File | `scripts/bash/run-v-model-gate.sh` (PLANNED) + `scripts/powershell/Run-VModel-Gate.ps1` mirror |
+| Traced From | REQ-016, REQ-017, REQ-NF-004, REQ-CN-002; SYS-004; ARCH-007; HAZ-009 |
 
-#### Algorithmic / Logic View
+**Description**: Thin POSIX shell wrapper (~30 lines) composing
+the existing `build-matrix.sh` + five `validate-*-coverage.sh` scripts.
+Introduces no parallel gating logic — only sequential composition with
+fail-closed exit propagation. The structural twin of the
+`commands/audit-report.md` deterministic-script vocabulary.
 
-```pseudocode
-FUNCTION evaluate_gate(feature_dir: Path) -> GateResult:
-    matrices = {}
-    gap_lines = []
-    SCRIPTS = [
-        ("A", "scripts/bash/build-matrix.sh", []),
-        ("A", "scripts/bash/validate-requirements-coverage.sh", [feature_dir/"v-model"]),
-        ("A", "scripts/bash/validate-acceptance-coverage.sh", [feature_dir/"v-model"]),
-        ("B", "scripts/bash/validate-system-coverage.sh", [feature_dir/"v-model"]),
-        ("C", "scripts/bash/validate-architecture-coverage.sh", [feature_dir/"v-model"]),
-        ("D", "scripts/bash/validate-module-coverage.sh", [feature_dir/"v-model"]),
-        ("D", "scripts/bash/validate-unit-coverage.sh", [feature_dir/"v-model"]),
-    ]
-    FOR each (matrix_key, script_path, args) IN SCRIPTS:
-        TRY:
-            run = MOD-026.run_subprocess([script_path, *args, "--json"], cwd=REPO_ROOT)
-            payload = parse_json(run.stdout)
-            pct = payload.get("coverage_pct", 100 IF run.exit_code == 0 ELSE 0)
-            matrices[matrix_key] = min(matrices.get(matrix_key, 100), pct)
-            IF pct < 100:
-                gap_lines.append(f"{script_path}: {payload.get('gaps', [])}")
-        EXCEPT SubprocessFailure AS e:
-            // fail-closed: convert exception to passed=false (per ITS-007-B1)
-            matrices[matrix_key] = 0
-            gap_lines.append(f"{script_path}: SubprocessFailure: {e}")
+**Responsibilities**:
+- Accept a single `<feature-dir>` argument.
+- Run `scripts/bash/build-matrix.sh <feature-dir>` first; non-zero ⇒
+  exit 1 with `GATE: FAIL`.
+- Run each of `validate-requirement-coverage.sh`,
+  `validate-system-coverage.sh`, `validate-architecture-coverage.sh`,
+  `validate-module-coverage.sh`, `validate-hazard-coverage.sh` in
+  sequence; aggregate stdout; any non-zero ⇒ exit 1.
+- Emit final line `GATE: PASS` (exit 0) or `GATE: FAIL` (exit 1).
 
-    passed = ALL(pct == 100 FOR pct IN matrices.values()) AND len(gap_lines) == 0
-    RETURN GateResult(passed=passed, gap_report="\n".join(gap_lines), matrices=matrices)
+**Pseudocode / Structural Sketch**:
+
+```bash
+#!/usr/bin/env bash
+# Implements MOD-010
+# Implements ARCH-007
+set -euo pipefail
+source "$(dirname "$0")/common.sh"  # Spec Kit Core helper
+
+FEATURE_DIR="${1:?usage: run-v-model-gate.sh <feature-dir>}"
+VMODEL_DIR="${FEATURE_DIR%/}/v-model"
+
+scripts=(
+  "scripts/bash/build-matrix.sh                 ${FEATURE_DIR}"
+  "scripts/bash/validate-requirement-coverage.sh ${VMODEL_DIR}"
+  "scripts/bash/validate-system-coverage.sh      ${VMODEL_DIR}"
+  "scripts/bash/validate-architecture-coverage.sh ${VMODEL_DIR}"
+  "scripts/bash/validate-module-coverage.sh      ${VMODEL_DIR}"
+  "scripts/bash/validate-hazard-coverage.sh      ${VMODEL_DIR}"
+)
+
+failed=0
+for cmd in "${scripts[@]}"; do
+  echo "--- ${cmd}" >&2
+  bash ${cmd} || failed=1
+done
+
+if (( failed != 0 )); then
+  echo "GATE: FAIL"
+  exit 1
+fi
+echo "GATE: PASS"
 ```
 
-#### State Machine View
+**Dependencies**:
+- Existing project shell scripts: `scripts/bash/build-matrix.sh`,
+  `scripts/bash/validate-requirement-coverage.sh`,
+  `scripts/bash/validate-system-coverage.sh`,
+  `scripts/bash/validate-architecture-coverage.sh`,
+  `scripts/bash/validate-module-coverage.sh`,
+  `scripts/bash/validate-hazard-coverage.sh`.
+- Spec Kit Core helper: `scripts/bash/common.sh`.
 
-N/A — Stateless
-
-#### Internal Data Structures
-
-| Name | Type | Size/Constraints | Initialization | Description |
-|------|------|------------------|----------------|-------------|
-| `SCRIPTS` | `list[tuple]` | exactly 7 | const | Script invocation table |
-| `matrices` | `dict[str, float]` | 4 keys (A, B, C, D) | empty | Per-matrix min coverage |
-| `gap_lines` | `list[str]` | bounded by `len(SCRIPTS)` | empty | Aggregate gap text |
-
-#### Error Handling & Return Codes
-
-| Error Condition | Error Code / Exception | Architecture Contract | Recovery |
-|----------------|------------------------|-----------------------|----------|
-| `SubprocessFailure` from MOD-026 | catch + convert to `passed=false` | ARCH-007 contract: NEVER raise; fail-closed via `GateResult` | Set `matrices[matrix_key] = 0` (which forces the final `passed` flag to false via the ALL-equals-100 invariant); append failure text to `gap_report`; do NOT re-raise. |
-| Any script returns `pct < 100` | aggregate into `gap_report` | ARCH-007 contract: `passed ⟺ every matrix is 100` | None — caller (MOD-005) fail-closes |
+**Verification**: BATS unit tests against fixture matrices: (a) all
+inner scripts pass ⇒ `GATE: PASS`, exit 0; (b) any inner script fails
+⇒ `GATE: FAIL`, exit 1; (c) missing inner script ⇒ exit 1 with
+diagnostic on stderr; (d) HAZ-009 fail-closed assertion (incomplete
+matrix MUST NOT produce code).
 
 ---
 
-### Module: MOD-011 (`embed_enrichment`)
+### MOD-011 — Plan Enrichment Encoder
 
-**Parent Architecture Modules**: ARCH-008
-**Target Source File(s)**: `src/v_model_extension/enrich/encoder.py`
-**Implements REQ:** REQ-007, REQ-NF-003, REQ-IF-001
+| Field | Value |
+|-------|-------|
+| Classification | NEW-PROMPT-SECTION |
+| Target Source File | `commands/plan.md` §Enrichment |
+| Traced From | REQ-007, REQ-NF-003, REQ-IF-001; SYS-005; ARCH-008 |
 
-#### Algorithmic / Logic View
+**Description**: Prompt section instructing the LLM to inject a single
+`<!-- vmodel:traces ... -->` HTML comment block immediately under the
+`plan.md` document title, plus optional `## V-Model Trace Summary`
+Markdown sections at the end of the document — never modifying any
+canonical spec-kit-core section.
 
-```pseudocode
-FUNCTION embed_enrichment(canonical_doc: str, metadata: EnrichmentMetadata) -> str:
-    // Precondition: canonical_doc must already validate against the spec-kit-core schema.
-    // Caller (MOD-001) is responsible for invoking the validator FIRST when this function is
-    // intended for non-empty metadata. We re-check defensively only in DEBUG mode.
-    IF metadata.is_empty():
-        RETURN canonical_doc                       // identity transform per ITS-008-A2
+**Responsibilities**:
+- Inject the HTML comment block immediately after the H1 title.
+- Append optional Markdown sections at end-of-document only.
+- Guarantee that ARCH-013 (`scripts/bash/validate-core-schema.sh
+  --plan`) still exits 0 after enrichment is applied (additive-only
+  invariant).
 
-    // Inject HTML comment block immediately under the document title (Markdown-transparent).
-    metadata_block = render_html_comment(metadata.trace_chains, metadata.optional_sections)
-    enriched = inject_after_title(canonical_doc, metadata_block)
-    // Append optional sections (e.g., "## V-Model Trace Summary") at the end.
-    FOR each (heading, body) IN metadata.optional_sections.items():
-        enriched += f"\n\n## {heading}\n\n{body}"
-    RETURN enriched
+**Pseudocode / Structural Sketch** (prompt outline):
+
+```
+## Enrichment
+
+1. Locate the H1 title line of the canonical `plan.md`.
+2. Immediately after it, insert one HTML comment block:
+     <!-- vmodel:traces
+       requirements: [REQ-001, REQ-002, ...]
+       hazards:      [HAZ-001, ...]
+       version:      v0.7.0
+     -->
+3. Optionally append `## V-Model Trace Summary` as the last section.
+4. NEVER modify any canonical section heading, ordering, or body.
+5. After enrichment, MOD-001 re-runs MOD-017 to confirm the canonical
+   schema still validates.
 ```
 
-#### State Machine View
+**Dependencies**:
+- `commands/plan.md` (host file).
+- §Execution Flow (MOD-001) which invokes this section.
+- `scripts/bash/validate-core-schema.sh` (MOD-017) for the
+  post-enrichment validation re-check.
 
-N/A — Stateless
-
-#### Internal Data Structures
-
-| Name | Type | Size/Constraints | Initialization | Description |
-|------|------|------------------|----------------|-------------|
-| `metadata_block` | `str` | bounded by `len(trace_chains)` | derived | HTML-comment block |
-| `enriched` | `str` | superset of `canonical_doc` | accumulator | Output document |
-
-#### Error Handling & Return Codes
-
-| Error Condition | Error Code / Exception | Architecture Contract | Recovery |
-|----------------|------------------------|-----------------------|----------|
-| `canonical_doc` is non-conformant (DEBUG-only check fires) | raise `EnrichmentError(reason)` | ARCH-008 contract: precondition violation → exception, NOT silent corruption | None — caller fail-closes |
+**Verification**: LLM structural-eval asserting (a) HTML-comment
+present after H1, (b) every canonical heading still present in
+canonical order, (c) MOD-017 still exits 0.
 
 ---
 
-### Module: MOD-012 (`embed_traceability_comments`)
+### MOD-012 — Tasks Traceability Comment Encoder
 
-**Parent Architecture Modules**: ARCH-008
-**Target Source File(s)**: `src/v_model_extension/enrich/encoder.py`
-**Implements REQ:** REQ-012, REQ-NF-003, REQ-IF-002
+| Field | Value |
+|-------|-------|
+| Classification | NEW-PROMPT-SECTION |
+| Target Source File | `commands/tasks.md` §Traceability Comments |
+| Traced From | REQ-012, REQ-NF-003, REQ-IF-002; SYS-005; ARCH-008 |
 
-#### Algorithmic / Logic View
+**Description**: Prompt section instructing the LLM, for each task line
+in `tasks.md`, to append on the immediately following line a single
+`<!-- traces-to: MOD-NNN → ARCH-NNN → SYS-NNN → REQ-NNN -->` HTML
+comment.
 
-```pseudocode
-FUNCTION embed_traceability_comments(tasks_doc: str, traces: list[TraceChain]) -> str:
-    IF traces == []:
-        RETURN tasks_doc                            // identity transform when no metadata
-    lines = tasks_doc.split("\n")
-    output = []
-    FOR each line IN lines:
-        output.append(line)
-        match = MATCH_TASK_ID(line)                 // detects "TASK-NNN" or "T-NNN"
-        IF match IS NOT NULL:
-            chain = LOOKUP(traces, match.task_id)
-            IF chain IS NOT NULL:
-                output.append(f"<!-- traces-to: {chain.mod} → {chain.arch} → {chain.sys} → {chain.req} -->")
-    RETURN "\n".join(output)
+**Responsibilities**:
+- Match each task line by `T-<n>:` prefix or table row.
+- Look up the trace chain from the in-context V-Model artifact set.
+- If no chain is found for a given task, emit no comment (silent
+  additive-only behaviour).
+- Never modify the task line itself.
+
+**Pseudocode / Structural Sketch** (prompt outline):
+
+```
+## Traceability Comments
+
+For each line `task_line` in the rendered task list:
+  if task_line matches /^T-\d+:/ or /^\| T-\d+ \|/:
+    chain := lookup_chain(task_id)
+    if chain is not None:
+      emit on the next line:
+        `<!-- traces-to: <chain.mod> → <chain.arch> → <chain.sys> → <chain.req> -->`
+  else: no-op.
 ```
 
-#### State Machine View
+**Dependencies**:
+- `commands/tasks.md` (host file).
+- §Execution Flow (MOD-003) which invokes this section.
 
-N/A — Stateless
-
-#### Internal Data Structures
-
-| Name | Type | Size/Constraints | Initialization | Description |
-|------|------|------------------|----------------|-------------|
-| `lines` | `list[str]` | bounded by doc size | from split | Line-by-line buffer |
-| `output` | `list[str]` | ≥ `len(lines)` | empty | Accumulator including HTML comments |
-
-#### Error Handling & Return Codes
-
-| Error Condition | Error Code / Exception | Architecture Contract | Recovery |
-|----------------|------------------------|-----------------------|----------|
-| Trace chain missing for a referenced task ID | append nothing (no comment); do NOT raise | ARCH-008 contract: enrichment is strictly additive — absence is not an error | None — silent skip |
+**Verification**: LLM structural-eval asserting every `T-<n>:` task in
+the rendered `tasks.md` is followed by a `traces-to:` comment when an
+in-context chain exists; BATS assertion that
+`validate-core-schema.sh --tasks` still exits 0.
 
 ---
 
-### Module: MOD-013 (`verify_ids`)
+### MOD-013 — Hallucination Guard
 
-**Parent Architecture Modules**: ARCH-009
-**Target Source File(s)**: `src/v_model_extension/guard/hallucination.py`
-**Implements REQ:** REQ-023, REQ-NF-002
+| Field | Value |
+|-------|-------|
+| Classification | NEW-SHELL |
+| Target Source File | `scripts/bash/validate-implements-ids.sh` (PLANNED, ~80 lines) + `scripts/powershell/Validate-Implements-Ids.ps1` mirror |
+| Traced From | REQ-023, REQ-NF-002; SYS-006; ARCH-009; HAZ-012 |
 
-#### Algorithmic / Logic View
+**Description**: Deterministic POSIX shell script that scans the
+generated source set for `# Implements <ID>` / `// Implements <ID>` /
+`<!-- Implements <ID> -->` comments via `grep -E`, cross-references
+each cited identifier against the canonical V-Model ID set extracted
+inline by MOD-025, and exits non-zero on any unknown identifier. Zero
+LLM involvement.
 
-```pseudocode
-FUNCTION verify_ids(generated_files: list[(Path, str)], vmodel_id_set: set[str]) -> VerifyResult:
-    hallucinations = []
-    PATTERNS = [
-        re.compile(r"^\s*#\s*Implements\s+([A-Z\-]+\-\d+)"),         // python/sh/ps/yaml
-        re.compile(r"^\s*//\s*Implements\s+([A-Z\-]+\-\d+)"),        // ts/c
-        re.compile(r"^\s*<!--\s*Implements\s+([A-Z\-]+\-\d+)\s*-->"),// markdown/html
-    ]
-    FOR each (path, content) IN generated_files:
-        FOR each (line_no, line) IN enumerate(content.split("\n"), start=1):
-            FOR each pattern IN PATTERNS:
-                m = pattern.match(line)
-                IF m IS NOT NULL:
-                    referenced_id = m.group(1)
-                    IF referenced_id NOT IN vmodel_id_set:
-                        hallucinations.append({"file": path, "line": line_no, "id": referenced_id})
-    RETURN VerifyResult(valid=(len(hallucinations) == 0), hallucinations=hallucinations)
+**Responsibilities**:
+- Accept a single `<feature-dir>` argument.
+- Discover generated source files (project-relative, excluding
+  `specs/` and `tests/fixtures/`).
+- Run MOD-025 (inline) to build the canonical ID set from
+  `<feature-dir>/v-model/*.md`.
+- Print one line per offending occurrence:
+  `<file>:<line>: unknown id <id>`.
+- Emit `GUARD: PASS` (exit 0) or `GUARD: FAIL` (exit 1).
+
+**Pseudocode / Structural Sketch**:
+
+```bash
+#!/usr/bin/env bash
+# Implements MOD-013
+# Implements MOD-025
+# Implements ARCH-009
+set -euo pipefail
+FEATURE_DIR="${1:?usage: validate-implements-ids.sh <feature-dir>}"
+VMODEL_DIR="${FEATURE_DIR%/}/v-model"
+
+# MOD-025 — extract canonical ID universe from V-Model artifacts
+canonical_ids=$(
+  grep -rhoE '(REQ|SYS|ARCH|MOD|HAZ|ATP|ITP|STP|UTP|SCN|ITS|UTS|STS)-[A-Z0-9-]+' \
+    "$VMODEL_DIR" 2>/dev/null \
+    | sort -u
+)
+
+# Scan generated tree for `Implements <ID>` annotations
+hits=$(
+  grep -rEn '(#|//|<!--)\s*Implements\s+[A-Z]+-[A-Z0-9-]+' \
+    --include='*.sh' --include='*.ps1' --include='*.py' \
+    --include='*.ts' --include='*.js' --include='*.md' \
+    --exclude-dir=specs --exclude-dir=tests \
+    . 2>/dev/null || true
+)
+
+failed=0
+while IFS= read -r line; do
+  [[ -z "$line" ]] && continue
+  id=$(printf '%s' "$line" | grep -oE '[A-Z]+-[A-Z0-9-]+' | tail -1)
+  if ! grep -qx "$id" <<<"$canonical_ids"; then
+    printf '%s: unknown id %s\n' "${line%%:*:*}" "$id"
+    failed=1
+  fi
+done <<<"$hits"
+
+if (( failed != 0 )); then
+  echo "GUARD: FAIL"
+  exit 1
+fi
+echo "GUARD: PASS"
 ```
 
-#### State Machine View
+**Dependencies**:
+- POSIX `grep`, `awk`, `sort` (system binaries).
+- V-Model artifact tree under `<feature-dir>/v-model/` (read-only).
+- MOD-025 is implemented inline as the `canonical_ids=$(grep ...)` step.
 
-N/A — Stateless
-
-#### Internal Data Structures
-
-| Name | Type | Size/Constraints | Initialization | Description |
-|------|------|------------------|----------------|-------------|
-| `PATTERNS` | `list[Pattern]` | exactly 3 | const | Comment-syntax matchers |
-| `hallucinations` | `list[dict]` | unbounded (worst-case = total comment count) | empty | Output list |
-
-#### Error Handling & Return Codes
-
-| Error Condition | Error Code / Exception | Architecture Contract | Recovery |
-|----------------|------------------------|-----------------------|----------|
-| File content is non-UTF-8 | propagate `UnicodeDecodeError` to caller | ARCH-009 contract: caller (MOD-005) provides UTF-8 only — code/test generators emit UTF-8 by construction | None |
+**Verification**: BATS unit tests covering (a) every comment cites a
+known ID ⇒ exit 0; (b) injected `REQ-999` phantom ⇒ exit 1 with the
+expected `unknown id REQ-999` line; (c) HAZ-012 false-negative rate
+assertion (no valid ID misclassified as hallucinated across the
+fixture artifact set).
 
 ---
 
-### Module: MOD-014 (`splice_managed_regions`)
+### MOD-014 — Source Region Splicer
 
-**Parent Architecture Modules**: ARCH-010
-**Target Source File(s)**: `src/v_model_extension/codegen/splicer.py`
-**Implements REQ:** REQ-022
+| Field | Value |
+|-------|-------|
+| Classification | NEW-SHELL |
+| Target Source File | `scripts/bash/splice-managed-regions.sh` (PLANNED, awk-based, ~80 lines) + `scripts/powershell/Splice-Managed-Regions.ps1` mirror |
+| Traced From | REQ-022; SYS-007; ARCH-010; HAZ-023 |
 
-#### Algorithmic / Logic View
+**Description**: POSIX shell script using `awk` to splice generated
+content into a target file's V-Model-managed region (delimited by
+language-appropriate `VMODEL-MANAGED-BEGIN` / `VMODEL-MANAGED-END`
+sentinel comments), preserving everything outside the markers. Aborts
+non-zero with a diff report on stderr if markers are unbalanced,
+overlapping, or duplicated.
 
-```pseudocode
-FUNCTION splice_managed_regions(target_path: Path, generated_content: str, language: str) -> str:
-    OPEN  = f"{LANGUAGE_COMMENT[language]} VMODEL-MANAGED-BEGIN"
-    CLOSE = f"{LANGUAGE_COMMENT[language]} VMODEL-MANAGED-END"
-    IF NOT target_path.exists():
-        RETURN OPEN + "\n" + generated_content + "\n" + CLOSE   // create from single managed region
-    existing = target_path.read_text(encoding="utf-8")
-    open_indices  = find_all_indices(existing, OPEN)
-    close_indices = find_all_indices(existing, CLOSE)
-    IF len(open_indices) != len(close_indices):
-        raise RegionConflict(diff_report=f"Unbalanced markers: {len(open_indices)} OPEN vs {len(close_indices)} CLOSE")
-    // Detect overlap: every CLOSE must come after the immediately preceding OPEN with no nested OPEN
-    FOR i IN range(len(open_indices)):
-        IF i+1 < len(open_indices) AND open_indices[i+1] < close_indices[i]:
-            raise RegionConflict(diff_report=f"Overlapping markers between bytes {open_indices[i]}..{close_indices[i]}")
-    // Splice: replace the (single, by convention) managed region with generated content
-    IF len(open_indices) > 1:
-        raise RegionConflict(diff_report="More than one managed region per file is not supported")
-    before = existing[:open_indices[0] + len(OPEN)]
-    after  = existing[close_indices[0]:]
-    RETURN before + "\n" + generated_content + "\n" + after
+**Responsibilities**:
+- Accept `<target_file> <generated_content_path> <language>`.
+- If `<target_file>` does not exist, wrap `<generated_content>` in the
+  language-appropriate `VMODEL-MANAGED-BEGIN`/`END` markers and print
+  the wrapped content to stdout (caller writes via `mktemp`+`mv`).
+- If `<target_file>` exists, locate the single managed region via
+  `awk` and replace its interior with `<generated_content>`, preserving
+  pre/post bytes.
+- Detect (a) unbalanced markers, (b) overlapping markers, (c) more
+  than one managed region — exit 1 with a diff on stderr.
+
+**Pseudocode / Structural Sketch**:
+
+```bash
+#!/usr/bin/env bash
+# Implements MOD-014
+# Implements ARCH-010
+set -euo pipefail
+TARGET="${1:?target}"
+NEW="${2:?generated_content}"
+LANG="${3:?language}"
+
+case "$LANG" in
+  shell|python|yaml|powershell) PFX="#"  ;;
+  typescript|c|js)              PFX="//" ;;
+  markdown|html)                PFX="<!--" SFX=" -->" ;;
+  *) echo "unsupported language: $LANG" >&2; exit 1 ;;
+esac
+SFX="${SFX:-}"
+OPEN="${PFX} VMODEL-MANAGED-BEGIN${SFX}"
+CLOSE="${PFX} VMODEL-MANAGED-END${SFX}"
+
+if [[ ! -f "$TARGET" ]]; then
+  printf '%s\n' "$OPEN"; cat "$NEW"; printf '%s\n' "$CLOSE"
+  exit 0
+fi
+
+opens=$(grep -cFx "$OPEN"  "$TARGET" || true)
+closes=$(grep -cFx "$CLOSE" "$TARGET" || true)
+if (( opens != closes )); then
+  echo "unbalanced markers: ${opens} OPEN vs ${closes} CLOSE" >&2; exit 1
+fi
+if (( opens > 1 )); then
+  echo "more than one managed region not supported" >&2; exit 1
+fi
+
+awk -v open="$OPEN" -v close="$CLOSE" -v newfile="$NEW" '
+  $0 == open  { print; while ((getline l < newfile) > 0) print l; in_region=1; next }
+  $0 == close { in_region=0; print; next }
+  !in_region  { print }
+' "$TARGET"
 ```
 
-#### State Machine View
+**Dependencies**:
+- POSIX `awk`, `grep`, `cat` (system binaries).
+- Caller (MOD-006) is responsible for `mktemp` + `mv` of the spliced
+  stdout.
 
-N/A — Stateless
-
-#### Internal Data Structures
-
-| Name | Type | Size/Constraints | Initialization | Description |
-|------|------|------------------|----------------|-------------|
-| `OPEN` / `CLOSE` | `str` | language-dependent | derived | Marker tokens |
-| `open_indices` / `close_indices` | `list[int]` | typically `[1]` (single managed region) | derived | Marker byte offsets |
-
-#### Error Handling & Return Codes
-
-| Error Condition | Error Code / Exception | Architecture Contract | Recovery |
-|----------------|------------------------|-----------------------|----------|
-| Unbalanced marker count | raise `RegionConflict` | ARCH-010 contract per ITS-010-B1 | None — caller (MOD-006) propagates fail-closed |
-| Overlapping markers | raise `RegionConflict` with diff | ARCH-010 contract | None |
-| > 1 managed region in one file | raise `RegionConflict` | ARCH-010 implicit invariant (REQ-022 single splice point) | None |
+**Verification**: BATS unit tests for (a) absent target ⇒ wrapped
+content; (b) present target with one managed region ⇒ correct splice
+preserving pre/post bytes; (c) unbalanced markers ⇒ exit 1 + diff on
+stderr; (d) overlapping / duplicated markers ⇒ exit 1; (e) HAZ-023
+mitigation: scanner consumes the spliced output without re-entry
+(deterministic, no in-process recursion).
 
 ---
 
-### Module: MOD-015 (`apply_overlay`)
+### MOD-015 — Domain Overlay Adapter
 
-**Parent Architecture Modules**: ARCH-011
-**Target Source File(s)**: `src/v_model_extension/overlay/loader.py`
-**Implements REQ:** REQ-024
+| Field | Value |
+|-------|-------|
+| Classification | NEW-PROMPT-SECTION |
+| Target Source File | `commands/implement.md` §Domain Overlay |
+| Traced From | REQ-024; SYS-008; ARCH-011; HAZ-024 |
 
-#### Algorithmic / Logic View
+**Description**: Prompt section instructing the LLM to read
+`v-model-config.yml` if present at the repository root and apply
+domain-specific generation rules (`automotive` ⇒ ISO 26262 ASIL test
+depth; `medical` ⇒ IEC 62304 traceability; `aerospace` ⇒ DO-178C MC/DC
+unit-test coverage) additively to the base instructions.
 
-```pseudocode
-FUNCTION apply_overlay(generation_plan: GenerationPlan, domain_config: dict | None) -> GenerationPlan:
-    IF domain_config IS NULL:
-        RETURN generation_plan                       // identity transform per ITS-011-A1
-    TRY:
-        domain = domain_config.get("domain")
-    EXCEPT (AttributeError, KeyError) AS e:
-        raise OverlayParseError(f"v-model-config.yml is malformed: {e}")
-    augmented = deep_copy(generation_plan)
-    IF domain == "iso_26262":
-        augmented = apply_iso_26262_overlay(augmented, domain_config)
-    ELIF domain == "do_178c":
-        augmented = apply_do_178c_overlay(augmented, domain_config)
-    ELIF domain == "iec_62304":
-        augmented = apply_iec_62304_overlay(augmented, domain_config)
-    ELSE:
-        // Unknown domain — log + identity (overlay opt-in, never fail-closed on unknown domain)
-        log_warning(f"Unknown domain '{domain}' — overlay skipped")
-    RETURN augmented
+**Responsibilities**:
+- File-presence check via the LLM's native filesystem read.
+- On YAML parse failure (malformed `v-model-config.yml`, missing
+  `domain:` key) ⇒ abort fail-closed with a `fatal_errors[]` entry and
+  non-zero exit.
+- For unknown `domain` value ⇒ log a `warnings[]` entry and continue
+  with no overlay (overlay is opt-in).
+
+**Pseudocode / Structural Sketch** (prompt outline):
+
+```
+## Domain Overlay
+
+1. If `<repo_root>/v-model-config.yml` is absent → no overlay; continue
+   with base prompt.
+2. Read the file as YAML. On parse failure → emit `fatal_errors[]`,
+   exit 1 (HAZ-024 fail-closed).
+3. domain := config["domain"]
+   if domain == "iso_26262"  : apply ASIL-driven test-depth rules.
+   if domain == "do_178c"    : require MC/DC unit-test coverage.
+   if domain == "iec_62304"  : require traceability matrix in every
+                               commit.
+   else                      : warnings[] += "Unknown domain '$domain' —
+                               overlay skipped".
+4. Overlay rules are additive only — they NEVER override the base
+   §Code Generation / §Test Generation instructions.
 ```
 
-#### State Machine View
+**Dependencies**:
+- `commands/implement.md` (host file).
+- §Execution Flow (MOD-005) which invokes this section before
+  §Code Generation.
+- Optional `v-model-config.yml` at repo root.
 
-N/A — Stateless
-
-#### Internal Data Structures
-
-| Name | Type | Size/Constraints | Initialization | Description |
-|------|------|------------------|----------------|-------------|
-| `augmented` | `GenerationPlan` | superset of input | deep copy | Overlay-augmented plan |
-| `domain` | `str \| None` | one of `{iso_26262, do_178c, iec_62304}` or unknown | from config | Selector |
-
-#### Error Handling & Return Codes
-
-| Error Condition | Error Code / Exception | Architecture Contract | Recovery |
-|----------------|------------------------|-----------------------|----------|
-| YAML parse failure (raised by caller's `read_optional_yaml` or by attribute access here) | raise `OverlayParseError(text)` | ARCH-011 contract: fail-closed propagation | None — caller (MOD-005) fail-closes |
-| Unknown `domain` value | log warning + identity | ARCH-011 contract: overlay is opt-in | Continue with un-augmented plan |
+**Verification**: LLM structural-eval over fixture configs covering
+{absent, valid-iso26262, valid-do178c, valid-iec62304, unknown-domain,
+malformed-yaml}; BATS assertion that the malformed-yaml case produces
+`fatal_errors[]` and exit 1.
 
 ---
 
-### Module: MOD-016 (`enrich_with_hazards`)
+### MOD-016 — Hazard-Driven Task Enricher
 
-**Parent Architecture Modules**: ARCH-012
-**Target Source File(s)**: `src/v_model_extension/tasks/hazards.py`
-**Implements REQ:** REQ-014
+| Field | Value |
+|-------|-------|
+| Classification | NEW-PROMPT-SECTION |
+| Target Source File | `commands/tasks.md` §Hazard Enrichment |
+| Traced From | REQ-014; SYS-009; ARCH-012; HAZ-001..HAZ-025 (any present) |
 
-#### Algorithmic / Logic View
+**Description**: Prompt section that activates when
+`hazard-analysis.md` is present in `<feature-dir>/v-model/`. Instructs
+the LLM to (a) raise the priority of any task whose target equals a
+HAZ row's mitigation requirement, (b) append one verification task per
+`HAZ-NNN` naming the hazard explicitly.
 
-```pseudocode
-FUNCTION enrich_with_hazards(tasks: list[Task], hazard_analysis: ParsedHazardAnalysis | None) -> list[Task]:
-    IF hazard_analysis IS NULL:
-        RETURN tasks                                 // identity per ITS-003-B1
-    enriched = list(tasks)                            // shallow copy
-    FOR each haz IN hazard_analysis.hazards:
-        IF NOT IS_VALID_HAZARD_ROW(haz):
-            raise MalformedHazardAnalysis(f"line {haz.line}: invalid HAZ row")
-        // Raise priority of mitigation tasks
-        FOR each task IN enriched:
-            IF task.target == haz.mitigation_req_id:
-                task.priority = max(task.priority, HAZARD_MITIGATION_PRIORITY)
-        // Emit one verification task per HAZ
-        enriched.append(Task(
-            kind="hazard_verification",
-            target=haz.id,
-            parents=[haz.id],
-            priority=HAZARD_VERIFICATION_PRIORITY,
-            text=f"Verify mitigation of {haz.id}: {haz.description}"
-        ))
-    RETURN enriched
+**Responsibilities**:
+- Read `<feature-dir>/v-model/hazard-analysis.md` natively.
+- Validate each HAZ row has the canonical columns (`HAZ-NNN`, severity,
+  mitigation, verification ID); malformed row ⇒ emit `fatal_errors[]`
+  and exit 1.
+- For each valid HAZ row, mutate the in-context task list per the
+  rules above.
 
-CONSTANT HAZARD_MITIGATION_PRIORITY  = 90
-CONSTANT HAZARD_VERIFICATION_PRIORITY = 95
+**Pseudocode / Structural Sketch** (prompt outline):
+
+```
+## Hazard Enrichment
+
+If `hazard-analysis.md` is absent → identity (no-op).
+
+For each row HAZ in hazard-analysis.md:
+  if row is malformed (missing required column) → fatal_errors[], exit 1.
+  for each task T in current task list:
+    if T.target == HAZ.mitigation_id:
+      T.priority := max(T.priority, HAZARD_MITIGATION_PRIORITY=90)
+  append a new task:
+    kind:     hazard_verification
+    target:   HAZ.id           (e.g. HAZ-009)
+    parents:  [HAZ.id]
+    priority: HAZARD_VERIFICATION_PRIORITY=95
+    text:     "Verify mitigation of <HAZ.id>: <HAZ.description>"
 ```
 
-#### State Machine View
+**Dependencies**:
+- `commands/tasks.md` (host file).
+- §Execution Flow (MOD-003).
+- Optional `<feature-dir>/v-model/hazard-analysis.md`.
 
-N/A — Stateless
-
-#### Internal Data Structures
-
-| Name | Type | Size/Constraints | Initialization | Description |
-|------|------|------------------|----------------|-------------|
-| `enriched` | `list[Task]` | `len(tasks)` + `len(hazards)` | shallow copy | Output |
-| `HAZARD_*_PRIORITY` | `int` | `0 ≤ p ≤ 100` | const | Priority constants |
-
-#### Error Handling & Return Codes
-
-| Error Condition | Error Code / Exception | Architecture Contract | Recovery |
-|----------------|------------------------|-----------------------|----------|
-| Malformed HAZ row | raise `MalformedHazardAnalysis` | ARCH-012 contract → propagated as `HazardEnrichmentError` by caller | None — caller fail-closes |
+**Verification**: LLM structural-eval over fixture `hazard-analysis.md`
+files; BATS assertion that one verification task per HAZ row is
+present in the rendered `tasks.md` and that mitigation-target tasks
+have `priority >= 90`.
 
 ---
 
-### Module: MOD-017 (`validate_plan_schema`)
+### MOD-017 — Plan Schema Validator
 
-**Parent Architecture Modules**: ARCH-013
-**Target Source File(s)**: `src/v_model_extension/schema/validator.py`
-**Implements REQ:** REQ-028, REQ-029, REQ-IF-001, REQ-CN-001
+| Field | Value |
+|-------|-------|
+| Classification | NEW-SHELL |
+| Target Source File | `scripts/bash/validate-core-schema.sh` (PLANNED, ~50 lines) invoked with `--plan` |
+| Traced From | REQ-028, REQ-029, REQ-IF-001, REQ-CN-001; SYS-010; ARCH-013 |
 
-#### Algorithmic / Logic View
+**Description**: One half of the shared schema validator. With `--plan`
+it greps the candidate `plan.md` against the pinned spec-kit-core
+v0.7.0 list of required sections (`## Technical Context`,
+`## Constitution Check`, etc.) and exits non-zero if any are missing
+or out of canonical order.
 
-```pseudocode
-FUNCTION validate_plan_schema(doc: str) -> ValidationResult:
-    schema = LOAD_SCHEMA("plan-template.md", PINNED_VERSION)
-    sections_required = schema.required_sections     // e.g. ["Technical Context", "Constitution Check", ...]
-    errors = []
-    FOR each section IN sections_required:
-        position = FIND_HEADER(doc, section)
-        IF position == -1:
-            errors.append({"section": section, "line": 0, "message": f"Required section '{section}' missing"})
-            CONTINUE
-        body = EXTRACT_SECTION(doc, position)
-        IF body IS EMPTY:
-            errors.append({"section": section, "line": position.line, "message": "Section is present but empty"})
-    // Optional sections / HTML-comment metadata are NOT validated here (additive enrichment is schema-transparent).
-    RETURN ValidationResult(valid=(len(errors) == 0), errors=errors, pinned_version=PINNED_VERSION)
+**Responsibilities**:
+- Accept `<file> --plan`.
+- For each required section in the pinned v0.7.0 plan-template list:
+  `grep -q '^## <Section Name>' <file>` ⇒ if no match, append to a
+  `MISSING:` list.
+- Emit final `SCHEMA: PASS` (exit 0; print `pinned_version=v0.7.0`)
+  or `SCHEMA: FAIL` (exit 1; print each missing section).
 
-CONSTANT PINNED_VERSION = "v0.7.0"
-```
+**Pseudocode / Structural Sketch**: see MOD-018 (shared script). The
+`--plan` branch sets `REQUIRED=("Technical Context" "Constitution
+Check" "Project Structure" "Phase 0" "Phase 1" "Phase 2" "Complexity
+Tracking")` per the pinned v0.7.0 `plan-template.md`.
 
-#### State Machine View
+**Dependencies**:
+- POSIX `grep`, `awk` (system binaries).
+- Pinned v0.7.0 required-section list (inline `case` statement in the
+  script — no separate fixture file).
 
-N/A — Stateless
-
-#### Internal Data Structures
-
-| Name | Type | Size/Constraints | Initialization | Description |
-|------|------|------------------|----------------|-------------|
-| `schema` | `SchemaSpec` | static fixture | from `tests/fixtures/spec-kit-core/v0.7.0/plan-template.md` | Pinned schema |
-| `errors` | `list[dict]` | unbounded | empty | Validation errors |
-| `PINNED_VERSION` | `str` | semver | const = `"v0.7.0"` | Reported in summary |
-
-#### Error Handling & Return Codes
-
-| Error Condition | Error Code / Exception | Architecture Contract | Recovery |
-|----------------|------------------------|-----------------------|----------|
-| Required section missing | append to `errors`, return `valid: false` | ARCH-013 contract per ITS-013-A2 | Caller decides exit |
-| Schema fixture missing on disk | raise `SchemaFixtureNotFound` | Implicit precondition: fixture committed with project | None — fatal |
+**Verification**: BATS unit tests for (a) all required sections present
+⇒ exit 0; (b) any required section missing ⇒ exit 1 with
+`<section>: MISSING` line; (c) `pinned_version=v0.7.0` printed in the
+PASS path.
 
 ---
 
-### Module: MOD-018 (`validate_tasks_schema`)
+### MOD-018 — Tasks Schema Validator
 
-**Parent Architecture Modules**: ARCH-013
-**Target Source File(s)**: `src/v_model_extension/schema/validator.py`
-**Implements REQ:** REQ-028, REQ-029, REQ-IF-002, REQ-CN-001
+| Field | Value |
+|-------|-------|
+| Classification | NEW-SHELL |
+| Target Source File | `scripts/bash/validate-core-schema.sh` (PLANNED, ~50 lines) invoked with `--tasks` |
+| Traced From | REQ-028, REQ-029, REQ-IF-002, REQ-CN-001; SYS-010; ARCH-013 |
 
-#### Algorithmic / Logic View
+**Description**: Sibling half of the shared schema validator. With
+`--tasks` it greps the candidate `tasks.md` against the pinned
+spec-kit-core v0.7.0 tasks-template required sections and the
+canonical task-row pattern.
 
-```pseudocode
-FUNCTION validate_tasks_schema(doc: str) -> ValidationResult:
-    schema = LOAD_SCHEMA("tasks-template.md", PINNED_VERSION)
-    sections_required = schema.required_sections     // e.g. ["Tasks", "Dependencies", ...]
-    errors = []
-    FOR each section IN sections_required:
-        position = FIND_HEADER(doc, section)
-        IF position == -1:
-            errors.append({"section": section, "line": 0, "message": f"Required section '{section}' missing"})
-            CONTINUE
-        rows = EXTRACT_TABLE_ROWS(doc, position)
-        FOR each row IN rows:
-            IF NOT MATCHES(row, schema.row_pattern):
-                errors.append({"section": section, "line": row.line, "message": f"Row does not match required pattern"})
-    RETURN ValidationResult(valid=(len(errors) == 0), errors=errors, pinned_version=PINNED_VERSION)
-```
+**Responsibilities**:
+- Accept `<file> --tasks`.
+- For each required section in the pinned v0.7.0 tasks-template list:
+  `grep -q '^## <Section Name>' <file>` ⇒ if no match, append to
+  `MISSING:` list.
+- Spot-check that at least one task line matches the canonical
+  `^T-[0-9]+:` row pattern.
+- Emit final `SCHEMA: PASS` (exit 0) or `SCHEMA: FAIL` (exit 1).
 
-#### State Machine View
+**Pseudocode / Structural Sketch** (shared script for MOD-017 +
+MOD-018):
 
-N/A — Stateless
+```bash
+#!/usr/bin/env bash
+# Implements MOD-017
+# Implements MOD-018
+# Implements ARCH-013
+set -euo pipefail
+FILE="${1:?usage: validate-core-schema.sh <file> --plan|--tasks}"
+MODE="${2:?--plan or --tasks}"
 
-#### Internal Data Structures
-
-| Name | Type | Size/Constraints | Initialization | Description |
-|------|------|------------------|----------------|-------------|
-| `schema` | `SchemaSpec` | static fixture | from `tests/fixtures/spec-kit-core/v0.7.0/tasks-template.md` | Pinned schema |
-| `rows` | `list[TableRow]` | bounded by table size | derived | Per-section rows |
-
-#### Error Handling & Return Codes
-
-| Error Condition | Error Code / Exception | Architecture Contract | Recovery |
-|----------------|------------------------|-----------------------|----------|
-| Row fails pattern match | append to `errors` with offending line | ARCH-013 contract | Caller decides exit |
-| Required section missing | append to `errors`, return `valid: false` | ARCH-013 contract | Caller decides exit |
-
----
-
-### Module: MOD-019 (`detect_enrichment`)
-
-**Parent Architecture Modules**: ARCH-014
-**Target Source File(s)**: `src/v_model_extension/schema/fallback.py`
-**Implements REQ:** REQ-028
-
-#### Algorithmic / Logic View
-
-```pseudocode
-FUNCTION detect_enrichment(upstream_doc: str) -> EnrichmentReport:
-    EXPECTED_KEYS = ["vmodel:traces", "vmodel:hazards", "vmodel:requirements"]
-    found_keys = []
-    FOR each key IN EXPECTED_KEYS:
-        marker = f"<!-- {key}"
-        IF marker IN upstream_doc:
-            found_keys.append(key)
-    missing_keys = [k FOR k IN EXPECTED_KEYS IF k NOT IN found_keys]
-    RETURN EnrichmentReport(
-        enriched=(len(missing_keys) == 0),
-        missing_metadata_keys=missing_keys
+case "$MODE" in
+  --plan)
+    REQUIRED=(
+      "Technical Context" "Constitution Check" "Project Structure"
+      "Phase 0" "Phase 1" "Phase 2" "Complexity Tracking"
     )
+    ;;
+  --tasks)
+    REQUIRED=("Tasks" "Dependencies" "Parallel Execution Notes")
+    ;;
+  *) echo "unknown mode: $MODE" >&2; exit 1 ;;
+esac
+
+failed=0
+for section in "${REQUIRED[@]}"; do
+  if ! grep -qE "^## ${section}\b" "$FILE"; then
+    printf '%s: MISSING\n' "$section"
+    failed=1
+  fi
+done
+
+if [[ "$MODE" == "--tasks" ]] && ! grep -qE '^T-[0-9]+:' "$FILE"; then
+  echo "Tasks: NO_CANONICAL_ROWS"
+  failed=1
+fi
+
+if (( failed != 0 )); then
+  echo "SCHEMA: FAIL"
+  exit 1
+fi
+echo "SCHEMA: PASS pinned_version=v0.7.0"
 ```
 
-#### State Machine View
+**Dependencies**:
+- POSIX `grep` (system binary).
+- Inline pinned v0.7.0 section lists.
 
-N/A — Stateless
-
-#### Internal Data Structures
-
-| Name | Type | Size/Constraints | Initialization | Description |
-|------|------|------------------|----------------|-------------|
-| `EXPECTED_KEYS` | `list[str]` | exactly 3 | const | V-Model HTML-comment keys |
-| `found_keys` | `list[str]` | ≤ 3 | empty | Detected keys |
-
-#### Error Handling & Return Codes
-
-| Error Condition | Error Code / Exception | Architecture Contract | Recovery |
-|----------------|------------------------|-----------------------|----------|
-| (none — pure scan) | — | ARCH-014 contract: never raises | — |
+**Verification**: BATS unit tests for (a) full-conformance fixture ⇒
+exit 0; (b) section deletion ⇒ exit 1 with the expected
+`<section>: MISSING` line; (c) canonical row pattern absent in
+`--tasks` mode ⇒ exit 1.
 
 ---
 
-### Module: MOD-020 (`register_hooks`)
+### MOD-019 — Hybrid Path Enrichment Detector
 
-**Parent Architecture Modules**: ARCH-015
-**Target Source File(s)**: `src/v_model_extension/hooks/registrar.py`
-**Implements REQ:** REQ-IF-003, REQ-IF-005, REQ-NF-006
+| Field | Value |
+|-------|-------|
+| Classification | NEW-PROMPT-SECTION |
+| Target Source File | `commands/tasks.md` §Hybrid Path Detection |
+| Traced From | REQ-028; SYS-010; ARCH-014 |
 
-#### Algorithmic / Logic View
+**Description**: Prompt section that, on entry to
+`/speckit.v-model.tasks`, performs a one-line `grep` (executed by the
+LLM via `run_command`) to detect whether an upstream `plan.md` carries
+V-Model enrichment markers; if absent, the LLM derives traceability
+directly from the V-Model artifact set (Hybrid path per REQ-028).
 
-```pseudocode
-FUNCTION register_hooks(extensions_yml_path: Path) -> WriteResult:
-    DESIRED_HOOKS = [
-        ("before_implement", "v-model.trace"),
-        ("after_implement",  "v-model.trace"),
-        ("after_specify",    "v-model.requirements"),
-    ]
-    yml = load_yaml(extensions_yml_path)
-    added = 0
-    skipped = 0
-    FOR each (hook_event, command) IN DESIRED_HOOKS:
-        existing = yml.get(hook_event, [])
-        IF command IN existing:
-            skipped += 1
-            CONTINUE
-        existing.append(command)
-        yml[hook_event] = existing
-        added += 1
-    IF added > 0:
-        rendered = dump_yaml(yml)
-        MOD-027.atomic_write(extensions_yml_path, rendered)
-    RETURN WriteResult(added=added, skipped_existing=skipped)
+**Responsibilities**:
+- Probe `<feature-dir>/plan.md` (if present) for the substring
+  `<!-- vmodel:traces`.
+- If absent ⇒ emit a `warnings[]` entry stating "Reduced-enrichment
+  path — upstream plan.md lacks vmodel markers; downstream
+  traceability derived directly from V-Model artifacts."
+- If present ⇒ consume markers as-is.
+
+**Pseudocode / Structural Sketch** (prompt outline):
+
+```
+## Hybrid Path Detection
+
+if not exists(<feature-dir>/plan.md):
+  enriched := false (no upstream)
+else:
+  run: grep -q '<!-- vmodel:traces' <feature-dir>/plan.md
+  enriched := (exit code == 0)
+
+if not enriched:
+  warnings[] += "Reduced-enrichment path — upstream plan.md lacks
+    vmodel markers; deriving traceability directly from V-Model
+    artifacts (REQ-028 Hybrid path)."
 ```
 
-#### State Machine View
+**Dependencies**:
+- `commands/tasks.md` (host file).
+- §Execution Flow (MOD-003).
 
-N/A — Stateless
-
-#### Internal Data Structures
-
-| Name | Type | Size/Constraints | Initialization | Description |
-|------|------|------------------|----------------|-------------|
-| `DESIRED_HOOKS` | `list[tuple]` | exactly 3 | const | Hooks to register |
-| `yml` | `dict` | bounded by extensions.yml size | from `load_yaml` | Mutable copy |
-
-#### Error Handling & Return Codes
-
-| Error Condition | Error Code / Exception | Architecture Contract | Recovery |
-|----------------|------------------------|-----------------------|----------|
-| `IOError` from MOD-027 | re-raise unmodified | ARCH-015 contract | None — atomicity guaranteed by ARCH-021 |
+**Verification**: LLM structural-eval over fixture
+`{absent, enriched, core-only}` upstream `plan.md` cases; assertion
+that the warnings entry appears exactly once in the core-only case.
 
 ---
 
-### Module: MOD-021 (`emit_summary`)
+### MOD-020 — Hook Registrar
 
-**Parent Architecture Modules**: ARCH-016
-**Target Source File(s)**: `src/v_model_extension/report/summary.py`
-**Implements REQ:** REQ-027, REQ-IF-004
+| Field | Value |
+|-------|-------|
+| Classification | REUSE-CORE |
+| Target Source File | `extension.yml` (3 YAML entries appended at the repository root) |
+| Traced From | REQ-IF-003, REQ-IF-005, REQ-NF-006; SYS-011; ARCH-015 |
 
-#### Algorithmic / Logic View
+**Description**: Three declarative YAML entries appended to
+`extension.yml` at the repository root. Registration is performed at
+install time by Spec Kit Core's `CommandRegistrar` class in
+`src/specify_cli/extensions.py` (lines 579–884). This feature ships
+**no new registration code**.
 
-```pseudocode
-FUNCTION emit_summary(run_result: RunResult) -> None:
-    print("--- v-model run summary ---")
-    print(f"inputs_read:")
-    FOR each path IN run_result.inputs_read:
-        print(f"  - {path}")
-    print(f"outputs_produced:")
-    FOR each path IN run_result.outputs_produced:
-        print(f"  - {path}")
-    print(f"artifacts_skipped:")
-    FOR each name IN run_result.artifacts_skipped:
-        print(f"  - {name}")
-    print(f"warnings:")
-    FOR each warn IN run_result.warnings:
-        print(f"  - {warn}")
-    IF len(run_result.fatal_errors) > 0:
-        print(f"fatal_errors:")
-        FOR each err IN run_result.fatal_errors:
-            print(f"  - {err}")
-    print("--- end summary ---")
+**Responsibilities** (all delegated to Spec Kit Core):
+- Discover extensions at install time by reading `extension.yml`.
+- Wire the three V-Model hooks (`after_specify` →
+  `v-model.requirements`; `before_implement`, `after_implement` →
+  `v-model.trace`) into the spec-kit CLI namespace.
+- Register the three new commands (`v-model.plan`, `v-model.tasks`,
+  `v-model.implement`) per the agent-specific format
+  (`AGENT_CONFIGS` dict in `extensions.py`).
+- Idempotency: re-runs do not duplicate entries.
+
+**Pseudocode / Structural Sketch** — YAML payload (the entire
+implementation):
+
+```yaml
+# extension.yml
+hooks:
+  after_specify:
+    - v-model.requirements
+  before_implement:
+    - v-model.trace
+  after_implement:
+    - v-model.trace
+
+commands:
+  - id: v-model.plan
+    file: commands/plan.md
+  - id: v-model.tasks
+    file: commands/tasks.md
+  - id: v-model.implement
+    file: commands/implement.md
 ```
 
-#### State Machine View
+**Dependencies**:
+- Spec Kit Core's `CommandRegistrar` class —
+  `src/specify_cli/extensions.py` lines 579–884.
+- `extension.yml` at the repository root.
 
-N/A — Stateless
-
-#### Internal Data Structures
-
-| Name | Type | Size/Constraints | Initialization | Description |
-|------|------|------------------|----------------|-------------|
-| `run_result` | `RunResult` | 5 string-list fields | param | Aggregated run state |
-
-#### Error Handling & Return Codes
-
-| Error Condition | Error Code / Exception | Architecture Contract | Recovery |
-|----------------|------------------------|-----------------------|----------|
-| stdout write fails (e.g., broken pipe) | propagate `BrokenPipeError` | ARCH-016 contract: best-effort emit | None — caller exits |
+**Verification**: BATS test asserting the three YAML entries exist in
+`extension.yml`; integration test installing the extension under each
+supported AI agent (`AGENT_CONFIGS` list in `extensions.py`) and
+asserting the commands appear in the expected `.<agent>/commands/`
+directory.
 
 ---
 
-### Module: MOD-022 (`compute_coverage_report`)
+### MOD-021 — Structured Summary Reporter
 
-**Parent Architecture Modules**: ARCH-017
-**Target Source File(s)**: `src/v_model_extension/quality/harness.py`
-**Implements REQ:** REQ-NF-001, REQ-CN-003, REQ-CN-004
+| Field | Value |
+|-------|-------|
+| Classification | NEW-PROMPT-SECTION |
+| Target Source File | `commands/plan.md`, `commands/tasks.md`, `commands/implement.md` §Structured Summary |
+| Traced From | REQ-027, REQ-IF-004; SYS-012; ARCH-016; HAZ-025 |
 
-#### Algorithmic / Logic View
+**Description**: Identical §Structured Summary section appended to each
+of the three command files. Specifies the exact stdout grammar shared
+by `commands/audit-report.md` and `commands/test-results.md`,
+guaranteeing every run — successful or failed — emits a machine-
+readable summary block.
 
-```pseudocode
-FUNCTION compute_coverage_report(feature_dir: Path) -> CoverageReport:
-    HARNESSES = [
-        ("bats",            ["bats", "tests/bats", "--report-formatter", "json"]),
-        ("pester",          ["pwsh", "-c", "Invoke-Pester tests/pester -CI -PassThru"]),
-        ("structural_eval", ["bash", "scripts/bash/run-structural-evals.sh", "--json"]),
-        ("llm_eval",        ["bash", "scripts/bash/run-llm-evals.sh", "--json"]),
-    ]
-    pcts = {}
-    FOR each (name, command) IN HARNESSES:
-        TRY:
-            run = MOD-026.run_subprocess(command, cwd=REPO_ROOT)
-            pct = parse_coverage_pct(run.stdout)
-        EXCEPT SubprocessFailure:
-            pct = 0
-        pcts[name] = pct
-    merge_gate = "allow" IF ALL(p == 100 FOR p IN pcts.values()) ELSE "block"
-    RETURN CoverageReport(
-        bats=pcts["bats"], pester=pcts["pester"],
-        structural_eval=pcts["structural_eval"], llm_eval=pcts["llm_eval"],
-        merge_gate=merge_gate
-    )
+**Responsibilities**:
+- Emit on every exit path (success and failure both flow through this
+  section before exit) — HAZ-025 mitigation.
+- Print the canonical envelope:
+  `--- v-model run summary ---` header,
+  `inputs_read:`, `outputs_produced:`, `artifacts_skipped:`,
+  `warnings:`, `fatal_errors:` (each as a YAML-style sequence),
+  `--- end summary ---` footer.
+- Flush stdout before exit.
+
+**Pseudocode / Structural Sketch** (prompt outline, identical in all
+three command files):
+
+```
+## Structured Summary
+
+Always emit, even on failure paths, before exit:
+
+--- v-model run summary ---
+inputs_read:
+  - <path1>
+  - <path2>
+outputs_produced:
+  - <path>
+artifacts_skipped:
+  - <name>
+warnings:
+  - <text>
+fatal_errors:
+  - <text>          # only when present; empty list ⇒ omit the key
+--- end summary ---
+
+Then: exit with the appropriate exit code (0 success, 1 fatal).
 ```
 
-#### State Machine View
+**Dependencies**:
+- `commands/plan.md`, `commands/tasks.md`, `commands/implement.md`
+  (host files).
+- Vocabulary borrowed from `commands/audit-report.md` and
+  `commands/test-results.md`.
 
-N/A — Stateless
-
-#### Internal Data Structures
-
-| Name | Type | Size/Constraints | Initialization | Description |
-|------|------|------------------|----------------|-------------|
-| `HARNESSES` | `list[tuple]` | exactly 4 | const | Test harness commands |
-| `pcts` | `dict[str, float]` | exactly 4 keys | empty | Per-harness coverage |
-
-#### Error Handling & Return Codes
-
-| Error Condition | Error Code / Exception | Architecture Contract | Recovery |
-|----------------|------------------------|-----------------------|----------|
-| `SubprocessFailure` from MOD-026 | catch + treat as `pct = 0` | ARCH-017 contract: missing harness blocks merge | Continue with other harnesses |
+**Verification**: LLM structural-eval over fixture runs of each of the
+three commands, asserting (a) the envelope is present on every exit
+path, (b) all five list keys are emitted (or `fatal_errors:` omitted
+on success), (c) HAZ-025 mitigation: stdout is flushed before exit so
+the summary is observable even when the LLM aborts.
 
 ---
 
-### Module: MOD-023 (`annotate_commit`)
+### MOD-022 — Quality Compliance Harness
 
-**Parent Architecture Modules**: ARCH-018
-**Target Source File(s)**: `src/v_model_extension/git/annotator.py`
-**Implements REQ:** REQ-021
+| Field | Value |
+|-------|-------|
+| Classification | DROP-recharacterized |
+| Target Source File | `[NO RUNTIME ARTIFACT — DEFERRED]` |
+| Traced From | REQ-NF-001, REQ-CN-003, REQ-CN-004; SYS-013 (paradigm-level deferred risk note); ARCH-017 |
 
-#### Algorithmic / Logic View
+**Description**: `[DEFERRED — no runtime module]`. The quality harness
+is a CI / meta concern, not a runtime command component. The four
+existing test stacks — `tests/bats/`, `tests/pester/`, `tests/evals/`
+(structural eval), and the LLM-eval suite under `tests/evals/` —
+already satisfy REQ-NF-001 / REQ-CN-003 / REQ-CN-004 when invoked from
+GitHub Actions. Merge-gate enforcement is GitHub Actions branch
+protection, not a runtime Python module.
 
-```pseudocode
-FUNCTION annotate_commit(message: str, ids: list[str]) -> str:
-    IF len(ids) == 0:
-        log_warning("annotate_commit called with empty ids list — suffix omitted")
-        annotated = message
-    ELSE:
-        suffix = ", ".join(ids)
-        annotated = f"{message} — {suffix}"
-    TRY:
-        MOD-026.run_subprocess(["git", "commit", "-m", annotated], cwd=REPO_ROOT)
-    EXCEPT SubprocessFailure AS e:
-        log_warning(f"git commit failed: {e}")    // best-effort: do NOT raise
-    RETURN annotated
-```
+**Pseudocode / Structural Sketch**: `[NO PSEUDOCODE — DEFERRED]`
 
-#### State Machine View
+**Replacement**: The CI workflow under `.github/workflows/` is the
+sole runtime locus. The MOD identifier is preserved as a deferred-risk
+note for forward traceability; should a future release introduce a
+local pre-commit harness, that work will be tracked under a new MOD.
 
-N/A — Stateless
+**Dependencies**: None at the runtime level.
 
-#### Internal Data Structures
-
-| Name | Type | Size/Constraints | Initialization | Description |
-|------|------|------------------|----------------|-------------|
-| `annotated` | `str` | UTF-8 | derived | Annotated commit message |
-| `suffix` | `str` | bounded by `len(ids)` | empty when `ids == []` | Comma-joined ID list |
-
-#### Error Handling & Return Codes
-
-| Error Condition | Error Code / Exception | Architecture Contract | Recovery |
-|----------------|------------------------|-----------------------|----------|
-| `SubprocessFailure` (git fails) | log warning, no raise | ARCH-018 contract: best-effort | Caller continues |
-| `ids == []` | log warning, omit suffix | ARCH-018 contract: warning only | Continue |
+**Verification**: CI workflow runs the four-stack harness on every PR;
+no in-tree assertion is owned by this MOD.
 
 ---
 
-### Module: MOD-024 (`load_artifacts`) [CROSS-CUTTING]
+### MOD-023 — Commit Annotator
 
-**Parent Architecture Modules**: ARCH-019
-**Target Source File(s)**: `src/v_model_extension/io/artifact_reader.py`
-**Implements REQ:** REQ-NF-003 (parser-drift prevention)
+| Field | Value |
+|-------|-------|
+| Classification | NEW-PROMPT-SECTION |
+| Target Source File | `commands/implement.md` §Commit Annotation |
+| Traced From | REQ-021; SYS-014; ARCH-018 |
 
-#### Algorithmic / Logic View
+**Description**: Prompt section instructing the LLM, after MOD-013
+exits 0, to issue `git commit -m "<base-message> — <ID>, <ID>, …"`
+where the suffix is the comma-separated list of V-Model identifiers
+fulfilled by the change. Best-effort: an annotation-construction
+failure is a `warnings[]` entry, not fatal; a `git commit` invocation
+failure is fatal.
 
-```pseudocode
-FUNCTION load_artifacts(feature_dir: Path) -> ArtifactSet:
-    vmodel_dir = feature_dir / "v-model"
-    artifact_set = ArtifactSet()  // all fields default None
-    EXPECTED = [
-        ("requirements",          "requirements.md",          parse_requirements),
-        ("acceptance_plan",       "acceptance-plan.md",       parse_acceptance_plan),
-        ("system_design",         "system-design.md",         parse_system_design),
-        ("system_test",           "system-test.md",           parse_system_test),
-        ("architecture_design",   "architecture-design.md",   parse_architecture_design),
-        ("integration_test",      "integration-test.md",      parse_integration_test),
-        ("module_design",         "module-design.md",         parse_module_design),
-        ("unit_test",             "unit-test.md",             parse_unit_test),
-        ("hazard_analysis",       "hazard-analysis.md",       parse_hazard_analysis),
-        ("traceability_matrix",   "traceability-matrix.md",   parse_traceability_matrix),
-    ]
-    FOR each (field_name, file_name, parser) IN EXPECTED:
-        path = vmodel_dir / file_name
-        IF path.exists():
-            TRY:
-                content = path.read_text(encoding="utf-8")
-                setattr(artifact_set, field_name, parser(content))
-            EXCEPT (ParseError, UnicodeDecodeError) AS e:
-                raise MalformedArtifact(path=path, reason=str(e))
-    RETURN artifact_set
+**Responsibilities**:
+- Compute the ID list from the in-context generation plan.
+- If the list is empty ⇒ emit a `warnings[]` entry and commit with the
+  unannotated base message.
+- Invoke `git commit -m "<annotated-message>"`.
+- Propagate `git commit` non-zero as `fatal_errors[]` and exit 1.
+
+**Pseudocode / Structural Sketch** (prompt outline):
+
+```
+## Commit Annotation
+
+Precondition: MOD-013 exited 0.
+
+ids := derive_ids_from(generation_plan)
+if len(ids) == 0:
+  warnings[] += "annotate_commit invoked with empty id list — suffix omitted"
+  message := base_message
+else:
+  message := base_message + " — " + ", ".join(ids)
+
+run: git commit -m "<message>"
+if exit != 0:
+  fatal_errors[] += "git commit failed: <stderr>"; exit 1
 ```
 
-#### State Machine View
+**Dependencies**:
+- `commands/implement.md` (host file).
+- §Execution Flow (MOD-005).
+- System binary `git`.
 
-N/A — Stateless
-
-#### Internal Data Structures
-
-| Name | Type | Size/Constraints | Initialization | Description |
-|------|------|------------------|----------------|-------------|
-| `EXPECTED` | `list[tuple]` | exactly 10 | const | Artifact load table |
-| `artifact_set` | `ArtifactSet` | 10 nullable fields | all `None` | Output struct |
-
-#### Error Handling & Return Codes
-
-| Error Condition | Error Code / Exception | Architecture Contract | Recovery |
-|----------------|------------------------|-----------------------|----------|
-| Parse failure on any artifact | raise `MalformedArtifact{path, reason}` | ARCH-019 contract: fatal — no partial `ArtifactSet` returned | None — caller fail-closes |
-| File absent | leave field as `None` (graceful degradation) | ARCH-019 contract: nullable fields | Continue |
+**Verification**: LLM structural-eval over a fixture generation plan;
+BATS assertion that the produced commit message ends with the canonical
+` — <ID>, <ID>` suffix and that the empty-ID case still produces a
+commit (with a warnings entry).
 
 ---
 
-### Module: MOD-025 (`extract_id_set`) [CROSS-CUTTING]
+### MOD-024 — V-Model Artifact Loader
 
-**Parent Architecture Modules**: ARCH-019
-**Target Source File(s)**: `src/v_model_extension/io/artifact_reader.py`
-**Implements REQ:** REQ-NF-002 (feeds hallucination guard)
+| Field | Value |
+|-------|-------|
+| Classification | DROP-recharacterized |
+| Target Source File | `[NO RUNTIME ARTIFACT — DEFERRED]` |
+| Traced From | REQ-NF-003 (parser-drift prevention); ARCH-019 (deferred-risk note) |
 
-#### Algorithmic / Logic View
+**Description**: `[DEFERRED — no runtime module]`. In the chosen
+paradigm the LLM reads V-Model Markdown artifacts natively as text;
+no parser ships with this feature. Spec Kit Core's
+`scripts/bash/check-prerequisites.sh` already handles `FEATURE_DIR` /
+`AVAILABLE_DOCS` discovery. The parser-drift risk that motivated this
+MOD (REQ-NF-003) is structurally eliminated by having no parser to
+drift.
 
-```pseudocode
-FUNCTION extract_id_set(artifact_set: ArtifactSet) -> set[str]:
-    ids = set()
-    IF artifact_set.requirements IS NOT NULL:
-        FOR each req IN artifact_set.requirements.entries:
-            ids.add(req.id)             // REQ-NNN
-    IF artifact_set.acceptance_plan IS NOT NULL:
-        FOR each atp IN artifact_set.acceptance_plan.test_plans:
-            ids.add(atp.id)             // ATP-NNN
-            FOR each scn IN atp.scenarios:
-                ids.add(scn.id)         // SCN-NNN-N
-    IF artifact_set.system_design IS NOT NULL:
-        FOR each sys IN artifact_set.system_design.components:
-            ids.add(sys.id)             // SYS-NNN
-    IF artifact_set.system_test IS NOT NULL:
-        FOR each stp IN artifact_set.system_test.test_plans:
-            ids.add(stp.id)
-            FOR each sts IN stp.scenarios:
-                ids.add(sts.id)
-    IF artifact_set.architecture_design IS NOT NULL:
-        FOR each arch IN artifact_set.architecture_design.modules:
-            ids.add(arch.id)            // ARCH-NNN
-    IF artifact_set.integration_test IS NOT NULL:
-        FOR each itp IN artifact_set.integration_test.test_cases:
-            ids.add(itp.id)
-            FOR each its IN itp.scenarios:
-                ids.add(its.id)
-    IF artifact_set.module_design IS NOT NULL:
-        FOR each mod IN artifact_set.module_design.modules:
-            ids.add(mod.id)             // MOD-NNN
-    IF artifact_set.unit_test IS NOT NULL:
-        FOR each utp IN artifact_set.unit_test.test_plans:
-            ids.add(utp.id)
-            FOR each uts IN utp.scenarios:
-                ids.add(uts.id)
-    IF artifact_set.hazard_analysis IS NOT NULL:
-        FOR each haz IN artifact_set.hazard_analysis.hazards:
-            ids.add(haz.id)             // HAZ-NNN
-    RETURN ids
-```
+**Pseudocode / Structural Sketch**: `[NO PSEUDOCODE — DEFERRED]`
 
-#### State Machine View
+**Replacement**: Native LLM Markdown reading + Spec Kit Core's
+`check-prerequisites.sh`.
 
-N/A — Stateless
+**Dependencies**: None at the runtime level.
 
-#### Internal Data Structures
-
-| Name | Type | Size/Constraints | Initialization | Description |
-|------|------|------------------|----------------|-------------|
-| `ids` | `set[str]` | bounded by total ID count across artifacts (~hundreds typical) | empty | Output set; deduplication is the contract guarantee |
-
-#### Error Handling & Return Codes
-
-| Error Condition | Error Code / Exception | Architecture Contract | Recovery |
-|----------------|------------------------|-----------------------|----------|
-| (none — pure projection) | — | ARCH-019 contract: never raises | — |
+**Verification**: ARCH-019 deferred-risk note assertion in
+`architecture-design.md`; no in-tree code asserts this MOD.
 
 ---
 
-### Module: MOD-026 (`run_subprocess`) [CROSS-CUTTING]
+### MOD-025 — Canonical ID-Set Extractor
 
-**Parent Architecture Modules**: ARCH-020
-**Target Source File(s)**: `src/v_model_extension/io/subprocess_runner.py`
-**Implements REQ:** REQ-CN-002
+| Field | Value |
+|-------|-------|
+| Classification | NEW-SHELL |
+| Target Source File | `scripts/bash/validate-implements-ids.sh` (PLANNED) — implemented inline as the `canonical_ids=$(grep …)` step |
+| Traced From | REQ-NF-002 (feeds the hallucination guard); ARCH-019 (deferred-risk note for the original Python loader) |
 
-#### Algorithmic / Logic View
+**Description**: ~15 lines of shell embedded inside MOD-013's script
+that build the canonical ID universe by `grep -roE` across every
+Markdown artifact in `<feature-dir>/v-model/`. There is no separate
+script file: the audit determined a separate file would be code-bloat
+without functional benefit. The MOD identifier remains for forward
+traceability into MOD-013.
 
-```pseudocode
-FUNCTION run_subprocess(command: list[str], cwd: Path) -> RunResult:
-    IF len(command) == 0:
-        raise SubprocessFailure(text="empty command", exit_code=-1)
-    // Reject non-shipped scripts (REQ-CN-002 — no new wrapper script)
-    IF NOT (command[0] in SHIPPED_SCRIPT_ALLOWLIST OR is_system_binary(command[0])):
-        raise SubprocessFailure(text=f"script not in allowlist: {command[0]}", exit_code=-2)
-    proc = SPAWN(command, cwd=cwd, stdout=PIPE, stderr=PIPE, text=False)
-    stdout_bytes, stderr_bytes = proc.communicate()
-    TRY:
-        stdout = stdout_bytes.decode("utf-8")
-        stderr = stderr_bytes.decode("utf-8")
-    EXCEPT UnicodeDecodeError AS e:
-        raise SubprocessFailure(text=f"binary output rejected: {e}", exit_code=proc.returncode)
-    RETURN RunResult(exit_code=proc.returncode, stdout=stdout, stderr=stderr)
+**Responsibilities**:
+- Walk every `*.md` under `<feature-dir>/v-model/`.
+- Extract every match of the regex
+  `(REQ|SYS|ARCH|MOD|HAZ|ATP|ITP|STP|UTP|SCN|ITS|UTS|STS)-[A-Z0-9-]+`.
+- Deduplicate via `sort -u`.
+- Expose the result as a Bash variable consumed by the line-by-line
+  comparison loop in MOD-013.
 
-CONSTANT SHIPPED_SCRIPT_ALLOWLIST = [
-    "scripts/bash/build-matrix.sh",
-    "scripts/bash/validate-requirements-coverage.sh",
-    "scripts/bash/validate-acceptance-coverage.sh",
-    "scripts/bash/validate-system-coverage.sh",
-    "scripts/bash/validate-architecture-coverage.sh",
-    "scripts/bash/validate-module-coverage.sh",
-    "scripts/bash/validate-unit-coverage.sh",
-    "scripts/bash/run-structural-evals.sh",
-    "scripts/bash/run-llm-evals.sh",
-]
-CONSTANT SYSTEM_BINARIES = ["git", "bats", "pwsh", "bash"]
+**Pseudocode / Structural Sketch** (excerpt from MOD-013's script):
+
+```bash
+# Implements MOD-025
+canonical_ids=$(
+  grep -rhoE '(REQ|SYS|ARCH|MOD|HAZ|ATP|ITP|STP|UTP|SCN|ITS|UTS|STS)-[A-Z0-9-]+' \
+    "$VMODEL_DIR" 2>/dev/null \
+  | sort -u
+)
 ```
 
-#### State Machine View
+**Dependencies**:
+- POSIX `grep`, `sort` (system binaries).
+- V-Model artifact tree (read-only).
+- Embedded inside `scripts/bash/validate-implements-ids.sh` (MOD-013).
 
-N/A — Stateless
-
-#### Internal Data Structures
-
-| Name | Type | Size/Constraints | Initialization | Description |
-|------|------|------------------|----------------|-------------|
-| `SHIPPED_SCRIPT_ALLOWLIST` | `list[str]` | 9 entries (current scope) | const | Project-shipped scripts |
-| `SYSTEM_BINARIES` | `list[str]` | 4 entries | const | Allowed system tools |
-
-#### Error Handling & Return Codes
-
-| Error Condition | Error Code / Exception | Architecture Contract | Recovery |
-|----------------|------------------------|-----------------------|----------|
-| Empty command | raise `SubprocessFailure` | ARCH-020 contract | None |
-| Script not in allowlist (REQ-CN-002 violation) | raise `SubprocessFailure` | ARCH-020 contract: enforces "no new wrapper script" | None — caller fail-closes |
-| Binary output | raise `SubprocessFailure` | ARCH-020 contract per ITS-020-B2 | None |
-| Subprocess could not be invoked (`OSError`) | raise `SubprocessFailure(text=..., exit_code=127)` | ARCH-020 contract per ITS-020-B1 | None |
+**Verification**: BATS unit tests over a fixture `v-model/` containing
+all canonical ID prefixes; assertion that each one is present in the
+extracted set and that no duplicates appear.
 
 ---
 
-### Module: MOD-027 (`atomic_write`) [CROSS-CUTTING]
+### MOD-026 — Subprocess Runner
 
-**Parent Architecture Modules**: ARCH-021
-**Target Source File(s)**: `src/v_model_extension/io/fs_writer.py`
-**Implements REQ:** REQ-022, REQ-025
+| Field | Value |
+|-------|-------|
+| Classification | DROP-recharacterized |
+| Target Source File | `[NO RUNTIME ARTIFACT — DEFERRED]` |
+| Traced From | REQ-CN-002; ARCH-020 (deferred-risk note) |
 
-#### Algorithmic / Logic View
+**Description**: `[DEFERRED — no runtime module]`. Shell scripts invoke
+other shell scripts via `bash <script>` directly; there is no Python
+runtime that needs a subprocess wrapper. The REQ-CN-002 allowlist is
+self-evident: it is the set of executable scripts under `scripts/bash/`
+plus the explicit system-binary list (`git`, `bats`, `pwsh`, `bash`,
+`grep`, `awk`, `sort`) used by the four new shell scripts.
 
-```pseudocode
-FUNCTION atomic_write(path: Path, content: bytes | str) -> None:
-    target_dir = path.parent
-    target_dir.mkdir(parents=True, exist_ok=True)
-    IF isinstance(content, str):
-        content = content.encode("utf-8")
-    // Tmp file MUST be in the SAME directory as target so rename is atomic (same filesystem)
-    fd, tmp_path = mkstemp(dir=target_dir, prefix=".vmodel_tmp_", suffix=path.suffix)
-    TRY:
-        os.write(fd, content)
-        os.fsync(fd)               // flush to disk before rename (durability)
-        os.close(fd)
-        os.rename(tmp_path, path)  // atomic on POSIX, atomic on Win32 since Python 3.3
-    EXCEPT OSError AS e:
-        // Cleanup: remove tmp file if rename did not happen
-        TRY:
-            os.unlink(tmp_path)
-        EXCEPT FileNotFoundError:
-            PASS
-        raise IOError(text=str(e), errno=e.errno)
+**Pseudocode / Structural Sketch**: `[NO PSEUDOCODE — DEFERRED]`
+
+**Replacement**: Direct `bash <script>` invocations from inside the
+LLM-orchestrated flow; system-binary calls inline in shell.
+
+**Dependencies**: None at the runtime level.
+
+**Verification**: ARCH-020 deferred-risk note in
+`architecture-design.md`; no in-tree code asserts this MOD.
+
+---
+
+### MOD-027 — Atomic Filesystem Writer
+
+| Field | Value |
+|-------|-------|
+| Classification | DROP-recharacterized |
+| Target Source File | `[NO RUNTIME ARTIFACT — DEFERRED]` |
+| Traced From | REQ-022, REQ-025; ARCH-021 (deferred-risk note) |
+
+**Description**: `[DEFERRED — no runtime module]`. Atomic write is the
+3-line `mktemp` + `mv` cliché used inline in every shell script that
+mutates a tracked file:
+
+```
+tmp=$(mktemp -p "$(dirname "$f")")
+printf '%s' "$content" > "$tmp"
+mv "$tmp" "$f"
 ```
 
-#### State Machine View
+This pattern is documented in `architecture-design.md` §Overview and
+enforced by code review. There is no centralised writer module to
+ship.
 
-N/A — Stateless
+**Pseudocode / Structural Sketch**: `[NO PSEUDOCODE — DEFERRED]`
 
-#### Internal Data Structures
+**Replacement**: Inline `mktemp`+`mv` cliché in every shell script and
+in every LLM prompt section that writes a file.
 
-| Name | Type | Size/Constraints | Initialization | Description |
-|------|------|------------------|----------------|-------------|
-| `tmp_path` | `Path` | same dir as `path` | `mkstemp` | Pre-rename temp file |
-| `fd` | `int` | OS file descriptor | `mkstemp` | Tmp file handle |
+**Dependencies**: POSIX `mktemp`, `mv` (system binaries).
 
-#### Error Handling & Return Codes
-
-| Error Condition | Error Code / Exception | Architecture Contract | Recovery |
-|----------------|------------------------|-----------------------|----------|
-| Disk full / permission denied during write | raise `IOError{text, errno}` + cleanup tmp file | ARCH-021 contract per ITS-021-B1 | Existing file at `path` is byte-equal to prior contents (rename never executed) |
-| Process killed mid-write | tmp file remains; target untouched | ARCH-021 contract per ITS-021-D1 | Next `atomic_write` call cleans orphan tmp |
-| Process killed after rename | target is new content | ARCH-021 contract per ITS-021-D2 (rename is the linearization point) | None |
+**Verification**: BATS assertion across the four new shell scripts that
+no script writes a tracked file via direct redirection (`> $target`)
+without going through the `mktemp`+`mv` pattern.
 
 ---
 
@@ -1561,15 +1575,73 @@ N/A — Stateless
 
 | Metric | Count |
 |--------|-------|
-| Total Module Designs (MOD) | 27 (27 active, 0 deprecated, 0 suspect) |
-| External Modules (`[EXTERNAL]`) | 0 |
-| Cross-Cutting Modules (`[CROSS-CUTTING]`) | 4 (MOD-024, MOD-025, MOD-026, MOD-027) |
-| Stateful Modules | 3 (MOD-001, MOD-003, MOD-005 — orchestrators) |
-| Stateless Modules | 24 |
-| Total Parent Architecture Modules Covered | 21 / 21 (100%) (active items only) |
-| Modules with Pseudocode | 27 / 27 (100%) |
-| **Forward Coverage (ARCH→MOD)** | **100%** |
+| Total Module Designs (MOD) | 27 (all preserved; MOD-001..MOD-027) |
+| **NEW-PROMPT-SECTION** (sections inside `commands/{plan,tasks,implement}.md`) | **16** — MOD-001, 002, 003, 004, 005, 006, 007, 008, 009, 011, 012, 015, 016, 019, 021, 023 |
+| **NEW-SHELL** (POSIX shell scripts under `scripts/bash/`) | **6** — MOD-010, 013, 014, 017, 018, 025 |
+| **REUSE-CORE** (declarative YAML; no new code) | **1** — MOD-020 |
+| **DROP-recharacterized** (deferred-risk notes; no functional contract) | **4** — MOD-022, 024, 026, 027 |
+| **Total** | **27** ✓ |
+| Net-new shell script files | 4 (`run-v-model-gate.sh`, `validate-implements-ids.sh`, `splice-managed-regions.sh`, `validate-core-schema.sh`) — MOD-013 + MOD-025 share one script; MOD-017 + MOD-018 share one script |
+| Net-new command Markdown files | 3 (`commands/plan.md`, `commands/tasks.md`, `commands/implement.md`) hosting the 16 NEW-PROMPT-SECTION entries |
+| Net-new Python files | **0** |
+| **Forward Coverage (ARCH→MOD)** | **21 / 21 (100%)** — every ARCH-NNN in `architecture-design.md` is realised by at least one active MOD or, for ARCH-019/020/021, by a paired DROP-recharacterized MOD that preserves the trace |
+
+### ARCH → MOD coverage table (forward)
+
+| ARCH | Realised By |
+|------|-------------|
+| ARCH-001 | MOD-001 |
+| ARCH-002 | MOD-002 |
+| ARCH-003 | MOD-003, MOD-004 |
+| ARCH-004 | MOD-005 |
+| ARCH-005 | MOD-006, MOD-007 |
+| ARCH-006 | MOD-008, MOD-009 |
+| ARCH-007 | MOD-010 |
+| ARCH-008 | MOD-011, MOD-012 |
+| ARCH-009 | MOD-013 |
+| ARCH-010 | MOD-014 |
+| ARCH-011 | MOD-015 |
+| ARCH-012 | MOD-016 |
+| ARCH-013 | MOD-017, MOD-018 |
+| ARCH-014 | MOD-019 |
+| ARCH-015 | MOD-020 |
+| ARCH-016 | MOD-021 |
+| ARCH-017 | MOD-022 (DROP-recharacterized — CI workflow replaces runtime) |
+| ARCH-018 | MOD-023 |
+| ARCH-019 | MOD-024 (DROP-recharacterized) + MOD-025 (NEW-SHELL inline) |
+| ARCH-020 | MOD-026 (DROP-recharacterized) |
+| ARCH-021 | MOD-027 (DROP-recharacterized) |
+
+## Standards Governance
+
+This document is a Software Design Description (SDD) per
+**IEEE 1016:2009 §5** (Required SDD Information Items) and a Software
+Detailed Design output per **ISO/IEC/IEEE 12207:2017 §8.4.4**
+(Software Detailed Design Process). Required IEEE 1016 §5 elements:
+
+- **Identification** — feature branch, version (Reworked 2026-05-01),
+  status, sources (architecture-design.md).
+- **Stakeholders & Concerns** — implementers (V-Model command authors),
+  reviewers (paradigm-drift auditor), Spec Kit Core maintainers
+  (interface contract via `extension.yml`).
+- **Design Views (§5.1)** — Decomposition (Module Map + per-MOD
+  rows), Dependency (per-MOD Dependencies field), Interface (per-MOD
+  Pseudocode / Structural Sketch + Verification field).
+- **Design Overlays** — none (no domain overlay loaded; base
+  IEEE 1016 only).
+- **Design Rationale** — captured as the Classification + Description
+  per MOD; full rationale lives in `drift-diff-plan.md`.
+
+ISO/IEC/IEEE 12207:2017 §8.4.4.3 (formal interface definition per
+module) is satisfied by (a) the per-MOD Target Source File anchor
+(naming the exact file and section), (b) the structured-sketch
+specifying inputs / outputs / preconditions / error paths, and (c)
+the per-MOD Verification field naming the BATS / structural-eval test
+that exercises the contract.
 
 ## Derived Modules
 
-None — all modules trace to existing architecture modules.
+None — every active MOD traces to one or more active `ARCH-NNN`. Four
+deferred-risk MODs (MOD-022, MOD-024, MOD-026, MOD-027) carry explicit
+`DROP-recharacterized` rationale and no functional contract; none
+qualify as derived.
