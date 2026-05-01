@@ -107,15 +107,15 @@ qualified.
 
 Architecture-level failure modes that are not visible at the system boundary
 are appended below per IEC 60812:2018 §6 progressive analysis. Three
-cross-cutting architecture modules (`ARCH-019`, `ARCH-020`, `ARCH-021`) carry
-no requirement-traceable capability of their own but mediate interfaces
-between `SYS` components, so they warrant dedicated entries.
+cross-cutting architecture components (`ARCH-009`, `ARCH-011`, `ARCH-016`) mediate
+interfaces between `SYS` components at the shell-script / LLM-prompt layer
+and warrant dedicated entries.
 
 | HAZ ID | Component | Failure Mode | Operational State | Effect | Severity | Likelihood | Risk Level | Mitigation | Residual Risk |
 |--------|-----------|-------------|-------------------|--------|----------|-----------|------------|------------|---------------|
-| HAZ-023 | SYS-006 / ARCH-019 | Interface mismatch: Hallucination Guard scanner is invoked on a stale snapshot of generated files (race with SYS-003 file writes) | COMMITTING | Newly-emitted hallucinated IDs slip through verification; commit ships uncertified | Critical | Remote | Undesirable | REQ-023, REQ-NF-002, ARCH-019 contract: scanner consumes file paths emitted by SYS-003 only after fsync barrier | Tolerable |
-| HAZ-024 | SYS-008 / ARCH-020 | Protocol failure: malformed `v-model-config.yml` parsed as an empty overlay rather than a hard error | NORMAL | Configured domain silently downgraded to base behaviour; regulatory obligations skipped without warning | Critical | Remote | Undesirable | REQ-024, ARCH-020 contract: schema validation MUST raise on parse failure; SYS-003 fail-closed when domain configured but adapter throws | Tolerable |
-| HAZ-025 | SYS-012 / ARCH-021 | Race condition: Structured Summary Reporter is interrupted by command exit before flushing stdout | ERROR | Truncated summary; CI parsers may misclassify the run | Minor | Remote | Acceptable | REQ-027, REQ-IF-004, ARCH-021 contract: emit summary on every exit path (success, failure, signal) before process termination | Acceptable |
+| HAZ-023 | SYS-006 / ARCH-009 | Interface mismatch: Hallucination Guard scanner is invoked on a stale snapshot of generated files (race with SYS-003 file writes) | COMMITTING | Newly-emitted hallucinated IDs slip through verification; commit ships uncertified | Critical | Remote | Undesirable | REQ-023, REQ-NF-002; scanner receives the list of generated file paths from the LLM via `validate-implements-ids.sh` invocation after generation | Tolerable |
+| HAZ-024 | SYS-008 / ARCH-011 | Protocol failure: malformed `v-model-config.yml` parsed as an empty overlay rather than a hard error | NORMAL | Configured domain silently downgraded to base behaviour; regulatory obligations skipped without warning | Critical | Remote | Undesirable | REQ-024; `v-model-config.yml` parse failure causes the §Domain Overlay step in `commands/implement.md` to abort with non-zero exit | Tolerable |
+| HAZ-025 | SYS-012 / ARCH-016 | Race condition: Structured Summary Reporter is interrupted by command exit before flushing stdout | ERROR | Truncated summary; CI parsers may misclassify the run | Minor | Remote | Acceptable | REQ-027, REQ-IF-004; the §Structured Summary section in each of `commands/{plan,tasks,implement}.md` instructs the LLM to flush a structured stdout summary on every exit path, including failure | Acceptable |
 
 ## Likelihood Justification (PRF-HAZ-004)
 
@@ -170,9 +170,9 @@ residual classification defensible.
 | **HAZ-020** | Acceptable | Acceptable | REQ-IF-004 requires best-effort emission on every exit path; verified by ITP-021-A scenarios on each failure-path matrix. |
 | **HAZ-021** | Tolerable | Acceptable | CI workflow rules enforce SYS-013; an override leaves an audit trail; review process compensates. |
 | **HAZ-022** | Tolerable | Tolerable | SYS-012 warning surfaces the omission in the run summary; in-file `// Implements` comments provide a fallback traceability source per REQ-021. The Likelihood here is "Occasional" because the commit-message-template logic is the most defect-prone code in v0.7.0; residual is held at Tolerable by the warning + fallback. |
-| **HAZ-023** | Undesirable | Tolerable | ARCH-019 contract (scanner consumes file paths only after fsync barrier) makes the race structurally impossible at the contract level; ITS-019-C scenarios verify the barrier behaviour. |
-| **HAZ-024** | Undesirable | Tolerable | ARCH-020 contract (schema validation MUST raise on parse failure) + SYS-003 fail-closed = structural impossibility of silent downgrade; ITS-020-C scenarios verify the raise behaviour. |
-| **HAZ-025** | Acceptable | Acceptable | ARCH-021 contract requires summary emission on every exit path including signal handlers; verified by STS-007-B2 + ITP-021 scenarios. |
+| **HAZ-023** | Undesirable | Tolerable | ARCH-009 (`validate-implements-ids.sh`) receives the list of generated file paths from the LLM orchestration step (ARCH-004), ensuring the scan is always over the complete just-generated set; the sequential invocation order in ARCH-004 makes the race structurally impossible; ITS-019-C scenarios verify the ordering. |
+| **HAZ-024** | Undesirable | Tolerable | `v-model-config.yml` parse failure causes the §Domain Overlay step in `commands/implement.md` (ARCH-011) to abort with non-zero exit, preventing silent downgrade; ITS-020-C scenarios verify the abort behaviour. |
+| **HAZ-025** | Acceptable | Acceptable | The §Structured Summary section in each of `commands/{plan,tasks,implement}.md` (ARCH-016) instructs the LLM to emit the summary on every exit path, including failure; verified by STS-007-B2 scenarios. |
 
 ## Progressive Deepening Cross-References (PRF-HAZ-010)
 
@@ -182,9 +182,9 @@ implicit relationship explicit:
 
 | Architecture-Level HAZ | Refines System-Level HAZ(s) | Relationship |
 |------------------------|------------------------------|--------------|
-| HAZ-023 (SYS-006 / ARCH-019 race) | HAZ-007 (hallucinated // Implements) + HAZ-012 (false-negative detection) | HAZ-023 is the architecture-level mechanism by which the false-negative outcome of HAZ-012 can be triggered (stale snapshot). The race-condition refinement closes the residual gap that HAZ-012 leaves open. |
-| HAZ-024 (SYS-008 / ARCH-020 protocol failure) | HAZ-015 (Configured domain not applied) | HAZ-024 is the specific architecture-level failure mode (malformed YAML parsed as empty overlay) that produces the system-level outcome of HAZ-015 (silent regulatory downgrade). |
-| HAZ-025 (SYS-012 / ARCH-021 truncated summary) | HAZ-020 (Summary not emitted on failure path) | HAZ-025 is the architecture-level realisation of HAZ-020 in the specific case of signal-driven exit; HAZ-020 covers the broader silent-omission case. |
+| HAZ-023 (SYS-006 / ARCH-009 race) | HAZ-007 (hallucinated // Implements) + HAZ-012 (false-negative detection) | HAZ-023 is the architecture-level mechanism by which the false-negative outcome of HAZ-012 can be triggered (stale snapshot). The race-condition refinement closes the residual gap that HAZ-012 leaves open. |
+| HAZ-024 (SYS-008 / ARCH-011 protocol failure) | HAZ-015 (Configured domain not applied) | HAZ-024 is the specific architecture-level failure mode (malformed YAML parsed as empty overlay) that produces the system-level outcome of HAZ-015 (silent regulatory downgrade). |
+| HAZ-025 (SYS-012 / ARCH-016 truncated summary) | HAZ-020 (Summary not emitted on failure path) | HAZ-025 is the architecture-level realisation of HAZ-020 in the specific case of signal-driven exit; HAZ-020 covers the broader silent-omission case. |
 
 ## Coverage Summary
 
