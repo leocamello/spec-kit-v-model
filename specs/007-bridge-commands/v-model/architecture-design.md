@@ -7,130 +7,157 @@
 
 ## Overview
 
-The bridge-commands architecture decomposes each system component (`SYS-NNN`)
-into one or more architecture modules (`ARCH-NNN`) along two principal
-seams: (1) **orchestration vs. emission** — the three top-level command
-subsystems each split into a flow-driving orchestrator and one or more
-content-producing modules, and (2) **canonical-output vs. fallback** — the
-spec-kit-core compatibility layer (SYS-010) splits into strict schema
-validation and reduced-enrichment fallback so each can be tested and evolved
-independently. Three cross-cutting infrastructure modules (V-Model artifact
-reader, subprocess runner, filesystem writer) supply common services to the
-business modules; they are tagged `[CROSS-CUTTING]` rather than parented to a
-SYS, since they implement no requirement-traceable capability of their own.
+The bridge-commands architecture is built on the project's actual delivery
+paradigm: **Markdown prompt files + POSIX shell scripts + Spec Kit Core
+reuse**. There is no Python runtime, no in-process orchestrator, and no
+language-level class hierarchy. Each `/speckit.v-model.<command>` is a
+Markdown file under `commands/` that the LLM reads and follows; deterministic
+checks (gates, schema validation, ID verification, region splicing) are
+delegated to small POSIX shell scripts under `scripts/bash/`.
 
-The runtime model is **single-threaded sequential** per command invocation —
-the bridge commands run as one-shot CLI processes with no internal
-concurrency. Synchronization is filesystem-level only (atomic-write semantics
-provided by ARCH-021). This choice trades performance for determinism and
-simplicity, anchored to the idempotency requirement (REQ-025).
+The runtime model is therefore:
+
+- **LLM as orchestrator.** The Markdown prompt file (e.g.
+  `commands/plan.md`) is the orchestrator contract. Pre-conditions,
+  post-conditions, and expected output sections are encoded as natural-
+  language instructions to the LLM. The LLM reads V-Model artifacts
+  natively as Markdown — no runtime parser is shipped.
+- **Spec Kit Core reuse.** All bootstrapping reuses the upstream scripts
+  shipped in `github/spec-kit/scripts/bash/`:
+  - `setup-plan.sh` — creates the canonical artifact skeleton for plan
+    synthesis,
+  - `check-prerequisites.sh` — confirms the feature directory contains
+    the artifacts each command requires,
+  - `common.sh` — shared helpers (path resolution, branch detection).
+  These are invoked verbatim; this feature never re-implements them.
+- **Existing project gate scripts.** The pre-implementation gate composes
+  the already-shipped `scripts/bash/build-matrix.sh` plus the five
+  `scripts/bash/validate-*-coverage.sh` scripts (requirement / system /
+  architecture / module / hazard). The new `run-v-model-gate.sh` is a
+  thin composer that exits non-zero on any inner failure; it adds no new
+  gating logic (REQ-CN-002).
+- **Single-shell, sequential execution.** Each command runs as one shell
+  invocation. There is no concurrency primitive in the system. The
+  long-standing concurrent-write concern (SYS-013) is recorded below as
+  a paradigm-level deferred risk note (see §Concurrent-Write Safety —
+  Deferred Risk) rather than as an active runtime component.
+- **Atomic file writes.** When a script must write a file, it uses the
+  3-line `mktemp` + `mv` pattern inline. There is no centralized
+  filesystem-writer module; the pattern is a coding convention enforced
+  by review.
 
 **Sensitivity points:**
+
 - The pinned spec-kit-core schema version (`v0.7.0`) — any drift in the
   upstream `plan-template.md` or `tasks-template.md` immediately breaks
-  ARCH-013 (Schema Validator). Mitigation: schema fixtures versioned with
-  the project; ARCH-013 reports the pinned version in its summary.
-- The Markdown / HTML-comment grammar used for additive enrichment — small
-  changes to the comment delimiter convention propagate to ARCH-008,
-  ARCH-013, and ARCH-019.
+  ARCH-013. Mitigation: the validator script uses `grep` against pinned
+  required-section names; the pinned version is reported in the run
+  summary.
+- The HTML-comment grammar used for additive enrichment — small changes
+  to the comment delimiter convention propagate to ARCH-008 and
+  ARCH-013 simultaneously.
 
 **Trade-off points:**
-- Single-threaded sequential execution → trades performance efficiency
-  (ISO 25010 §4.2.3) for **idempotency** (REQ-025) and **maintainability**
-  (ISO 25010 §4.2.7). Acceptable because bridge-command runtime is bounded
-  by I/O and LLM latency, not by intra-process concurrency.
-- Reduced-enrichment fallback (ARCH-014) → trades enrichment-completeness
-  for **co-existence** with `speckit.*` outputs (ISO 25010 §4.2.4). Required
-  by REQ-028 (Hybrid path).
 
-No domain overlay is loaded for this feature (`v-model-config.yml` is absent
-at the repository root); only the base IEEE 42010 / Kruchten 4+1 views are
-populated, and no safety-integrity decomposition, defensive-programming
-table, or temporal-constraints table is required.
+- LLM-as-orchestrator vs. coded orchestrator → trades CPU determinism
+  for a thin, declarative surface that aligns with the surrounding
+  spec-kit ecosystem (REQ-CN-002, REQ-CN-003).
+- Sequential single-shell execution → trades performance efficiency
+  (ISO 25010 §4.2.3) for **idempotency** (REQ-025) and
+  **maintainability** (ISO 25010 §4.2.7).
+- Reduced-enrichment fallback (ARCH-014) → trades enrichment
+  completeness for **co-existence** with `speckit.*` outputs (ISO 25010
+  §4.2.4); required by REQ-028 (Hybrid path).
+
+No domain overlay is loaded for this feature (`v-model-config.yml` is
+absent at the repository root); only the base IEEE 42010 / Kruchten 4+1
+views are populated.
 
 ## ID Schema
 
-- **Architecture Module**: `ARCH-NNN` — sequential identifier, never renumbered.
-- **Parent System Components**: Comma-separated `SYS-NNN` list per module
-  (many-to-many). Coverage is computed against the active SYS set in
-  `system-design.md`.
-- **Cross-Cutting Tag**: `[CROSS-CUTTING]` for infrastructure modules
-  (artifact reader, subprocess runner, filesystem writer) that implement no
-  requirement-traceable capability of their own.
-- Example: `ARCH-001` with Parent System Components `SYS-001` — module
-  implements (in part) the Plan Synthesizer.
+- **Architecture Module**: `ARCH-NNN` — sequential identifier, never
+  renumbered.
+- **Parent System Components**: comma-separated `SYS-NNN` list per
+  module (many-to-many). Coverage is computed against the active SYS
+  set in `system-design.md`.
+- **Cross-Cutting Tag**: `[CROSS-CUTTING]` for entries that implement
+  no requirement-traceable capability of their own. When the entry is
+  also a deferred risk note (carried for traceability only), the
+  parent column also bears `[DEFERRED]` / `[DEFERRED RISK NOTE]`.
+- **Classification**: one of `NEW-PROMPT-SECTION` (LLM prompt section
+  in `commands/<name>.md`), `NEW-SHELL` (POSIX shell script under
+  `scripts/bash/`), `REUSE-CORE` (delegates to a Spec Kit Core
+  component, no new code), `DROP-recharacterized` (no functional
+  contract; carried as a deferred risk note for traceability).
 
 ## Logical View — Component Breakdown (IEEE 42010 / Kruchten 4+1)
 
-| ARCH ID | Name | Description | Parent System Components | Type |
-|---------|------|-------------|--------------------------|------|
-| ARCH-001 | Plan Synthesis Orchestrator | Drives the `/speckit.v-model.plan` flow: loads V-Model artifacts via ARCH-019, requests enrichment from ARCH-008, validates the assembled `plan.md` via ARCH-013, and emits the final canonical artifact set via ARCH-002. Reports the run via ARCH-016. | SYS-001 | Component |
-| ARCH-002 | Canonical Artifact Emitter | Renders and writes the canonical spec-kit-core output set (`plan.md`, `data-model.md`, `contracts/` directory entries, `quickstart.md`, `research.md`) to disk through ARCH-021. Each render method consumes the in-memory representation produced by ARCH-001 and produces canonical Markdown / file-tree output. | SYS-001 | Component |
-| ARCH-003 | Tasks Synthesis Orchestrator | Drives the `/speckit.v-model.tasks` flow: loads V-Model artifacts plus any `plan.md` (V-Model-enriched or core-only) via ARCH-019, generates the TDD-ordered task list, applies hazard enrichment via ARCH-012, embeds traceability comments via ARCH-008, validates against the canonical schema via ARCH-013, and writes the result via ARCH-021. | SYS-002 | Component |
-| ARCH-004 | Implementation Orchestrator | Drives the `/speckit.v-model.implement` flow: loads V-Model artifacts via ARCH-019, gates the run via ARCH-007, applies overlay augmentation via ARCH-011, dispatches to ARCH-005 and ARCH-006, calls ARCH-009 for pre-commit verification, and produces commits via ARCH-018. Aborts on any safety-net failure before the commit phase. | SYS-003 | Component |
-| ARCH-005 | Code Generator | Generates source code into the path declared by each `MOD-NNN` Target Source File. Uses ARCH-010 to splice generated content into existing target files while preserving user regions. Emits `# Implements <ID>` traceability comments in the generated language's comment syntax. | SYS-003 | Component |
-| ARCH-006 | Test Generator | Generates tests at all four V-Model levels (unit / integration / system / acceptance) by reading the corresponding test-plan artifacts (`unit-test.md`, `integration-test.md`, `system-test.md`, `acceptance-plan.md`) and emitting test files into the project's existing test directories via ARCH-021. | SYS-003 | Component |
-| ARCH-007 | Pre-Implementation Gate Coordinator | Composes the existing deterministic scripts (`build-matrix.sh`, the five `validate-*-coverage.sh` scripts) by invoking each via ARCH-020, aggregating their JSON output into a single `GateResult`, and returning it to ARCH-004. Introduces no new gating logic. | SYS-004 | Component |
-| ARCH-008 | Additive Enrichment Encoder | Layers V-Model traceability metadata onto canonical spec-kit-core artifacts as HTML comments and optional Markdown sections. Provides `embed_enrichment(plan_doc, metadata)` for plan-style outputs and `embed_traceability_comments(tasks_doc, traces)` for task-style outputs. | SYS-005 | Service |
-| ARCH-009 | Hallucination Guard | Pre-commit verification module. Scans every `// Implements <ID>` (or language equivalent) comment in the generated source set, confirms each referenced ID exists in the V-Model artifact set loaded by ARCH-019, and returns `{valid, hallucinations[]}` to ARCH-004. | SYS-006 | Service |
-| ARCH-010 | Source Region Splicer | Demarcates and splices V-Model-managed regions inside generated source files using language-appropriate marker comments. Detects overlapping markers and aborts with a diff report. Used by ARCH-005. | SYS-007 | Component |
-| ARCH-011 | Domain Overlay Loader | Loads `v-model-config.yml` (when present) and applies overlay-specific output requirements (e.g., MC/DC obligations for DO-178C Level A, ASIL-driven test depth for ISO 26262) to the generation plan consumed by ARCH-005 and ARCH-006. | SYS-008 | Adapter |
-| ARCH-012 | Hazard Task Emitter | Activates when `hazard-analysis.md` is present in the artifact set: raises mitigation-task priority and emits dedicated verification tasks naming each `HAZ-NNN`. Consumed by ARCH-003. | SYS-009 | Component |
-| ARCH-013 | Spec-Kit Schema Validator | Validates `plan.md` and `tasks.md` against spec-kit-core's canonical `plan-template.md` and `tasks-template.md` schemas pinned at v0.7.0 release time. Returns `{valid, errors[]}`. Owns the round-trip property. | SYS-010 | Library |
-| ARCH-014 | Reduced-Enrichment Fallback | Detects upstream artifacts (e.g., a `plan.md` produced by `speckit.plan`) that lack V-Model enrichment metadata and falls back to populating downstream traceability from the V-Model artifact set directly. Enables the Hybrid path. | SYS-010 | Component |
-| ARCH-015 | Hook Registrar | Writes hook entries into `.specify/extensions.yml` registering `before_implement` / `after_implement` to invoke `v-model.trace` and `after_specify` to invoke `v-model.requirements`. Modifies registrations only — never the hook infrastructure itself. | SYS-011 | Adapter |
-| ARCH-016 | Structured Summary Reporter | Renders a machine-readable stdout summary (inputs read / outputs produced / artifacts skipped / warnings) in the existing `v-model.test-results` / `v-model.audit-report` summary conventions. Always emits, even on failure paths. | SYS-012 | Component |
-| ARCH-017 | Quality Compliance Harness | Computes four-stack coverage (BATS, Pester, structural eval, LLM eval) by invoking the existing test harnesses via ARCH-020 and gates merge on 100% coverage. Also runs scope-guardrail audits (rejects orchestrator/sandbox additions) and dogfood-discipline checks. | SYS-013 | Utility |
-| ARCH-018 | Commit Annotator | Suffixes git commit messages with the comma-separated list of V-Model identifiers fulfilled by the change. Invokes Git via ARCH-020 (subprocess to `git commit -m`). Best-effort: warns on failure, commit still proceeds. | SYS-014 | Component |
-| ARCH-019 | V-Model Artifact Reader | `[CROSS-CUTTING]` — Loads and parses every V-Model artifact in `specs/<feature>/v-model/` (Markdown + HTML-comment metadata + table extraction). Provides a stable in-memory representation to every consumer. **Rationale:** every command reads the same artifact set; centralising the parser prevents per-command drift. | [CROSS-CUTTING] — shared parser for V-Model Markdown + HTML-comment grammar; consumed by ARCH-001, ARCH-003, ARCH-004, ARCH-007, ARCH-009, ARCH-014. Drift in parsing rules across commands would directly violate REQ-NF-003. | Library |
-| ARCH-020 | Subprocess Runner | `[CROSS-CUTTING]` — Invokes external scripts (`build-matrix.sh`, `validate-*-coverage.sh`, BATS, Pester, eval harnesses) and the test runners. Captures stdout/stderr and exit codes; surfaces JSON output transparently. **Rationale:** required by REQ-CN-002 (no new wrapper script) — all gate logic stays in the existing scripts; this module is a thin invocation surface only. | [CROSS-CUTTING] — required by REQ-CN-002; consumed by ARCH-007, ARCH-017, ARCH-018. | Utility |
-| ARCH-021 | Filesystem Writer | `[CROSS-CUTTING]` — Atomic file-write primitive (write-to-tmp + rename) used by ARCH-002, ARCH-005, ARCH-006, ARCH-010, ARCH-015. **Rationale:** atomicity is what makes failed runs leave the filesystem in a consistent state; without it a partial write could corrupt a target source file (REQ-022 violation). | [CROSS-CUTTING] — atomic-write infrastructure required by every artifact-emitting module. | Utility |
+| ARCH ID | Name | Description | Parent System Components | Type | Classification |
+|---------|------|-------------|--------------------------|------|----------------|
+| ARCH-001 | Plan Synthesis Orchestrator | LLM section in `commands/plan.md` §Execution Flow that drives `/speckit.v-model.plan`: invokes `setup-plan.sh`, reads V-Model artifacts as Markdown, applies enrichment via ARCH-008, validates the assembled `plan.md` via ARCH-013, and emits the canonical artifact set per ARCH-002. Reports the run via ARCH-016. | SYS-001 | Prompt | NEW-PROMPT-SECTION |
+| ARCH-002 | Canonical Artifact Emitter | LLM section in `commands/plan.md` §Output Artifacts that names every canonical spec-kit-core output (`plan.md`, `data-model.md`, `contracts/`, `quickstart.md`, `research.md`) and the inline 3-line `mktemp` + `mv` write pattern the LLM must use. | SYS-001 | Prompt | NEW-PROMPT-SECTION |
+| ARCH-003 | Tasks Synthesis Orchestrator | LLM section in `commands/tasks.md` §Execution Flow that drives `/speckit.v-model.tasks`: reads V-Model artifacts plus any `plan.md` (V-Model-enriched or core-only), generates the TDD-ordered task list, applies hazard enrichment via ARCH-012, embeds traceability comments via ARCH-008, validates against the canonical schema via ARCH-013, and writes the result inline. | SYS-002 | Prompt | NEW-PROMPT-SECTION |
+| ARCH-004 | Implementation Orchestrator | LLM section in `commands/implement.md` §Execution Flow that drives `/speckit.v-model.implement`: invokes `check-prerequisites.sh`, runs the gate via ARCH-007, dispatches code generation (ARCH-005) and test generation (ARCH-006), runs the hallucination guard via ARCH-009 before any commit, and produces commits annotated by ARCH-018. Aborts on any safety-net failure before the commit phase. | SYS-003 | Prompt | NEW-PROMPT-SECTION |
+| ARCH-005 | Code Generator | LLM section in `commands/implement.md` §Code Generation + §Traceability Comments that instructs the LLM to emit source code into the path declared by each `MOD-NNN` Target Source File, splice it through ARCH-010, and stamp every generated region with a language-appropriate `Implements <ID>` comment. | SYS-003 | Prompt | NEW-PROMPT-SECTION |
+| ARCH-006 | Test Generator | LLM section in `commands/implement.md` §Test Generation + §Test Levels that instructs the LLM to emit tests at all four V-Model levels (unit / integration / system / acceptance) into the project's existing test directories, sourced from the corresponding `unit-test.md`, `integration-test.md`, `system-test.md`, `acceptance-plan.md` artifacts. | SYS-003 | Prompt | NEW-PROMPT-SECTION |
+| ARCH-007 | Pre-Implementation Gate | `scripts/bash/run-v-model-gate.sh <feature-dir>` (PLANNED; ~30 lines). Composes `build-matrix.sh` + `validate-requirement-coverage.sh` + `validate-system-coverage.sh` + `validate-architecture-coverage.sh` + `validate-module-coverage.sh` + `validate-hazard-coverage.sh`. Exits 0 only when every inner check exits 0; introduces no new gating logic. | SYS-004 | Shell | NEW-SHELL |
+| ARCH-008 | Additive Enrichment Encoder | LLM section in `commands/plan.md` §Enrichment + `commands/tasks.md` §Traceability that instructs the LLM to layer V-Model traceability metadata onto canonical spec-kit-core artifacts as HTML comments and optional Markdown sections, never modifying canonical sections. | SYS-005 | Prompt | NEW-PROMPT-SECTION |
+| ARCH-009 | Hallucination Guard | `scripts/bash/validate-implements-ids.sh <feature-dir>` (PLANNED; `grep`+`awk`, ~80 lines). Scans every `Implements <ID>` (or language-equivalent) comment in the generated source set, confirms each referenced ID exists in the V-Model artifact set, exits 0 only when none are unknown. | SYS-006 | Shell | NEW-SHELL |
+| ARCH-010 | Source Region Splicer | `scripts/bash/splice-managed-regions.sh <target-file> <generated-content> <language>` (PLANNED; `awk`, ~85 lines). Demarcates and splices V-Model-managed regions inside generated source files using language-appropriate marker comments; aborts non-zero on overlapping markers with a diff report on stderr. | SYS-007 | Shell | NEW-SHELL |
+| ARCH-011 | Domain Overlay Loader | LLM section in `commands/implement.md` §Domain Overlay that activates when `v-model-config.yml` is present at the repository root: reads the `domain:` value (e.g., `automotive`, `medical`, `aerospace`) and adjusts code-generation and test-generation prompts accordingly (additive overlay only — never overrides base instructions). When the file is absent, no overlay is loaded and base behavior applies. | SYS-008 | Prompt | NEW-PROMPT-SECTION |
+| ARCH-012 | Hazard Task Emitter | LLM section in `commands/tasks.md` §Hazard Enrichment that activates when `hazard-analysis.md` is present: raises mitigation-task priority and emits dedicated verification tasks naming each `HAZ-NNN`. | SYS-009 | Prompt | NEW-PROMPT-SECTION |
+| ARCH-013 | Schema Validator | `scripts/bash/validate-core-schema.sh <file> --plan|--tasks` (PLANNED; `grep`, ~50 lines). Validates `plan.md` and `tasks.md` against spec-kit-core's canonical `plan-template.md` and `tasks-template.md` schemas pinned at v0.7.0. Exit 0 ⇔ every required section present in order. | SYS-010 | Shell | NEW-SHELL |
+| ARCH-014 | Reduced-Enrichment Fallback | LLM section in `commands/tasks.md` §Hybrid Path Detection that instructs the LLM to detect upstream artifacts (e.g., a `plan.md` produced by `speckit.plan`) lacking V-Model enrichment metadata and fall back to populating downstream traceability from the V-Model artifact set directly. | SYS-010 | Prompt | NEW-PROMPT-SECTION |
+| ARCH-015 | Hook Registrar | Three YAML entries in `extension.yml` (`before_implement` → `v-model.gate`, `after_implement` → `v-model.trace`, `after_specify` → `v-model.requirements`). Registration is performed by Spec Kit Core's `CommandRegistrar` in `src/specify_cli/extensions.py`; this feature ships no new registration code. | SYS-011 | Config | REUSE-CORE |
+| ARCH-016 | Structured Summary Reporter | `§Structured Summary` section in each of `commands/plan.md`, `commands/tasks.md`, `commands/implement.md` that instructs the LLM to print a machine-readable stdout summary (inputs read / outputs produced / artifacts skipped / warnings / fatal errors) using the existing `v-model.test-results` / `v-model.audit-report` summary grammar. Always emitted, even on failure. | SYS-012 | Prompt | NEW-PROMPT-SECTION |
+| ARCH-017 | Quality Compliance Harness | LLM section in `commands/implement.md` §Quality Compliance that instructs the LLM to invoke the existing four-stack test harnesses (BATS, Pester, structural eval, LLM eval) via `bash`, gate merge on 100% coverage, and run scope-guardrail and dogfood-discipline audits. | SYS-003 | Prompt | NEW-PROMPT-SECTION |
+| ARCH-018 | Commit Annotator | LLM section in `commands/implement.md` §Commit Annotation that instructs the LLM to suffix git commit messages with the comma-separated list of V-Model identifiers fulfilled by the change. Best-effort: warns on annotation failure, commit still proceeds. | SYS-014 | Prompt | NEW-PROMPT-SECTION |
+| ARCH-019 | V-Model Artifact Reader (Deferred) | `[CROSS-CUTTING] [DEFERRED]` — the LLM reads V-Model Markdown artifacts natively; no runtime parser is shipped. Recorded for traceability only; no functional contract. | [CROSS-CUTTING] [DEFERRED] | Note | DROP-recharacterized |
+| ARCH-020 | Subprocess Runner (Deferred) | `[CROSS-CUTTING] [DEFERRED]` — shell scripts invoke other scripts via `bash` directly; the allowlist is the contents of `scripts/bash/`. No runtime subprocess module exists. Recorded for traceability only; no functional contract. | [CROSS-CUTTING] [DEFERRED] | Note | DROP-recharacterized |
+| ARCH-021 | Filesystem Writer (Deferred) | `[CROSS-CUTTING] [DEFERRED]` — atomic writes are realised by the inline 3-line `mktemp` + `mv` pattern used directly in shell scripts. No runtime writer module exists. Recorded for traceability only; no functional contract. | [CROSS-CUTTING] [DEFERRED] | Note | DROP-recharacterized |
 
 ## Process View — Dynamic Behavior (Kruchten 4+1)
 
-**Concurrency Model:** Single-threaded sequential per command invocation. The
-bridge commands run as one-shot CLI processes; there is no internal
-concurrency, no thread pool, no event loop, and no actor model. External
-subprocesses invoked via ARCH-020 (e.g., `build-matrix.sh`) execute
-sequentially in the order shown in the diagrams.
+**Concurrency Model:** Single-shell sequential per command invocation.
+The bridge commands run as one-shot LLM-driven processes; there is no
+internal concurrency, no thread pool, no event loop. Shell scripts
+invoked from the LLM (e.g., `run-v-model-gate.sh`) execute sequentially
+in the order shown.
 
-**Synchronization Points:** Filesystem only. ARCH-021 provides atomic-write
-semantics (write-to-tmp, then rename) — this is the only synchronization
-primitive used. No in-process mutexes, semaphores, or barriers exist.
+**Synchronization Points:** None at the process level. Each script that
+writes a file uses the inline `mktemp` + `mv` pattern. The
+concurrent-write concern (SYS-013) is documented below as a paradigm-level
+deferred risk note (see §Concurrent-Write Safety — Deferred Risk);
+concurrent runs against the same feature directory are not supported.
 
 **Execution-order constraints:** Hard ordering between (a) gate before
-generation (ARCH-007 strictly precedes ARCH-005 and ARCH-006), (b)
-generation before verification (ARCH-009 strictly precedes ARCH-018), and
-(c) verification before commit (the `git commit` invocation in ARCH-018 is
-gated on a passing ARCH-009 result).
+generation (ARCH-007 strictly precedes ARCH-005 / ARCH-006), (b)
+generation before verification (ARCH-009 strictly precedes ARCH-018),
+and (c) verification before commit (the `git commit` step in ARCH-018
+is gated on ARCH-009 exiting 0).
 
 ### Interaction: Plan Synthesis (`/speckit.v-model.plan`)
 
 ```mermaid
 sequenceDiagram
     participant CLI as User CLI
-    participant A1 as ARCH-001 Plan Orch.
-    participant A19 as ARCH-019 Artifact Reader
-    participant A8 as ARCH-008 Enrichment Encoder
-    participant A13 as ARCH-013 Schema Validator
-    participant A2 as ARCH-002 Artifact Emitter
-    participant A21 as ARCH-021 FS Writer
-    participant A16 as ARCH-016 Summary Reporter
+    participant LLM as LLM (commands/plan.md)
+    participant Core as setup-plan.sh (Spec Kit Core)
+    participant Schema as validate-core-schema.sh
+    participant FS as Filesystem
 
-    CLI->>A1: invoke(/speckit.v-model.plan)
-    A1->>A19: load_artifacts(feature_dir)
-    A19-->>A1: ArtifactSet
-    A1->>A8: embed_enrichment(canonical_plan, metadata)
-    A8-->>A1: enriched_plan
-    A1->>A13: validate_plan_schema(enriched_plan)
-    A13-->>A1: {valid: true}
-    A1->>A2: emit_all(canonical_outputs)
-    A2->>A21: atomic_write(plan.md, ...)
-    A21-->>A2: ok
-    A2-->>A1: ok
-    A1->>A16: emit_summary(run_result)
-    A16-->>CLI: stdout summary
-    A1-->>CLI: exit 0
+    CLI->>LLM: /speckit.v-model.plan
+    LLM->>Core: bash setup-plan.sh
+    Core-->>LLM: skeleton paths (stdout)
+    LLM->>FS: read V-Model artifacts (Markdown, native)
+    FS-->>LLM: artifact contents
+    Note over LLM: §Enrichment (ARCH-008): layer<br/>HTML-comment metadata
+    LLM->>Schema: bash validate-core-schema.sh plan.md --plan
+    Schema-->>LLM: exit 0
+    LLM->>FS: mktemp + mv → plan.md, data-model.md, contracts/, quickstart.md, research.md
+    FS-->>LLM: ok
+    Note over LLM: §Structured Summary (ARCH-016)
+    LLM-->>CLI: stdout summary, exit 0
 ```
 
 ### Interaction: Implementation Pipeline (`/speckit.v-model.implement`)
@@ -138,313 +165,324 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant CLI as User CLI
-    participant A4 as ARCH-004 Impl. Orch.
-    participant A19 as ARCH-019 Artifact Reader
-    participant A7 as ARCH-007 Gate Coord.
-    participant A20 as ARCH-020 Subprocess Runner
-    participant A11 as ARCH-011 Overlay Loader
-    participant A5 as ARCH-005 Code Gen
-    participant A10 as ARCH-010 Region Splicer
-    participant A6 as ARCH-006 Test Gen
-    participant A9 as ARCH-009 Hallucination Guard
-    participant A18 as ARCH-018 Commit Annotator
+    participant LLM as LLM (commands/implement.md)
+    participant Pre as check-prerequisites.sh (Spec Kit Core)
+    participant Gate as run-v-model-gate.sh
+    participant Splice as splice-managed-regions.sh
+    participant Guard as validate-implements-ids.sh
+    participant FS as Filesystem
+    participant Git as git commit
 
-    CLI->>A4: invoke(/speckit.v-model.implement)
-    A4->>A19: load_artifacts(feature_dir)
-    A19-->>A4: ArtifactSet
-    A4->>A7: evaluate_gate(feature_dir)
-    A7->>A20: run(build-matrix.sh, validate-*.sh)
-    A20-->>A7: exit codes + JSON gap reports
-    A7-->>A4: GateResult{passed: true}
-    A4->>A11: apply_overlay(generation_plan, config)
-    A11-->>A4: augmented_plan
-    A4->>A5: generate_code(plan)
-    A5->>A10: splice_managed_regions(target, content)
-    A10-->>A5: final_content
-    A5-->>A4: file_set
-    A4->>A6: generate_tests(plan)
-    A6-->>A4: test_set
-    A4->>A9: verify_ids(file_set ∪ test_set, vmodel_id_set)
-    A9-->>A4: VerifyResult{valid: true}
-    A4->>A18: annotate_commit(message, ids)
-    A18-->>A4: ok
-    A4-->>CLI: exit 0
+    CLI->>LLM: /speckit.v-model.implement
+    LLM->>Pre: bash check-prerequisites.sh
+    Pre-->>LLM: exit 0
+    LLM->>Gate: bash run-v-model-gate.sh <feature-dir>
+    Gate-->>LLM: exit 0 (else abort, no generation)
+    Note over LLM: §Code Generation (ARCH-005)<br/>§Test Generation (ARCH-006)
+    LLM->>Splice: bash splice-managed-regions.sh <target> <content> <lang>
+    Splice-->>LLM: spliced content (stdout)
+    LLM->>FS: mktemp + mv → source/test files
+    FS-->>LLM: ok
+    LLM->>Guard: bash validate-implements-ids.sh <feature-dir>
+    Guard-->>LLM: exit 0 (else abort, no commit)
+    Note over LLM: §Commit Annotation (ARCH-018)
+    LLM->>Git: git commit -m "<msg> — <id>, <id>, ..."
+    Git-->>LLM: ok
+    LLM-->>CLI: stdout summary, exit 0
 ```
 
-> **Fail-closed exits not shown above for brevity:** every dashed return
-> from ARCH-007 (`passed: false`), ARCH-009 (`valid: false`), or ARCH-010
-> (overlapping markers detected) terminates ARCH-004 with non-zero exit
-> before the next downstream call. No partial commit is ever produced.
+> **Fail-closed exits not shown above for brevity:** any non-zero exit
+> from `run-v-model-gate.sh` (ARCH-007), `splice-managed-regions.sh`
+> (ARCH-010), or `validate-implements-ids.sh` (ARCH-009) terminates
+> the LLM-orchestrated flow with non-zero before the next downstream
+> step. No partial commit is ever produced.
 
 ### Interaction: Hazard-Aware Tasks Synthesis (`/speckit.v-model.tasks`)
 
 ```mermaid
 sequenceDiagram
     participant CLI as User CLI
-    participant A3 as ARCH-003 Tasks Orch.
-    participant A19 as ARCH-019 Artifact Reader
-    participant A14 as ARCH-014 Fallback
-    participant A12 as ARCH-012 Hazard Emitter
-    participant A8 as ARCH-008 Enrichment Encoder
-    participant A13 as ARCH-013 Schema Validator
-    participant A21 as ARCH-021 FS Writer
+    participant LLM as LLM (commands/tasks.md)
+    participant Pre as check-prerequisites.sh (Spec Kit Core)
+    participant Schema as validate-core-schema.sh
+    participant FS as Filesystem
 
-    CLI->>A3: invoke(/speckit.v-model.tasks)
-    A3->>A19: load_artifacts(feature_dir + plan.md)
-    A19-->>A3: ArtifactSet
-    A3->>A14: detect_enrichment(plan.md)
-    A14-->>A3: {enriched: false}  %% e.g. plan from speckit.plan
-    A3->>A3: build_TDD_task_list()
-    A3->>A12: enrich_with_hazards(tasks, hazard_analysis)
-    A12-->>A3: tasks_with_HAZ_verification_tasks
-    A3->>A8: embed_traceability_comments(tasks, traces)
-    A8-->>A3: enriched_tasks
-    A3->>A13: validate_tasks_schema(enriched_tasks)
-    A13-->>A3: {valid: true}
-    A3->>A21: atomic_write(tasks.md)
-    A21-->>A3: ok
-    A3-->>CLI: exit 0
+    CLI->>LLM: /speckit.v-model.tasks
+    LLM->>Pre: bash check-prerequisites.sh
+    Pre-->>LLM: exit 0
+    LLM->>FS: read V-Model artifacts + (optional) plan.md
+    FS-->>LLM: contents
+    Note over LLM: §Hybrid Path Detection (ARCH-014):<br/>plan.md not enriched ⇒ derive from V-Model
+    Note over LLM: build TDD-ordered task list
+    Note over LLM: §Hazard Enrichment (ARCH-012):<br/>emit HAZ-NNN verification tasks
+    Note over LLM: §Traceability (ARCH-008): inject HTML comments
+    LLM->>Schema: bash validate-core-schema.sh tasks.md --tasks
+    Schema-->>LLM: exit 0
+    LLM->>FS: mktemp + mv → tasks.md
+    FS-->>LLM: ok
+    LLM-->>CLI: stdout summary, exit 0
 ```
 
-## Interface View — API Contracts (Kruchten 4+1)
+## Interface View — Contracts (Kruchten 4+1)
 
-> All function-style contracts below are **synchronous, in-process** unless
-> annotated otherwise. The two CLI-edge contracts (ARCH-001 / ARCH-003 /
-> ARCH-004 entry points) are invoked as one-shot subprocesses by the spec-kit
-> CLI host.
+> Three contract shapes are used in this feature:
+>
+> - **Shell** — `scripts/bash/<name>.sh <args>` → exit 0 on success,
+>   non-zero on failure; stdout is a documented schema; stderr carries
+>   diagnostic text.
+> - **Prompt** — a named section in `commands/<name>.md`. The contract
+>   is encoded as preconditions / postconditions / expected sub-sections
+>   the LLM must produce, plus the error path it must follow.
+> - **REUSE-CORE** — a YAML configuration entry plus a citation of the
+>   Spec Kit Core component that performs the work.
+> - **DROP-recharacterized** — a one-line deferred-risk note; no
+>   functional contract.
 
-### ARCH-001: Plan Synthesis Orchestrator
+### ARCH-001: Plan Synthesis Orchestrator (Prompt)
 
-| Direction | Name | Type | Format | Constraints |
-|-----------|------|------|--------|-------------|
-| Input | `feature_dir` | path | absolute filesystem path | MUST contain `requirements.md`; other artifacts optional |
-| Input | `arguments` | string | UTF-8 | optional CLI `$ARGUMENTS` |
-| Output | exit code | int | 0 \| 1 | 0 on success (incl. graceful-degradation warnings); 1 on schema-bridge failure |
-| Output | stdout summary | text | ARCH-016 format | always emitted |
-| Output | side-effects | files | written to `feature_dir/` | `plan.md`, `data-model.md`, `contracts/`, `quickstart.md`, `research.md` (subset when optional inputs absent) |
-| Exception | `EnrichmentError` | propagated | text + stack | when ARCH-008 raises |
-| Exception | `SchemaValidationError` | propagated | text + section + line | when ARCH-013 returns `{valid: false}` |
+| Field | Value |
+|-------|-------|
+| Realised By | `commands/plan.md` §Execution Flow |
+| Preconditions | `feature_dir` contains `requirements.md`; Spec Kit Core's `setup-plan.sh` is on `PATH` |
+| Postconditions | Canonical artifact set written to `feature_dir/`; structured summary printed; exit 0 (else exit 1 with summary still emitted) |
+| Expected sections in `commands/plan.md` | §Execution Flow, §Output Artifacts, §Enrichment, §Structured Summary |
+| Error path | Any failure (missing input, validator non-zero, write failure) ⇒ LLM must abort, emit §Structured Summary with `fatal_errors[]` populated, exit 1 |
 
-### ARCH-002: Canonical Artifact Emitter
+### ARCH-002: Canonical Artifact Emitter (Prompt)
 
-| Direction | Name | Type | Format | Constraints |
-|-----------|------|------|--------|-------------|
-| Input | `canonical_outputs` | struct | `{plan, data_model, contracts[], quickstart, research}` | each field optional; absent fields → file not emitted |
-| Output | written paths | list[path] | absolute paths | one entry per file actually written |
-| Exception | `IOError` | from ARCH-021 | text | propagated when atomic write fails |
+| Field | Value |
+|-------|-------|
+| Realised By | `commands/plan.md` §Output Artifacts |
+| Preconditions | In-memory canonical content for each emitted artifact has been validated by ARCH-013 |
+| Postconditions | Each of `plan.md`, `data-model.md`, `contracts/<name>.md`, `quickstart.md`, `research.md` written via inline `mktemp` + `mv`; absent inputs ⇒ artifact skipped (logged in §Structured Summary) |
+| Expected sections in `commands/plan.md` | §Output Artifacts (file list + per-file required-sections + write pattern) |
+| Error path | Write failure ⇒ propagate, emit `fatal_errors[]`, exit 1; no partial overwrite (atomic move semantics) |
 
-### ARCH-003: Tasks Synthesis Orchestrator
+### ARCH-003: Tasks Synthesis Orchestrator (Prompt)
 
-| Direction | Name | Type | Format | Constraints |
-|-----------|------|------|--------|-------------|
-| Input | `feature_dir` | path | absolute filesystem path | MUST contain `requirements.md`; `plan.md` optional |
-| Input | `arguments` | string | UTF-8 | optional CLI `$ARGUMENTS` |
-| Output | exit code | int | 0 \| 1 | 0 on success; 1 on schema or hazard-enrichment failure |
-| Output | side-effect | file | `feature_dir/tasks.md` | always emitted on exit 0 |
-| Exception | `HazardEnrichmentError` | propagated | text | when ARCH-012 raises and `hazard-analysis.md` is present |
-| Exception | `SchemaValidationError` | propagated | text + section + line | when ARCH-013 returns `{valid: false}` |
-| Exception | `UpstreamParseError` | propagated | text + path + line | when ARCH-014 cannot parse the upstream document for enrichment markers; fail-closed per ARCH-014 contract |
+| Field | Value |
+|-------|-------|
+| Realised By | `commands/tasks.md` §Execution Flow |
+| Preconditions | `feature_dir` contains `requirements.md`; `plan.md` may be absent, V-Model-enriched, or speckit-only |
+| Postconditions | `feature_dir/tasks.md` written; structured summary printed; exit 0 (else exit 1 with summary still emitted) |
+| Expected sections in `commands/tasks.md` | §Execution Flow, §Hybrid Path Detection, §Hazard Enrichment, §Traceability, §Structured Summary |
+| Error path | ARCH-013 non-zero ⇒ abort before write; ARCH-014 cannot parse upstream ⇒ abort fail-closed |
 
-### ARCH-004: Implementation Orchestrator
+### ARCH-004: Implementation Orchestrator (Prompt)
 
-| Direction | Name | Type | Format | Constraints |
-|-----------|------|------|--------|-------------|
-| Input | `feature_dir` | path | absolute filesystem path | MUST contain `requirements.md`, `module-design.md`, all four V-Model test plans |
-| Input | `arguments` | string | UTF-8 | optional CLI `$ARGUMENTS` |
-| Output | exit code | int | 0 \| 1 | 1 if any of: gate fails, hallucination detected, region conflict, overlay failure |
-| Output | side-effects | files + commits | written to `MOD-NNN` Target Source Files + git commits | atomically all-or-nothing per run |
-| Exception | `GateFailure` | propagated | gap report | when ARCH-007 returns `{passed: false}` |
-| Exception | `HallucinationDetected` | propagated | list of `(file, line, id)` | when ARCH-009 returns `{valid: false}` |
-| Exception | `RegionConflict` | propagated | diff report | when ARCH-010 detects overlapping markers |
-| Exception | `IOError` | propagated | text + path | from ARCH-021 atomic write at Stage 7; aborts the run during the write phase, after ARCH-009 verification has already passed |
+| Field | Value |
+|-------|-------|
+| Realised By | `commands/implement.md` §Execution Flow |
+| Preconditions | `feature_dir` contains `requirements.md`, `module-design.md`, all four V-Model test plans; gate (ARCH-007) exits 0 |
+| Postconditions | Source + test files written; ARCH-009 exits 0; commit produced via ARCH-018 |
+| Expected sections in `commands/implement.md` | §Execution Flow, §Code Generation, §Traceability Comments, §Test Generation, §Test Levels, §Quality Compliance, §Commit Annotation, §Structured Summary |
+| Error path | Any of {gate, splicer, hallucination guard} non-zero ⇒ abort before commit; emit `fatal_errors[]`, exit 1 |
 
-### ARCH-005: Code Generator
+### ARCH-005: Code Generator (Prompt)
 
-| Direction | Name | Type | Format | Constraints |
-|-----------|------|------|--------|-------------|
-| Input | `generation_plan` | struct | `{modules[], language_per_module, target_paths}` | every entry has a `MOD-NNN` and a Target Source File |
-| Output | `file_set` | list[(path, content)] | absolute paths + UTF-8 content | every emitted file contains ≥1 `// Implements <ID>` (language-appropriate) comment |
-| Exception | `RegionConflict` | from ARCH-010 | propagated | aborts before any file is written |
-| Exception | `IOError` | from ARCH-021 | text + path | raised by ARCH-021 in pipeline Stage 7 (after ARCH-009 returns `valid: true`) when atomic-write of an emitted source file fails (target dir missing, disk full, permission denied); aborts the run during the write phase, after verification has already passed. ARCH-005 itself never writes to disk — the (`path`, `content`) tuples it returns to ARCH-004 are passed through ARCH-009 first, then handed to ARCH-021 for atomic write. This row documents the exception that propagates back through ARCH-005's call frame, not a failure mode of ARCH-005 itself. |
+| Field | Value |
+|-------|-------|
+| Realised By | `commands/implement.md` §Code Generation + §Traceability Comments |
+| Preconditions | Each `MOD-NNN` row in `module-design.md` declares a Target Source File and a target language |
+| Postconditions | Generated content per `MOD-NNN` is spliced through ARCH-010 and stamped with at least one language-appropriate `Implements <ID>` comment per emitted region |
+| Expected sections in `commands/implement.md` | §Code Generation (per-MOD generation rules), §Traceability Comments (comment syntax per language) |
+| Error path | ARCH-010 non-zero (overlapping markers) ⇒ abort before write |
 
-### ARCH-006: Test Generator
+### ARCH-006: Test Generator (Prompt)
 
-| Direction | Name | Type | Format | Constraints |
-|-----------|------|------|--------|-------------|
-| Input | `generation_plan` | struct | as above | also requires test-plan artifacts |
-| Output | `test_set` | list[(path, content)] | absolute paths + UTF-8 content | covers unit / integration / system / acceptance levels |
-| Exception | `MalformedTestPlan` | raised | text + artifact path + line | when an input test-plan artifact (`unit-test.md`, `integration-test.md`, `system-test.md`, `acceptance-plan.md`) cannot be parsed or omits a mandatory field; propagated to ARCH-004 fail-closed |
-| Exception | `IOError` | from ARCH-021 | text + path | raised by ARCH-021 in pipeline Stage 7 (after ARCH-009 returns `valid: true`) when atomic-write of an emitted test file fails (e.g., target directory missing, disk full, permission denied); aborts the run during the write phase, after verification has already passed. ARCH-006 itself never writes to disk — the (`path`, `content`) tuples it returns to ARCH-004 are passed through ARCH-009 first, then handed to ARCH-021 for atomic write. This row documents the exception that propagates back through ARCH-006's call frame, not a failure mode of ARCH-006 itself. |
+| Field | Value |
+|-------|-------|
+| Realised By | `commands/implement.md` §Test Generation + §Test Levels |
+| Preconditions | `unit-test.md`, `integration-test.md`, `system-test.md`, `acceptance-plan.md` are present |
+| Postconditions | Tests emitted at all four V-Model levels into existing test directories; each test references the source `UTP/ITP/STP/ATP` ID |
+| Expected sections in `commands/implement.md` | §Test Generation (per-level rules), §Test Levels (mapping artifact → directory) |
+| Error path | Any test-plan artifact fails to parse for the LLM ⇒ abort fail-closed |
 
-### ARCH-007: Pre-Implementation Gate Coordinator
+### ARCH-007: Pre-Implementation Gate (Shell)
 
-| Direction | Name | Type | Format | Constraints |
-|-----------|------|------|--------|-------------|
-| Input | `feature_dir` | path | absolute path | |
-| Output | `GateResult` | struct | `{passed: bool, gap_report: str, matrices: {A,B,C,D,H: {pct: float, gaps: [...]}}}` | `passed == true` ⟺ every matrix is 100% complete |
-| Side-effect | (none) | — | — | strictly read-only against the feature directory |
-| Exception | `SubprocessFailure` | from ARCH-020 | text + exit code | propagated as `{passed: false}` (fail-closed) |
+| Field | Value |
+|-------|-------|
+| Realised By | `scripts/bash/run-v-model-gate.sh` (PLANNED) |
+| CLI invocation | `bash scripts/bash/run-v-model-gate.sh <feature-dir>` |
+| Input args | `<feature-dir>` (required, absolute or repo-relative path) |
+| Output — exit code | 0 ⇔ every inner script exits 0; 1 otherwise |
+| Output — stdout schema | Concatenated stdout of `build-matrix.sh` + each `validate-*-coverage.sh`; final line `GATE: PASS` or `GATE: FAIL` |
+| Side-effects | None (read-only against `<feature-dir>`) |
+| Error paths | Inner script non-zero ⇒ propagate, exit 1; missing inner script ⇒ exit 1 with diagnostic on stderr |
 
-### ARCH-008: Additive Enrichment Encoder
+### ARCH-008: Additive Enrichment Encoder (Prompt)
 
-| Direction | Name | Type | Format | Constraints |
-|-----------|------|------|--------|-------------|
-| Input | `canonical_doc` | string | canonical Markdown | MUST validate against the corresponding spec-kit-core schema before enrichment |
-| Input | `metadata` | struct | `{trace_chains[], optional_sections{}}` | empty metadata → identity transform |
-| Output | `enriched_doc` | string | canonical Markdown + HTML comments + optional sections | MUST still validate against the spec-kit-core schema after enrichment |
-| Exception | `EnrichmentError` | raised | text | when the input `canonical_doc` is itself non-conformant |
+| Field | Value |
+|-------|-------|
+| Realised By | `commands/plan.md` §Enrichment + `commands/tasks.md` §Traceability |
+| Preconditions | The canonical document being enriched has already been validated by ARCH-013 |
+| Postconditions | Enrichment confined to HTML comments and optional Markdown sections; canonical sections untouched; document still validates by ARCH-013 |
+| Expected sections | §Enrichment (HTML-comment grammar) in `commands/plan.md`; §Traceability (comment placement rules) in `commands/tasks.md` |
+| Error path | Canonical doc fails post-enrichment validation ⇒ abort, do not write |
 
-### ARCH-009: Hallucination Guard
+### ARCH-009: Hallucination Guard (Shell)
 
-| Direction | Name | Type | Format | Constraints |
-|-----------|------|------|--------|-------------|
-| Input | `generated_files` | list[(path, content)] | UTF-8 | parsed for `// Implements <ID>` (and language-equivalent) comments |
-| Input | `vmodel_id_set` | set[string] | canonical IDs from ARCH-019 | the authoritative ID universe; constructed by ARCH-019 from the V-Model artifact set per the SYS-006 algorithm specification (system-design.md § "SYS-006 Algorithm Specification") |
-| Output | `VerifyResult` | struct | `{valid: bool, hallucinations: [{file, line, id}]}` | `valid` ⟺ `len(hallucinations) == 0`. Field `hallucinations[*].file` is the absolute path; `line` is 1-indexed; `id` is the verbatim claimed identifier as it appeared in the comment. |
-| Determinism | (intrinsic) | — | — | ARCH-009 is a pure function of `(generated_files, vmodel_id_set)`; no I/O, no LLM call, no clock, no randomness. Same inputs ⟹ same outputs across hosts and runs. See system-design.md § "SYS-006 Algorithm Specification" for the regex and complexity contract. |
+| Field | Value |
+|-------|-------|
+| Realised By | `scripts/bash/validate-implements-ids.sh` (PLANNED, `grep`+`awk`, ~80 lines) |
+| CLI invocation | `bash scripts/bash/validate-implements-ids.sh <feature-dir>` |
+| Input args | `<feature-dir>` (required); script discovers generated source files and the V-Model artifact set itself |
+| Output — exit code | 0 ⇔ every `Implements <ID>` comment references an ID present in the V-Model artifact set; 1 otherwise |
+| Output — stdout schema | One line per offending occurrence: `<file>:<line>: unknown id <id>`; final line `GUARD: PASS` or `GUARD: FAIL` |
+| Side-effects | None (read-only) |
+| Error paths | Unknown ID found ⇒ exit 1; missing feature dir ⇒ exit 1 |
 
-### ARCH-010: Source Region Splicer
+### ARCH-010: Source Region Splicer (Shell)
 
-| Direction | Name | Type | Format | Constraints |
-|-----------|------|------|--------|-------------|
-| Input | `target_path` | path | absolute path; may not exist | |
-| Input | `generated_content` | string | UTF-8 | belongs inside one V-Model-managed region |
-| Output | `final_content` | string | UTF-8 | preserves all bytes outside V-Model-managed regions |
-| Exception | `RegionConflict` | raised | diff report | when existing markers overlap |
+| Field | Value |
+|-------|-------|
+| Realised By | `scripts/bash/splice-managed-regions.sh` (PLANNED, `awk`, ~85 lines) |
+| CLI invocation | `bash scripts/bash/splice-managed-regions.sh <target-file> <generated-content> <language>` |
+| Input args | `<target-file>` (path, may not exist), `<generated-content>` (path to file containing generated region), `<language>` (one of `bash`, `pwsh`, `python`, `js`, `ts`, …) |
+| Output — exit code | 0 on clean splice; 1 on overlapping markers |
+| Output — stdout schema | Final spliced content written to stdout; on conflict, no stdout, diff report on stderr |
+| Side-effects | None — caller is responsible for atomic write of stdout |
+| Error paths | Overlapping V-Model markers ⇒ exit 1 with diff report on stderr |
 
-### ARCH-011: Domain Overlay Loader
+### ARCH-011: Domain Overlay Loader (Prompt)
 
-| Direction | Name | Type | Format | Constraints |
-|-----------|------|------|--------|-------------|
-| Input | `generation_plan` | struct | as for ARCH-005/006 | |
-| Input | `domain_config` | struct \| null | parsed YAML | `null` ⟹ identity transform; non-null ⟹ overlay-augmented plan |
-| Output | `augmented_plan` | struct | superset of input | adds e.g. MC/DC obligations, ASIL markers |
-| Exception | `OverlayParseError` | raised | text | propagated to ARCH-004 (fail-closed) |
+| Field | Value |
+|-------|-------|
+| Realised By | `commands/implement.md` §Domain Overlay |
+| Preconditions | None — applies if `v-model-config.yml` is present at repository root, otherwise no overlay |
+| Postconditions | Code- and test-generation prompts are augmented (additively only) per the `domain:` value (e.g., `automotive`, `medical`, `aerospace`); base instructions are never overridden |
+| Expected sections in `commands/implement.md` | §Domain Overlay (file-presence check + per-domain prompt augmentation rules) |
+| Side-effects | None at this contract's level — augmented prompts feed ARCH-005 / ARCH-006 |
+| Error path | `v-model-config.yml` present but malformed (unparseable YAML, missing `domain:` key) ⇒ abort fail-closed with non-zero exit |
 
-### ARCH-012: Hazard Task Emitter
+### ARCH-012: Hazard Task Emitter (Prompt)
 
-| Direction | Name | Type | Format | Constraints |
-|-----------|------|------|--------|-------------|
-| Input | `tasks` | list[Task] | TDD-ordered task list | |
-| Input | `hazard_analysis` | parsed `hazard-analysis.md` | struct | absent ⟹ identity transform (early return) |
-| Output | `enriched_tasks` | list[Task] | augmented | adds verification tasks per `HAZ-NNN`; raises priority on mitigation tasks |
-| Exception | `MalformedHazardAnalysis` | raised | text + line | when the input fails parse |
+| Field | Value |
+|-------|-------|
+| Realised By | `commands/tasks.md` §Hazard Enrichment |
+| Preconditions | `hazard-analysis.md` is present in `feature_dir` |
+| Postconditions | TDD task list contains one verification task per `HAZ-NNN`; mitigation tasks have raised priority |
+| Expected sections in `commands/tasks.md` | §Hazard Enrichment (priority-raise rule + verification-task template) |
+| Error path | `hazard-analysis.md` malformed ⇒ abort fail-closed |
 
-### ARCH-013: Spec-Kit Schema Validator
+### ARCH-013: Schema Validator (Shell)
 
-| Direction | Name | Type | Format | Constraints |
-|-----------|------|------|--------|-------------|
-| Input | `doc` | string | canonical Markdown | schema is selected by call site (`validate_plan_schema` or `validate_tasks_schema`) |
-| Output | `ValidationResult` | struct | `{valid: bool, errors: [{section, line, message}]}` | strict against the pinned spec-kit-core schema |
-| Output | `pinned_version` | string | semver | reported in run summary |
-| Exception | `SchemaValidationError` | raised | text + section + line | wraps `ValidationResult` when callers prefer exception-style flow (ARCH-001, ARCH-003); equivalent to `ValidationResult{valid: false}` and carries the same error list. See ARCH-001 § Interface View "SchemaValidationError" exception row for the propagated semantics. |
-| Error-recovery | (none — fail-closed) | — | — | ARCH-013 NEVER attempts to mutate, repair, or downgrade `doc`. Callers MUST abort on any non-`valid` result and MUST NOT invoke ARCH-002 / ARCH-021 to write a non-conformant artifact. The reduced-enrichment fallback (ARCH-014) is a SEPARATE upstream-document path and does NOT bypass ARCH-013 on the output side. |
+| Field | Value |
+|-------|-------|
+| Realised By | `scripts/bash/validate-core-schema.sh` (PLANNED, `grep`, ~50 lines) |
+| CLI invocation | `bash scripts/bash/validate-core-schema.sh <file> --plan\|--tasks` |
+| Input args | `<file>` (path to `plan.md` or `tasks.md`); `--plan` or `--tasks` selects the pinned schema |
+| Output — exit code | 0 ⇔ every required section of the v0.7.0 pinned schema is present in canonical order; 1 otherwise |
+| Output — stdout schema | One line per missing/out-of-order section: `<section>: MISSING` / `<section>: OUT_OF_ORDER`; final line `SCHEMA: PASS` (with `pinned_version=v0.7.0`) or `SCHEMA: FAIL` |
+| Side-effects | None (read-only) |
+| Error paths | Required section missing or out of order ⇒ exit 1; never mutates `<file>` |
 
-### ARCH-014: Reduced-Enrichment Fallback
+### ARCH-014: Reduced-Enrichment Fallback (Prompt)
 
-| Direction | Name | Type | Format | Constraints |
-|-----------|------|------|--------|-------------|
-| Input | `upstream_doc` | string | canonical Markdown | e.g. a `plan.md` |
-| Output | `EnrichmentReport` | struct | `{enriched: bool, missing_metadata_keys: [str]}` | `enriched: false` ⟹ ARCH-003 / ARCH-004 will populate from V-Model artifacts directly |
-| Exception | `UpstreamParseError` | raised | text + path + line | when `upstream_doc` is not valid UTF-8 Markdown or cannot be parsed for enrichment markers (truncated input, unexpected schema variant, non-UTF-8 byte sequence); propagated to ARCH-003 fail-closed |
-| Error-recovery | (none — fail-open on metadata absence) | — | — | a successfully parsed `upstream_doc` whose enrichment metadata is merely absent yields `EnrichmentReport{enriched: false, missing_metadata_keys: [...]}`; this is NOT an error and the Hybrid path proceeds via the fallback branch in ARCH-003 / ARCH-004. Only structural parse failure raises `UpstreamParseError`. |
+| Field | Value |
+|-------|-------|
+| Realised By | `commands/tasks.md` §Hybrid Path Detection |
+| Preconditions | A `plan.md` exists at `feature_dir/plan.md` |
+| Postconditions | If V-Model enrichment markers absent ⇒ LLM derives traceability from V-Model artifacts directly (Hybrid path, REQ-028); if present ⇒ LLM consumes them as-is |
+| Expected sections in `commands/tasks.md` | §Hybrid Path Detection (decision rule + fallback procedure) |
+| Error path | Upstream `plan.md` cannot be parsed at all ⇒ abort fail-closed |
 
-### ARCH-015: Hook Registrar
+### ARCH-015: Hook Registrar (REUSE-CORE)
 
-| Direction | Name | Type | Format | Constraints |
-|-----------|------|------|--------|-------------|
-| Input | `extensions_yml_path` | path | `.specify/extensions.yml` | MUST exist; only registrations are written |
-| Output | `WriteResult` | struct | `{added: int, skipped_existing: int}` | idempotent — re-runs do not duplicate entries |
-| Exception | `IOError` | from ARCH-021 | text | propagated |
+| Field | Value |
+|-------|-------|
+| Realised By | YAML entries in `extension.yml`; registration handled by `CommandRegistrar` in Spec Kit Core's `src/specify_cli/extensions.py` |
+| YAML entries | `before_implement: v-model.gate`, `after_implement: v-model.trace`, `after_specify: v-model.requirements` |
+| Preconditions | `extension.yml` exists at the project root; Spec Kit Core present (provides `CommandRegistrar`) |
+| Postconditions | The three hooks are registered idempotently on next CLI invocation; re-runs do not duplicate entries |
+| Side-effects | None at this feature's level — registration is performed by core |
+| Error path | Schema-invalid YAML ⇒ core's `CommandRegistrar` rejects; this feature contributes only the YAML payload |
 
-### ARCH-016: Structured Summary Reporter
+### ARCH-016: Structured Summary Reporter (Prompt)
 
-| Direction | Name | Type | Format | Constraints |
-|-----------|------|------|--------|-------------|
-| Input | `run_result` | struct | `{inputs_read[], outputs_produced[], artifacts_skipped[], warnings[], fatal_errors[]}` | |
-| Output | stdout text | text | `v-model.test-results` / `v-model.audit-report` summary grammar | always emitted, even on failure |
+| Field | Value |
+|-------|-------|
+| Realised By | §Structured Summary section in each of `commands/plan.md`, `commands/tasks.md`, `commands/implement.md` |
+| Preconditions | None — emitted on every code path, including failure |
+| Postconditions | stdout contains `inputs_read[]`, `outputs_produced[]`, `artifacts_skipped[]`, `warnings[]`, `fatal_errors[]` per the `v-model.test-results` / `v-model.audit-report` summary grammar |
+| Expected sections | §Structured Summary in each command file (identical grammar across the three) |
+| Error path | n/a — the summary itself is the error reporting surface |
 
-### ARCH-017: Quality Compliance Harness
+### ARCH-017: Quality Compliance Harness (Prompt)
 
-| Direction | Name | Type | Format | Constraints |
-|-----------|------|------|--------|-------------|
-| Input | `feature_dir` | path | absolute path | |
-| Output | `CoverageReport` | struct | `{bats: pct, pester: pct, structural_eval: pct, llm_eval: pct, merge_gate: "allow"\|"block"}` | `merge_gate == "allow"` ⟺ every harness reports 100% |
-| Output | `AuditReport` | struct | `{deferred_capability_violations: [], dogfood_discipline_ok: bool}` | for REQ-CN-003 / REQ-CN-004 audit steps |
-| Exception | `SubprocessFailure` | from ARCH-020 | text + harness name + exit code | propagated to caller; `merge_gate` left undefined when this is raised — caller must treat as a fail-closed condition equivalent to `merge_gate:"block"`. |
+| Field | Value |
+|-------|-------|
+| Realised By | `commands/implement.md` §Quality Compliance |
+| Preconditions | The four-stack harnesses (BATS, Pester, structural eval, LLM eval) are installed and on `PATH` |
+| Postconditions | Each harness reports 100% on its scope; scope-guardrail audits reject orchestrator/sandbox additions; dogfood-discipline checks pass |
+| Expected sections in `commands/implement.md` | §Quality Compliance (per-harness invocation, merge-gate rule, audit checklists) |
+| Error path | Any harness <100% ⇒ merge-gate `block`; any audit fails ⇒ exit 1 |
 
-### ARCH-018: Commit Annotator
+### ARCH-018: Commit Annotator (Prompt)
 
-| Direction | Name | Type | Format | Constraints |
-|-----------|------|------|--------|-------------|
-| Input | `message` | string | UTF-8 | base commit message |
-| Input | `ids` | list[string] | V-Model identifiers | empty list permitted (warning, no suffix) |
-| Output | `annotated_message` | string | UTF-8 | `<message> — <id>, <id>, ...` (suffix omitted when `ids == []`) |
-| Side-effect | `git commit` | invocation via ARCH-020 | — | exits non-zero only if Git itself fails; annotation failure is a warning, not a hard error |
+| Field | Value |
+|-------|-------|
+| Realised By | `commands/implement.md` §Commit Annotation |
+| Preconditions | ARCH-009 has exited 0; the LLM has the list of V-Model IDs fulfilled by the change |
+| Postconditions | `git commit -m "<message> — <id>, <id>, …"`; empty ID list ⇒ commit proceeds with original message and a warning entry in §Structured Summary |
+| Expected sections in `commands/implement.md` | §Commit Annotation (suffix grammar + best-effort policy) |
+| Error path | `git commit` itself fails ⇒ propagate exit 1; annotation construction failure is a warning, not fatal |
 
-### ARCH-019 [CROSS-CUTTING]: V-Model Artifact Reader
+### ARCH-019: V-Model Artifact Reader (Deferred)
 
-| Direction | Name | Type | Format | Constraints |
-|-----------|------|------|--------|-------------|
-| Input | `feature_dir` | path | absolute path | |
-| Output | `ArtifactSet` | struct | `{requirements, acceptance_plan, system_design, system_test, architecture_design, integration_test, module_design, unit_test, hazard_analysis, traceability_matrix}` | each field nullable; nulls flow through to "graceful degradation" decisions in callers |
-| Output | `vmodel_id_set` | set[string] | union of every REQ/ATP/SCN/SYS/STP/STS/ARCH/ITP/ITS/MOD/UTP/UTS/HAZ ID present | consumed by ARCH-009 |
-| Exception | `MalformedArtifact` | raised | path + reason | propagated as fatal |
+> **`[CROSS-CUTTING] [DEFERRED]`** — The LLM reads V-Model artifacts as
+> Markdown natively; no runtime parser is shipped. Recorded for
+> traceability only; no functional contract.
 
-### ARCH-020 [CROSS-CUTTING]: Subprocess Runner
+### ARCH-020: Subprocess Runner (Deferred)
 
-| Direction | Name | Type | Format | Constraints |
-|-----------|------|------|--------|-------------|
-| Input | `command` | list[string] | argv | first element MUST be a script path the project itself ships (REQ-CN-002 — no new wrapper script) |
-| Input | `cwd` | path | absolute | |
-| Output | `RunResult` | struct | `{exit_code: int, stdout: str, stderr: str}` | UTF-8; binary output rejected |
-| Exception | `SubprocessFailure` | raised | text + exit code | propagated to caller for fail-closed handling |
+> **`[CROSS-CUTTING] [DEFERRED]`** — Shell scripts invoke other shell
+> scripts via `bash` directly; the implicit allowlist is the contents of
+> `scripts/bash/`. No runtime subprocess module exists. Recorded for
+> traceability only; no functional contract.
 
-### ARCH-021 [CROSS-CUTTING]: Filesystem Writer
+### ARCH-021: Filesystem Writer (Deferred)
 
-| Direction | Name | Type | Format | Constraints |
-|-----------|------|------|--------|-------------|
-| Input | `path` | path | absolute path | |
-| Input | `content` | bytes | UTF-8 (typical) | |
-| Output | (side-effect) | file at `path` | atomic | write-to-tmp + rename; failed writes leave the existing file untouched |
-| Exception | `IOError` | raised | text + errno | propagated |
+> **`[CROSS-CUTTING] [DEFERRED]`** — Atomic writes are realised by the
+> inline 3-line `mktemp` + `mv` pattern used directly inside shell
+> scripts. No runtime writer module exists. Recorded for traceability
+> only; no functional contract.
 
 ## Data Flow View — Data Transformation Chains (Kruchten 4+1)
 
 ### Data Flow: Requirements → tasks.md (TDD-ordered, hazard-enriched)
 
-| Stage | Module | Input Format | Transformation | Output Format |
-|-------|--------|--------------|----------------|---------------|
-| 1 | ARCH-019 | `requirements.md` (Markdown) + `module-design.md` + `hazard-analysis.md` | Parse Markdown tables and HTML-comment metadata | `ArtifactSet` (in-memory struct) |
-| 2 | ARCH-014 | optional upstream `plan.md` | Detect V-Model enrichment presence | `EnrichmentReport` |
-| 3 | ARCH-003 | `ArtifactSet` + `EnrichmentReport` | Build TDD-ordered task list (unit-tests → impl → integration-tests → system-tests → acceptance-tests) | `list[Task]` (in-memory) |
-| 4 | ARCH-012 | `list[Task]` + `hazard_analysis` | Raise mitigation-task priorities; emit verification tasks per `HAZ-NNN` | `list[Task]` (enriched) |
-| 5 | ARCH-008 | `list[Task]` + `trace_chains` | Inject `<!-- traces-to: MOD → ARCH → SYS → REQ -->` HTML comments | canonical Markdown with HTML-comment enrichment |
-| 6 | ARCH-013 | enriched canonical Markdown | Validate against `tasks-template.md` schema (pinned at v0.7.0) | `ValidationResult` |
-| 7 | ARCH-021 | enriched canonical Markdown | Atomic write | `tasks.md` on disk |
+| Stage | Actor | Input Format | Transformation | Output Format |
+|-------|-------|--------------|----------------|---------------|
+| 1 | LLM (commands/tasks.md) | `requirements.md` + `module-design.md` + (optional) `hazard-analysis.md` (Markdown) | Read natively | in-context artifact set |
+| 2 | LLM (§Hybrid Path Detection, ARCH-014) | optional upstream `plan.md` | Detect V-Model enrichment presence | enrichment decision (`enriched: true|false`) |
+| 3 | LLM (ARCH-003) | in-context artifact set + decision | Build TDD-ordered task list (unit-tests → impl → integration-tests → system-tests → acceptance-tests) | in-context task list |
+| 4 | LLM (§Hazard Enrichment, ARCH-012) | task list + hazard-analysis | Raise mitigation-task priority; emit `HAZ-NNN` verification tasks | enriched task list |
+| 5 | LLM (§Traceability, ARCH-008) | enriched task list | Inject `<!-- traces-to: MOD → ARCH → SYS → REQ -->` HTML comments | canonical Markdown w/ enrichment |
+| 6 | `validate-core-schema.sh --tasks` (ARCH-013) | canonical Markdown (written to a tmp path) | Grep against pinned v0.7.0 required sections | exit 0 / 1 + section-status report |
+| 7 | LLM (inline `mktemp` + `mv`) | validated canonical Markdown | Atomic write | `tasks.md` on disk |
 
 ### Data Flow: module-design.md MOD entries → source code files
 
-| Stage | Module | Input Format | Transformation | Output Format |
-|-------|--------|--------------|----------------|---------------|
-| 1 | ARCH-019 | `module-design.md` | Parse MOD table (incl. Target Source File field) | `list[ModuleSpec]` |
-| 2 | ARCH-007 | (none — gate inputs are read directly from feature dir) | Compose `build-matrix.sh` + `validate-*-coverage.sh` | `GateResult` (must be `passed: true` to proceed) |
-| 3 | ARCH-011 | `list[ModuleSpec]` + `v-model-config.yml` | Apply overlay (e.g. add MC/DC obligations) | `augmented list[ModuleSpec]` |
-| 4 | ARCH-005 | `augmented list[ModuleSpec]` | Generate code per MOD; render `# Implements <ID>` comments | `list[(path, content)]` |
-| 5 | ARCH-010 | each `(path, content)` + existing file (if any) | Splice generated content into V-Model-managed regions; preserve user content outside | `list[(path, final_content)]` |
-| 6 | ARCH-009 | `list[(path, final_content)]` + `vmodel_id_set` | Verify every `// Implements <ID>` references a real ID | `VerifyResult` (must be `valid: true` to proceed) |
-| 7 | ARCH-021 | `list[(path, final_content)]` | Atomic write | source files on disk |
-| 8 | ARCH-018 | base commit message + `vmodel_id_set` | Append ID suffix; invoke `git commit` | annotated commit in Git history |
+| Stage | Actor | Input Format | Transformation | Output Format |
+|-------|-------|--------------|----------------|---------------|
+| 1 | LLM (commands/implement.md) | `module-design.md` | Read MOD table (incl. Target Source File field) natively | in-context module list |
+| 2 | `run-v-model-gate.sh` (ARCH-007) | feature directory | Compose `build-matrix.sh` + 5× `validate-*-coverage.sh` | exit 0 / 1 + per-matrix gap report |
+| 3 | LLM (§Code Generation, ARCH-005) | module list | Generate code per MOD; render `Implements <ID>` comments | per-MOD `(path, content)` candidates |
+| 4 | `splice-managed-regions.sh` (ARCH-010) | each `(path, content)` + existing target file (if any) | Splice into V-Model-managed regions; preserve user content | spliced content on stdout |
+| 5 | `validate-implements-ids.sh` (ARCH-009) | feature directory after candidates staged | Grep+awk every `Implements <ID>` against the V-Model ID universe | exit 0 / 1 + offending-occurrence list |
+| 6 | LLM (inline `mktemp` + `mv`) | spliced content (gate-passed) | Atomic write | source files on disk |
+| 7 | LLM (§Commit Annotation, ARCH-018) | base commit message + ID list | Append ID suffix; invoke `git commit` | annotated commit in Git history |
 
 ### Error and Abort Paths
 
 | Condition | Effect |
 |-----------|--------|
-| ARCH-013 returns `valid:false` at Stage 6 (tasks flow) | ARCH-003 raises `SchemaValidationError`; Stage 7 NOT executed; no `tasks.md` written. |
-| ARCH-009 returns `valid:false` at Stage 6 (source flow) | ARCH-004 raises `HallucinationDetected`; Stages 7–8 NOT executed; no source files written; no commit produced. |
-| ARCH-021 raises `IOError` at Stage 7 (source flow) | ARCH-004 propagates; no commit at Stage 8; partial files left in tmp namespace per ARCH-021 atomic semantics. |
-| ARCH-007 returns `passed:false` at Stage 2 (source flow) | Upstream caller aborts before Stage 3; no plan/task generation proceeds. |
-| ARCH-014 raises `UpstreamParseError` at Stage 2 (tasks flow) | ARCH-003 propagates fail-closed; Stages 3–7 NOT executed; no `tasks.md` written. |
+| ARCH-013 exits non-zero at Stage 6 (tasks flow) | LLM aborts; Stage 7 NOT executed; no `tasks.md` written. |
+| ARCH-009 exits non-zero at Stage 5 (source flow) | LLM aborts; Stages 6–7 NOT executed; no source files written; no commit produced. |
+| Inline `mv` fails at Stage 6 (source flow) | LLM aborts; no commit at Stage 7; previous file untouched (rename atomicity). |
+| ARCH-007 exits non-zero at Stage 2 (source flow) | LLM aborts before Stage 3; no generation proceeds. |
+| ARCH-014 detects unparseable upstream `plan.md` (tasks flow Stage 2) | LLM aborts fail-closed; Stages 3–7 NOT executed; no `tasks.md` written. |
 
 ---
 
@@ -454,33 +492,49 @@ sequenceDiagram
 
 | Architecture Decision | Quality Characteristic (ISO 25010) | Trade-off Accepted |
 |----------------------|------------------------------------|--------------------|
-| Split orchestration (ARCH-001/003/004) from emission/generation (ARCH-002/005/006) | Maintainability §4.2.7 ↑ (separation of flow from rendering); Testability ↑ (each renderable independently mockable) | Adds one indirection per command invocation; latency cost negligible against I/O / LLM time. |
-| Centralised V-Model Artifact Reader (ARCH-019) as `[CROSS-CUTTING]` | Maintainability §4.2.7 ↑ (single source of parser truth); Compatibility §4.2.4 ↑ (REQ-NF-003 cannot be violated by per-command drift) | Couples every command to one parser version — change requires coordinated update across all callers. |
-| Single-threaded sequential runtime (no thread pool, no event loop) | Reliability §4.2.2 ↑ (deterministic execution); Maintainability §4.2.7 ↑ (no concurrency bugs); supports REQ-025 idempotency | Performance Efficiency §4.2.3 ↓ (cannot parallelise within a run). Acceptable: bridge-command runtime is I/O- and LLM-bound, not CPU-bound. |
-| Subprocess Runner (ARCH-020) for the existing scripts rather than re-implementing gate logic in-process | Maintainability §4.2.7 ↑ (no drift between CI and command); REQ-CN-002 satisfied by construction | Performance §4.2.3 ↓ (subprocess overhead per invocation). Acceptable: subprocess cost is dominated by script work itself. |
-| Splitting SYS-010 into ARCH-013 (strict validator) + ARCH-014 (reduced-enrichment fallback) | Compatibility §4.2.4 ↑ (Hybrid path enabled by REQ-028); Testability ↑ (each path independently exercisable) | Adds one decision point per upstream-artifact ingest; mitigated by clear boundary in the data-flow diagram. |
-| Atomic-write Filesystem Writer (ARCH-021) | Reliability §4.2.2 ↑ (failed runs leave filesystem consistent); supports REQ-022 (no destructive overwrite) | Doubles peak temp-file usage during a run. Acceptable on developer machines and CI. |
-| Hallucination Guard (ARCH-009) as a mandatory pre-commit step inside ARCH-004 | Functional Suitability (Correctness) §4.2.1 ↑ (REQ-NF-002 satisfied by construction); Reliability §4.2.2 ↑ (fail-closed) | Adds one full file scan per run; small constant against generation cost. |
+| LLM-as-orchestrator via `commands/*.md` rather than a coded entry point | Maintainability §4.2.7 ↑ (declarative, versioned with the spec); Compatibility §4.2.4 ↑ (aligns with surrounding spec-kit ecosystem) | Loses static-typing guarantees of a coded orchestrator; mitigated by deterministic shell scripts at every safety-critical step. |
+| Spec Kit Core reuse (`setup-plan.sh`, `check-prerequisites.sh`, `common.sh`) instead of re-implementing bootstrapping | Maintainability §4.2.7 ↑ (zero duplication); Reliability §4.2.2 ↑ (battle-tested code path) | Couples this feature to upstream changes in those scripts; mitigated by the v0.7.0 pin. |
+| Composing existing project gate scripts (ARCH-007 = `run-v-model-gate.sh` over `build-matrix.sh` + 5 validators) instead of new gate logic | Maintainability §4.2.7 ↑ (REQ-CN-002 satisfied by construction); no drift between CI and command | Performance §4.2.3 ↓ (one shell process per inner script). Acceptable: gate runtime is dominated by validator work. |
+| Single-shell sequential runtime (no thread pool, no event loop) | Reliability §4.2.2 ↑ (deterministic execution); Maintainability §4.2.7 ↑ (no concurrency bugs); supports REQ-025 idempotency | Performance Efficiency §4.2.3 ↓ (cannot parallelise within a run). Acceptable: bridge-command runtime is I/O- and LLM-bound. Concurrent-write concern (SYS-013) recorded as a paradigm-level deferred risk note (see §Concurrent-Write Safety — Deferred Risk). |
+| Splitting SYS-010 into ARCH-013 (strict validator script) + ARCH-014 (LLM fallback prompt section) | Compatibility §4.2.4 ↑ (Hybrid path enabled by REQ-028); Testability ↑ (each path independently exercisable) | Adds one decision point per upstream-artifact ingest; documented in `commands/tasks.md` §Hybrid Path Detection. |
+| Inline `mktemp` + `mv` atomic-write pattern (vs. a centralized writer module) | Reliability §4.2.2 ↑ (failed runs leave filesystem consistent; supports REQ-022); Simplicity ↑ (no shared module to evolve) | Pattern is a coding convention enforced by review; mitigated by being a 3-line cliché in every shell script. |
+| Hallucination Guard (ARCH-009) as a mandatory pre-commit shell check | Functional Suitability (Correctness) §4.2.1 ↑ (REQ-NF-002 satisfied by construction); Reliability §4.2.2 ↑ (fail-closed) | Adds one full-tree `grep` per run; small constant against generation cost. |
 
 ### Fitness-for-Purpose Scenario Analysis (ISO/IEC 42030:2019 §6)
 
 | Quality Scenario | Architecture Response (ARCH-NNN) | Risk / Sensitivity Point | Verdict |
 |-----------------|-----------------------------------|--------------------------|---------|
-| Reliability — A run with an incomplete traceability matrix MUST NOT produce code | ARCH-007 (Gate) returns `{passed: false}`; ARCH-004 fail-closed transition before ARCH-005 | Single point of failure: any false negative in `build-matrix.sh` defeats the gate | ✅ Addressed |
-| Reliability — A run that would emit a hallucinated `// Implements <ID>` MUST NOT commit | ARCH-009 (Guard) verifies against `vmodel_id_set` from ARCH-019; ARCH-004 fail-closed before ARCH-018 | Sensitive to ARCH-019 parser bugs that drop a valid ID from the set (would convert valid → false-positive hallucination) | ✅ Addressed |
-| Compatibility — Outputs MUST parse without warning by unmodified spec-kit-core v0.7.0 | ARCH-008 enrichment confined to HTML comments + optional sections; ARCH-013 validates strictly against the pinned schema | Sensitive to upstream `plan-template.md` / `tasks-template.md` drift across spec-kit releases | ✅ Addressed (within v0.7.0) |
-| Compatibility — Hybrid path: a `plan.md` from `speckit.plan` MUST be valid input to `v-model.tasks` | ARCH-014 detects `enriched: false` and signals ARCH-003 to populate traceability from V-Model artifacts directly | Reduced-enrichment outputs may have weaker traceability comments — the trade-off is documented in REQ-028 | ✅ Addressed |
-| Maintainability — A future spec-kit-core schema update MUST be absorbable without changing every command | ARCH-013 isolates the schema contract; only one module needs revision | Sensitive to schema-version pinning hygiene; mitigated by ARCH-013 reporting `pinned_version` in every run summary | ✅ Addressed |
-| Performance Efficiency — A repeat run on identical inputs SHOULD complete in similar time and produce ≥95% structurally identical output | Single-threaded sequential runtime + idempotent ARCH-005/006 + atomic ARCH-021 | No quantitative wall-clock budget specified by requirements; idempotency is the only Performance proxy | ✅ Addressed (qualitatively); no `[ARCH CONCERN]` raised |
-| Security — No sensitive data flows through bridge-command boundaries | Repository-source-only data; no credentials, no secrets in any input or output (see system-design Data Design View note) | If a future requirement introduces credentialed data, ARCH-002 / ARCH-021 would need an encryption-at-rest path | ✅ Addressed (for current requirement set) |
-| Safety — Hazards in upstream artifacts propagate into the task list as raised-priority and verification tasks | ARCH-012 emits `HAZ-NNN` verification tasks; raises mitigation-task priority | Sensitive to `hazard-analysis.md` parse correctness | ✅ Addressed |
+| Reliability — A run with an incomplete traceability matrix MUST NOT produce code | ARCH-007 (`run-v-model-gate.sh`) exits non-zero; LLM (ARCH-004) aborts before ARCH-005 | Single point of failure: any false negative in `build-matrix.sh` defeats the gate | ✅ Addressed |
+| Reliability — A run that would emit a hallucinated `Implements <ID>` MUST NOT commit | ARCH-009 (`validate-implements-ids.sh`) verifies every comment against the V-Model artifact set; LLM (ARCH-004) aborts before ARCH-018 | Sensitive to artifact-set parsing bugs that drop a valid ID (would convert valid → false-positive hallucination) | ✅ Addressed |
+| Compatibility — Outputs MUST parse without warning by unmodified spec-kit-core v0.7.0 | ARCH-008 enrichment confined to HTML comments + optional sections; ARCH-013 grep-validates strictly against the pinned schema | Sensitive to upstream `plan-template.md` / `tasks-template.md` drift across spec-kit releases | ✅ Addressed (within v0.7.0) |
+| Compatibility — Hybrid path: a `plan.md` from `speckit.plan` MUST be valid input to `v-model.tasks` | ARCH-014 detects `enriched: false` and instructs the LLM to derive traceability from V-Model artifacts | Reduced-enrichment outputs may have weaker traceability comments — trade-off documented in REQ-028 | ✅ Addressed |
+| Maintainability — A future spec-kit-core schema update MUST be absorbable without changing every command | ARCH-013 isolates the schema contract; only one shell script needs revision | Sensitive to schema-version pinning hygiene; mitigated by `pinned_version=v0.7.0` reported in every run summary | ✅ Addressed |
+| Performance Efficiency — A repeat run on identical inputs SHOULD complete in similar time and produce ≥95% structurally identical output | Sequential single-shell runtime + idempotent ARCH-005/006 + atomic inline writes | No quantitative wall-clock budget specified by requirements; idempotency is the only Performance proxy | ✅ Addressed (qualitatively); no `[ARCH CONCERN]` raised |
+| Security — No sensitive data flows through bridge-command boundaries | Repository-source-only data; no credentials, no secrets in any input or output | If a future requirement introduces credentialed data, the inline write pattern would need an encryption-at-rest path | ✅ Addressed (for current requirement set) |
+| Safety — Hazards in upstream artifacts propagate into the task list as raised-priority and verification tasks | ARCH-012 (LLM §Hazard Enrichment) emits `HAZ-NNN` verification tasks; raises mitigation-task priority | Sensitive to LLM correctly recognising `hazard-analysis.md` shape | ✅ Addressed |
 
 **`[ARCH CONCERN]` flags raised:** none.
 
 ### Sensitivity and Trade-off Points (Summary)
 
-- **Sensitivity:** spec-kit-core schema pinning (any drift breaks ARCH-013); HTML-comment grammar (any change touches ARCH-008/013/019 simultaneously).
-- **Trade-off:** single-threaded determinism vs. throughput (chose determinism); subprocess-per-script vs. in-process gate logic (chose subprocess for REQ-CN-002).
+- **Sensitivity:** spec-kit-core schema pinning (any drift breaks
+  ARCH-013); HTML-comment grammar (any change touches ARCH-008/013
+  simultaneously).
+- **Trade-off:** LLM-as-orchestrator vs. coded orchestrator (chose
+  declarative for ecosystem alignment); single-shell determinism vs.
+  throughput (chose determinism); composing existing scripts vs.
+  in-process gate logic (chose composition for REQ-CN-002).
+
+### Concurrent-Write Safety — Deferred Risk
+
+> **`[DEFERRED RISK NOTE]` — covers SYS-013.** The bridge commands run
+> as one-shot, single-shell, sequential invocations; there is no
+> concurrency primitive in the architecture. Concurrent runs against
+> the same `feature_dir` are explicitly **not supported** by this
+> release. This note exists for `SYS-013` traceability only; it carries
+> no functional contract and is not assigned an `ARCH-NNN`. Should a
+> future release introduce parallel agent execution, a concrete
+> write-coordination component will need to be added to this design.
 
 ---
 
@@ -489,15 +543,17 @@ sequenceDiagram
 | Metric | Count |
 |--------|-------|
 | Total Architecture Modules (ARCH) | 21 (21 active, 0 deprecated, 0 suspect) |
-| Cross-Cutting Modules | 3 (ARCH-019, ARCH-020, ARCH-021) |
-| Total Parent System Components Covered | 14 / 14 (100%) (active items only) |
-| Modules per Type | Component: 11 \| Service: 2 \| Library: 2 \| Utility: 4 \| Adapter: 2 |
+| NEW-PROMPT-SECTION (LLM prompt sections in `commands/*.md`) | 13 (ARCH-001, 002, 003, 004, 005, 006, 008, 011, 012, 014, 016, 017, 018) |
+| NEW-SHELL (POSIX shell scripts under `scripts/bash/`) | 4 (ARCH-007, 009, 010, 013) |
+| REUSE-CORE (delegates to Spec Kit Core; no new code) | 1 (ARCH-015) |
+| DROP-recharacterized (deferred risk notes; no functional contract) | 3 (ARCH-019, 020, 021) |
+| Total Parent System Components Covered | 14 / 14 (100%) — SYS-013 (Concurrent-Write Safety) is covered as a paradigm-level deferred risk note (see §Concurrent-Write Safety — Deferred Risk), not by a runtime ARCH |
 | Mermaid Diagrams | 3 (Plan Synthesis, Implementation Pipeline, Hazard-Aware Tasks) |
-| Interface Contracts Defined | 21 / 21 (100%) — no black-box modules |
-| **Forward Coverage (SYS→ARCH)** | **100%** |
+| Interface Contracts Defined | 18 / 18 (100%) for active modules; 3 deferred risk notes carry no contract |
+| **Forward Coverage (SYS→ARCH)** | **14 / 14 (100%)** — all SYS components have an owning ARCH or paradigm-level deferred-risk note |
 
 ## Derived Modules
 
-None — every non-cross-cutting module traces to one or more existing
-`SYS-NNN`. The three cross-cutting modules (ARCH-019, ARCH-020, ARCH-021)
-carry explicit `[CROSS-CUTTING]` rationale; none qualify as derived.
+None — every active module traces to one or more `SYS-NNN`. Three
+deferred-risk modules (ARCH-019, ARCH-020, ARCH-021) carry explicit
+`[DEFERRED]` rationale; none qualify as derived.
