@@ -26,4 +26,5 @@ markers = [
     "eval: marks tests as LLM evaluation tests (may require API key)",
     "structural: marks tests as structural validation tests (deterministic)",
     "e2e: marks tests as end-to-end command invocation tests (requires GOOGLE_API_KEY)",
+    "llm_judge: marks tests that invoke an LLM judge (skipped without GOOGLE_API_KEY)",
 ]
