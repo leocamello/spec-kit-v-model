@@ -49,9 +49,14 @@ traceability.
 
 ## ID Schema
 
-- **Integration Test Case**: `ITP-{NNN}` where `NNN` matches the parent
-  ARCH module. One ITP per active ARCH (ARCH-019, ARCH-020, ARCH-021
-  are dropped — their ITPs are preserved as DEFERRED).
+- **Integration Test Case**: `ITP-{NNN}-{LETTER}` where `NNN` matches the
+  parent ARCH module and `LETTER` is a per-ARCH suffix (`A`, `B`, `C`,
+  `D`, ...). Multiple ITPs per ARCH are permitted where a single ARCH
+  needs to be exercised by independent technique groupings (e.g.,
+  ITP-004-A, ITP-004-B, ITP-004-D for ARCH-004's nominal, fault-injection,
+  and idempotency contracts respectively). ARCH-019, ARCH-020, ARCH-021
+  are dropped — their ITPs are preserved as DEFERRED with the canonical
+  `-A` suffix only.
 - **Integration Test Scenario**: `ITS-{NNN}-{LETTER}{#}` — nested under
   the parent ITP, with technique-suffix letter and numeric suffix.
   - **A** = Happy-path / nominal contract
@@ -111,8 +116,7 @@ per-mode coverage *is* the integration-coverage matrix.
     `specs/<feature>/v-model/requirements.md`
   * **When** the test invokes the command via the BATS harness:
     ```bash
-    run bash "$PROJECT_ROOT/scripts/bash/invoke-command.sh" \
-        speckit.v-model.plan --feature-dir "$TEST_TEMP_DIR/specs/001-test"
+    run invoke_command speckit.v-model.plan --feature-dir "$TEST_TEMP_DIR/specs/001-test"
     ```
   * **Then** `[ "$status" -eq 0 ]` and `assert_output --partial "--- v-model run summary ---"`
     and the file `specs/001-test/plan.md` exists and contains the required
@@ -123,8 +127,10 @@ per-mode coverage *is* the integration-coverage matrix.
   * **Given** the same fixture
   * **When** the command runs
   * **Then** `assert_output --partial "validate-core-schema.sh --plan"` (the
-    invocation is logged) and the produced `plan.md` contains every section
-    pinned by the script's heading list (HAZ-024 mitigation)
+    invocation is logged); the deeper assertion that the produced
+    `plan.md` contains every section pinned by the script's heading list
+    (HAZ-024 mitigation) is exercised by ITP-013 (ARCH-013) at the
+    schema-validator boundary.
 
 #### Test Case: ITP-001-B (Fault injection — missing requirements.md produces fail-closed exit)
 
@@ -152,7 +158,7 @@ per-mode coverage *is* the integration-coverage matrix.
 
 * **Integration Scenario: ITS-002-A1** (only `plan.md` emitted when only requirements.md is upstream)
   * **Given** a fixture with only `requirements.md`
-  * **When** `run bash invoke-command.sh speckit.v-model.plan ...`
+  * **When** `run invoke_command speckit.v-model.plan ...`
   * **Then** `[ -f "$dir/plan.md" ]` and `[ ! -f "$dir/data-model.md" ]`
     and `[ ! -d "$dir/contracts" ]` (selective emission per nullable upstream)
 
@@ -194,7 +200,7 @@ per-mode coverage *is* the integration-coverage matrix.
     `architecture-design.md`, `acceptance.md`, `system-test.md`,
     `integration-test.md`, `module-design.md`, `unit-test.md`
     (no `plan.md`)
-  * **When** `run bash invoke-command.sh speckit.v-model.tasks ...`
+  * **When** `run invoke_command speckit.v-model.tasks ...`
   * **Then** `[ "$status" -eq 0 ]` and `[ -f "$dir/tasks.md" ]` and
     `assert_output --partial "tasks emitted"`
 
@@ -231,7 +237,7 @@ per-mode coverage *is* the integration-coverage matrix.
 * **Integration Scenario: ITS-004-A1** (gate passes → code emitted → commit annotated)
   * **Given** a fixture with full V-Model artifacts and a `tasks.md`
     whose every task traces to a real MOD-NNN
-  * **When** `run bash invoke-command.sh speckit.v-model.implement ...`
+  * **When** `run invoke_command speckit.v-model.implement ...`
   * **Then** `[ "$status" -eq 0 ]`, `assert_output --partial "gate: PASS"`,
     the produced source files exist at the MOD-declared target paths, and
     the latest git commit message matches `assert_output --partial "— MOD-"` suffix
@@ -243,16 +249,16 @@ per-mode coverage *is* the integration-coverage matrix.
 **Requirements traced**: REQ-003, REQ-007, REQ-021, REQ-022, HAZ-009
 
 * **Integration Scenario: ITS-004-B1** (gate fails → fail-closed, no source emitted)
-  * **Given** a fixture whose `tasks.md` references an undeclared MOD-099
+  * **Given** a fixture whose `tasks.md` references an undeclared MOD-099 (test-data sentinel — see UTS-013-A2)
   * **When** the command runs
   * **Then** `assert_failure`, `assert_output --partial "gate: FAIL"`,
-    `assert_output --partial "MOD-099"`, and **no** files were created
+    `assert_output --partial "MOD-099"` (test-data sentinel — see UTS-013-A2), and **no** files were created
     under `src/` (REQ-022 fail-closed)
 
 #### Test Case: ITP-004-D (Idempotency — re-run on identical fixture produces no diff)
 
 **Test File**: `tests/system/bridge-commands/implement.bats`
-**Technique**: Fixture-Driven Black-Box + Fault Injection
+**Technique**: Idempotent Re-Run
 **Requirements traced**: REQ-003, REQ-007, REQ-021, REQ-022, HAZ-009
 
 * **Integration Scenario: ITS-004-D1** (idempotent re-run on identical fixture produces no diff)
@@ -396,16 +402,16 @@ per-mode coverage *is* the integration-coverage matrix.
 **Technique**: CLI Contract Testing + Fault Injection
 **Requirements traced**: REQ-008, HAZ-012, HAZ-023
 
-* **Integration Scenario: ITS-009-B1** (hallucinated ID `MOD-999` → exit non-zero + named ID)
-  * **Given** a generated file containing `# Implements MOD-999`
+* **Integration Scenario: ITS-009-B1** (hallucinated ID `MOD-999` → exit non-zero + named ID) (test-data sentinel — see UTS-013-A2)
+  * **Given** a generated file containing `# Implements MOD-999` (test-data sentinel — see UTS-013-A2)
   * **When** the script runs against the same V-Model fixture
-  * **Then** `assert_failure` and `assert_output --partial "HALLUCINATED: MOD-999"`
+  * **Then** `assert_failure` and `assert_output --partial "HALLUCINATED: MOD-999"` (test-data sentinel — see UTS-013-A2)
 
 * **Integration Scenario: ITS-009-B2** (mixed comment styles — Python `#`, JS `//`, both detected)
   * **Given** two files: `a.py` with `# Implements REQ-001` and `b.js`
-    with `// Implements MOD-099`
+    with `// Implements MOD-099` (test-data sentinel — see UTS-013-A2)
   * **When** the script runs
-  * **Then** `assert_failure`, `assert_output --partial "HALLUCINATED: MOD-099"`,
+  * **Then** `assert_failure`, `assert_output --partial "HALLUCINATED: MOD-099"` (test-data sentinel — see UTS-013-A2),
     and REQ-001 is reported as valid (regex covers both comment markers)
 
 ---
@@ -546,6 +552,17 @@ per-mode coverage *is* the integration-coverage matrix.
   * **Given** a fixture `tasks.md` containing the spec-kit-core required tasks-schema sections
   * **When** the script runs in `--tasks` mode
   * **Then** `assert_success` and `assert_output --partial "schema: ok"`
+
+* **Integration Scenario: ITS-013-A3** (`--plan` mode applied to the upstream `plan.md` produced by ITP-001 — moved from ITS-001-A2 per peer-review pass-7)
+  * **Given** the `plan.md` artifact produced by an end-to-end run of
+    `speckit.v-model.plan` (the same fixture used by ITP-001-A1)
+  * **When**
+    ```bash
+    run bash "$SCRIPTS_DIR/validate-core-schema.sh" --plan "$dir/plan.md"
+    ```
+  * **Then** `[ "$status" -eq 0 ]` and the produced `plan.md` contains
+    every section pinned by the script's heading list (HAZ-024
+    mitigation)
 
 #### Test Case: ITP-013-B (Fault injection — missing section and unknown mode produce exit non-zero)
 
@@ -811,9 +828,9 @@ New fixtures needed:
 ### Entry Criteria Check (IEEE 1012:2016 §5.6.1)
 
 - ✅ `architecture-design.md` is current (rewritten on 2026-05-01 per `drift-diff-plan.md`)
-- ✅ Every active `ARCH-NNN` module has at least one `ITP-NNN` test case (18/18 = 100% forward coverage)
-- ✅ All active `ITP-NNN` test cases have at least one `ITS-NNN-X#` executable scenario
-- ✅ DROP'd ARCHs (017, 019, 020, 021) have DEFERRED placeholders preserving traceability IDs
+- ✅ Every active `ARCH-NNN` module has at least one `ITP-NNN-X` test case (18/18 = 100% forward coverage)
+- ✅ All active `ITP-NNN-X` test cases have at least one `ITS-NNN-X#` executable scenario
+- ✅ DROP'd ARCHs (019, 020, 021) have DEFERRED placeholders preserving traceability IDs
 - ✅ Every test scenario uses observable boundaries (stdout / exit code / file system / `extension.yml` content)
 
 **Gap list:** *None* — all active architecture modules are covered.
@@ -825,23 +842,25 @@ New fixtures needed:
 | Metric | Count |
 |--------|-------|
 | Total Architecture Modules (ARCH) | 21 (18 active, 3 DROP) |
-| Active ITPs | 18 |
+| Active ITPs | 30 |
 | DEFERRED ITPs (placeholder, no scenarios) | 3 (ITP-019, ITP-020, ITP-021) |
-| Total executable Scenarios (ITS) | 41 |
+| Total executable Scenarios (ITS) | 49 |
 | Active ARCHs with ≥1 ITP | 18 / 18 (100%) |
-| Active ITPs with ≥1 ITS | 18 / 18 (100%) |
+| Active ITPs with ≥1 ITS | 30 / 30 (100%) |
 | **Forward Coverage (active ARCH→ITP)** | **100%** |
 
 ### Technique Distribution
 
-| Technique | Test Cases | Percentage |
-|-----------|-----------|------------|
-| Fixture-Driven Black-Box (slash-command e2e) | 11 | 64.7% |
-| CLI Contract Testing (shell scripts + manifest) | 5 | 29.4% |
-| Hook-Registration Integration (REUSE-CORE) | 1 | 5.9% |
+| Technique (primary axis) | Test Cases | Percentage |
+|--------------------------|-----------|------------|
+| Fixture-Driven Black-Box (pure or combined with Fault Injection / CLI Contract / Idempotent Re-Run) | 17 | 56.7% |
+| CLI Contract Testing (combined with Fault Injection and/or Idempotent Re-Run) | 12 | 40.0% |
+| Idempotent Re-Run (pure, ITP-004-D) | 1 | 3.3% |
 
-(Fault Injection, Idempotent Re-Run scenarios are nested within the
-above test cases as the **B** and **D** scenario suffixes.)
+(Fault Injection and Idempotent Re-Run are not primary axes — they are
+combined with the two primary techniques above as scenario-level
+suffixes (`B` = fault injection, `D` = idempotency); the row counts
+above attribute each test case to its dominant axis.)
 
 ## Uncovered Modules
 

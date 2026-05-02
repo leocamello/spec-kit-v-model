@@ -54,19 +54,20 @@ ASIL allocation) are required.
 | SYS-003 | Implementation Engine | Implements `/speckit.v-model.implement` as a Markdown prompt file. Reads V-Model artifacts directly from the feature directory (no intermediate `plan.md` / `tasks.md` required), generates source code into the Target Source File path declared by each `MOD-NNN`, generates tests at all four levels (unit / integration / system / acceptance), embeds `// Implements <ID>` traceability comments, honours the configured domain overlay, and is idempotent across re-runs (≥95% structural identity). | REQ-015, REQ-018, REQ-019, REQ-020, REQ-021, REQ-022, REQ-024, REQ-025, REQ-026, REQ-027, REQ-NF-005 | Subsystem |
 | SYS-004 | Pre-Implementation Gate | Composite quality gate executed by SYS-003 before any code generation, realised as the thin Bash wrapper `scripts/bash/run-v-model-gate.sh` (~30 lines). The wrapper invokes the existing scripts `build-matrix.sh`, `validate-requirement-coverage.sh`, `validate-system-coverage.sh`, `validate-architecture-coverage.sh`, `validate-module-coverage.sh`, and `validate-hazard-coverage.sh` in sequence, refuses to proceed (non-zero exit + gap report to stdout) when Matrix A, B, C, D, or H is incomplete, and aggregates exit codes; introduces no parallel gating logic, only orchestration. | REQ-016, REQ-017, REQ-NF-004, REQ-CN-002 | Module |
 | SYS-005 | Additive-Enrichment Encoder | Cross-cutting prompt-section used by SYS-001 and SYS-002 to layer V-Model traceability metadata onto canonical spec-kit-core outputs as HTML comments and optional Markdown sections. Realised as the "## Requirement Linkage" / "## Enrichment" sections inside `commands/plan.md` and the "## Traceability" section inside `commands/tasks.md`, instructing the LLM to inject `<!-- vmodel:traces ... -->` and `<!-- traces-to: ... -->` markers. Guarantees that an unmodified spec-kit-core release pinned at v0.7.0 parses every emitted artifact without error, warning, or unrecognised-token diagnostic. | REQ-007, REQ-012, REQ-NF-003, REQ-IF-001, REQ-IF-002 | Service |
-| SYS-006 | Hallucination Guard | Pre-commit self-verification realised as the Bash script `scripts/bash/validate-implements-ids.sh` (~80 lines). Greps every generated source file for `// Implements <ID>` (and language-equivalent) comments, cross-references each cited identifier against the canonical ID set extracted by `grep -oE '(REQ\|SYS\|ARCH\|MOD\|HAZ\|ATP\|ITP\|UTP)-[A-Z0-9-]+' specs/<feature>/v-model/*.md`, and aborts the run (non-zero exit, no commit) on any mismatch. Provides the structural-eval ID-validation evidence required for 100% pass rate. Deterministic, no LLM. | REQ-023, REQ-NF-002 | Service |
+| SYS-006 | Hallucination Guard | Pre-commit self-verification realised as the Bash script `scripts/bash/validate-implements-ids.sh` (~80 lines). Greps every generated source file for `// Implements <ID>` (and language-equivalent) comments, cross-references each cited identifier against the canonical ID set extracted by `grep -oE '(REQ&#124;SYS&#124;ARCH&#124;MOD&#124;HAZ&#124;ATP&#124;ITP&#124;UTP)-[A-Z0-9-]+' specs/<feature>/v-model/*.md`, and aborts the run (non-zero exit, no commit) on any mismatch. Provides the structural-eval ID-validation evidence required for 100% pass rate. Deterministic, no LLM. | REQ-023, REQ-NF-002 | Service |
 | SYS-007 | Source Region Manager | Realised as the Bash/awk script `scripts/bash/splice-managed-regions.sh` (~80 lines), invoked by `commands/implement.md` on every re-run. Locates the `<!-- BEGIN MANAGED id="..." -->` / `<!-- END MANAGED id="..." -->` sentinel pairs (or language-equivalent comment markers) inside target source files, replaces only the interior content, and preserves any user-authored content located outside the sentinels. Atomic write is guaranteed by the standard `tmp=$(mktemp -p "$(dirname "$f")"); ... ; mv "$tmp" "$f"` pattern; idempotent — running twice produces the same on-disk result. Enables the Hybrid user path. | REQ-022 | Module |
 | SYS-008 | Domain Overlay Adapter | Cross-cutting prompt-section in `commands/implement.md` ("## Domain Overlay") that instructs the LLM to read `v-model-config.yml` (when present) and apply overlay-specific output requirements to code and test generation, including MC/DC unit-test coverage for DO-178C Level A and ASIL-driven test depth for ISO 26262. The same prompt section also instructs the LLM to consult `commands/overlays/{domain}/_domain.yml` for the authoritative overlay manifest. No runtime adapter code is required. | REQ-024 | Module |
 | SYS-009 | Hazard-Driven Task Emitter | Prompt-section in `commands/tasks.md` ("## Hazard Enrichment") that activates when `hazard-analysis.md` is present in the feature directory: instructs the LLM to raise mitigation-task priority and to emit dedicated verification tasks that explicitly reference each `HAZ-NNN` identifier. | REQ-014 | Module |
 | SYS-010 | Spec-Kit Core Compatibility Layer | Realised in two parts: (a) prompt-side, an "## Output Format" section in `commands/plan.md` and `commands/tasks.md` instructing the LLM to render the canonical spec-kit-core schema for the v0.7.0-pinned `plan-template.md` / `tasks-template.md`; and (b) shell-side, the verifier `scripts/bash/validate-core-schema.sh` (~50 lines) which greps for the required section headings per the pinned schema and exits non-zero on any missing section. Owns the round-trip property (`v-model.plan` → `speckit.tasks`, `v-model.tasks` → `speckit.implement`) and implements the reduced-enrichment fallback (the prompt instructs the LLM, when an upstream `plan.md` lacks `<!-- vmodel:` markers, to populate traceability directly from V-Model artifacts). Holds the `MUST NOT modify spec-kit core` invariant. | REQ-028, REQ-029, REQ-IF-001, REQ-IF-002, REQ-CN-001 | Library |
 | SYS-011 | Hook Registrar | Realised by three declarative YAML entries appended to `extension.yml` at the repository root (no runtime code in this extension). Spec-kit core's `CommandRegistrar` class in `src/specify_cli/extensions.py` reads `extension.yml` at install time and wires the three new commands (`plan`, `tasks`, `implement`) and their hooks (`after_specify` → `v-model.requirements`; `before_implement` and `after_implement` → `v-model.trace`) into the spec-kit CLI namespace. The existing hook infrastructure is untouched. | REQ-IF-003, REQ-IF-005, REQ-NF-006 | Module |
 | SYS-012 | Structured Summary Reporter | Cross-cutting prompt-section ("## Observability" / "## Structured Summary") appended to each of `commands/plan.md`, `commands/tasks.md`, and `commands/implement.md`. Instructs the LLM to emit a machine-readable stdout summary (timestamp, command, phase, outcome, every input artifact read, every output artifact produced, every optional artifact skipped, every warning encountered) in the same `--- v-model run summary ---` conventions used by `v-model.test-results` and `v-model.audit-report`. Shell wrappers capture the summary via stdout/stderr redirection. | REQ-027, REQ-IF-004 | Module |
-| SYS-013 | Concurrent Write Safety (Deferred Risk Note) | The Markdown+shell paradigm is sequential by nature: each bridge command is a single LLM turn followed by one or more shell-script invocations, and concurrent invocations of the same command against the same feature directory are out of scope for the v0.7.0 release. SYS-013 therefore retains its identifier as a documented deferred-risk note rather than an active runtime component. The sole concurrency safeguard in v0.7.0 is the `mktemp`-into-same-directory + `mv` atomic-rename pattern used by SYS-007 (and by any other shell script that mutates a tracked file), which prevents partial-write corruption of a single target by a single process. Full concurrent-write safety (e.g., a process-wide `flock` advisory lock around the gate / splice / commit sequence) is deferred to a future shell-locking mechanism and is explicitly NOT delivered under this feature. | REQ-CN-003, REQ-CN-004, REQ-NF-001 | Deferred Risk Note |
+| SYS-013 | [DEPRECATED] Quality & Process Compliance Harness | Originally specified in the pre-rework Python paradigm as a runtime harness gating four-stack test coverage, scope guardrails, and dogfood discipline. Under the Markdown+shell paradigm these meta-constraints are enforced by GitHub Actions workflows, branch-protection rules, and the existing `tests/bats/` + `tests/pester/` + `tests/evals/` harnesses; no runtime SYS component is required. Functional intent recharacterised as the Quality Compliance prompt section under ARCH-017 (parent SYS-003). Identifier retained as a deprecated stub for ID-stability per project rules. | (none — deprecated) | Module |
 | SYS-014 | Commit Annotator | Prompt-section in `commands/implement.md` ("## Commit Annotation") that instructs the LLM, when issuing `git commit -m "..."` after successful generation, to suffix the commit message with the comma-separated list of V-Model identifiers fulfilled by the change (e.g., `feat(<scope>): <subject> — MOD-NNN, REQ-NNN`). Enables git-history-based traceability. | REQ-021 | Module |
+| SYS-015 | Concurrent Write Safety | The Markdown+shell paradigm is sequential by nature: each bridge command is a single LLM turn followed by one or more shell-script invocations, and concurrent invocations of the same command against the same feature directory are out of scope for the v0.7.0 release. The sole concurrency safeguard in v0.7.0 is the `mktemp`-into-same-directory + `mv` atomic-rename pattern used by SYS-007 (and by any other shell script that mutates a tracked file), which prevents partial-write corruption of a single target by a single process. Full concurrent-write safety (e.g., a process-wide `flock` advisory lock around the gate / splice / commit sequence) is deferred to a future shell-locking mechanism and is explicitly NOT delivered under this feature. | REQ-CN-003, REQ-CN-004, REQ-NF-001 | Module |
 
 ## Realisation View
 
-The following 14 subsections enumerate each system component's realisation
+The following 15 subsections enumerate each system component's realisation
 in the Markdown+shell paradigm. Every subsection states (1) the
 classification per the paradigm-drift audit
 (`REUSE-CORE` / `REUSE-OURS` / `NEW-PROMPT-SECTION` / `NEW-SHELL` /
@@ -92,12 +93,12 @@ reworked separately under the same paradigm.
     Markdown prompt's `scripts:` frontmatter and inline `run_command`
     invocations.
 
-### SYS-002 — Phase-Aware Context Assembly (Tasks Synthesizer)
+### SYS-002 — Tasks Synthesizer
 
 - **Classification**: NEW-PROMPT-SECTION
-- **Realised by**: `commands/plan.md` "## Context Assembly" section (and
-  the equivalent "## Context Assembly" section inside `commands/tasks.md`
-  for the tasks side).
+- **Realised by**: `commands/tasks.md` (to be created), specifically the
+  "## Command: tasks" section in its body, with the shared "## Context
+  Assembly" prompt section also referenced by `commands/plan.md`.
 - **Responsibilities**:
   - Collect the active phase (plan / tasks / implement) from workspace
     state.
@@ -105,12 +106,12 @@ reworked separately under the same paradigm.
   - Emit a phase-scoped context block consumed by every subsequent prompt
     step in the same command.
 
-### SYS-003 — Artefact Generation Pipeline (Implementation Engine)
+### SYS-003 — Implementation Engine
 
 - **Classification**: NEW-PROMPT-SECTION
-- **Realised by**: `commands/tasks.md` "## Artefact Generation" section
-  and the corresponding "## Artefact Generation" section in
-  `commands/implement.md`.
+- **Realised by**: `commands/implement.md` (to be created), specifically
+  the "## Command: implement" section and the "## Artefact Generation"
+  section in its body.
 - **Responsibilities**:
   - Produce work-package Markdown with explicit V-model phase tags
     (Verification / Validation / Implementation).
@@ -120,9 +121,9 @@ reworked separately under the same paradigm.
 
 ### SYS-004 — Pre-Implementation Gate
 
-- **Classification**: REUSE-OURS + NEW-SHELL
+- **Classification**: NEW-SHELL
 - **Realised by**:
-  - **Existing scripts (REUSE-OURS)**:
+  - **Existing scripts (orchestrated, not modified)**:
     `scripts/bash/validate-requirement-coverage.sh`,
     `scripts/bash/validate-system-coverage.sh`,
     `scripts/bash/validate-architecture-coverage.sh`,
@@ -139,7 +140,7 @@ reworked separately under the same paradigm.
   one coverage dimension; the wrapper aggregates results and prints a
   consolidated gap report on stdout.
 
-### SYS-005 — Requirement Linkage Tracker (Additive-Enrichment Encoder)
+### SYS-005 — Additive-Enrichment Encoder
 
 - **Classification**: NEW-PROMPT-SECTION
 - **Realised by**: "## Requirement Linkage" section inside
@@ -150,7 +151,7 @@ reworked separately under the same paradigm.
   output artefact, so that downstream tooling can rebuild the traceability
   matrix without reading any auxiliary index.
 
-### SYS-006 — Hallucination Guard / Implements-ID Validator
+### SYS-006 — Hallucination Guard
 
 - **Classification**: NEW-SHELL
 - **Realised by**: `scripts/bash/validate-implements-ids.sh` (~80 lines).
@@ -168,9 +169,17 @@ reworked separately under the same paradigm.
   loop; no LLM, no Python, no external dependencies beyond `grep`, `awk`,
   and `sort`.
 
-### SYS-007 — Source Region Splicing
+### SYS-007 — Source Region Manager
 
-- **Classification**: NEW-SHELL
+- **Classification**: NEW-PROMPT-SECTION
+- **Realised by**: "## Region Preservation" prompt section inside
+  `commands/implement.md`, which orchestrates the downstream Bash/awk
+  helper script `scripts/bash/splice-managed-regions.sh` (~80 lines)
+  catalogued under ARCH-010 / MOD-014. The SYS-level home is the prompt
+  section that decides when and on which files to invoke the splice
+  helper; the script itself is the architecture-level realisation.
+
+> **Pre-rework legacy classification**: NEW-SHELL
 - **Realised by**: `scripts/bash/splice-managed-regions.sh` (~80 lines,
   awk-based).
 - **Responsibilities**:
@@ -184,7 +193,7 @@ reworked separately under the same paradigm.
     produces an identical on-disk result.
   - Exits non-zero on overlapping or unbalanced sentinels.
 
-### SYS-008 — Output Formatter (Domain Overlay Adapter)
+### SYS-008 — Domain Overlay Adapter
 
 - **Classification**: NEW-PROMPT-SECTION
 - **Realised by**: "## Output Format" section shared (by inclusion) across
@@ -199,7 +208,7 @@ reworked separately under the same paradigm.
     overlay-specific output requirements (e.g., MC/DC test coverage for
     DO-178C Level A, ASIL-driven test depth for ISO 26262).
 
-### SYS-009 — State Persistence (Hazard-Driven Task Emitter)
+### SYS-009 — Hazard-Driven Task Emitter
 
 - **Classification**: NEW-PROMPT-SECTION
 - **Realised by**: "## State & Workspace" section inside
@@ -213,7 +222,7 @@ reworked separately under the same paradigm.
   - When `hazard-analysis.md` is present, raise the priority of mitigation
     tasks and emit one verification task per `HAZ-NNN` identifier.
 
-### SYS-010 — Validation & Error Reporting (Spec-Kit Core Compatibility Layer)
+### SYS-010 — Spec-Kit Core Compatibility Layer
 
 - **Classification**: NEW-PROMPT-SECTION + NEW-SHELL
 - **Realised by**:
@@ -251,7 +260,7 @@ reworked separately under the same paradigm.
   registration is declarative YAML consumed by core. The existing hook
   infrastructure is untouched (REQ-NF-006).
 
-### SYS-012 — Telemetry / Observability (Structured Summary Reporter)
+### SYS-012 — Structured Summary Reporter
 
 - **Classification**: NEW-PROMPT-SECTION
 - **Realised by**: "## Observability" section appended to each of
@@ -263,43 +272,56 @@ reworked separately under the same paradigm.
   capture them via straightforward stdout/stderr redirection. No
   telemetry SDK and no runtime daemon are introduced.
 
-### SYS-013 — Concurrent Write Safety (Deferred Risk Note)
+### SYS-013 — [DEPRECATED] Quality & Process Compliance Harness
 
-- **Classification**: DROP-RECHARACTERIZED (deferred risk)
-- **Realised by**: nothing at runtime under v0.7.0; SYS-013 is retained
-  solely as a documentation anchor for the concurrency-safety position
-  taken by this release.
+- **Classification**: DEPRECATED (no runtime realisation)
+- **Status**: Deprecated under the Markdown+shell paradigm. Identifier
+  retained as a stub for ID-stability per project rules.
+- **Position**: Originally specified in the pre-rework Python paradigm as
+  a runtime harness gating four-stack test coverage, scope guardrails, and
+  dogfood discipline. Under the Markdown+shell paradigm the functional
+  intent is recharacterised as the Quality Compliance prompt section
+  realised under **ARCH-017** (parent SYS-003), with REQ-NF-001 /
+  REQ-CN-003 / REQ-CN-004 enforced by GitHub Actions workflows,
+  branch-protection rules, and the existing
+  `tests/bats/` + `tests/pester/` + `tests/evals/` harnesses. No runtime
+  SYS component is required; the SYS-013 entry is preserved purely as a
+  pre-rework anchor.
+
+### SYS-014 — Commit Annotator
+
+- **Classification**: NEW-PROMPT-SECTION
+- **Realised by**:
+  - **Commit annotation (NEW-PROMPT-SECTION)**: "## Commit Annotation"
+    section inside `commands/implement.md` instructs the LLM to suffix
+    every `git commit -m "..."` it issues with the comma-separated list
+    of V-Model identifiers fulfilled by the change. Packaging itself
+    requires no new code: the extension is distributed as a directory
+    containing `extension.yml`, `commands/*.md`, and
+    `scripts/bash/*.sh`, installed by core's existing
+    `spec-kit extension install <path>` flow.
+
+### SYS-015 — Concurrent Write Safety
+
+- **Classification**: NEW-SHELL (per-file `mktemp`+`mv` safeguard;
+  full multi-file locking deferred)
+- **Realised by**: nothing dedicated at runtime under v0.7.0; the only
+  concurrency safeguard delivered under this feature is the per-file
+  `mktemp`-into-same-directory + `mv` atomic-rename pattern used by
+  SYS-007 (and by any other shell script that mutates a tracked file).
 - **Position**:
   - The Markdown+shell paradigm is sequential by construction: each
     command is one LLM turn plus a small fixed sequence of shell
     invocations, and the project does not support concurrent invocations
     of the same command against the same feature directory in v0.7.0.
-  - The sole concurrency safeguard in v0.7.0 is the `mktemp`-into-same-
-    directory + `mv` atomic-rename pattern used by SYS-007 and by any
-    other shell script that mutates a tracked file. This guarantees that
-    a reader observing the target file sees either the previous content
-    or the new content, never a partially-written interleaving.
+  - The `mktemp`+`mv` pattern guarantees that a reader observing the
+    target file sees either the previous content or the new content,
+    never a partially-written interleaving.
   - Full concurrent-write safety — for example, a process-wide `flock`
     advisory lock around the gate / splice / commit sequence — is
     explicitly **deferred** to a future shell-locking mechanism and is
     NOT delivered under this feature. There is no Python threading or
     locking proposed; the deferred design space is shell-only.
-
-### SYS-014 — Extension Packaging (Commit Annotator)
-
-- **Classification**: REUSE-CORE (packaging) + NEW-PROMPT-SECTION (commit annotation)
-- **Realised by**:
-  - **Packaging (REUSE-CORE)**: spec-kit-core's install protocol — the
-    extension is distributed as a directory containing `extension.yml`,
-    `commands/*.md`, and `scripts/bash/*.sh`. There is no Python
-    package, no `pyproject.toml` for runtime distribution, and no
-    additional build step. Installation is a single
-    `spec-kit extension install <path>` invocation that core executes
-    against the directory.
-  - **Commit annotation (NEW-PROMPT-SECTION)**: "## Commit Annotation"
-    section inside `commands/implement.md` instructs the LLM to suffix
-    every `git commit -m "..."` it issues with the comma-separated list
-    of V-Model identifiers fulfilled by the change.
 
 ## Dependency View (IEEE 1016 §5.2)
 
@@ -331,7 +353,7 @@ reworked separately under the same paradigm.
 | SYS-006 | (External: V-Model artifact files under `specs/<feature>/v-model/`) | File read (grep) | Hallucination Guard cannot read the canonical ID set; cannot certify generated comments. Returns non-zero exit to SYS-003. |
 | SYS-008 | (External: `v-model-config.yml`, `commands/overlays/{domain}/_domain.yml`) | File read (LLM) | Domain Overlay Adapter cannot determine the configured domain. Treated as "no domain configured" (base behaviour); SYS-003 continues without overlay-specific requirements. |
 | SYS-011 | (External: `extension.yml`, `src/specify_cli/extensions.py:579 CommandRegistrar`) | YAML read by core at install time | Hook Registrar cannot register the bridge-command hooks; the commands remain invocable manually but are not wired into the automation graph (REQ-IF-003 / REQ-IF-005 partial failure). Surfaced as installation-time error by core's `CommandRegistrar`. |
-| SYS-013 | (n/a — deferred) | n/a | Documented limitation: concurrent invocations against the same feature directory are not supported in v0.7.0; the only safeguard is the per-file `mktemp`+`mv` atomic-rename used by SYS-007. |
+| SYS-015 | (n/a — deferred-risk note) | n/a | Documented limitation: concurrent invocations against the same feature directory are not supported in v0.7.0; the only safeguard is the per-file `mktemp`+`mv` atomic-rename used by SYS-007. |
 
 ### Dependency Diagram
 
@@ -366,7 +388,7 @@ reworked separately under the same paradigm.
    │   (SYS-002 also refers SYS-009) │──refers────► SYS-012 ─────────────────────┘
    └─────────────────────────────────┘
 
-   SYS-013 (deferred risk note): no runtime arrows; documents the
+   SYS-015 (deferred risk note): no runtime arrows; documents the
    sequential-only execution model and the per-file mktemp+mv safeguard.
 ```
 
@@ -611,7 +633,7 @@ deprecated-but-still-traced item are NOT flagged as hallucinations.
 | Compatibility (co-existence, interoperability) | §4.2.4 | Spec-Kit Core Compatibility Layer (SYS-010) owns the schema contracts (verified by `validate-core-schema.sh`) and the round-trip property (REQ-029); Additive-Enrichment Encoder (SYS-005) ensures core tooling parses outputs without warning (REQ-NF-003); Hook Registrar (SYS-011) preserves the existing hook infrastructure (REQ-NF-006) by delegating to spec-kit core's `CommandRegistrar`. |
 | Security (confidentiality, integrity, authenticity, accountability) | §4.2.5 | No sensitive data flows through bridge-command boundaries (see Data Design View note). Accountability is provided by Commit Annotator (SYS-014) and the Structured Summary Reporter (SYS-012) which together create an auditable record of every change. |
 | Maintainability (modularity, reusability, analysability, modifiability, testability) | §4.2.7 | Decomposition separates command business logic (SYS-001/002/003 prompt files) from cross-cutting concerns (SYS-005, SYS-010, SYS-012); the Compatibility Layer can evolve independently of the synthesizers. The shell layer is testable via the project's existing BATS harness. |
-| Safety (operational constraint, risk identification, fail safe, hazard warning) | §4.2.9 | Hazard-Driven Task Emitter (SYS-009) propagates `HAZ-NNN` into mitigation and verification tasks (REQ-014). Pre-Implementation Gate (SYS-004) and Hallucination Guard (SYS-006) implement fail-safe behaviour. SYS-013 documents the deferred concurrency-safety position and the per-file `mktemp`+`mv` safeguard that is in force today. Note: this feature does not itself produce hazards; it relays hazards from upstream artifacts. |
+| Safety (operational constraint, risk identification, fail safe, hazard warning) | §4.2.9 | Hazard-Driven Task Emitter (SYS-009) propagates `HAZ-NNN` into mitigation and verification tasks (REQ-014). Pre-Implementation Gate (SYS-004) and Hallucination Guard (SYS-006) implement fail-safe behaviour. SYS-015 documents the deferred concurrency-safety position and the per-file `mktemp`+`mv` safeguard that is in force today. Note: this feature does not itself produce hazards; it relays hazards from upstream artifacts. |
 
 No quality gaps flagged.
 
@@ -619,9 +641,9 @@ No quality gaps flagged.
 
 | Metric | Count |
 |--------|-------|
-| Total System Components (SYS) | 14 (13 active + 1 deferred-risk note, 0 deprecated, 0 suspect) |
-| Total Parent Requirements Covered | 41 / 41 active functional / NF / IF / CN requirements bound to a runtime SYS (REQ-NF-001, REQ-CN-003, REQ-CN-004 are CI/process meta-constraints not bound to a runtime SYS — see Derived Requirements note below) |
-| Components per Type | Subsystem: 3 \| Module: 7 \| Service: 2 \| Library: 1 \| Deferred Risk Note: 1 |
+| Total System Components (SYS) | 15 (14 active + 1 deprecated, 0 suspect) |
+| Total Parent Requirements Covered | 44 / 44 active functional / NF / IF / CN requirements bound to a runtime SYS (REQ-NF-001, REQ-CN-003, REQ-CN-004 are CI/process meta-constraints documented under the deprecated SYS-013 stub and are surfaced by the existing CI workflows — see Derived Requirements note below) |
+| Components per Type | Subsystem: 3 \| Module: 8 \| Service: 2 \| Library: 1 \| Deprecated: 1 |
 | **Forward Coverage (REQ→SYS) for runtime requirements** | **100%** |
 
 ## Derived Requirements
@@ -639,8 +661,10 @@ mandated by `requirements.md`.
 > component (SYS-013). In the Markdown+shell paradigm they are enforced
 > by GitHub Actions workflows, branch-protection rules, and the
 > existing `tests/bats/` + `tests/pester/` + `tests/evals/` harnesses;
-> none of them require a runtime SYS component. The SYS-013 identifier
-> has therefore been recharacterised (see SYS-013 above) and the three
+> none of them require a runtime SYS component. The functional intent is
+> recharacterised as the Quality Compliance prompt section under
+> **ARCH-017** (parent SYS-003); the SYS-013 identifier itself is
+> retained as a deprecated stub (see SYS-013 above), and the three
 > meta-constraints are intentionally unbound from any runtime SYS in
 > this revision. They remain enforceable and merge-blocking through CI.
 

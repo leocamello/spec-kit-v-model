@@ -102,7 +102,7 @@ entirely.
 | MOD-019 | Hybrid Path Enrichment Detector | NEW-PROMPT-SECTION | `commands/tasks.md` §Hybrid Path Detection |
 | MOD-020 | Hook Registrar | REUSE-CORE | `extension.yml` (3 YAML entries) |
 | MOD-021 | Structured Summary Reporter | NEW-PROMPT-SECTION | `commands/plan.md`, `commands/tasks.md`, `commands/implement.md` §Structured Summary |
-| MOD-022 | Quality Compliance Harness | DROP-recharacterized | `[NO RUNTIME ARTIFACT — DEFERRED]` |
+| MOD-022 | Quality Compliance Harness | NEW-PROMPT-SECTION | `commands/implement.md` §Quality Compliance |
 | MOD-023 | Commit Annotator | NEW-PROMPT-SECTION | `commands/implement.md` §Commit Annotation |
 | MOD-024 | V-Model Artifact Loader | DROP-recharacterized | `[NO RUNTIME ARTIFACT — DEFERRED]` |
 | MOD-025 | Canonical ID-Set Extractor | NEW-SHELL | `scripts/bash/validate-implements-ids.sh` (inline `grep`) |
@@ -893,8 +893,9 @@ echo "GUARD: PASS"
 - MOD-025 is implemented inline as the `canonical_ids=$(grep ...)` step.
 
 **Verification**: BATS unit tests covering (a) every comment cites a
-known ID ⇒ exit 0; (b) injected `REQ-999` phantom ⇒ exit 1 with the
-expected `unknown id REQ-999` line; (c) HAZ-012 false-negative rate
+known ID ⇒ exit 0; (b) injected phantom ID ⇒ exit 1 with the
+expected `unknown id <ID>` line (sentinel fixtures defined in
+unit-test.md UTS-013-A2); (c) HAZ-012 false-negative rate
 assertion (no valid ID misclassified as hallucinated across the
 fixture artifact set).
 
@@ -1395,35 +1396,44 @@ the summary is observable even when the LLM aborts.
 
 ---
 
-### Module: MOD-022 (Quality Compliance Harness) [EXTERNAL]
+### Module: MOD-022 (Quality Compliance Harness)
 
 **Parent Architecture Modules**: ARCH-017
 
 | Field | Value |
 |-------|-------|
-| Classification | DROP-recharacterized |
-| Target Source File | `[NO RUNTIME ARTIFACT — DEFERRED]` |
-| Traced From | REQ-NF-001, REQ-CN-003, REQ-CN-004; SYS-013 (paradigm-level deferred risk note); ARCH-017 |
+| Classification | NEW-PROMPT-SECTION |
+| Target Source File | `commands/implement.md` §Quality Compliance |
+| Traced From | REQ-NF-001, REQ-CN-003, REQ-CN-004; SYS-003; ARCH-017 |
 
-**Description**: `[DEFERRED — no runtime module]`. The quality harness
-is a CI / meta concern, not a runtime command component. The four
-existing test stacks — `tests/bats/`, `tests/pester/`, `tests/evals/`
-(structural eval), and the LLM-eval suite under `tests/evals/` —
-already satisfy REQ-NF-001 / REQ-CN-003 / REQ-CN-004 when invoked from
-GitHub Actions. Merge-gate enforcement is GitHub Actions branch
-protection, not a runtime Python module.
+**Description**: The Quality Compliance prompt section instructs the LLM,
+during the implementation flow, to invoke the existing four-stack test
+harnesses (`tests/bats/`, `tests/pester/`, `tests/evals/` structural eval,
+and the LLM eval suite under `tests/evals/`) via `bash`, gate merge on
+100% coverage, and run scope-guardrail and dogfood-discipline audits.
+Realisation is fully prompt-borne: no new runtime code is shipped; the
+LLM orchestrates the existing CI scripts as part of the implement flow.
+GitHub Actions branch protection remains the merge-time enforcement
+mechanism; this prompt section provides the local, in-flow check.
 
-**Pseudocode / Structural Sketch**: `[NO PSEUDOCODE — DEFERRED]`
+**Pseudocode / Structural Sketch**:
 
-**Replacement**: The CI workflow under `.github/workflows/` is the
-sole runtime locus. The MOD identifier is preserved as a deferred-risk
-note for forward traceability; should a future release introduce a
-local pre-commit harness, that work will be tracked under a new MOD.
+```text
+§Quality Compliance (in commands/implement.md):
+  After §Test Generation completes:
+    1. Invoke `bash tests/bats/run-bats.sh` (or equivalent project entry)
+    2. Invoke `bash tests/pester/run-pester.sh` (PowerShell parity)
+    3. Invoke `bash tests/evals/structural-eval.sh`
+    4. Invoke `bash tests/evals/llm-eval.sh`
+    5. Aggregate exit codes; any non-zero ⇒ abort before commit
+    6. Emit a §Structured Summary entry with per-stack pass counts
+```
 
-**Dependencies**: None at the runtime level.
+**Dependencies**: None new. Reads from the four existing test stacks.
 
-**Verification**: CI workflow runs the four-stack harness on every PR;
-no in-tree assertion is owned by this MOD.
+**Verification**: Prompt-section presence verified by UTP-022 unit test
+(see unit-test.md UTP-022-A); end-to-end exercise covered by the
+implement-command BATS scenario.
 
 ---
 
@@ -1630,13 +1640,13 @@ without going through the `mktemp`+`mv` pattern.
 | Metric | Count |
 |--------|-------|
 | Total Module Designs (MOD) | 27 (all preserved; MOD-001..MOD-027) |
-| **NEW-PROMPT-SECTION** (sections inside `commands/{plan,tasks,implement}.md`) | **16** — MOD-001, 002, 003, 004, 005, 006, 007, 008, 009, 011, 012, 015, 016, 019, 021, 023 |
+| **NEW-PROMPT-SECTION** (sections inside `commands/{plan,tasks,implement}.md`) | **17** — MOD-001, 002, 003, 004, 005, 006, 007, 008, 009, 011, 012, 015, 016, 019, 021, 022, 023 |
 | **NEW-SHELL** (POSIX shell scripts under `scripts/bash/`) | **6** — MOD-010, 013, 014, 017, 018, 025 |
 | **REUSE-CORE** (declarative YAML; no new code) | **1** — MOD-020 |
-| **DROP-recharacterized** (deferred-risk notes; no functional contract) | **4** — MOD-022, 024, 026, 027 |
+| **DROP-recharacterized** (deferred-risk notes; no functional contract) | **3** — MOD-024, 026, 027 |
 | **Total** | **27** ✓ |
 | Net-new shell script files | 4 (`run-v-model-gate.sh`, `validate-implements-ids.sh`, `splice-managed-regions.sh`, `validate-core-schema.sh`) — MOD-013 + MOD-025 share one script; MOD-017 + MOD-018 share one script |
-| Net-new command Markdown files | 3 (`commands/plan.md`, `commands/tasks.md`, `commands/implement.md`) hosting the 16 NEW-PROMPT-SECTION entries |
+| Net-new command Markdown files | 3 (`commands/plan.md`, `commands/tasks.md`, `commands/implement.md`) hosting the 17 NEW-PROMPT-SECTION entries |
 | Net-new Python files | **0** |
 | **Forward Coverage (ARCH→MOD)** | **21 / 21 (100%)** — every ARCH-NNN in `architecture-design.md` is realised by at least one active MOD or, for ARCH-019/020/021, by a paired DROP-recharacterized MOD that preserves the trace |
 
@@ -1652,7 +1662,7 @@ without going through the `mktemp`+`mv` pattern.
 | ARCH-006 | MOD-008, MOD-009 |
 | ARCH-007 | MOD-010 |
 | ARCH-008 | MOD-011, MOD-012 |
-| ARCH-009 | MOD-013 |
+| ARCH-009 | MOD-013, MOD-025 (NEW-SHELL inline) |
 | ARCH-010 | MOD-014 |
 | ARCH-011 | MOD-015 |
 | ARCH-012 | MOD-016 |
@@ -1660,9 +1670,9 @@ without going through the `mktemp`+`mv` pattern.
 | ARCH-014 | MOD-019 |
 | ARCH-015 | MOD-020 |
 | ARCH-016 | MOD-021 |
-| ARCH-017 | MOD-022 (DROP-recharacterized — CI workflow replaces runtime) |
+| ARCH-017 | MOD-022 (NEW-PROMPT-SECTION) |
 | ARCH-018 | MOD-023 |
-| ARCH-019 | MOD-024 (DROP-recharacterized) + MOD-025 (NEW-SHELL inline) |
+| ARCH-019 | MOD-024 (DROP-recharacterized) |
 | ARCH-020 | MOD-026 (DROP-recharacterized) |
 | ARCH-021 | MOD-027 (DROP-recharacterized) |
 
@@ -1695,7 +1705,7 @@ that exercises the contract.
 
 ## Derived Modules
 
-None — every active MOD traces to one or more active `ARCH-NNN`. Four
-deferred-risk MODs (MOD-022, MOD-024, MOD-026, MOD-027) carry explicit
+None — every active MOD traces to one or more active `ARCH-NNN`. Three
+deferred-risk MODs (MOD-024, MOD-026, MOD-027) carry explicit
 `DROP-recharacterized` rationale and no functional contract; none
 qualify as derived.

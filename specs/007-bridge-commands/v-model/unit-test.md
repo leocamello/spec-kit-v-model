@@ -19,10 +19,11 @@ three categories of testable unit:
    `tests/unit/bridge-commands/` (the same files that act as
    integration tests, with the unit cases below isolating per-function
    and per-flag behaviour).
-2. **LLM prompt sections** — the 16 NEW-PROMPT-SECTION MODs decompose
+2. **LLM prompt sections** — the 17 NEW-PROMPT-SECTION MODs decompose
    into discrete sections inside `commands/plan.md`, `commands/tasks.md`,
    `commands/implement.md` (e.g. §Execution Flow, §Output Artifacts,
-   §Enrichment, §Code Generation, §Commit Annotation). These are tested
+   §Enrichment, §Code Generation, §Commit Annotation, §Quality Compliance,
+   §Domain Overlay). These are tested
    with **DeepEval structural metrics** in `tests/evals/` that assert:
    required headings present, required preconditions stated, required
    output sections enumerated, error-path language present.
@@ -31,15 +32,18 @@ three categories of testable unit:
    `CommandRegistrar` schema and contains the three required hook
    entries.
 
-DROP'd modules (MOD-022, MOD-024, MOD-026, MOD-027 — see
+DROP'd modules (MOD-024, MOD-026, MOD-027 — see
 `drift-diff-plan.md`) have UTP IDs preserved as `[NO UNIT TEST —
 DEFERRED]` placeholders so the trace matrix continues to resolve.
+MOD-022 is no longer DROP'd: it is the ACTIVE §Quality Compliance
+prompt section in `commands/implement.md` (UTP-022-A).
 
 ## ID Schema
 
-- **Unit Test Case**: `UTP-{NNN}` where `NNN` matches the parent MOD.
-  One UTP per active MOD; deferred MODs retain their UTP ID as a
-  placeholder.
+- **Unit Test Case**: `UTP-{NNN}-{LETTER}` where `NNN` matches the
+  parent MOD and `LETTER` is a per-MOD suffix (`A`, `B`, ...). One or
+  more UTPs per active MOD; deferred MODs retain their UTP ID as the
+  canonical `-A` placeholder.
 - **Unit Test Scenario**: `UTS-{NNN}-{LETTER}{#}` — nested under the
   parent UTP, with a technique-suffix letter and numeric suffix.
 - IDs are permanent — never renumbered or reassigned.
@@ -471,7 +475,14 @@ DEFERRED]` placeholders so the trace matrix continues to resolve.
     `commands/implement.md` rule: missing markers ⇒ wrap)
 
 * **Unit Scenario: UTS-014-B2** (boundary: exactly 1 region — happy path)
-  * Same as UTS-014-A2
+  * **Arrange**: existing target containing exactly one
+    `# VMODEL-MANAGED-BEGIN ... # VMODEL-MANAGED-END` region
+    bracketing legacy content, with arbitrary unmanaged prologue and epilogue
+  * **Act**: invoke `splice-managed-regions.sh` with new managed content
+  * **Assert**: `assert_success`; the prologue and epilogue are byte-for-byte
+    unchanged; only the bytes between `BEGIN`/`END` are replaced with the
+    new content; the marker lines themselves are preserved verbatim
+    (single-region contract, REQ-007 idempotency)
 
 * **Unit Scenario: UTS-014-B3** (boundary: 2 regions in same file — rejected per single-region contract)
   * **Arrange**: target with two non-overlapping `BEGIN/END` pairs
@@ -676,13 +687,30 @@ DEFERRED]` placeholders so the trace matrix continues to resolve.
 
 ---
 
-## UTP-022 [NO UNIT TEST — DEFERRED]
+### Module: MOD-022 (Quality Compliance Prompt Section)
 
-**Original target**: MOD-022 (`compute_coverage_report` Python module)
-**Status**: DROP per `drift-diff-plan.md`. The four-stack quality
-harness is a CI-process concern (GitHub Actions branch protection over
-the existing `tests/bats/`, `tests/pester/`, `tests/evals/` suites) —
-not a runtime module. ID retained for traceability; no scenarios authored.
+**Parent Architecture Modules**: ARCH-017
+
+#### Test Case: UTP-022-A (§Quality Compliance structural metrics — four-stack instructions present)
+
+**Target Artifact**: `commands/implement.md` §Quality Compliance
+**Test File**: `tests/evals/test_implement_command_eval.py::TestQualityCompliance`
+**Technique**: DeepEval Structural Metric
+
+* **Unit Scenario: UTS-022-A1** (four quality stacks named in §Quality Compliance)
+  * **Arrange**: load `commands/implement.md` and extract the §Quality Compliance section
+  * **Act**: assert each of `"BATS"`, `"Pester"`, `"structural eval"`, and `"LLM eval"` substrings present
+  * **Assert**: structural metric returns 1.0 — all four quality stacks
+    are explicitly enumerated (REQ-019, REQ-CN-002)
+
+* **Unit Scenario: UTS-022-A2** (gate-on-failure instruction documented)
+  * **Arrange**: same loaded section
+  * **Act**: assert `"fail"` (or `"halt"`) and `"do not commit"` (or
+    `"abort"`) substrings present, and the four-stack list precedes the
+    gate clause
+  * **Assert**: structural metric returns 1.0 — the prompt instructs
+    the LLM to abort the implement run when any of the four quality
+    stacks fail (HAZ-012, REQ-NF-005)
 
 ---
 
@@ -707,7 +735,11 @@ not a runtime module. ID retained for traceability; no scenarios authored.
 
 ---
 
-## UTP-024 [NO UNIT TEST — DEFERRED]
+### Module: MOD-024 (V-Model Artifact Reader — Deferred)
+
+**Parent Architecture Modules**: ARCH-019
+
+#### UTP-024 [NO UNIT TEST — DEFERRED]
 
 **Original target**: MOD-024 (`load_artifacts` Python parser)
 **Status**: DROP per `drift-diff-plan.md`. In the Markdown+shell
@@ -755,7 +787,11 @@ parser. ID retained for traceability; no scenarios authored.
 
 ---
 
-## UTP-026 [NO UNIT TEST — DEFERRED]
+### Module: MOD-026 (Subprocess Runner — Deferred)
+
+**Parent Architecture Modules**: ARCH-020
+
+#### UTP-026 [NO UNIT TEST — DEFERRED]
 
 **Original target**: MOD-026 (`run_subprocess` Python wrapper)
 **Status**: DROP per `drift-diff-plan.md`. Shell scripts invoke other
@@ -766,7 +802,11 @@ ID retained for traceability; no scenarios authored.
 
 ---
 
-## UTP-027 [NO UNIT TEST — DEFERRED]
+### Module: MOD-027 (Atomic Filesystem Writer — Deferred)
+
+**Parent Architecture Modules**: ARCH-021
+
+#### UTP-027 [NO UNIT TEST — DEFERRED]
 
 **Original target**: MOD-027 (`atomic_write` Python module)
 **Status**: DROP per `drift-diff-plan.md`. Atomic write in shell is the
@@ -780,10 +820,12 @@ no scenarios authored.
 
 ## External Module Bypass
 
-None. The 4 deferred MODs (MOD-022, MOD-024, MOD-026, MOD-027) are
+None. The 3 deferred MODs (MOD-024, MOD-026, MOD-027) are
 **dropped**, not bypassed: they no longer exist as runtime modules in
-the Markdown+shell paradigm. There are no in-process external Python
-dependencies to mock.
+the Markdown+shell paradigm. MOD-022 is no longer deferred — it is
+the ACTIVE §Quality Compliance prompt section in
+`commands/implement.md`, exercised by UTP-022-A. There are no
+in-process external Python dependencies to mock.
 
 ---
 
@@ -791,26 +833,26 @@ dependencies to mock.
 
 | Metric | Count |
 |--------|-------|
-| Total Modules (MOD) | 27 (23 active, 4 DROP) |
-| Active MODs tested | 23 |
-| MODs deferred ([NO UNIT TEST — DEFERRED]) | 4 (MOD-022, MOD-024, MOD-026, MOD-027) |
-| Active UTPs | 23 |
-| Total executable Scenarios (UTS) | 56 |
-| Active MODs with ≥1 UTP | 23 / 23 (100%) |
-| Active UTPs with ≥1 UTS | 23 / 23 (100%) |
+| Total Modules (MOD) | 27 (24 active, 3 DROP) |
+| Active MODs tested | 24 |
+| MODs deferred ([NO UNIT TEST — DEFERRED]) | 3 (MOD-024, MOD-026, MOD-027) |
+| Active UTPs | 30 |
+| Total executable Scenarios (UTS) | 62 |
+| Active MODs with ≥1 UTP | 24 / 24 (100%) |
+| Active UTPs with ≥1 UTS | 30 / 30 (100%) |
 | **Forward Coverage (active MOD→UTP)** | **100%** |
 
 ### Technique Distribution
 
 | Technique | Test Cases | Percentage |
 |-----------|-----------|------------|
-| DeepEval Structural Metric (prompt sections) | 16 | 69.6% |
-| BATS Statement & Branch + Equivalence/Boundary (shell scripts) | 6 | 26.1% |
-| YAML Schema Validation (`extension.yml`) | 1 | 4.3% |
+| DeepEval Structural Metric (prompt sections) | 17 | 56.7% |
+| BATS Statement & Branch + Equivalence/Boundary (shell scripts) | 12 | 40.0% |
+| YAML Schema Validation (`extension.yml`) | 1 | 3.3% |
 
 ## Uncovered Modules
 
-None — all 23 active modules covered. The 4 DROP'd modules (MOD-022,
-MOD-024, MOD-026, MOD-027) have DEFERRED placeholders per the
+None — all 24 active modules covered. The 3 DROP'd modules (MOD-024,
+MOD-026, MOD-027) have DEFERRED placeholders per the
 paradigm-shift contract; they do not exist at runtime and therefore
 have no unit-testable surface.

@@ -1,6 +1,6 @@
 # Traceability Matrix
 
-**Generated**: 2026-05-01
+**Generated**: 2026-05-02
 **Source**: `specs/007-bridge-commands/v-model/`
 
 ## Matrix A — Validation (User View)
@@ -228,7 +228,11 @@
 | | SYS-007 | Source Region Manager | STP-007-A | Boundary Value Analysis | STS-007-A3 | ⬜ Untested |
 | | SYS-007 | Source Region Manager | STP-007-B | Fault Injection | STS-007-B1 | ⬜ Untested |
 | | SYS-007 | Source Region Manager | STP-007-B | Fault Injection | STS-007-B2 | ⬜ Untested |
-| **REQ-023** | ❌ MISSING | — | — | — | — | ⬜ Untested |
+| **REQ-023** | SYS-006 | Hallucination Guard | STP-006-A | Interface Contract Testing | STS-006-A1 | ⬜ Untested |
+| | SYS-006 | Hallucination Guard | STP-006-A | Interface Contract Testing | STS-006-A2 | ⬜ Untested |
+| | SYS-006 | Hallucination Guard | STP-006-B | Equivalence Partitioning | STS-006-B1 | ⬜ Untested |
+| | SYS-006 | Hallucination Guard | STP-006-B | Equivalence Partitioning | STS-006-B2 | ⬜ Untested |
+| | SYS-006 | Hallucination Guard | STP-006-B | Equivalence Partitioning | STS-006-B3 | ⬜ Untested |
 | **REQ-024** | SYS-003 | Implementation Engine | STP-003-A | Interface Contract Testing | STS-003-A1 | ⬜ Untested |
 | | SYS-003 | Implementation Engine | STP-003-A | Interface Contract Testing | STS-003-A2 | ⬜ Untested |
 | | SYS-003 | Implementation Engine | STP-003-B | Equivalence Partitioning | STS-003-B1 | ⬜ Untested |
@@ -317,8 +321,10 @@
 | | SYS-004 | Pre-Implementation Gate | STP-004-B | Equivalence Partitioning | STS-004-B1 | ⬜ Untested |
 | | SYS-004 | Pre-Implementation Gate | STP-004-B | Equivalence Partitioning | STS-004-B2 | ⬜ Untested |
 | | SYS-004 | Pre-Implementation Gate | STP-004-B | Equivalence Partitioning | STS-004-B3 | ⬜ Untested |
-| **REQ-CN-003** | ❌ MISSING | — | — | — | — | ⬜ Untested |
-| **REQ-CN-004** | ❌ MISSING | — | — | — | — | ⬜ Untested |
+| **REQ-CN-003** | SYS-015 | Concurrent Write Safety | STP-015-A | Inspection (audit) — analytic verification of the deferred-risk note documented in `system-design.md` §SYS-015. | STS-015-A1 | ⬜ Untested |
+| | SYS-015 | Concurrent Write Safety | STP-015-A | Inspection (audit) — analytic verification of the deferred-risk note documented in `system-design.md` §SYS-015. | STS-015-A2 | ⬜ Untested |
+| **REQ-CN-004** | SYS-015 | Concurrent Write Safety | STP-015-A | Inspection (audit) — analytic verification of the deferred-risk note documented in `system-design.md` §SYS-015. | STS-015-A1 | ⬜ Untested |
+| | SYS-015 | Concurrent Write Safety | STP-015-A | Inspection (audit) — analytic verification of the deferred-risk note documented in `system-design.md` §SYS-015. | STS-015-A2 | ⬜ Untested |
 | **REQ-IF-001** | SYS-001 | Plan Synthesizer | STP-001-A | Interface Contract Testing | STS-001-A1 | ⬜ Untested |
 | | SYS-001 | Plan Synthesizer | STP-001-A | Interface Contract Testing | STS-001-A2 | ⬜ Untested |
 | | SYS-001 | Plan Synthesizer | STP-001-B | Boundary Value Analysis | STS-001-B1 | ⬜ Untested |
@@ -357,8 +363,13 @@
 | | SYS-012 | Structured Summary Reporter | STP-012-A | Interface Contract Testing | STS-012-A2 | ⬜ Untested |
 | **REQ-IF-005** | SYS-011 | Hook Registrar | STP-011-A | Interface Contract Testing | STS-011-A1 | ⬜ Untested |
 | | SYS-011 | Hook Registrar | STP-011-A | Interface Contract Testing | STS-011-A2 | ⬜ Untested |
-| **REQ-NF-001** | ❌ MISSING | — | — | — | — | ⬜ Untested |
-| **REQ-NF-002** | ❌ MISSING | — | — | — | — | ⬜ Untested |
+| **REQ-NF-001** | SYS-015 | Concurrent Write Safety | STP-015-A | Inspection (audit) — analytic verification of the deferred-risk note documented in `system-design.md` §SYS-015. | STS-015-A1 | ⬜ Untested |
+| | SYS-015 | Concurrent Write Safety | STP-015-A | Inspection (audit) — analytic verification of the deferred-risk note documented in `system-design.md` §SYS-015. | STS-015-A2 | ⬜ Untested |
+| **REQ-NF-002** | SYS-006 | Hallucination Guard | STP-006-A | Interface Contract Testing | STS-006-A1 | ⬜ Untested |
+| | SYS-006 | Hallucination Guard | STP-006-A | Interface Contract Testing | STS-006-A2 | ⬜ Untested |
+| | SYS-006 | Hallucination Guard | STP-006-B | Equivalence Partitioning | STS-006-B1 | ⬜ Untested |
+| | SYS-006 | Hallucination Guard | STP-006-B | Equivalence Partitioning | STS-006-B2 | ⬜ Untested |
+| | SYS-006 | Hallucination Guard | STP-006-B | Equivalence Partitioning | STS-006-B3 | ⬜ Untested |
 | **REQ-NF-003** | SYS-005 | Additive-Enrichment Encoder | STP-005-A | Interface Contract Testing | STS-005-A1 | ⬜ Untested |
 | | SYS-005 | Additive-Enrichment Encoder | STP-005-A | Interface Contract Testing | STS-005-A2 | ⬜ Untested |
 | | SYS-005 | Additive-Enrichment Encoder | STP-005-B | Boundary Value Analysis | STS-005-B1 | ⬜ Untested |
@@ -396,34 +407,72 @@
 
 | Metric | Value |
 |--------|-------|
-| **Total System Components (SYS)** | 14 |
-| **Total System Test Cases (STP)** | 28 |
-| **Total System Scenarios (STS)** | 60 |
-| **REQ → SYS Coverage** | 39/44 (88%) |
-| **SYS → STP Coverage** | 14/14 (100%) |
+| **Total System Components (SYS)** | 15 |
+| **Total System Test Cases (STP)** | 29 |
+| **Total System Scenarios (STS)** | 62 |
+| **REQ → SYS Coverage** | 44/44 (100%) |
+| **SYS → STP Coverage** | 15/15 (100%) |
 
 ## Matrix C — Integration Verification (Module Boundary View)
 
 | System Component (SYS) | Parent REQs | Architecture Module (ARCH) | Module Name | Test Case ID (ITP) | Technique | Scenario ID (ITS) | Status |
 |------------------------|-------------|---------------------------|-------------|--------------------|-----------|--------------------|--------|
-| SYS-001 (REQ-001, REQ-002, REQ-003, REQ-004, REQ-005, REQ-006, REQ-008, REQ-026, REQ-027, REQ-NF-005, REQ-IF-001) | REQ-001, REQ-002, REQ-003, REQ-004, REQ-005, REQ-006, REQ-008, REQ-026, REQ-027, REQ-NF-005, REQ-IF-001 | ARCH-001 | Plan Synthesis Orchestrator | ❌ MISSING | — | — | ⬜ Untested |
-| SYS-001 (REQ-001, REQ-002, REQ-003, REQ-004, REQ-005, REQ-006, REQ-008, REQ-026, REQ-027, REQ-NF-005, REQ-IF-001) | REQ-001, REQ-002, REQ-003, REQ-004, REQ-005, REQ-006, REQ-008, REQ-026, REQ-027, REQ-NF-005, REQ-IF-001 | ARCH-002 | Canonical Artifact Emitter | ❌ MISSING | — | — | ⬜ Untested |
-| SYS-002 (REQ-009, REQ-010, REQ-011, REQ-013, REQ-014, REQ-026, REQ-027, REQ-NF-005, REQ-IF-002) | REQ-009, REQ-010, REQ-011, REQ-013, REQ-014, REQ-026, REQ-027, REQ-NF-005, REQ-IF-002 | ARCH-003 | Tasks Synthesis Orchestrator | ❌ MISSING | — | — | ⬜ Untested |
-| SYS-003 (REQ-015, REQ-018, REQ-019, REQ-020, REQ-021, REQ-022, REQ-024, REQ-025, REQ-026, REQ-027, REQ-NF-005) | REQ-015, REQ-018, REQ-019, REQ-020, REQ-021, REQ-022, REQ-024, REQ-025, REQ-026, REQ-027, REQ-NF-005 | ARCH-004 | Implementation Orchestrator | ❌ MISSING | — | — | ⬜ Untested |
-| SYS-003 (REQ-015, REQ-018, REQ-019, REQ-020, REQ-021, REQ-022, REQ-024, REQ-025, REQ-026, REQ-027, REQ-NF-005) | REQ-015, REQ-018, REQ-019, REQ-020, REQ-021, REQ-022, REQ-024, REQ-025, REQ-026, REQ-027, REQ-NF-005 | ARCH-005 | Code Generator | ❌ MISSING | — | — | ⬜ Untested |
-| SYS-003 (REQ-015, REQ-018, REQ-019, REQ-020, REQ-021, REQ-022, REQ-024, REQ-025, REQ-026, REQ-027, REQ-NF-005) | REQ-015, REQ-018, REQ-019, REQ-020, REQ-021, REQ-022, REQ-024, REQ-025, REQ-026, REQ-027, REQ-NF-005 | ARCH-006 | Test Generator | ❌ MISSING | — | — | ⬜ Untested |
-| SYS-003 (REQ-015, REQ-018, REQ-019, REQ-020, REQ-021, REQ-022, REQ-024, REQ-025, REQ-026, REQ-027, REQ-NF-005) | REQ-015, REQ-018, REQ-019, REQ-020, REQ-021, REQ-022, REQ-024, REQ-025, REQ-026, REQ-027, REQ-NF-005 | ARCH-017 | Quality Compliance Harness | ❌ MISSING | — | — | ⬜ Untested |
-| SYS-004 (REQ-016, REQ-017, REQ-NF-004, REQ-CN-002) | REQ-016, REQ-017, REQ-NF-004, REQ-CN-002 | ARCH-007 | Pre-Implementation Gate | ❌ MISSING | — | — | ⬜ Untested |
-| SYS-005 (REQ-007, REQ-012, REQ-NF-003, REQ-IF-001, REQ-IF-002) | REQ-007, REQ-012, REQ-NF-003, REQ-IF-001, REQ-IF-002 | ARCH-008 | Additive Enrichment Encoder | ❌ MISSING | — | — | ⬜ Untested |
-| SYS-006 (SYS\) | SYS\ | ARCH-009 | Hallucination Guard | ❌ MISSING | — | — | ⬜ Untested |
-| SYS-007 (REQ-022) | REQ-022 | ARCH-010 | Source Region Splicer | ❌ MISSING | — | — | ⬜ Untested |
-| SYS-008 (REQ-024) | REQ-024 | ARCH-011 | Domain Overlay Loader | ❌ MISSING | — | — | ⬜ Untested |
-| SYS-009 (REQ-014) | REQ-014 | ARCH-012 | Hazard Task Emitter | ❌ MISSING | — | — | ⬜ Untested |
-| SYS-010 (REQ-028, REQ-029, REQ-IF-001, REQ-IF-002, REQ-CN-001) | REQ-028, REQ-029, REQ-IF-001, REQ-IF-002, REQ-CN-001 | ARCH-014 | Reduced-Enrichment Fallback | ❌ MISSING | — | — | ⬜ Untested |
-| SYS-011 (REQ-IF-003, REQ-IF-005, REQ-NF-006) | REQ-IF-003, REQ-IF-005, REQ-NF-006 | ARCH-015 | Hook Registrar | ❌ MISSING | — | — | ⬜ Untested |
-| SYS-012 (REQ-027, REQ-IF-004) | REQ-027, REQ-IF-004 | ARCH-016 | Structured Summary Reporter | ❌ MISSING | — | — | ⬜ Untested |
-| SYS-013 ((deferred — no active REQ-NNN binding under v0.7.0)) | (deferred — no active REQ-NNN binding under v0.7.0) | ❌ MISSING | — | — | — | — | ⬜ Untested |
-| SYS-014 (REQ-021) | REQ-021 | ARCH-018 | Commit Annotator | ❌ MISSING | — | — | ⬜ Untested |
+| SYS-001 (REQ-001, REQ-002, REQ-003, REQ-004, REQ-005, REQ-006, REQ-008, REQ-026, REQ-027, REQ-NF-005, REQ-IF-001) | REQ-001, REQ-002, REQ-003, REQ-004, REQ-005, REQ-006, REQ-008, REQ-026, REQ-027, REQ-NF-005, REQ-IF-001 | ARCH-001 | Plan Synthesis Orchestrator | ITP-001-A | Fixture-Driven Black-Box + CLI Contract Testing | ITS-001-A1 | ⬜ Untested |
+| SYS-001 (REQ-001, REQ-002, REQ-003, REQ-004, REQ-005, REQ-006, REQ-008, REQ-026, REQ-027, REQ-NF-005, REQ-IF-001) | REQ-001, REQ-002, REQ-003, REQ-004, REQ-005, REQ-006, REQ-008, REQ-026, REQ-027, REQ-NF-005, REQ-IF-001 | ARCH-001 | Plan Synthesis Orchestrator | ITP-001-A | Fixture-Driven Black-Box + CLI Contract Testing | ITS-001-A2 | ⬜ Untested |
+| SYS-001 (REQ-001, REQ-002, REQ-003, REQ-004, REQ-005, REQ-006, REQ-008, REQ-026, REQ-027, REQ-NF-005, REQ-IF-001) | REQ-001, REQ-002, REQ-003, REQ-004, REQ-005, REQ-006, REQ-008, REQ-026, REQ-027, REQ-NF-005, REQ-IF-001 | ARCH-001 | Plan Synthesis Orchestrator | ITP-001-B | Fixture-Driven Black-Box + CLI Contract Testing | ITS-001-B1 | ⬜ Untested |
+| SYS-001 (REQ-001, REQ-002, REQ-003, REQ-004, REQ-005, REQ-006, REQ-008, REQ-026, REQ-027, REQ-NF-005, REQ-IF-001) | REQ-001, REQ-002, REQ-003, REQ-004, REQ-005, REQ-006, REQ-008, REQ-026, REQ-027, REQ-NF-005, REQ-IF-001 | ARCH-002 | Canonical Artifact Emitter | ITP-002-A | Fixture-Driven Black-Box | ITS-002-A1 | ⬜ Untested |
+| SYS-001 (REQ-001, REQ-002, REQ-003, REQ-004, REQ-005, REQ-006, REQ-008, REQ-026, REQ-027, REQ-NF-005, REQ-IF-001) | REQ-001, REQ-002, REQ-003, REQ-004, REQ-005, REQ-006, REQ-008, REQ-026, REQ-027, REQ-NF-005, REQ-IF-001 | ARCH-002 | Canonical Artifact Emitter | ITP-002-A | Fixture-Driven Black-Box | ITS-002-A2 | ⬜ Untested |
+| SYS-001 (REQ-001, REQ-002, REQ-003, REQ-004, REQ-005, REQ-006, REQ-008, REQ-026, REQ-027, REQ-NF-005, REQ-IF-001) | REQ-001, REQ-002, REQ-003, REQ-004, REQ-005, REQ-006, REQ-008, REQ-026, REQ-027, REQ-NF-005, REQ-IF-001 | ARCH-002 | Canonical Artifact Emitter | ITP-002-B | Fixture-Driven Black-Box | ITS-002-B1 | ⬜ Untested |
+| SYS-002 (REQ-009, REQ-010, REQ-011, REQ-013, REQ-014, REQ-026, REQ-027, REQ-NF-005, REQ-IF-002) | REQ-009, REQ-010, REQ-011, REQ-013, REQ-014, REQ-026, REQ-027, REQ-NF-005, REQ-IF-002 | ARCH-003 | Tasks Synthesis Orchestrator | ITP-003-A | Fixture-Driven Black-Box + CLI Contract Testing | ITS-003-A1 | ⬜ Untested |
+| SYS-002 (REQ-009, REQ-010, REQ-011, REQ-013, REQ-014, REQ-026, REQ-027, REQ-NF-005, REQ-IF-002) | REQ-009, REQ-010, REQ-011, REQ-013, REQ-014, REQ-026, REQ-027, REQ-NF-005, REQ-IF-002 | ARCH-003 | Tasks Synthesis Orchestrator | ITP-003-A | Fixture-Driven Black-Box + CLI Contract Testing | ITS-003-A2 | ⬜ Untested |
+| SYS-002 (REQ-009, REQ-010, REQ-011, REQ-013, REQ-014, REQ-026, REQ-027, REQ-NF-005, REQ-IF-002) | REQ-009, REQ-010, REQ-011, REQ-013, REQ-014, REQ-026, REQ-027, REQ-NF-005, REQ-IF-002 | ARCH-003 | Tasks Synthesis Orchestrator | ITP-003-B | Fixture-Driven Black-Box + CLI Contract Testing | ITS-003-B1 | ⬜ Untested |
+| SYS-003 (REQ-015, REQ-018, REQ-019, REQ-020, REQ-021, REQ-022, REQ-024, REQ-025, REQ-026, REQ-027, REQ-NF-005) | REQ-015, REQ-018, REQ-019, REQ-020, REQ-021, REQ-022, REQ-024, REQ-025, REQ-026, REQ-027, REQ-NF-005 | ARCH-004 | Implementation Orchestrator | ITP-004-A | Fixture-Driven Black-Box + Fault Injection | ITS-004-A1 | ⬜ Untested |
+| SYS-003 (REQ-015, REQ-018, REQ-019, REQ-020, REQ-021, REQ-022, REQ-024, REQ-025, REQ-026, REQ-027, REQ-NF-005) | REQ-015, REQ-018, REQ-019, REQ-020, REQ-021, REQ-022, REQ-024, REQ-025, REQ-026, REQ-027, REQ-NF-005 | ARCH-004 | Implementation Orchestrator | ITP-004-B | Fixture-Driven Black-Box + Fault Injection | ITS-004-B1 | ⬜ Untested |
+| SYS-003 (REQ-015, REQ-018, REQ-019, REQ-020, REQ-021, REQ-022, REQ-024, REQ-025, REQ-026, REQ-027, REQ-NF-005) | REQ-015, REQ-018, REQ-019, REQ-020, REQ-021, REQ-022, REQ-024, REQ-025, REQ-026, REQ-027, REQ-NF-005 | ARCH-004 | Implementation Orchestrator | ITP-004-D | Idempotent Re-Run | ITS-004-D1 | ⬜ Untested |
+| SYS-003 (REQ-015, REQ-018, REQ-019, REQ-020, REQ-021, REQ-022, REQ-024, REQ-025, REQ-026, REQ-027, REQ-NF-005) | REQ-015, REQ-018, REQ-019, REQ-020, REQ-021, REQ-022, REQ-024, REQ-025, REQ-026, REQ-027, REQ-NF-005 | ARCH-005 | Code Generator | ITP-005-A | Fixture-Driven Black-Box | ITS-005-A1 | ⬜ Untested |
+| SYS-003 (REQ-015, REQ-018, REQ-019, REQ-020, REQ-021, REQ-022, REQ-024, REQ-025, REQ-026, REQ-027, REQ-NF-005) | REQ-015, REQ-018, REQ-019, REQ-020, REQ-021, REQ-022, REQ-024, REQ-025, REQ-026, REQ-027, REQ-NF-005 | ARCH-005 | Code Generator | ITP-005-A | Fixture-Driven Black-Box | ITS-005-A2 | ⬜ Untested |
+| SYS-003 (REQ-015, REQ-018, REQ-019, REQ-020, REQ-021, REQ-022, REQ-024, REQ-025, REQ-026, REQ-027, REQ-NF-005) | REQ-015, REQ-018, REQ-019, REQ-020, REQ-021, REQ-022, REQ-024, REQ-025, REQ-026, REQ-027, REQ-NF-005 | ARCH-006 | Test Generator | ITP-006-A | Fixture-Driven Black-Box | ITS-006-A1 | ⬜ Untested |
+| SYS-003 (REQ-015, REQ-018, REQ-019, REQ-020, REQ-021, REQ-022, REQ-024, REQ-025, REQ-026, REQ-027, REQ-NF-005) | REQ-015, REQ-018, REQ-019, REQ-020, REQ-021, REQ-022, REQ-024, REQ-025, REQ-026, REQ-027, REQ-NF-005 | ARCH-017 | Quality Compliance Harness | ITP-017-A | Fixture-Driven Black-Box (mocked harness invocations) | ITS-017-A1 | ⬜ Untested |
+| SYS-003 (REQ-015, REQ-018, REQ-019, REQ-020, REQ-021, REQ-022, REQ-024, REQ-025, REQ-026, REQ-027, REQ-NF-005) | REQ-015, REQ-018, REQ-019, REQ-020, REQ-021, REQ-022, REQ-024, REQ-025, REQ-026, REQ-027, REQ-NF-005 | ARCH-017 | Quality Compliance Harness | ITP-017-A | Fixture-Driven Black-Box (mocked harness invocations) | ITS-017-A2 | ⬜ Untested |
+| SYS-004 (REQ-016, REQ-017, REQ-NF-004, REQ-CN-002) | REQ-016, REQ-017, REQ-NF-004, REQ-CN-002 | ARCH-007 | Pre-Implementation Gate | ITP-007-A | CLI Contract Testing + Fault Injection | ITS-007-A1 | ⬜ Untested |
+| SYS-004 (REQ-016, REQ-017, REQ-NF-004, REQ-CN-002) | REQ-016, REQ-017, REQ-NF-004, REQ-CN-002 | ARCH-007 | Pre-Implementation Gate | ITP-007-B | CLI Contract Testing + Fault Injection | ITS-007-B1 | ⬜ Untested |
+| SYS-004 (REQ-016, REQ-017, REQ-NF-004, REQ-CN-002) | REQ-016, REQ-017, REQ-NF-004, REQ-CN-002 | ARCH-007 | Pre-Implementation Gate | ITP-007-B | CLI Contract Testing + Fault Injection | ITS-007-B2 | ⬜ Untested |
+| SYS-005 (REQ-007, REQ-012, REQ-NF-003, REQ-IF-001, REQ-IF-002) | REQ-007, REQ-012, REQ-NF-003, REQ-IF-001, REQ-IF-002 | ARCH-008 | Additive Enrichment Encoder | ITP-008-A | Fixture-Driven Black-Box + Idempotent Re-Run | ITS-008-A1 | ⬜ Untested |
+| SYS-005 (REQ-007, REQ-012, REQ-NF-003, REQ-IF-001, REQ-IF-002) | REQ-007, REQ-012, REQ-NF-003, REQ-IF-001, REQ-IF-002 | ARCH-008 | Additive Enrichment Encoder | ITP-008-A | Fixture-Driven Black-Box + Idempotent Re-Run | ITS-008-A2 | ⬜ Untested |
+| SYS-006 (REQ-023, REQ-NF-002) | REQ-023, REQ-NF-002 | ARCH-009 | Hallucination Guard | ITP-009-A | CLI Contract Testing + Fault Injection | ITS-009-A1 | ⬜ Untested |
+| SYS-006 (REQ-023, REQ-NF-002) | REQ-023, REQ-NF-002 | ARCH-009 | Hallucination Guard | ITP-009-B | CLI Contract Testing + Fault Injection | ITS-009-B1 | ⬜ Untested |
+| SYS-006 (REQ-023, REQ-NF-002) | REQ-023, REQ-NF-002 | ARCH-009 | Hallucination Guard | ITP-009-B | CLI Contract Testing + Fault Injection | ITS-009-B2 | ⬜ Untested |
+| SYS-007 (REQ-022) | REQ-022 | ARCH-010 | Source Region Splicer | ITP-010-A | CLI Contract Testing + Idempotent Re-Run + Fault Injection | ITS-010-A1 | ⬜ Untested |
+| SYS-007 (REQ-022) | REQ-022 | ARCH-010 | Source Region Splicer | ITP-010-A | CLI Contract Testing + Idempotent Re-Run + Fault Injection | ITS-010-A2 | ⬜ Untested |
+| SYS-007 (REQ-022) | REQ-022 | ARCH-010 | Source Region Splicer | ITP-010-B | CLI Contract Testing + Idempotent Re-Run + Fault Injection | ITS-010-B1 | ⬜ Untested |
+| SYS-007 (REQ-022) | REQ-022 | ARCH-010 | Source Region Splicer | ITP-010-B | CLI Contract Testing + Idempotent Re-Run + Fault Injection | ITS-010-B2 | ⬜ Untested |
+| SYS-007 (REQ-022) | REQ-022 | ARCH-010 | Source Region Splicer | ITP-010-D | CLI Contract Testing + Idempotent Re-Run + Fault Injection | ITS-010-D1 | ⬜ Untested |
+| SYS-008 (REQ-024) | REQ-024 | ARCH-011 | Domain Overlay Loader | ITP-011-A | Fixture-Driven Black-Box + Fault Injection | ITS-011-A1 | ⬜ Untested |
+| SYS-008 (REQ-024) | REQ-024 | ARCH-011 | Domain Overlay Loader | ITP-011-B | Fixture-Driven Black-Box + Fault Injection | ITS-011-B1 | ⬜ Untested |
+| SYS-009 (REQ-014) | REQ-014 | ARCH-012 | Hazard Task Emitter | ITP-012-A | Fixture-Driven Black-Box | ITS-012-A1 | ⬜ Untested |
+| SYS-009 (REQ-014) | REQ-014 | ARCH-012 | Hazard Task Emitter | ITP-012-A | Fixture-Driven Black-Box | ITS-012-A2 | ⬜ Untested |
+| SYS-010 (REQ-028, REQ-029, REQ-IF-001, REQ-IF-002, REQ-CN-001) | REQ-028, REQ-029, REQ-IF-001, REQ-IF-002, REQ-CN-001 | ARCH-013 | Schema Validator | ITP-013-A | CLI Contract Testing + Fault Injection | ITS-013-A1 | ⬜ Untested |
+| SYS-010 (REQ-028, REQ-029, REQ-IF-001, REQ-IF-002, REQ-CN-001) | REQ-028, REQ-029, REQ-IF-001, REQ-IF-002, REQ-CN-001 | ARCH-013 | Schema Validator | ITP-013-A | CLI Contract Testing + Fault Injection | ITS-013-A2 | ⬜ Untested |
+| SYS-010 (REQ-028, REQ-029, REQ-IF-001, REQ-IF-002, REQ-CN-001) | REQ-028, REQ-029, REQ-IF-001, REQ-IF-002, REQ-CN-001 | ARCH-013 | Schema Validator | ITP-013-A | CLI Contract Testing + Fault Injection | ITS-013-A3 | ⬜ Untested |
+| SYS-010 (REQ-028, REQ-029, REQ-IF-001, REQ-IF-002, REQ-CN-001) | REQ-028, REQ-029, REQ-IF-001, REQ-IF-002, REQ-CN-001 | ARCH-013 | Schema Validator | ITP-013-B | CLI Contract Testing + Fault Injection | ITS-013-B1 | ⬜ Untested |
+| SYS-010 (REQ-028, REQ-029, REQ-IF-001, REQ-IF-002, REQ-CN-001) | REQ-028, REQ-029, REQ-IF-001, REQ-IF-002, REQ-CN-001 | ARCH-013 | Schema Validator | ITP-013-B | CLI Contract Testing + Fault Injection | ITS-013-B2 | ⬜ Untested |
+| SYS-010 (REQ-028, REQ-029, REQ-IF-001, REQ-IF-002, REQ-CN-001) | REQ-028, REQ-029, REQ-IF-001, REQ-IF-002, REQ-CN-001 | ARCH-014 | Reduced-Enrichment Fallback | ITP-014-A | Fixture-Driven Black-Box | ITS-014-A1 | ⬜ Untested |
+| SYS-010 (REQ-028, REQ-029, REQ-IF-001, REQ-IF-002, REQ-CN-001) | REQ-028, REQ-029, REQ-IF-001, REQ-IF-002, REQ-CN-001 | ARCH-014 | Reduced-Enrichment Fallback | ITP-014-A | Fixture-Driven Black-Box | ITS-014-A2 | ⬜ Untested |
+| SYS-011 (REQ-IF-003, REQ-IF-005, REQ-NF-006) | REQ-IF-003, REQ-IF-005, REQ-NF-006 | ARCH-015 | Hook Registrar | ITP-015-A | CLI Contract Testing + Idempotent Re-Run | ITS-015-A1 | ⬜ Untested |
+| SYS-011 (REQ-IF-003, REQ-IF-005, REQ-NF-006) | REQ-IF-003, REQ-IF-005, REQ-NF-006 | ARCH-015 | Hook Registrar | ITP-015-A | CLI Contract Testing + Idempotent Re-Run | ITS-015-A2 | ⬜ Untested |
+| SYS-011 (REQ-IF-003, REQ-IF-005, REQ-NF-006) | REQ-IF-003, REQ-IF-005, REQ-NF-006 | ARCH-015 | Hook Registrar | ITP-015-A | CLI Contract Testing + Idempotent Re-Run | ITS-015-A3 | ⬜ Untested |
+| SYS-011 (REQ-IF-003, REQ-IF-005, REQ-NF-006) | REQ-IF-003, REQ-IF-005, REQ-NF-006 | ARCH-015 | Hook Registrar | ITP-015-D | CLI Contract Testing + Idempotent Re-Run | ITS-015-D1 | ⬜ Untested |
+| SYS-012 (REQ-027, REQ-IF-004) | REQ-027, REQ-IF-004 | ARCH-016 | Structured Summary Reporter | ITP-016-A | CLI Contract Testing + Fault Injection | ITS-016-A1 | ⬜ Untested |
+| SYS-012 (REQ-027, REQ-IF-004) | REQ-027, REQ-IF-004 | ARCH-016 | Structured Summary Reporter | ITP-016-A | CLI Contract Testing + Fault Injection | ITS-016-A2 | ⬜ Untested |
+| SYS-013 ((none — deprecated)) | (none — deprecated) | ARCH-017 | Quality Compliance Harness | ITP-017-A | Fixture-Driven Black-Box (mocked harness invocations) | ITS-017-A1 | ⬜ Untested |
+| SYS-013 ((none — deprecated)) | (none — deprecated) | ARCH-017 | Quality Compliance Harness | ITP-017-A | Fixture-Driven Black-Box (mocked harness invocations) | ITS-017-A2 | ⬜ Untested |
+| SYS-014 (REQ-021) | REQ-021 | ARCH-018 | Commit Annotator | ITP-018-A | Fixture-Driven Black-Box | ITS-018-A1 | ⬜ Untested |
+| SYS-014 (REQ-021) | REQ-021 | ARCH-018 | Commit Annotator | ITP-018-A | Fixture-Driven Black-Box | ITS-018-A2 | ⬜ Untested |
+| SYS-015 (REQ-CN-003, REQ-CN-004, REQ-NF-001) | REQ-CN-003, REQ-CN-004, REQ-NF-001 | ARCH-010 | Source Region Splicer | ITP-010-A | CLI Contract Testing + Idempotent Re-Run + Fault Injection | ITS-010-A1 | ⬜ Untested |
+| SYS-015 (REQ-CN-003, REQ-CN-004, REQ-NF-001) | REQ-CN-003, REQ-CN-004, REQ-NF-001 | ARCH-010 | Source Region Splicer | ITP-010-A | CLI Contract Testing + Idempotent Re-Run + Fault Injection | ITS-010-A2 | ⬜ Untested |
+| SYS-015 (REQ-CN-003, REQ-CN-004, REQ-NF-001) | REQ-CN-003, REQ-CN-004, REQ-NF-001 | ARCH-010 | Source Region Splicer | ITP-010-B | CLI Contract Testing + Idempotent Re-Run + Fault Injection | ITS-010-B1 | ⬜ Untested |
+| SYS-015 (REQ-CN-003, REQ-CN-004, REQ-NF-001) | REQ-CN-003, REQ-CN-004, REQ-NF-001 | ARCH-010 | Source Region Splicer | ITP-010-B | CLI Contract Testing + Idempotent Re-Run + Fault Injection | ITS-010-B2 | ⬜ Untested |
+| SYS-015 (REQ-CN-003, REQ-CN-004, REQ-NF-001) | REQ-CN-003, REQ-CN-004, REQ-NF-001 | ARCH-010 | Source Region Splicer | ITP-010-D | CLI Contract Testing + Idempotent Re-Run + Fault Injection | ITS-010-D1 | ⬜ Untested |
 | N/A (Cross-Cutting) | — | ARCH-019 | V-Model Artifact Reader (Deferred) | ❌ MISSING | — | — | ⬜ Untested |
 | N/A (Cross-Cutting) | — | ARCH-020 | Subprocess Runner (Deferred) | ❌ MISSING | — | — | ⬜ Untested |
 | N/A (Cross-Cutting) | — | ARCH-021 | Filesystem Writer (Deferred) | ❌ MISSING | — | — | ⬜ Untested |
@@ -434,10 +483,10 @@
 |--------|-------|
 | **Total Architecture Modules (ARCH)** | 21 |
 | **Total Cross-Cutting Modules** | 3 |
-| **Total Integration Test Cases (ITP)** | 0 |
-| **Total Integration Scenarios (ITS)** | 46 |
-| **SYS → ARCH Coverage** | 13/14 (92%) |
-| **ARCH → ITP Coverage** | 0/21 (0%) |
+| **Total Integration Test Cases (ITP)** | 30 |
+| **Total Integration Scenarios (ITS)** | 49 |
+| **SYS → ARCH Coverage** | 15/15 (100%) |
+| **ARCH → ITP Coverage** | 18/21 (85%) |
 
 ### Uncovered Requirements (REQ without ATP)
 
@@ -449,11 +498,7 @@ None — all tests trace to requirements.
 
 ### Uncovered Requirements — System Level (REQ without SYS)
 
-- REQ-023
-- REQ-CN-003
-- REQ-CN-004
-- REQ-NF-001
-- REQ-NF-002
+None — full coverage.
 
 ### Orphaned System Test Cases (STP without valid SYS)
 
@@ -461,7 +506,7 @@ None — all system tests trace to components.
 
 ### Uncovered System Components — Architecture Level (SYS without ARCH)
 
-- SYS-013
+None — full coverage.
 
 ### Orphaned Integration Test Cases (ITP without valid ARCH)
 
@@ -471,39 +516,85 @@ None — all integration tests trace to modules.
 
 | Architecture Module (ARCH) | Parent System | Module Design (MOD) | Module Name | Test Case ID (UTP) | Technique | Scenario ID (UTS) | Status |
 |---------------------------|---------------|---------------------|-------------|--------------------|-----------|--------------------|--------|
-| ARCH-001 (SYS-001) | SYS-001 | ❌ MISSING | — | — | — | — | ⬜ Untested |
-| ARCH-002 (SYS-001) | SYS-001 | ❌ MISSING | — | — | — | — | ⬜ Untested |
-| ARCH-003 (SYS-002) | SYS-002 | ❌ MISSING | — | — | — | — | ⬜ Untested |
-| ARCH-004 (SYS-003) | SYS-003 | ❌ MISSING | — | — | — | — | ⬜ Untested |
-| ARCH-005 (SYS-003) | SYS-003 | ❌ MISSING | — | — | — | — | ⬜ Untested |
-| ARCH-006 (SYS-003) | SYS-003 | ❌ MISSING | — | — | — | — | ⬜ Untested |
-| ARCH-007 (SYS-004) | SYS-004 | ❌ MISSING | — | — | — | — | ⬜ Untested |
-| ARCH-008 (SYS-005) | SYS-005 | ❌ MISSING | — | — | — | — | ⬜ Untested |
-| ARCH-009 (SYS-006) | SYS-006 | ❌ MISSING | — | — | — | — | ⬜ Untested |
-| ARCH-010 (SYS-007) | SYS-007 | ❌ MISSING | — | — | — | — | ⬜ Untested |
-| ARCH-011 (SYS-008) | SYS-008 | ❌ MISSING | — | — | — | — | ⬜ Untested |
-| ARCH-012 (SYS-009) | SYS-009 | ❌ MISSING | — | — | — | — | ⬜ Untested |
-| ARCH-013 (--tasks` (PLANNED; `grep`, ~50 lines). Validates `plan.md` and `tasks.md` against spec-kit-core's canonical `plan-template.md` and `tasks-template.md` schemas pinned at v0.7.0. Exit 0 ⇔ every required section present in order.) | --tasks` (PLANNED; `grep`, ~50 lines). Validates `plan.md` and `tasks.md` against spec-kit-core's canonical `plan-template.md` and `tasks-template.md` schemas pinned at v0.7.0. Exit 0 ⇔ every required section present in order. | ❌ MISSING | — | — | — | — | ⬜ Untested |
-| ARCH-014 (SYS-010) | SYS-010 | ❌ MISSING | — | — | — | — | ⬜ Untested |
-| ARCH-015 (SYS-011) | SYS-011 | ❌ MISSING | — | — | — | — | ⬜ Untested |
-| ARCH-016 (SYS-012) | SYS-012 | ❌ MISSING | — | — | — | — | ⬜ Untested |
-| ARCH-017 (SYS-003) | SYS-003 | ❌ MISSING | — | — | — | — | ⬜ Untested |
-| ARCH-018 (SYS-014) | SYS-014 | ❌ MISSING | — | — | — | — | ⬜ Untested |
-| ARCH-019 ([CROSS-CUTTING]) | [CROSS-CUTTING] | ❌ MISSING | — | — | — | — | ⬜ Untested |
-| ARCH-020 ([CROSS-CUTTING]) | [CROSS-CUTTING] | ❌ MISSING | — | — | — | — | ⬜ Untested |
-| ARCH-021 ([CROSS-CUTTING]) | [CROSS-CUTTING] | ❌ MISSING | — | — | — | — | ⬜ Untested |
+| ARCH-001 (SYS-001) | SYS-001 | MOD-001 | Plan Synthesis Orchestrator | UTP-001-A | DeepEval Structural Metric | UTS-001-A1 | ⬜ Untested |
+| ARCH-001 (SYS-001) | SYS-001 | MOD-001 | Plan Synthesis Orchestrator | UTP-001-A | DeepEval Structural Metric | UTS-001-A2 | ⬜ Untested |
+| ARCH-001 (SYS-001) | SYS-001 | MOD-001 | Plan Synthesis Orchestrator | UTP-001-A | DeepEval Structural Metric | UTS-001-A3 | ⬜ Untested |
+| ARCH-002 (SYS-001) | SYS-001 | MOD-002 | Canonical Output Emitter | UTP-002-A | DeepEval Structural Metric | UTS-002-A1 | ⬜ Untested |
+| ARCH-002 (SYS-001) | SYS-001 | MOD-002 | Canonical Output Emitter | UTP-002-A | DeepEval Structural Metric | UTS-002-A2 | ⬜ Untested |
+| ARCH-002 (SYS-001) | SYS-001 | MOD-002 | Canonical Output Emitter | UTP-002-A | DeepEval Structural Metric | UTS-002-A3 | ⬜ Untested |
+| ARCH-003 (SYS-002) | SYS-002 | MOD-003 | Tasks Synthesis Orchestrator | UTP-003-A | DeepEval Structural Metric | UTS-003-A1 | ⬜ Untested |
+| ARCH-003 (SYS-002) | SYS-002 | MOD-003 | Tasks Synthesis Orchestrator | UTP-003-A | DeepEval Structural Metric | UTS-003-A2 | ⬜ Untested |
+| ARCH-003 (SYS-002) | SYS-002 | MOD-004 | TDD Task List Builder | UTP-004-A | DeepEval Structural Metric | UTS-004-A1 | ⬜ Untested |
+| ARCH-003 (SYS-002) | SYS-002 | MOD-004 | TDD Task List Builder | UTP-004-A | DeepEval Structural Metric | UTS-004-A2 | ⬜ Untested |
+| ARCH-004 (SYS-003) | SYS-003 | MOD-005 | Implementation Orchestrator | UTP-005-A | DeepEval Structural Metric | UTS-005-A1 | ⬜ Untested |
+| ARCH-004 (SYS-003) | SYS-003 | MOD-005 | Implementation Orchestrator | UTP-005-A | DeepEval Structural Metric | UTS-005-A2 | ⬜ Untested |
+| ARCH-005 (SYS-003) | SYS-003 | MOD-006 | per-MOD dispatch | UTP-006-A | DeepEval Structural Metric | UTS-006-A1 | ⬜ Untested |
+| ARCH-005 (SYS-003) | SYS-003 | MOD-006 | per-MOD dispatch | UTP-006-A | DeepEval Structural Metric | UTS-006-A2 | ⬜ Untested |
+| ARCH-005 (SYS-003) | SYS-003 | MOD-007 | Module Source Renderer | UTP-007-A | DeepEval Structural Metric | UTS-007-A1 | ⬜ Untested |
+| ARCH-005 (SYS-003) | SYS-003 | MOD-007 | Module Source Renderer | UTP-007-A | DeepEval Structural Metric | UTS-007-A2 | ⬜ Untested |
+| ARCH-006 (SYS-003) | SYS-003 | MOD-008 | per-level dispatch | UTP-008-A | DeepEval Structural Metric | UTS-008-A1 | ⬜ Untested |
+| ARCH-006 (SYS-003) | SYS-003 | MOD-009 | Per-Level Test Renderer | UTP-009-A | DeepEval Structural Metric | UTS-009-A1 | ⬜ Untested |
+| ARCH-007 (SYS-004) | SYS-004 | MOD-010 | Pre-Implementation Gate Coordinator | UTP-010-A | BATS Statement & Branch Coverage + Equivalence Partitioning | UTS-010-A1 | ⬜ Untested |
+| ARCH-007 (SYS-004) | SYS-004 | MOD-010 | Pre-Implementation Gate Coordinator | UTP-010-A | BATS Statement & Branch Coverage + Equivalence Partitioning | UTS-010-A2 | ⬜ Untested |
+| ARCH-007 (SYS-004) | SYS-004 | MOD-010 | Pre-Implementation Gate Coordinator | UTP-010-B | BATS Statement & Branch Coverage + Equivalence Partitioning | UTS-010-B1 | ⬜ Untested |
+| ARCH-007 (SYS-004) | SYS-004 | MOD-010 | Pre-Implementation Gate Coordinator | UTP-010-B | BATS Statement & Branch Coverage + Equivalence Partitioning | UTS-010-B2 | ⬜ Untested |
+| ARCH-007 (SYS-004) | SYS-004 | MOD-010 | Pre-Implementation Gate Coordinator | UTP-010-B | BATS Statement & Branch Coverage + Equivalence Partitioning | UTS-010-B3 | ⬜ Untested |
+| ARCH-008 (SYS-005) | SYS-005 | MOD-011 | Plan Enrichment Encoder | UTP-011-A | DeepEval Structural Metric | UTS-011-A1 | ⬜ Untested |
+| ARCH-008 (SYS-005) | SYS-005 | MOD-011 | Plan Enrichment Encoder | UTP-011-A | DeepEval Structural Metric | UTS-011-A2 | ⬜ Untested |
+| ARCH-008 (SYS-005) | SYS-005 | MOD-012 | Tasks Traceability Comment Encoder | UTP-012-A | DeepEval Structural Metric | UTS-012-A1 | ⬜ Untested |
+| ARCH-009 (SYS-006) | SYS-006 | MOD-013 | Hallucination Guard | UTP-013-A | BATS Statement & Branch Coverage + Equivalence Partitioning | UTS-013-A1 | ⬜ Untested |
+| ARCH-009 (SYS-006) | SYS-006 | MOD-013 | Hallucination Guard | UTP-013-A | BATS Statement & Branch Coverage + Equivalence Partitioning | UTS-013-A2 | ⬜ Untested |
+| ARCH-009 (SYS-006) | SYS-006 | MOD-013 | Hallucination Guard | UTP-013-A | BATS Statement & Branch Coverage + Equivalence Partitioning | UTS-013-A3 | ⬜ Untested |
+| ARCH-009 (SYS-006) | SYS-006 | MOD-013 | Hallucination Guard | UTP-013-B | BATS Statement & Branch Coverage + Equivalence Partitioning | UTS-013-B1 | ⬜ Untested |
+| ARCH-009 (SYS-006) | SYS-006 | MOD-013 | Hallucination Guard | UTP-013-B | BATS Statement & Branch Coverage + Equivalence Partitioning | UTS-013-B2 | ⬜ Untested |
+| ARCH-009 (SYS-006) | SYS-006 | MOD-013 | Hallucination Guard | UTP-013-B | BATS Statement & Branch Coverage + Equivalence Partitioning | UTS-013-B3 | ⬜ Untested |
+| ARCH-009 (SYS-006) | SYS-006 | MOD-025 | Canonical ID-Set Extractor | UTP-025-A | BATS Statement & Branch Coverage + Equivalence Partitioning | UTS-025-A1 | ⬜ Untested |
+| ARCH-009 (SYS-006) | SYS-006 | MOD-025 | Canonical ID-Set Extractor | UTP-025-A | BATS Statement & Branch Coverage + Equivalence Partitioning | UTS-025-A2 | ⬜ Untested |
+| ARCH-009 (SYS-006) | SYS-006 | MOD-025 | Canonical ID-Set Extractor | UTP-025-B | BATS Statement & Branch Coverage + Equivalence Partitioning | UTS-025-B1 | ⬜ Untested |
+| ARCH-010 (SYS-007, SYS-015) | SYS-007, SYS-015 | MOD-014 | Source Region Splicer | UTP-014-A | BATS Statement & Branch Coverage + Boundary Value Analysis | UTS-014-A1 | ⬜ Untested |
+| ARCH-010 (SYS-007, SYS-015) | SYS-007, SYS-015 | MOD-014 | Source Region Splicer | UTP-014-A | BATS Statement & Branch Coverage + Boundary Value Analysis | UTS-014-A2 | ⬜ Untested |
+| ARCH-010 (SYS-007, SYS-015) | SYS-007, SYS-015 | MOD-014 | Source Region Splicer | UTP-014-A | BATS Statement & Branch Coverage + Boundary Value Analysis | UTS-014-A3 | ⬜ Untested |
+| ARCH-010 (SYS-007, SYS-015) | SYS-007, SYS-015 | MOD-014 | Source Region Splicer | UTP-014-B | BATS Statement & Branch Coverage + Boundary Value Analysis | UTS-014-B1 | ⬜ Untested |
+| ARCH-010 (SYS-007, SYS-015) | SYS-007, SYS-015 | MOD-014 | Source Region Splicer | UTP-014-B | BATS Statement & Branch Coverage + Boundary Value Analysis | UTS-014-B2 | ⬜ Untested |
+| ARCH-010 (SYS-007, SYS-015) | SYS-007, SYS-015 | MOD-014 | Source Region Splicer | UTP-014-B | BATS Statement & Branch Coverage + Boundary Value Analysis | UTS-014-B3 | ⬜ Untested |
+| ARCH-011 (SYS-008) | SYS-008 | MOD-015 | Domain Overlay Adapter | UTP-015-A | DeepEval Structural Metric | UTS-015-A1 | ⬜ Untested |
+| ARCH-011 (SYS-008) | SYS-008 | MOD-015 | Domain Overlay Adapter | UTP-015-A | DeepEval Structural Metric | UTS-015-A2 | ⬜ Untested |
+| ARCH-012 (SYS-009) | SYS-009 | MOD-016 | Hazard-Driven Task Enricher | UTP-016-A | DeepEval Structural Metric | UTS-016-A1 | ⬜ Untested |
+| ARCH-012 (SYS-009) | SYS-009 | MOD-016 | Hazard-Driven Task Enricher | UTP-016-A | DeepEval Structural Metric | UTS-016-A2 | ⬜ Untested |
+| ARCH-012 (SYS-009) | SYS-009 | MOD-016 | Hazard-Driven Task Enricher | UTP-016-A | DeepEval Structural Metric | UTS-016-A3 | ⬜ Untested |
+| ARCH-013 (SYS-010) | SYS-010 | MOD-017 | Plan Schema Validator | UTP-017-A | BATS Statement & Branch Coverage + Equivalence Partitioning | UTS-017-A1 | ⬜ Untested |
+| ARCH-013 (SYS-010) | SYS-010 | MOD-017 | Plan Schema Validator | UTP-017-A | BATS Statement & Branch Coverage + Equivalence Partitioning | UTS-017-A2 | ⬜ Untested |
+| ARCH-013 (SYS-010) | SYS-010 | MOD-017 | Plan Schema Validator | UTP-017-B | BATS Statement & Branch Coverage + Equivalence Partitioning | UTS-017-B1 | ⬜ Untested |
+| ARCH-013 (SYS-010) | SYS-010 | MOD-018 | Tasks Schema Validator | UTP-018-A | BATS Statement & Branch Coverage + Equivalence Partitioning | UTS-018-A1 | ⬜ Untested |
+| ARCH-013 (SYS-010) | SYS-010 | MOD-018 | Tasks Schema Validator | UTP-018-A | BATS Statement & Branch Coverage + Equivalence Partitioning | UTS-018-A2 | ⬜ Untested |
+| ARCH-013 (SYS-010) | SYS-010 | MOD-018 | Tasks Schema Validator | UTP-018-B | BATS Statement & Branch Coverage + Equivalence Partitioning | UTS-018-B1 | ⬜ Untested |
+| ARCH-014 (SYS-010) | SYS-010 | MOD-019 | Hybrid Path Enrichment Detector | UTP-019-A | DeepEval Structural Metric | UTS-019-A1 | ⬜ Untested |
+| ARCH-014 (SYS-010) | SYS-010 | MOD-019 | Hybrid Path Enrichment Detector | UTP-019-A | DeepEval Structural Metric | UTS-019-A2 | ⬜ Untested |
+| ARCH-015 (SYS-011) | SYS-011 | MOD-020 | Hook Registrar | UTP-020-A | YAML Schema Validation | UTS-020-A1 | ⬜ Untested |
+| ARCH-015 (SYS-011) | SYS-011 | MOD-020 | Hook Registrar | UTP-020-A | YAML Schema Validation | UTS-020-A2 | ⬜ Untested |
+| ARCH-015 (SYS-011) | SYS-011 | MOD-020 | Hook Registrar | UTP-020-A | YAML Schema Validation | UTS-020-A3 | ⬜ Untested |
+| ARCH-016 (SYS-012) | SYS-012 | MOD-021 | Structured Summary Reporter | UTP-021-A | DeepEval Structural Metric (one assertion per command file) | UTS-021-A1 | ⬜ Untested |
+| ARCH-016 (SYS-012) | SYS-012 | MOD-021 | Structured Summary Reporter | UTP-021-A | DeepEval Structural Metric (one assertion per command file) | UTS-021-A2 | ⬜ Untested |
+| ARCH-016 (SYS-012) | SYS-012 | MOD-021 | Structured Summary Reporter | UTP-021-A | DeepEval Structural Metric (one assertion per command file) | UTS-021-A3 | ⬜ Untested |
+| ARCH-017 (SYS-003, SYS-013) | SYS-003, SYS-013 | MOD-022 | Quality Compliance Harness | UTP-022-A | DeepEval Structural Metric | UTS-022-A1 | ⬜ Untested |
+| ARCH-017 (SYS-003, SYS-013) | SYS-003, SYS-013 | MOD-022 | Quality Compliance Harness | UTP-022-A | DeepEval Structural Metric | UTS-022-A2 | ⬜ Untested |
+| ARCH-018 (SYS-014) | SYS-014 | MOD-023 | Commit Annotator | UTP-023-A | DeepEval Structural Metric | UTS-023-A1 | ⬜ Untested |
+| ARCH-018 (SYS-014) | SYS-014 | MOD-023 | Commit Annotator | UTP-023-A | DeepEval Structural Metric | UTS-023-A2 | ⬜ Untested |
+| ARCH-019 ([CROSS-CUTTING]) | [CROSS-CUTTING] | MOD-024 | V-Model Artifact Loader [EXTERNAL] | — (integration level) | — | — | ⬜ Bypassed |
+| ARCH-020 ([CROSS-CUTTING]) | [CROSS-CUTTING] | MOD-026 | Subprocess Runner [EXTERNAL] | — (integration level) | — | — | ⬜ Bypassed |
+| ARCH-021 ([CROSS-CUTTING]) | [CROSS-CUTTING] | MOD-027 | Atomic Filesystem Writer [EXTERNAL] | — (integration level) | — | — | ⬜ Bypassed |
 
 ### Matrix D Coverage
 
 | Metric | Value |
 |--------|-------|
-| **Total Module Designs (MOD)** | 0 |
-| **External Modules** | 0 |
-| **Testable Modules** | 0 |
-| **Total Unit Test Cases (UTP)** | 0 |
-| **Total Unit Scenarios (UTS)** | 62 |
-| **ARCH → MOD Coverage** | 0/21 (0%) |
-| **MOD → UTP Coverage** | 0/0 (0%) |
+| **Total Module Designs (MOD)** | 27 |
+| **External Modules** | 3 |
+| **Testable Modules** | 24 |
+| **Total Unit Test Cases (UTP)** | 30 |
+| **Total Unit Scenarios (UTS)** | 64 |
+| **ARCH → MOD Coverage** | 21/21 (100%) |
+| **MOD → UTP Coverage** | 24/24 (100%) |
 
 ## Matrix H — Hazard Traceability
 
@@ -543,7 +634,7 @@ None — all integration tests trace to modules.
 | | REQ-NF-002 | ATP-NF-002-A | ⬜ Pending |
 | | SYS-006 | STP-006-A STP-006-B | ⬜ Pending |
 | | SYS-006 | STP-006-A STP-006-B | ⬜ Pending |
-| | SYS-013 | STP-013-A STP-013-B | ⬜ Pending |
+| | SYS-003 | STP-003-A STP-003-B STP-003-C | ⬜ Pending |
 | HAZ-013 | REQ-023 | ATP-023-A | ⬜ Pending |
 | | SYS-006 | STP-006-A STP-006-B | ⬜ Pending |
 | | SYS-006 | STP-006-A STP-006-B | ⬜ Pending |
@@ -588,4 +679,4 @@ None — all integration tests trace to modules.
 
 - **Matrix generated by**: `build-matrix.sh` (deterministic regex parser)
 - **Source documents**: `requirements.md`, `acceptance-plan.md`, `system-design.md`, `system-test.md`, `architecture-design.md`, `integration-test.md`, `module-design.md`, `unit-test.md`, `hazard-analysis.md`
-- **Last validated**: 2026-05-01
+- **Last validated**: 2026-05-02

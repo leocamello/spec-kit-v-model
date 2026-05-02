@@ -38,7 +38,7 @@ The runtime model is therefore:
   gating logic (REQ-CN-002).
 - **Single-shell, sequential execution.** Each command runs as one shell
   invocation. There is no concurrency primitive in the system. The
-  long-standing concurrent-write concern (SYS-013) is recorded below as
+  long-standing concurrent-write concern (SYS-015) is recorded below as
   a paradigm-level deferred risk note (see §Concurrent-Write Safety —
   Deferred Risk) rather than as an active runtime component.
 - **Atomic file writes.** When a script must write a file, it uses the
@@ -103,14 +103,14 @@ views are populated.
 | ARCH-007 | Pre-Implementation Gate | `scripts/bash/run-v-model-gate.sh <feature-dir>` (PLANNED; ~30 lines). Composes `build-matrix.sh` + `validate-requirement-coverage.sh` + `validate-system-coverage.sh` + `validate-architecture-coverage.sh` + `validate-module-coverage.sh` + `validate-hazard-coverage.sh`. Exits 0 only when every inner check exits 0; introduces no new gating logic. | SYS-004 | Shell | NEW-SHELL |
 | ARCH-008 | Additive Enrichment Encoder | LLM section in `commands/plan.md` §Enrichment + `commands/tasks.md` §Traceability that instructs the LLM to layer V-Model traceability metadata onto canonical spec-kit-core artifacts as HTML comments and optional Markdown sections, never modifying canonical sections. | SYS-005 | Prompt | NEW-PROMPT-SECTION |
 | ARCH-009 | Hallucination Guard | `scripts/bash/validate-implements-ids.sh <feature-dir>` (PLANNED; `grep`+`awk`, ~80 lines). Scans every `Implements <ID>` (or language-equivalent) comment in the generated source set, confirms each referenced ID exists in the V-Model artifact set, exits 0 only when none are unknown. | SYS-006 | Shell | NEW-SHELL |
-| ARCH-010 | Source Region Splicer | `scripts/bash/splice-managed-regions.sh <target-file> <generated-content> <language>` (PLANNED; `awk`, ~85 lines). Demarcates and splices V-Model-managed regions inside generated source files using language-appropriate marker comments; aborts non-zero on overlapping markers with a diff report on stderr. | SYS-007 | Shell | NEW-SHELL |
+| ARCH-010 | Source Region Splicer | `scripts/bash/splice-managed-regions.sh <target-file> <generated-content> <language>` (PLANNED; `awk`, ~85 lines). Demarcates and splices V-Model-managed regions inside generated source files using language-appropriate marker comments; aborts non-zero on overlapping markers with a diff report on stderr. The `mktemp`-into-same-directory + `mv` atomic-rename pattern used here is the in-force safeguard for SYS-015 (Concurrent Write Safety). | SYS-007, SYS-015 | Shell | NEW-SHELL |
 | ARCH-011 | Domain Overlay Loader | LLM section in `commands/implement.md` §Domain Overlay that activates when `v-model-config.yml` is present at the repository root: reads the `domain:` value (e.g., `automotive`, `medical`, `aerospace`) and adjusts code-generation and test-generation prompts accordingly (additive overlay only — never overrides base instructions). When the file is absent, no overlay is loaded and base behavior applies. | SYS-008 | Prompt | NEW-PROMPT-SECTION |
 | ARCH-012 | Hazard Task Emitter | LLM section in `commands/tasks.md` §Hazard Enrichment that activates when `hazard-analysis.md` is present: raises mitigation-task priority and emits dedicated verification tasks naming each `HAZ-NNN`. | SYS-009 | Prompt | NEW-PROMPT-SECTION |
-| ARCH-013 | Schema Validator | `scripts/bash/validate-core-schema.sh <file> --plan|--tasks` (PLANNED; `grep`, ~50 lines). Validates `plan.md` and `tasks.md` against spec-kit-core's canonical `plan-template.md` and `tasks-template.md` schemas pinned at v0.7.0. Exit 0 ⇔ every required section present in order. | SYS-010 | Shell | NEW-SHELL |
+| ARCH-013 | Schema Validator | `scripts/bash/validate-core-schema.sh <file> --plan&#124;--tasks` (PLANNED; `grep`, ~50 lines). Validates `plan.md` and `tasks.md` against spec-kit-core's canonical `plan-template.md` and `tasks-template.md` schemas pinned at v0.7.0. Exit 0 ⇔ every required section present in order. | SYS-010 | Shell | NEW-SHELL |
 | ARCH-014 | Reduced-Enrichment Fallback | LLM section in `commands/tasks.md` §Hybrid Path Detection that instructs the LLM to detect upstream artifacts (e.g., a `plan.md` produced by `speckit.plan`) lacking V-Model enrichment metadata and fall back to populating downstream traceability from the V-Model artifact set directly. | SYS-010 | Prompt | NEW-PROMPT-SECTION |
 | ARCH-015 | Hook Registrar | Three YAML entries in `extension.yml` (`before_implement` → `v-model.gate`, `after_implement` → `v-model.trace`, `after_specify` → `v-model.requirements`). Registration is performed by Spec Kit Core's `CommandRegistrar` in `src/specify_cli/extensions.py`; this feature ships no new registration code. | SYS-011 | Config | REUSE-CORE |
 | ARCH-016 | Structured Summary Reporter | `§Structured Summary` section in each of `commands/plan.md`, `commands/tasks.md`, `commands/implement.md` that instructs the LLM to print a machine-readable stdout summary (inputs read / outputs produced / artifacts skipped / warnings / fatal errors) using the existing `v-model.test-results` / `v-model.audit-report` summary grammar. Always emitted, even on failure. | SYS-012 | Prompt | NEW-PROMPT-SECTION |
-| ARCH-017 | Quality Compliance Harness | LLM section in `commands/implement.md` §Quality Compliance that instructs the LLM to invoke the existing four-stack test harnesses (BATS, Pester, structural eval, LLM eval) via `bash`, gate merge on 100% coverage, and run scope-guardrail and dogfood-discipline audits. | SYS-003 | Prompt | NEW-PROMPT-SECTION |
+| ARCH-017 | Quality Compliance Harness | LLM section in `commands/implement.md` §Quality Compliance that instructs the LLM to invoke the existing four-stack test harnesses (BATS, Pester, structural eval, LLM eval) via `bash`, gate merge on 100% coverage, and run scope-guardrail and dogfood-discipline audits. (Inherits the deprecated SYS-013 traceability: this prompt section is the recharacterised functional intent of the original "Quality & Process Compliance Harness".) | SYS-003, SYS-013 | Prompt | NEW-PROMPT-SECTION |
 | ARCH-018 | Commit Annotator | LLM section in `commands/implement.md` §Commit Annotation that instructs the LLM to suffix git commit messages with the comma-separated list of V-Model identifiers fulfilled by the change. Best-effort: warns on annotation failure, commit still proceeds. | SYS-014 | Prompt | NEW-PROMPT-SECTION |
 | ARCH-019 | V-Model Artifact Reader (Deferred) | `[CROSS-CUTTING] [DEFERRED]` — the LLM reads V-Model Markdown artifacts natively; no runtime parser is shipped. Recorded for traceability only; no functional contract. | [CROSS-CUTTING] [DEFERRED] | Note | DROP-recharacterized |
 | ARCH-020 | Subprocess Runner (Deferred) | `[CROSS-CUTTING] [DEFERRED]` — shell scripts invoke other scripts via `bash` directly; the allowlist is the contents of `scripts/bash/`. No runtime subprocess module exists. Recorded for traceability only; no functional contract. | [CROSS-CUTTING] [DEFERRED] | Note | DROP-recharacterized |
@@ -126,7 +126,7 @@ in the order shown.
 
 **Synchronization Points:** None at the process level. Each script that
 writes a file uses the inline `mktemp` + `mv` pattern. The
-concurrent-write concern (SYS-013) is documented below as a paradigm-level
+concurrent-write concern (SYS-015) is documented below as a paradigm-level
 deferred risk note (see §Concurrent-Write Safety — Deferred Risk);
 concurrent runs against the same feature directory are not supported.
 
@@ -178,6 +178,7 @@ sequenceDiagram
     Pre-->>LLM: exit 0
     LLM->>Gate: bash run-v-model-gate.sh <feature-dir>
     Gate-->>LLM: exit 0 (else abort, no generation)
+    Note over LLM: §Domain Overlay (ARCH-011): if<br/>v-model-config.yml present, load overlay
     Note over LLM: §Code Generation (ARCH-005)<br/>§Test Generation (ARCH-006)
     LLM->>Splice: bash splice-managed-regions.sh <target> <content> <lang>
     Splice-->>LLM: spliced content (stdout)
@@ -275,7 +276,7 @@ sequenceDiagram
 | Realised By | `commands/implement.md` §Execution Flow |
 | Preconditions | `feature_dir` contains `requirements.md`, `module-design.md`, all four V-Model test plans; gate (ARCH-007) exits 0 |
 | Postconditions | Source + test files written; ARCH-009 exits 0; commit produced via ARCH-018 |
-| Expected sections in `commands/implement.md` | §Execution Flow, §Code Generation, §Traceability Comments, §Test Generation, §Test Levels, §Quality Compliance, §Commit Annotation, §Structured Summary |
+| Expected sections in `commands/implement.md` | §Execution Flow, §Code Generation, §Traceability Comments, §Test Generation, §Test Levels, §Domain Overlay, §Quality Compliance, §Commit Annotation, §Structured Summary |
 | Error path | Any of {gate, splicer, hallucination guard} non-zero ⇒ abort before commit; emit `fatal_errors[]`, exit 1 |
 
 ### ARCH-005: Code Generator (Prompt)
@@ -495,7 +496,7 @@ sequenceDiagram
 | LLM-as-orchestrator via `commands/*.md` rather than a coded entry point | Maintainability §4.2.7 ↑ (declarative, versioned with the spec); Compatibility §4.2.4 ↑ (aligns with surrounding spec-kit ecosystem) | Loses static-typing guarantees of a coded orchestrator; mitigated by deterministic shell scripts at every safety-critical step. |
 | Spec Kit Core reuse (`setup-plan.sh`, `check-prerequisites.sh`, `common.sh`) instead of re-implementing bootstrapping | Maintainability §4.2.7 ↑ (zero duplication); Reliability §4.2.2 ↑ (battle-tested code path) | Couples this feature to upstream changes in those scripts; mitigated by the v0.7.0 pin. |
 | Composing existing project gate scripts (ARCH-007 = `run-v-model-gate.sh` over `build-matrix.sh` + 5 validators) instead of new gate logic | Maintainability §4.2.7 ↑ (REQ-CN-002 satisfied by construction); no drift between CI and command | Performance §4.2.3 ↓ (one shell process per inner script). Acceptable: gate runtime is dominated by validator work. |
-| Single-shell sequential runtime (no thread pool, no event loop) | Reliability §4.2.2 ↑ (deterministic execution); Maintainability §4.2.7 ↑ (no concurrency bugs); supports REQ-025 idempotency | Performance Efficiency §4.2.3 ↓ (cannot parallelise within a run). Acceptable: bridge-command runtime is I/O- and LLM-bound. Concurrent-write concern (SYS-013) recorded as a paradigm-level deferred risk note (see §Concurrent-Write Safety — Deferred Risk). |
+| Single-shell sequential runtime (no thread pool, no event loop) | Reliability §4.2.2 ↑ (deterministic execution); Maintainability §4.2.7 ↑ (no concurrency bugs); supports REQ-025 idempotency | Performance Efficiency §4.2.3 ↓ (cannot parallelise within a run). Acceptable: bridge-command runtime is I/O- and LLM-bound. Concurrent-write concern (SYS-015) recorded as a paradigm-level deferred risk note (see §Concurrent-Write Safety — Deferred Risk). |
 | Splitting SYS-010 into ARCH-013 (strict validator script) + ARCH-014 (LLM fallback prompt section) | Compatibility §4.2.4 ↑ (Hybrid path enabled by REQ-028); Testability ↑ (each path independently exercisable) | Adds one decision point per upstream-artifact ingest; documented in `commands/tasks.md` §Hybrid Path Detection. |
 | Inline `mktemp` + `mv` atomic-write pattern (vs. a centralized writer module) | Reliability §4.2.2 ↑ (failed runs leave filesystem consistent; supports REQ-022); Simplicity ↑ (no shared module to evolve) | Pattern is a coding convention enforced by review; mitigated by being a 3-line cliché in every shell script. |
 | Hallucination Guard (ARCH-009) as a mandatory pre-commit shell check | Functional Suitability (Correctness) §4.2.1 ↑ (REQ-NF-002 satisfied by construction); Reliability §4.2.2 ↑ (fail-closed) | Adds one full-tree `grep` per run; small constant against generation cost. |
@@ -527,11 +528,11 @@ sequenceDiagram
 
 ### Concurrent-Write Safety — Deferred Risk
 
-> **`[DEFERRED RISK NOTE]` — covers SYS-013.** The bridge commands run
+> **`[DEFERRED RISK NOTE]` — covers SYS-015.** The bridge commands run
 > as one-shot, single-shell, sequential invocations; there is no
 > concurrency primitive in the architecture. Concurrent runs against
 > the same `feature_dir` are explicitly **not supported** by this
-> release. This note exists for `SYS-013` traceability only; it carries
+> release. This note exists for `SYS-015` traceability only; it carries
 > no functional contract and is not assigned an `ARCH-NNN`. Should a
 > future release introduce parallel agent execution, a concrete
 > write-coordination component will need to be added to this design.
@@ -542,15 +543,17 @@ sequenceDiagram
 
 | Metric | Count |
 |--------|-------|
-| Total Architecture Modules (ARCH) | 21 (21 active, 0 deprecated, 0 suspect) |
+| Total Architecture Modules (ARCH) | 21 (18 active + 3 DROP-recharacterized, 0 deprecated, 0 suspect) |
 | NEW-PROMPT-SECTION (LLM prompt sections in `commands/*.md`) | 13 (ARCH-001, 002, 003, 004, 005, 006, 008, 011, 012, 014, 016, 017, 018) |
 | NEW-SHELL (POSIX shell scripts under `scripts/bash/`) | 4 (ARCH-007, 009, 010, 013) |
 | REUSE-CORE (delegates to Spec Kit Core; no new code) | 1 (ARCH-015) |
 | DROP-recharacterized (deferred risk notes; no functional contract) | 3 (ARCH-019, 020, 021) |
-| Total Parent System Components Covered | 14 / 14 (100%) — SYS-013 (Concurrent-Write Safety) is covered as a paradigm-level deferred risk note (see §Concurrent-Write Safety — Deferred Risk), not by a runtime ARCH |
+| Total Parent System Components Covered | 14 / 14 (100%) [^sys013-deprecation] — SYS-015 (Concurrent-Write Safety) is covered as a paradigm-level deferred risk note (see §Concurrent-Write Safety — Deferred Risk), not by a runtime ARCH |
 | Mermaid Diagrams | 3 (Plan Synthesis, Implementation Pipeline, Hazard-Aware Tasks) |
 | Interface Contracts Defined | 18 / 18 (100%) for active modules; 3 deferred risk notes carry no contract |
-| **Forward Coverage (SYS→ARCH)** | **14 / 14 (100%)** — all SYS components have an owning ARCH or paradigm-level deferred-risk note |
+| **Forward Coverage (SYS→ARCH)** | **14 / 14 (100%)** — all active SYS components have an owning ARCH or paradigm-level deferred-risk note |
+
+[^sys013-deprecation]: SYS-013 deprecated; superseded by the Quality Compliance prompt section under ARCH-017 (parent SYS-003).
 
 ## Derived Modules
 

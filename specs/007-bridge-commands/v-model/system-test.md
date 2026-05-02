@@ -595,7 +595,29 @@ resource-usage thresholds (e.g., WCET) apply to this test plan.
 
 ---
 
-## V&V Coverage (IEEE 1012:2016)
+### Component Verification: SYS-015 (Concurrent Write Safety)
+
+**Parent Requirements**: REQ-CN-003, REQ-CN-004, REQ-NF-001
+
+#### Test Case: STP-015-A (Per-file `mktemp`+`mv` atomic-rename safeguard prevents partial-write corruption)
+
+**Technique**: Inspection (audit) — analytic verification of the deferred-risk note documented in `system-design.md` §SYS-015.
+**Target View**: Behavioural View (Concurrency safety)
+**Description**: Confirms that every shell script which mutates a tracked artifact uses the `mktemp`-into-same-directory + `mv` atomic-rename pattern, which is the only concurrency safeguard delivered in v0.7.0; full process-wide locking is explicitly out of scope.
+
+* **System Scenario: STS-015-A1**
+  * **Given** the set of shell scripts under `scripts/bash/` that mutate tracked artifacts (`splice-managed-regions.sh`, `validate-core-schema.sh`, `validate-implements-ids.sh`, `run-v-model-gate.sh`, plus any future addition flagged by `peer-review-check.sh`)
+  * **When** an audit greps each script for either the `mktemp` invocation followed by `mv "$tmp" "$f"` pattern, or an explicit "no-mutation" annotation
+  * **Then** every mutating script matches the pattern (or the explicit annotation), and the audit emits zero violations
+
+* **System Scenario: STS-015-A2**
+  * **Given** the §SYS-015 deferred-risk note in `system-design.md` declaring full concurrent-write safety as out of scope for v0.7.0
+  * **When** an audit confirms that no commitment to process-wide locking appears in `requirements.md`, `architecture-design.md`, or `system-design.md` outside the explicit deferred-risk wording
+  * **Then** the deferred-risk position is internally consistent and the audit emits zero violations
+
+---
+
+
 
 Every active `REQ-NNN` is exercised by at least one V&V activity at the system
 test layer. Coverage is achieved transitively: each REQ is the parent of one
@@ -613,7 +635,7 @@ STP. Below is the per-REQ-category mapping that confirms IEEE 1012:2016 §5.5.
 
 **Entry-criteria check (IEEE 1012:2016 §5.5.1):**
 - ✅ `system-design.md` is current (committed at f07c241)
-- ✅ Every `SYS-NNN` has at least one `STP-NNN-X` (14/14 = 100% forward coverage)
+- ✅ Every `SYS-NNN` has at least one `STP-NNN-X` (15/15 = 100% forward coverage; SYS-013 is deprecated and verified by inspection only — see §System-Design SYS-013 stub)
 - ✅ Every `STP-NNN-X` has at least one `STS-NNN-X#`
 - ✅ V&V gap list is empty
 
@@ -623,15 +645,16 @@ STP. Below is the per-REQ-category mapping that confirms IEEE 1012:2016 §5.5.
 
 | Metric | Count |
 |--------|-------|
-| Total System Components (SYS) | 14 (14 active, 0 deprecated) |
-| Total Test Cases (STP) | 28 |
-| Total Scenarios (STS) | 60 |
-| Components with ≥1 STP | 14 / 14 (100%) (active items only) |
-| Test Cases with ≥1 STS | 28 / 28 (100%) |
+| Total System Components (SYS) | 15 (14 active + 1 deprecated SYS-013) |
+| Total Test Cases (STP) | 29 |
+| Total Scenarios (STS) | 62 |
+| Components with ≥1 STP | 14 / 14 (100%) (active items only; SYS-013 deprecated stub verified by inspection) |
+| Test Cases with ≥1 STS | 29 / 29 (100%) |
 | **Overall Coverage (SYS→STP)** | **100%** |
 
 **Technique distribution:**
 - Interface Contract Testing: 13 STPs (STP-001-A, 002-A, 003-A, 004-A, 005-A, 006-A, 008-A, 009-A, 010-A, 011-A, 012-A, 013-A, 014-A)
+- Inspection (audit): 1 STP (STP-015-A — `mktemp`+`mv` audit + deferred-risk consistency)
 - Boundary Value Analysis: 4 STPs (STP-001-B, 005-B, 007-A, 010-C)
 - Equivalence Partitioning: 6 STPs (STP-002-B, 003-B, 004-B, 006-B, 010-B, 013-B)
 - Fault Injection: 5 STPs (STP-001-C, 002-C, 003-C, 007-B, 008-B)
