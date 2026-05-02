@@ -74,6 +74,20 @@ provides:
       file: "commands/trace.md"
       description: "Build a Bidirectional Traceability Matrix (Matrix A + B + C + D + H) with coverage audit and gap detection"
 
+    # ----- v0.7.0: bridge commands (T016, T017, T018; ARCH-001/003/004; MOD-001/003/005; D-001) -----
+
+    - name: "speckit.v-model.plan"
+      file: "commands/plan.md"
+      description: "V-Model-aware planning bridge — wraps spec-kit-core /speckit.plan to synthesise a canonical plan.md from the V-Model artifact set with additive enrichment, pinned-schema validation, and a structured run summary"
+
+    - name: "speckit.v-model.tasks"
+      file: "commands/tasks.md"
+      description: "V-Model-aware tasks bridge — wraps spec-kit-core /speckit.tasks to synthesise a TDD-ordered, hazard-priority-elevated tasks.md with per-HAZ verification tasks, additive enrichment, pinned-schema validation, and a structured run summary"
+
+    - name: "speckit.v-model.implement"
+      file: "commands/implement.md"
+      description: "V-Model-aware implementation bridge — runs the pre-implementation gate, generates code and four-level tests with Implements directives, splices into existing sources via sentinel-managed regions, self-checks for hallucinated IDs, runs the quality harness, and emits an annotated commit plus a structured run summary"
+
   config:
     - name: "v-model-config.yml"
       template: "config-template.yml"
@@ -86,6 +100,26 @@ hooks:
     optional: true
     prompt: "Run traceability matrix to validate requirement coverage?"
     description: "Builds the traceability matrix after tasks are generated"
+
+  # ----- v0.7.0: bridge hooks (T019; ARCH-015; MOD-020; D-007; REQ-IF-003, REQ-IF-005) -----
+
+  after_specify:
+    command: "speckit.v-model.requirements"
+    optional: true
+    prompt: "Generate the V-Model Requirements Specification from the spec?"
+    description: "Bridges spec-kit-core /speckit.specify into the V-Model chain by offering to synthesise the requirements artifact"
+
+  before_implement:
+    command: "speckit.v-model.trace"
+    optional: true
+    prompt: "Run pre-implementation traceability matrix to confirm full V-Model coverage before code generation?"
+    description: "Confirms full V-Model coverage and surfaces any gaps before /speckit.v-model.implement runs the pre-implementation gate"
+
+  after_implement:
+    command: "speckit.v-model.trace"
+    optional: true
+    prompt: "Refresh the traceability matrix to reflect the new implementation?"
+    description: "Refreshes the traceability matrix after /speckit.v-model.implement so the run summary reflects the freshly-generated code and tests"
 
 tags:
   - "v-model"
