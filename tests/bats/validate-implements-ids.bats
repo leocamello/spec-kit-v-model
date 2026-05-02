@@ -109,3 +109,114 @@ EOF
     run bash "$GUARD_SCRIPT" "$FEATURE_DIR"
     assert_failure
 }
+
+# ---------------------------------------------------------------------------
+# Step C.4 (MF-2): scope-aware flags --canonical / --scan / --changed-only.
+# ---------------------------------------------------------------------------
+
+@test "C.4 --scan flag scans the supplied directory tree (canonical IDs accepted)" {
+    REPO_ROOT="$TEST_TEMP_DIR/repo"
+    mkdir -p "$REPO_ROOT/specs/feat/v-model" "$REPO_ROOT/src"
+    cp "$FIXTURES_DIR/v-model/complete/"*.md "$REPO_ROOT/specs/feat/v-model/"
+    cat > "$REPO_ROOT/src/foo.py" <<'PY'
+# Implements: REQ-001
+print("ok")
+PY
+    run bash "$GUARD_SCRIPT" --canonical "$REPO_ROOT/specs/feat/v-model" --scan "$REPO_ROOT"
+    assert_success
+    last_line=$(printf '%s\n' "$output" | tail -n 1)
+    [ "$last_line" = "GUARD: PASS" ]
+}
+
+@test "C.4 --scan rejects an unknown ID injected into src/" {
+    REPO_ROOT="$TEST_TEMP_DIR/repo"
+    mkdir -p "$REPO_ROOT/specs/feat/v-model" "$REPO_ROOT/src"
+    cp "$FIXTURES_DIR/v-model/complete/"*.md "$REPO_ROOT/specs/feat/v-model/"
+    fab="$(printf 'REQ-%s' 9 9 9 | tr -d ' ')"
+    cat > "$REPO_ROOT/src/foo.py" <<EOF2
+# Implements: ${fab}
+print("nope")
+EOF2
+    run bash "$GUARD_SCRIPT" --canonical "$REPO_ROOT/specs/feat/v-model" --scan "$REPO_ROOT"
+    assert_failure
+    assert_output --partial "unknown id ${fab}"
+    last_line=$(printf '%s\n' "$output" | tail -n 1)
+    [ "$last_line" = "GUARD: FAIL" ]
+}
+
+@test "C.4 --changed-only restricts to git diff + untracked (committed clean baseline ignored)" {
+    REPO_ROOT="$TEST_TEMP_DIR/repo"
+    mkdir -p "$REPO_ROOT/specs/feat/v-model" "$REPO_ROOT/src"
+    cp "$FIXTURES_DIR/v-model/complete/"*.md "$REPO_ROOT/specs/feat/v-model/"
+    git -C "$REPO_ROOT" init --quiet
+    git -C "$REPO_ROOT" config user.email t@t
+    git -C "$REPO_ROOT" config user.name t
+    fab="$(printf 'REQ-%s' 9 8 7 6 5 | tr -d ' ')"
+    # Pre-existing committed file with a fabricated ID — must be IGNORED by
+    # --changed-only since it's part of the clean baseline.
+    cat > "$REPO_ROOT/src/old.py" <<EOF2
+# Implements: ${fab}
+print("old")
+EOF2
+    cat > "$REPO_ROOT/src/changed.py" <<'PY'
+# Implements: REQ-001
+print("changed-baseline")
+PY
+    git -C "$REPO_ROOT" add . >/dev/null
+    git -C "$REPO_ROOT" commit --quiet -m baseline
+    # Now modify changed.py and add an untracked new.py — both with valid IDs.
+    cat > "$REPO_ROOT/src/changed.py" <<'PY'
+# Implements: REQ-001
+# Implements: SYS-001
+print("changed-modified")
+PY
+    cat > "$REPO_ROOT/src/new.py" <<'PY'
+# Implements: REQ-001
+print("new")
+PY
+    run bash "$GUARD_SCRIPT" --canonical "$REPO_ROOT/specs/feat/v-model" --scan "$REPO_ROOT" --changed-only
+    assert_success
+    last_line=$(printf '%s\n' "$output" | tail -n 1)
+    [ "$last_line" = "GUARD: PASS" ]
+    # Without --changed-only, the bad committed file IS scanned and fails.
+    run bash "$GUARD_SCRIPT" --canonical "$REPO_ROOT/specs/feat/v-model" --scan "$REPO_ROOT"
+    assert_failure
+    assert_output --partial "unknown id ${fab}"
+}
+
+@test "C.4 --changed-only outside git falls back gracefully" {
+    REPO_ROOT="$TEST_TEMP_DIR/nogit"
+    mkdir -p "$REPO_ROOT/specs/feat/v-model" "$REPO_ROOT/src"
+    cp "$FIXTURES_DIR/v-model/complete/"*.md "$REPO_ROOT/specs/feat/v-model/"
+    cat > "$REPO_ROOT/src/foo.py" <<'PY'
+# Implements: REQ-001
+print("ok")
+PY
+    run bash "$GUARD_SCRIPT" --canonical "$REPO_ROOT/specs/feat/v-model" --scan "$REPO_ROOT" --changed-only
+    assert_success
+    assert_output --partial "not a git working tree"
+    last_line=$(printf '%s\n' "$output" | tail -n 1)
+    [ "$last_line" = "GUARD: PASS" ]
+}
+
+@test "C.4 legacy positional invocation matches --canonical/--scan equivalents byte-for-byte" {
+    # Reuse the standard fixture from setup() (FEATURE_DIR populated there).
+    cat > "$SRC_DIR/widget.sh" <<'EOF2'
+#!/bin/sh
+# Implements REQ-001
+# Implements SYS-001
+echo ok
+EOF2
+    legacy_out="$(bash "$GUARD_SCRIPT" "$FEATURE_DIR" 2>&1)"
+    legacy_rc=$?
+    flag_out="$(bash "$GUARD_SCRIPT" --canonical "$FEATURE_DIR/v-model" --scan "$FEATURE_DIR" 2>&1)"
+    flag_rc=$?
+    [ "$legacy_rc" -eq "$flag_rc" ]
+    [ "$legacy_out" = "$flag_out" ]
+}
+
+@test "C.4 --canonical without --scan or feature-dir fails with clear error" {
+    run bash "$GUARD_SCRIPT" --canonical "$FEATURE_DIR/v-model"
+    assert_failure
+    assert_output --partial "--scan is required"
+}

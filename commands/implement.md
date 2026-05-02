@@ -41,6 +41,8 @@ The command is **graceful** in exactly one direction: missing optional V-Model a
 
 Run `{SCRIPT}` from the repository root and parse the JSON output. Required keys: `FEATURE_DIR`, `AVAILABLE_DOCS`, `BRANCH`. The V-Model directory is `FEATURE_DIR/v-model/` (may be absent on greenfield features).
 
+Also derive `REPO_ROOT="$(git rev-parse --show-toplevel)"` for use by Step 7 — the bridge wrapper's JSON does not currently surface `REPO_ROOT` (the upstream `check-prerequisites.sh` only includes it under `--paths-only`), so the command itself resolves it via git for the hallucination-guard scope.
+
 For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\''m Groot' (or double-quote if possible: "I'm Groot").
 
 Read `.specify/memory/constitution.md`. Read `FEATURE_DIR/tasks.md` (required — this is the V-Model-ordered task list from `/speckit.v-model.tasks`). Read `FEATURE_DIR/plan.md`, `FEATURE_DIR/spec.md`, and every doc named in `AVAILABLE_DOCS` (`data-model.md`, `contracts/`, `research.md`, `quickstart.md`).
@@ -114,13 +116,16 @@ Code outside the managed region must remain byte-identical (ATP-022-A). This is 
 
 ### 7. Hallucination-guard self-check (per ARCH-009, MOD-013, REQ-023, REQ-NF-002, D-004, D-008)
 
-Invoke the guard wrapper (reusing the script delivered in Step B.2 / T009) over the feature directory after Steps 4–6 have written every generated and spliced file:
+Invoke the guard wrapper (reusing the script delivered in Step B.2 / T009 and extended in Step C.4) over the **repo root** after Steps 4–6 have written every generated and spliced file:
 
 ```bash
-bash scripts/bash/validate-implements-ids.sh "$FEATURE_DIR"
+bash scripts/bash/validate-implements-ids.sh \
+  --canonical "$FEATURE_DIR/v-model" \
+  --scan "$REPO_ROOT" \
+  --changed-only
 ```
 
-The script greps the canonical V-Model ID set out of `<FEATURE_DIR>/v-model/*.md`, scans every generated source for `Implements: <ID>` (and language-equivalent) comments, and prints `<file>:<line>: unknown id <id>` for every offence, terminating with exactly `GUARD: PASS` or `GUARD: FAIL`. There is no LLM in this loop — determinism is the contract (Constitution Principle II; D-004).
+The script greps the canonical V-Model ID set out of `<FEATURE_DIR>/v-model/*.md`, then scans every file modified or added by the current change-set (`git diff` HEAD ∪ staged ∪ untracked-new, intersected with `--scan`, excluding paths under `--canonical`) for `Implements: <ID>` (and language-equivalent) comments, printing `<file>:<line>: unknown id <id>` for every offence and terminating with exactly `GUARD: PASS` or `GUARD: FAIL`. Scanning the repo root rather than `$FEATURE_DIR` is what brings the actually-generated source under `src/`, `tests/unit/`, `tests/integration/`, `tests/system/`, and `tests/acceptance/` into scope (these live OUTSIDE `$FEATURE_DIR`); `--changed-only` keeps the gate fast and focused on this run's deltas. The reduced-enrichment / D-014 fallback in Step 9 still applies — the guard remains a hard gate regardless. There is no LLM in this loop — determinism is the contract (Constitution Principle II; D-004).
 
 - `GUARD: FAIL` ⇒ STOP. Append the offending lines into `fatal_errors[]`, emit §Structured Summary, exit 1. **Do NOT commit.** This guards HAZ-007 (hallucinated `Implements` directive), HAZ-012 (false-negative), and HAZ-023 (stale snapshot — mitigated by running the guard immediately before Step 9, never earlier).
 - `GUARD: PASS` ⇒ proceed to Step 8.

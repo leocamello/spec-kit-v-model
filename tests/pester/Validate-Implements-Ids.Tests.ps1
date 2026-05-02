@@ -119,3 +119,128 @@ echo ok
         $LASTEXITCODE | Should -Not -Be 0
     }
 }
+
+# ---------------------------------------------------------------------------
+# Step C.4 (MF-2): scope-aware flags -Canonical / -Scan / -ChangedOnly.
+# Per-test isolation via $TestDrive sub-dirs (Pester 5).
+# ---------------------------------------------------------------------------
+
+Describe 'Validate-Implements-Ids — C.4 scope-aware flags' {
+
+    BeforeAll {
+        function New-RepoLayout {
+            $base = Join-Path $TestDrive ([System.IO.Path]::GetRandomFileName())
+            $repo = Join-Path $base 'repo'
+            $vmodel = Join-Path $repo 'specs/feat/v-model'
+            $src = Join-Path $repo 'src'
+            New-Item -ItemType Directory -Force -Path $vmodel | Out-Null
+            New-Item -ItemType Directory -Force -Path $src    | Out-Null
+            Copy-Item (Join-Path $script:FixturesDir 'v-model/complete/*.md') $vmodel
+            return @{ Repo = $repo; VModel = $vmodel; Src = $src }
+        }
+        $script:GitAvailable = $null -ne (Get-Command git -ErrorAction SilentlyContinue)
+    }
+
+    It 'C.4 -Scan flag scans the supplied directory tree (canonical IDs accepted)' {
+        $L = New-RepoLayout
+        @"
+# Implements: REQ-001
+print("ok")
+"@ | Set-Content -LiteralPath (Join-Path $L.Src 'foo.py')
+        $output = & pwsh -NoProfile -File $script:GuardScript -Canonical $L.VModel -Scan $L.Repo 2>&1
+        $LASTEXITCODE | Should -Be 0
+        $lines = @($output | ForEach-Object { $_.ToString() })
+        $lines[-1] | Should -BeExactly 'GUARD: PASS'
+    }
+
+    It 'C.4 -Scan rejects an unknown ID injected into src/' {
+        $L = New-RepoLayout
+        $fab = 'REQ-' + (((1..3 | ForEach-Object { 9 }) -join ''))
+        @"
+# Implements: $fab
+print("nope")
+"@ | Set-Content -LiteralPath (Join-Path $L.Src 'foo.py')
+        $output = & pwsh -NoProfile -File $script:GuardScript -Canonical $L.VModel -Scan $L.Repo 2>&1
+        $LASTEXITCODE | Should -Not -Be 0
+        ($output | Out-String) | Should -Match ("unknown id " + [regex]::Escape($fab))
+        $lines = @($output | ForEach-Object { $_.ToString() })
+        $lines[-1] | Should -BeExactly 'GUARD: FAIL'
+    }
+
+    It 'C.4 -ChangedOnly restricts to git diff + untracked (committed baseline ignored)' {
+        if (-not $script:GitAvailable) { Set-ItResult -Skipped -Because 'git not available' }
+        $L = New-RepoLayout
+        & git -C $L.Repo init --quiet 2>$null
+        & git -C $L.Repo config user.email t@t 2>$null
+        & git -C $L.Repo config user.name t 2>$null
+        $fab = 'REQ-' + (((1..5 | ForEach-Object { 9 }) -join ''))
+        @"
+# Implements: $fab
+print("old")
+"@ | Set-Content -LiteralPath (Join-Path $L.Src 'old.py')
+        @"
+# Implements: REQ-001
+print("baseline")
+"@ | Set-Content -LiteralPath (Join-Path $L.Src 'changed.py')
+        & git -C $L.Repo add . 2>$null | Out-Null
+        & git -C $L.Repo commit --quiet -m baseline 2>$null | Out-Null
+        @"
+# Implements: REQ-001
+# Implements: SYS-001
+print("changed-modified")
+"@ | Set-Content -LiteralPath (Join-Path $L.Src 'changed.py')
+        @"
+# Implements: REQ-001
+print("new")
+"@ | Set-Content -LiteralPath (Join-Path $L.Src 'new.py')
+
+        $output = & pwsh -NoProfile -File $script:GuardScript -Canonical $L.VModel -Scan $L.Repo -ChangedOnly 2>&1
+        $LASTEXITCODE | Should -Be 0
+        $lines = @($output | ForEach-Object { $_.ToString() })
+        $lines[-1] | Should -BeExactly 'GUARD: PASS'
+
+        # Without -ChangedOnly, the bad committed file IS scanned and fails.
+        $output2 = & pwsh -NoProfile -File $script:GuardScript -Canonical $L.VModel -Scan $L.Repo 2>&1
+        $LASTEXITCODE | Should -Not -Be 0
+        ($output2 | Out-String) | Should -Match ("unknown id " + [regex]::Escape($fab))
+    }
+
+    It 'C.4 -ChangedOnly outside git falls back gracefully' {
+        $L = New-RepoLayout
+        @"
+# Implements: REQ-001
+print("ok")
+"@ | Set-Content -LiteralPath (Join-Path $L.Src 'foo.py')
+        $output = & pwsh -NoProfile -File $script:GuardScript -Canonical $L.VModel -Scan $L.Repo -ChangedOnly 2>&1
+        $LASTEXITCODE | Should -Be 0
+        ($output | Out-String) | Should -Match 'not a git working tree'
+        $lines = @($output | ForEach-Object { $_.ToString() })
+        $lines[-1] | Should -BeExactly 'GUARD: PASS'
+    }
+
+    It 'C.4 legacy positional invocation matches -Canonical/-Scan equivalents' {
+        $L = New-RepoLayout
+        $feature = Split-Path -Parent $L.VModel
+        $featureSrc = Join-Path $feature 'src'
+        New-Item -ItemType Directory -Force -Path $featureSrc | Out-Null
+        @"
+#!/bin/sh
+# Implements REQ-001
+# Implements SYS-001
+echo ok
+"@ | Set-Content -LiteralPath (Join-Path $featureSrc 'widget.sh')
+        $legacyOut = (& pwsh -NoProfile -File $script:GuardScript $feature 2>&1) | Out-String
+        $legacyRc  = $LASTEXITCODE
+        $flagOut   = (& pwsh -NoProfile -File $script:GuardScript -Canonical (Join-Path $feature 'v-model') -Scan $feature 2>&1) | Out-String
+        $flagRc    = $LASTEXITCODE
+        $legacyRc | Should -Be $flagRc
+        $legacyOut | Should -BeExactly $flagOut
+    }
+
+    It 'C.4 -Canonical without -Scan or feature-dir fails with clear error' {
+        $L = New-RepoLayout
+        $output = & pwsh -NoProfile -File $script:GuardScript -Canonical $L.VModel 2>&1
+        $LASTEXITCODE | Should -Not -Be 0
+        ($output | Out-String) | Should -Match '-Scan is required'
+    }
+}
