@@ -96,513 +96,575 @@ per-mode coverage *is* the integration-coverage matrix.
 
 ## Integration Tests
 
-## ITP-001 (Plan Synthesis Orchestrator — `/speckit.v-model.plan` end-to-end)
+### Module Verification: ARCH-001 (Plan Synthesis Orchestrator)
 
-**Covers**: ARCH-001 (NEW-PROMPT-SECTION → `commands/plan.md` §Execution Flow)
 **Parent System Components**: SYS-001
+
+#### Test Case: ITP-001-A (Nominal contract — requirements-only and full-upstream paths produce plan.md)
+
 **Test File**: `tests/system/bridge-commands/plan.bats`
 **Technique**: Fixture-Driven Black-Box + CLI Contract Testing
 **Requirements traced**: REQ-001, REQ-005, REQ-IF-001, REQ-NF-006
 
-### ITS-001-A1 (happy-path: requirements-only feature dir produces plan.md)
+* **Integration Scenario: ITS-001-A1** (happy-path: requirements-only feature dir produces plan.md)
+  * **Given** a temp feature directory containing only
+    `specs/<feature>/v-model/requirements.md`
+  * **When** the test invokes the command via the BATS harness:
+    ```bash
+    run bash "$PROJECT_ROOT/scripts/bash/invoke-command.sh" \
+        speckit.v-model.plan --feature-dir "$TEST_TEMP_DIR/specs/001-test"
+    ```
+  * **Then** `[ "$status" -eq 0 ]` and `assert_output --partial "--- v-model run summary ---"`
+    and the file `specs/001-test/plan.md` exists and contains the required
+    spec-kit-core v0.7.0 sections (`## Technical Context`, `## Constitution
+    Check`, `## Phase 0: Outline & Research`, etc.)
 
-* **Given** a temp feature directory containing only
-  `specs/<feature>/v-model/requirements.md`
-* **When** the test invokes the command via the BATS harness:
-  ```bash
-  run bash "$PROJECT_ROOT/scripts/bash/invoke-command.sh" \
-      speckit.v-model.plan --feature-dir "$TEST_TEMP_DIR/specs/001-test"
-  ```
-* **Then** `[ "$status" -eq 0 ]` and `assert_output --partial "--- v-model run summary ---"`
-  and the file `specs/001-test/plan.md` exists and contains the required
-  spec-kit-core v0.7.0 sections (`## Technical Context`, `## Constitution
-  Check`, `## Phase 0: Outline & Research`, etc.)
+* **Integration Scenario: ITS-001-A2** (frontmatter `scripts:` invokes `validate-core-schema.sh --plan`)
+  * **Given** the same fixture
+  * **When** the command runs
+  * **Then** `assert_output --partial "validate-core-schema.sh --plan"` (the
+    invocation is logged) and the produced `plan.md` contains every section
+    pinned by the script's heading list (HAZ-024 mitigation)
 
-### ITS-001-A2 (frontmatter `scripts:` invokes `validate-core-schema.sh --plan`)
+#### Test Case: ITP-001-B (Fault injection — missing requirements.md produces fail-closed exit)
 
-* **Given** the same fixture
-* **When** the command runs
-* **Then** `assert_output --partial "validate-core-schema.sh --plan"` (the
-  invocation is logged) and the produced `plan.md` contains every section
-  pinned by the script's heading list (HAZ-024 mitigation)
+**Test File**: `tests/system/bridge-commands/plan.bats`
+**Technique**: Fixture-Driven Black-Box + CLI Contract Testing
+**Requirements traced**: REQ-001, REQ-005, REQ-IF-001, REQ-NF-006
 
-### ITS-001-B1 (missing requirements.md → fail-closed, no partial outputs)
-
-* **Given** a temp feature directory with no `requirements.md`
-* **When** the command runs
-* **Then** `assert_failure` and `assert_output --partial "FATAL: requirements.md not found"`
-  and `[ ! -f "$TEST_TEMP_DIR/specs/001-test/plan.md" ]` (REQ-022 — no partial writes)
+* **Integration Scenario: ITS-001-B1** (missing requirements.md → fail-closed, no partial outputs)
+  * **Given** a temp feature directory with no `requirements.md`
+  * **When** the command runs
+  * **Then** `assert_failure` and `assert_output --partial "FATAL: requirements.md not found"`
+    and `[ ! -f "$TEST_TEMP_DIR/specs/001-test/plan.md" ]` (REQ-022 — no partial writes)
 
 ---
 
-## ITP-002 (Canonical Artifact Emitter — selective emission)
+### Module Verification: ARCH-002 (Canonical Artifact Emitter)
 
-**Covers**: ARCH-002 (NEW-PROMPT-SECTION → `commands/plan.md` §Output Artifacts)
 **Parent System Components**: SYS-001
+
+#### Test Case: ITP-002-A (Selective emission contract — partial and full upstream)
+
 **Test File**: `tests/system/bridge-commands/plan.bats`
 **Technique**: Fixture-Driven Black-Box
 **Requirements traced**: REQ-005, REQ-022
 
-### ITS-002-A1 (only `plan.md` emitted when only requirements.md is upstream)
+* **Integration Scenario: ITS-002-A1** (only `plan.md` emitted when only requirements.md is upstream)
+  * **Given** a fixture with only `requirements.md`
+  * **When** `run bash invoke-command.sh speckit.v-model.plan ...`
+  * **Then** `[ -f "$dir/plan.md" ]` and `[ ! -f "$dir/data-model.md" ]`
+    and `[ ! -d "$dir/contracts" ]` (selective emission per nullable upstream)
 
-* **Given** a fixture with only `requirements.md`
-* **When** `run bash invoke-command.sh speckit.v-model.plan ...`
-* **Then** `[ -f "$dir/plan.md" ]` and `[ ! -f "$dir/data-model.md" ]`
-  and `[ ! -d "$dir/contracts" ]` (selective emission per nullable upstream)
+* **Integration Scenario: ITS-002-A2** (full bundle emitted when full upstream is present)
+  * **Given** a fixture with `requirements.md`, `system-design.md`,
+    `architecture-design.md`, `module-design.md`
+  * **When** the command runs
+  * **Then** `[ -f "$dir/plan.md" ]`, `[ -f "$dir/data-model.md" ]`,
+    `[ -d "$dir/contracts" ]`, `[ -f "$dir/quickstart.md" ]`,
+    `[ -f "$dir/research.md" ]` — all five canonical artifacts produced
 
-### ITS-002-A2 (full bundle emitted when full upstream is present)
+#### Test Case: ITP-002-B (Atomic emission — no partial files on early abort)
 
-* **Given** a fixture with `requirements.md`, `system-design.md`,
-  `architecture-design.md`, `module-design.md`
-* **When** the command runs
-* **Then** `[ -f "$dir/plan.md" ]`, `[ -f "$dir/data-model.md" ]`,
-  `[ -d "$dir/contracts" ]`, `[ -f "$dir/quickstart.md" ]`,
-  `[ -f "$dir/research.md" ]` — all five canonical artifacts produced
+**Test File**: `tests/system/bridge-commands/plan.bats`
+**Technique**: Fixture-Driven Black-Box
+**Requirements traced**: REQ-005, REQ-022
 
-### ITS-002-B1 (atomic emission — no half-written files on early abort)
-
-* **Given** a fixture that triggers `validate-core-schema.sh --plan`
-  failure mid-run (missing `## Technical Context`)
-* **When** the command runs and fails
-* **Then** `assert_failure` and no partial `plan.md` exists at
-  the target path (mktemp/mv pattern prevents corruption — REQ-022)
+* **Integration Scenario: ITS-002-B1** (atomic emission — no half-written files on early abort)
+  * **Given** a fixture that triggers `validate-core-schema.sh --plan`
+    failure mid-run (missing `## Technical Context`)
+  * **When** the command runs and fails
+  * **Then** `assert_failure` and no partial `plan.md` exists at
+    the target path (mktemp/mv pattern prevents corruption — REQ-022)
 
 ---
 
-## ITP-003 (Tasks Synthesis Orchestrator — `/speckit.v-model.tasks` end-to-end)
+### Module Verification: ARCH-003 (Tasks Synthesis Orchestrator)
 
-**Covers**: ARCH-003 (NEW-PROMPT-SECTION → `commands/tasks.md` §Execution Flow)
 **Parent System Components**: SYS-002
+
+#### Test Case: ITP-003-A (Nominal contract — direct path and TDD ordering invariant)
+
 **Test File**: `tests/system/bridge-commands/tasks.bats`
 **Technique**: Fixture-Driven Black-Box + CLI Contract Testing
 **Requirements traced**: REQ-002, REQ-005, REQ-IF-002
 
-### ITS-003-A1 (happy-path: V-Model artifacts present, plan.md absent → direct path)
+* **Integration Scenario: ITS-003-A1** (happy-path: V-Model artifacts present, plan.md absent → direct path)
+  * **Given** a fixture with `requirements.md`, `system-design.md`,
+    `architecture-design.md`, `acceptance.md`, `system-test.md`,
+    `integration-test.md`, `module-design.md`, `unit-test.md`
+    (no `plan.md`)
+  * **When** `run bash invoke-command.sh speckit.v-model.tasks ...`
+  * **Then** `[ "$status" -eq 0 ]` and `[ -f "$dir/tasks.md" ]` and
+    `assert_output --partial "tasks emitted"`
 
-* **Given** a fixture with `requirements.md`, `system-design.md`,
-  `architecture-design.md`, `acceptance.md`, `system-test.md`,
-  `integration-test.md`, `module-design.md`, `unit-test.md`
-  (no `plan.md`)
-* **When** `run bash invoke-command.sh speckit.v-model.tasks ...`
-* **Then** `[ "$status" -eq 0 ]` and `[ -f "$dir/tasks.md" ]` and
-  `assert_output --partial "tasks emitted"`
+* **Integration Scenario: ITS-003-A2** (TDD ordering — every test task precedes its impl task)
+  * **Given** the produced `tasks.md` from ITS-003-A1
+  * **When** the test scans it with `grep -nE '^- \[ \]'`
+  * **Then** for every `(test_task, impl_task)` pair traced to the same
+    MOD-NNN, the test_task line number < impl_task line number (REQ-IF-002)
 
-### ITS-003-A2 (TDD ordering — every test task precedes its impl task)
+#### Test Case: ITP-003-B (Fault injection — schema validation failure produces non-zero exit)
 
-* **Given** the produced `tasks.md` from ITS-003-A1
-* **When** the test scans it with `grep -nE '^- \[ \]'`
-* **Then** for every `(test_task, impl_task)` pair traced to the same
-  MOD-NNN, the test_task line number < impl_task line number (REQ-IF-002)
+**Test File**: `tests/system/bridge-commands/tasks.bats`
+**Technique**: Fixture-Driven Black-Box + CLI Contract Testing
+**Requirements traced**: REQ-002, REQ-005, REQ-IF-002
 
-### ITS-003-B1 (`validate-core-schema.sh --tasks` failure → non-zero exit)
-
-* **Given** a fixture that produces a `tasks.md` missing the required
-  `## Phase 3.x: Implementation` heading
-* **When** the command runs
-* **Then** `assert_failure` and `assert_output --partial "MISSING: ## Phase 3"`
+* **Integration Scenario: ITS-003-B1** (`validate-core-schema.sh --tasks` failure → non-zero exit)
+  * **Given** a fixture that produces a `tasks.md` missing the required
+    `## Phase 3.x: Implementation` heading
+  * **When** the command runs
+  * **Then** `assert_failure` and `assert_output --partial "MISSING: ## Phase 3"`
 
 ---
 
-## ITP-004 (Implementation Orchestrator — `/speckit.v-model.implement` end-to-end)
+### Module Verification: ARCH-004 (Implementation Orchestrator)
 
-**Covers**: ARCH-004 (NEW-PROMPT-SECTION → `commands/implement.md` §Execution Flow)
 **Parent System Components**: SYS-003
+
+#### Test Case: ITP-004-A (Nominal contract — gate passes, code emitted, commit annotated)
+
 **Test File**: `tests/system/bridge-commands/implement.bats`
 **Technique**: Fixture-Driven Black-Box + Fault Injection
 **Requirements traced**: REQ-003, REQ-007, REQ-021, REQ-022, HAZ-009
 
-### ITS-004-A1 (gate passes → code emitted → commit annotated)
+* **Integration Scenario: ITS-004-A1** (gate passes → code emitted → commit annotated)
+  * **Given** a fixture with full V-Model artifacts and a `tasks.md`
+    whose every task traces to a real MOD-NNN
+  * **When** `run bash invoke-command.sh speckit.v-model.implement ...`
+  * **Then** `[ "$status" -eq 0 ]`, `assert_output --partial "gate: PASS"`,
+    the produced source files exist at the MOD-declared target paths, and
+    the latest git commit message matches `assert_output --partial "— MOD-"` suffix
 
-* **Given** a fixture with full V-Model artifacts and a `tasks.md`
-  whose every task traces to a real MOD-NNN
-* **When** `run bash invoke-command.sh speckit.v-model.implement ...`
-* **Then** `[ "$status" -eq 0 ]`, `assert_output --partial "gate: PASS"`,
-  the produced source files exist at the MOD-declared target paths, and
-  the latest git commit message matches `assert_output --partial "— MOD-"` suffix
+#### Test Case: ITP-004-B (Fault injection — gate failure produces fail-closed exit, no source emitted)
 
-### ITS-004-B1 (gate fails → fail-closed, no source emitted)
+**Test File**: `tests/system/bridge-commands/implement.bats`
+**Technique**: Fixture-Driven Black-Box + Fault Injection
+**Requirements traced**: REQ-003, REQ-007, REQ-021, REQ-022, HAZ-009
 
-* **Given** a fixture whose `tasks.md` references an undeclared MOD-099
-* **When** the command runs
-* **Then** `assert_failure`, `assert_output --partial "gate: FAIL"`,
-  `assert_output --partial "MOD-099"`, and **no** files were created
-  under `src/` (REQ-022 fail-closed)
+* **Integration Scenario: ITS-004-B1** (gate fails → fail-closed, no source emitted)
+  * **Given** a fixture whose `tasks.md` references an undeclared MOD-099
+  * **When** the command runs
+  * **Then** `assert_failure`, `assert_output --partial "gate: FAIL"`,
+    `assert_output --partial "MOD-099"`, and **no** files were created
+    under `src/` (REQ-022 fail-closed)
 
-### ITS-004-D1 (idempotent re-run on identical fixture produces no diff)
+#### Test Case: ITP-004-D (Idempotency — re-run on identical fixture produces no diff)
 
-* **Given** a fixture that has been run once successfully
-* **When** the command runs a second time with no changes
-* **Then** `assert_success` and `git diff --quiet` exits 0 (re-run
-  preserves managed regions; REQ-NF-005)
+**Test File**: `tests/system/bridge-commands/implement.bats`
+**Technique**: Fixture-Driven Black-Box + Fault Injection
+**Requirements traced**: REQ-003, REQ-007, REQ-021, REQ-022, HAZ-009
+
+* **Integration Scenario: ITS-004-D1** (idempotent re-run on identical fixture produces no diff)
+  * **Given** a fixture that has been run once successfully
+  * **When** the command runs a second time with no changes
+  * **Then** `assert_success` and `git diff --quiet` exits 0 (re-run
+    preserves managed regions; REQ-NF-005)
 
 ---
 
-## ITP-005 (Code Generator — per-MOD source emission)
+### Module Verification: ARCH-005 (Code Generator)
 
-**Covers**: ARCH-005 (NEW-PROMPT-SECTION → `commands/implement.md` §Code Generation)
 **Parent System Components**: SYS-003
+
+#### Test Case: ITP-005-A (Per-MOD emission and traceability comment contract)
+
 **Test File**: `tests/system/bridge-commands/implement.bats`
 **Technique**: Fixture-Driven Black-Box
 **Requirements traced**: REQ-003, REQ-021
 
-### ITS-005-A1 (every MOD-NNN gets a source file at its declared target)
+* **Integration Scenario: ITS-005-A1** (every MOD-NNN gets a source file at its declared target)
+  * **Given** a fixture `module-design.md` declaring 3 MODs with target
+    paths `src/foo/a.py`, `src/foo/b.py`, `src/foo/c.py`
+  * **When** the command runs
+  * **Then** all three files exist after the run, and each begins with a
+    `# Implements MOD-NNN` traceability comment line (REQ-021)
 
-* **Given** a fixture `module-design.md` declaring 3 MODs with target
-  paths `src/foo/a.py`, `src/foo/b.py`, `src/foo/c.py`
-* **When** the command runs
-* **Then** all three files exist after the run, and each begins with a
-  `# Implements MOD-NNN` traceability comment line (REQ-021)
-
-### ITS-005-A2 (traceability comment present on every generated file)
-
-* **Given** the result of ITS-005-A1
-* **When** `run bash scripts/bash/validate-implements-ids.sh src/foo/`
-* **Then** `assert_success` and `assert_output --partial "all IDs valid"`
+* **Integration Scenario: ITS-005-A2** (traceability comment present on every generated file)
+  * **Given** the result of ITS-005-A1
+  * **When** `run bash scripts/bash/validate-implements-ids.sh src/foo/`
+  * **Then** `assert_success` and `assert_output --partial "all IDs valid"`
 
 ---
 
-## ITP-006 (Test Generator — four-level test emission)
+### Module Verification: ARCH-006 (Test Generator)
 
-**Covers**: ARCH-006 (NEW-PROMPT-SECTION → `commands/implement.md` §Test Generation)
 **Parent System Components**: SYS-003
+
+#### Test Case: ITP-006-A (Four-level test emission — one file per declared level)
+
 **Test File**: `tests/system/bridge-commands/implement.bats`
 **Technique**: Fixture-Driven Black-Box
 **Requirements traced**: REQ-007, REQ-IF-003
 
-### ITS-006-A1 (one test file per declared level present after run)
-
-* **Given** a fixture with `unit-test.md`, `integration-test.md`,
-  `system-test.md`, `acceptance.md`
-* **When** the command runs
-* **Then** test files exist under `tests/unit/`, `tests/integration/`,
-  `tests/system/`, `tests/acceptance/` respectively (one per declared
-  scenario set)
+* **Integration Scenario: ITS-006-A1** (one test file per declared level present after run)
+  * **Given** a fixture with `unit-test.md`, `integration-test.md`,
+    `system-test.md`, `acceptance.md`
+  * **When** the command runs
+  * **Then** test files exist under `tests/unit/`, `tests/integration/`,
+    `tests/system/`, `tests/acceptance/` respectively (one per declared
+    scenario set)
 
 ---
 
-## ITP-007 (Pre-Implementation Gate Coordinator — `run-v-model-gate.sh` CLI)
+### Module Verification: ARCH-007 (Pre-Implementation Gate)
 
-**Covers**: ARCH-007 (NEW-SHELL → `scripts/bash/run-v-model-gate.sh`)
 **Parent System Components**: SYS-004
+
+#### Test Case: ITP-007-A (Nominal contract — all validators pass produces exit 0 + summary)
+
 **Test File**: `tests/unit/bridge-commands/run-v-model-gate.bats`
 **Technique**: CLI Contract Testing + Fault Injection
 **Requirements traced**: REQ-006, REQ-009, HAZ-009
 
-### ITS-007-A1 (all six validators pass → exit 0 + summary)
+* **Integration Scenario: ITS-007-A1** (all six validators pass → exit 0 + summary)
+  * **Given** the `tests/fixtures/minimal/` v-model artifact set (known to
+    satisfy all five `validate-*-coverage.sh` scripts)
+  * **When**
+    ```bash
+    run bash "$SCRIPTS_DIR/run-v-model-gate.sh" "$FIXTURES_DIR/minimal"
+    ```
+  * **Then** `[ "$status" -eq 0 ]` and `assert_output --partial "gate: PASS"`
+    and `assert_output --partial "build-matrix.sh: ok"`
 
-* **Given** the `tests/fixtures/minimal/` v-model artifact set (known to
-  satisfy all five `validate-*-coverage.sh` scripts)
-* **When**
-  ```bash
-  run bash "$SCRIPTS_DIR/run-v-model-gate.sh" "$FIXTURES_DIR/minimal"
-  ```
-* **Then** `[ "$status" -eq 0 ]` and `assert_output --partial "gate: PASS"`
-  and `assert_output --partial "build-matrix.sh: ok"`
+#### Test Case: ITP-007-B (Fault injection — any validator failure or missing argument produces non-zero exit)
 
-### ITS-007-B1 (any validator fails → exit non-zero + named failure)
+**Test File**: `tests/unit/bridge-commands/run-v-model-gate.bats`
+**Technique**: CLI Contract Testing + Fault Injection
+**Requirements traced**: REQ-006, REQ-009, HAZ-009
 
-* **Given** the `tests/fixtures/gaps/` fixture (known module-coverage gap)
-* **When** `run bash "$SCRIPTS_DIR/run-v-model-gate.sh" "$FIXTURES_DIR/gaps"`
-* **Then** `assert_failure` and `assert_output --partial "validate-module-coverage.sh: FAIL"`
-  and `assert_output --partial "gate: FAIL"`
+* **Integration Scenario: ITS-007-B1** (any validator fails → exit non-zero + named failure)
+  * **Given** the `tests/fixtures/gaps/` fixture (known module-coverage gap)
+  * **When** `run bash "$SCRIPTS_DIR/run-v-model-gate.sh" "$FIXTURES_DIR/gaps"`
+  * **Then** `assert_failure` and `assert_output --partial "validate-module-coverage.sh: FAIL"`
+    and `assert_output --partial "gate: FAIL"`
 
-### ITS-007-B2 (missing argument → usage + exit 1)
-
-* **Given** no argument
-* **When** `run bash "$SCRIPTS_DIR/run-v-model-gate.sh"`
-* **Then** `assert_failure` and `assert_output --partial "Usage:"`
+* **Integration Scenario: ITS-007-B2** (missing argument → usage + exit 1)
+  * **Given** no argument
+  * **When** `run bash "$SCRIPTS_DIR/run-v-model-gate.sh"`
+  * **Then** `assert_failure` and `assert_output --partial "Usage:"`
 
 ---
 
-## ITP-008 (Additive Enrichment Encoder — round-trip schema preservation)
+### Module Verification: ARCH-008 (Additive Enrichment Encoder)
 
-**Covers**: ARCH-008 (NEW-PROMPT-SECTION → `commands/plan.md` §Enrichment, `commands/tasks.md` §Traceability)
 **Parent System Components**: SYS-005
+
+#### Test Case: ITP-008-A (HTML-comment enrichment block injected and schema-preserved round-trip)
+
 **Test File**: `tests/system/bridge-commands/plan.bats` and `tasks.bats`
 **Technique**: Fixture-Driven Black-Box + Idempotent Re-Run
 **Requirements traced**: REQ-005, REQ-IF-001, REQ-IF-002
 
-### ITS-008-A1 (HTML-comment enrichment block injected after document title)
+* **Integration Scenario: ITS-008-A1** (HTML-comment enrichment block injected after document title)
+  * **Given** the `plan.md` produced by ITP-001-A1
+  * **When** the test inspects the file with `grep -nE '<!-- vmodel:traces'`
+  * **Then** the HTML comment block exists immediately after the `# `
+    document-title line and contains `<!-- traces-to:` lines for every
+    MOD/ARCH/SYS/REQ ID referenced
 
-* **Given** the `plan.md` produced by ITP-001-A1
-* **When** the test inspects the file with `grep -nE '<!-- vmodel:traces'`
-* **Then** the HTML comment block exists immediately after the `# `
-  document-title line and contains `<!-- traces-to:` lines for every
-  MOD/ARCH/SYS/REQ ID referenced
-
-### ITS-008-A2 (enriched output still validates against pinned spec-kit-core schema)
-
-* **Given** the enriched `plan.md`
-* **When** `run bash "$SCRIPTS_DIR/validate-core-schema.sh" --plan "$dir/plan.md"`
-* **Then** `assert_success` (enrichment is purely additive — HAZ-006 mitigation)
+* **Integration Scenario: ITS-008-A2** (enriched output still validates against pinned spec-kit-core schema)
+  * **Given** the enriched `plan.md`
+  * **When** `run bash "$SCRIPTS_DIR/validate-core-schema.sh" --plan "$dir/plan.md"`
+  * **Then** `assert_success` (enrichment is purely additive — HAZ-006 mitigation)
 
 ---
 
-## ITP-009 (Hallucination Guard — `validate-implements-ids.sh` CLI)
+### Module Verification: ARCH-009 (Hallucination Guard)
 
-**Covers**: ARCH-009 (NEW-SHELL → `scripts/bash/validate-implements-ids.sh`)
 **Parent System Components**: SYS-006
+
+#### Test Case: ITP-009-A (Nominal contract — all referenced IDs resolve produces exit 0)
+
 **Test File**: `tests/unit/bridge-commands/validate-implements-ids.bats`
 **Technique**: CLI Contract Testing + Fault Injection
 **Requirements traced**: REQ-008, HAZ-012, HAZ-023
 
-### ITS-009-A1 (all referenced IDs resolve in V-Model artifacts → exit 0)
+* **Integration Scenario: ITS-009-A1** (all referenced IDs resolve in V-Model artifacts → exit 0)
+  * **Given** a generated source file containing `# Implements MOD-001`
+    and a V-Model fixture where `MOD-001` is declared in `module-design.md`
+  * **When**
+    ```bash
+    run bash "$SCRIPTS_DIR/validate-implements-ids.sh" \
+        --vmodel-dir "$FIXTURES_DIR/minimal" "$TEST_TEMP_DIR/src/"
+    ```
+  * **Then** `[ "$status" -eq 0 ]` and `assert_output --partial "all IDs valid"`
 
-* **Given** a generated source file containing `# Implements MOD-001`
-  and a V-Model fixture where `MOD-001` is declared in `module-design.md`
-* **When**
-  ```bash
-  run bash "$SCRIPTS_DIR/validate-implements-ids.sh" \
-      --vmodel-dir "$FIXTURES_DIR/minimal" "$TEST_TEMP_DIR/src/"
-  ```
-* **Then** `[ "$status" -eq 0 ]` and `assert_output --partial "all IDs valid"`
+#### Test Case: ITP-009-B (Fault injection — hallucinated or cross-style IDs produce exit non-zero)
 
-### ITS-009-B1 (hallucinated ID `MOD-999` → exit non-zero + named ID)
+**Test File**: `tests/unit/bridge-commands/validate-implements-ids.bats`
+**Technique**: CLI Contract Testing + Fault Injection
+**Requirements traced**: REQ-008, HAZ-012, HAZ-023
 
-* **Given** a generated file containing `# Implements MOD-999`
-* **When** the script runs against the same V-Model fixture
-* **Then** `assert_failure` and `assert_output --partial "HALLUCINATED: MOD-999"`
+* **Integration Scenario: ITS-009-B1** (hallucinated ID `MOD-999` → exit non-zero + named ID)
+  * **Given** a generated file containing `# Implements MOD-999`
+  * **When** the script runs against the same V-Model fixture
+  * **Then** `assert_failure` and `assert_output --partial "HALLUCINATED: MOD-999"`
 
-### ITS-009-B2 (mixed comment styles — Python `#`, JS `//`, both detected)
-
-* **Given** two files: `a.py` with `# Implements REQ-001` and `b.js`
-  with `// Implements MOD-099`
-* **When** the script runs
-* **Then** `assert_failure`, `assert_output --partial "HALLUCINATED: MOD-099"`,
-  and REQ-001 is reported as valid (regex covers both comment markers)
+* **Integration Scenario: ITS-009-B2** (mixed comment styles — Python `#`, JS `//`, both detected)
+  * **Given** two files: `a.py` with `# Implements REQ-001` and `b.js`
+    with `// Implements MOD-099`
+  * **When** the script runs
+  * **Then** `assert_failure`, `assert_output --partial "HALLUCINATED: MOD-099"`,
+    and REQ-001 is reported as valid (regex covers both comment markers)
 
 ---
 
-## ITP-010 (Source Region Splicer — `splice-managed-regions.sh` CLI)
+### Module Verification: ARCH-010 (Source Region Splicer)
 
-**Covers**: ARCH-010 (NEW-SHELL → `scripts/bash/splice-managed-regions.sh`)
 **Parent System Components**: SYS-007
+
+#### Test Case: ITP-010-A (Nominal splice contract — target-absent wrap and target-present in-place update)
+
 **Test File**: `tests/unit/bridge-commands/splice-managed-regions.bats`
 **Technique**: CLI Contract Testing + Idempotent Re-Run + Fault Injection
 **Requirements traced**: REQ-013, REQ-NF-005, HAZ-013
 
-### ITS-010-A1 (target file absent → wrap content with markers)
+* **Integration Scenario: ITS-010-A1** (target file absent → wrap content with markers)
+  * **Given** `target=/tmp/$$/foo.py` does not exist (created in
+    `$TEST_TEMP_DIR`, not `/tmp` per harness)
+  * **When**
+    ```bash
+    run bash "$SCRIPTS_DIR/splice-managed-regions.sh" \
+        "$TEST_TEMP_DIR/foo.py" "print('hello')" python
+    ```
+  * **Then** `[ "$status" -eq 0 ]` and `cat "$TEST_TEMP_DIR/foo.py"` contains
+    `# VMODEL-MANAGED-BEGIN` and `# VMODEL-MANAGED-END` wrapping `print('hello')`
 
-* **Given** `target=/tmp/$$/foo.py` does not exist (created in
-  `$TEST_TEMP_DIR`, not `/tmp` per harness)
-* **When**
-  ```bash
-  run bash "$SCRIPTS_DIR/splice-managed-regions.sh" \
-      "$TEST_TEMP_DIR/foo.py" "print('hello')" python
-  ```
-* **Then** `[ "$status" -eq 0 ]` and `cat "$TEST_TEMP_DIR/foo.py"` contains
-  `# VMODEL-MANAGED-BEGIN` and `# VMODEL-MANAGED-END` wrapping `print('hello')`
+* **Integration Scenario: ITS-010-A2** (target file present with single managed region → splice in place)
+  * **Given** an existing file with content
+    `outside1\n# VMODEL-MANAGED-BEGIN\nold\n# VMODEL-MANAGED-END\noutside2`
+  * **When** the script is invoked with new content `new`
+  * **Then** `assert_success` and the file now contains
+    `outside1`, the markers, `new`, and `outside2` — `outside1`/`outside2`
+    preserved verbatim
 
-### ITS-010-A2 (target file present with single managed region → splice in place)
+#### Test Case: ITP-010-B (Fault injection — unbalanced and overlapping markers produce non-zero exit)
 
-* **Given** an existing file with content
-  `outside1\n# VMODEL-MANAGED-BEGIN\nold\n# VMODEL-MANAGED-END\noutside2`
-* **When** the script is invoked with new content `new`
-* **Then** `assert_success` and the file now contains
-  `outside1`, the markers, `new`, and `outside2` — `outside1`/`outside2`
-  preserved verbatim
+**Test File**: `tests/unit/bridge-commands/splice-managed-regions.bats`
+**Technique**: CLI Contract Testing + Idempotent Re-Run + Fault Injection
+**Requirements traced**: REQ-013, REQ-NF-005, HAZ-013
 
-### ITS-010-D1 (idempotent: running twice with same input produces identical file)
+* **Integration Scenario: ITS-010-B1** (unbalanced markers → exit non-zero)
+  * **Given** a target file containing `# VMODEL-MANAGED-BEGIN` but no
+    matching `# VMODEL-MANAGED-END`
+  * **When** the script runs
+  * **Then** `assert_failure` and `assert_output --partial "unbalanced markers"`
 
-* **Given** the result of ITS-010-A2
-* **When** the script is invoked a second time with the same content
-* **Then** `assert_success` and `diff first second` produces no output
+* **Integration Scenario: ITS-010-B2** (overlapping/nested markers → exit non-zero)
+  * **Given** a file with two `BEGIN` lines before any `END`
+  * **When** the script runs
+  * **Then** `assert_failure` and `assert_output --partial "overlapping markers"`
 
-### ITS-010-B1 (unbalanced markers → exit non-zero)
+#### Test Case: ITP-010-D (Idempotency — identical re-run produces identical output file)
 
-* **Given** a target file containing `# VMODEL-MANAGED-BEGIN` but no
-  matching `# VMODEL-MANAGED-END`
-* **When** the script runs
-* **Then** `assert_failure` and `assert_output --partial "unbalanced markers"`
+**Test File**: `tests/unit/bridge-commands/splice-managed-regions.bats`
+**Technique**: CLI Contract Testing + Idempotent Re-Run + Fault Injection
+**Requirements traced**: REQ-013, REQ-NF-005, HAZ-013
 
-### ITS-010-B2 (overlapping/nested markers → exit non-zero)
-
-* **Given** a file with two `BEGIN` lines before any `END`
-* **When** the script runs
-* **Then** `assert_failure` and `assert_output --partial "overlapping markers"`
+* **Integration Scenario: ITS-010-D1** (idempotent: running twice with same input produces identical file)
+  * **Given** the result of ITS-010-A2
+  * **When** the script is invoked a second time with the same content
+  * **Then** `assert_success` and `diff first second` produces no output
 
 ---
 
-## ITP-011 (Domain Overlay Loader — overlay-aware generation)
+### Module Verification: ARCH-011 (Domain Overlay Loader)
 
-**Covers**: ARCH-011 (NEW-PROMPT-SECTION → `commands/implement.md` §Domain Overlay)
 **Parent System Components**: SYS-008
+
+#### Test Case: ITP-011-A (Nominal contract — no overlay produces identity transform)
+
 **Test File**: `tests/system/bridge-commands/implement.bats`
 **Technique**: Fixture-Driven Black-Box + Fault Injection
 **Requirements traced**: REQ-014, HAZ-024
 
-### ITS-011-A1 (no overlay file → identity transform)
+* **Integration Scenario: ITS-011-A1** (no overlay file → identity transform)
+  * **Given** a fixture with no `v-model-config.yml` at the repo root
+  * **When** the implement command runs
+  * **Then** `assert_success` and the produced source uses the default
+    generation rules (no domain-specific suffix in summary)
 
-* **Given** a fixture with no `v-model-config.yml` at the repo root
-* **When** the implement command runs
-* **Then** `assert_success` and the produced source uses the default
-  generation rules (no domain-specific suffix in summary)
+#### Test Case: ITP-011-B (Fault injection — malformed v-model-config.yml produces fail-closed exit)
 
-### ITS-011-B1 (malformed `v-model-config.yml` → fail-closed)
+**Test File**: `tests/system/bridge-commands/implement.bats`
+**Technique**: Fixture-Driven Black-Box + Fault Injection
+**Requirements traced**: REQ-014, HAZ-024
 
-* **Given** a `v-model-config.yml` containing tab-indented keys
-  (per `tests/fixtures/v-model-config/malformed/tab-indent.yml`)
-* **When** the command runs
-* **Then** `assert_failure` and `assert_output --partial "v-model-config.yml: parse error"`
+* **Integration Scenario: ITS-011-B1** (malformed `v-model-config.yml` → fail-closed)
+  * **Given** a `v-model-config.yml` containing tab-indented keys
+    (per `tests/fixtures/v-model-config/malformed/tab-indent.yml`)
+  * **When** the command runs
+  * **Then** `assert_failure` and `assert_output --partial "v-model-config.yml: parse error"`
 
 ---
 
-## ITP-012 (Hazard Task Emitter — HAZ-NNN verification tasks)
+### Module Verification: ARCH-012 (Hazard Task Emitter)
 
-**Covers**: ARCH-012 (NEW-PROMPT-SECTION → `commands/tasks.md` §Hazard Enrichment)
 **Parent System Components**: SYS-009
+
+#### Test Case: ITP-012-A (HAZ verification tasks emitted when hazard-analysis.md present; absent path silent)
+
 **Test File**: `tests/system/bridge-commands/tasks.bats`
 **Technique**: Fixture-Driven Black-Box
 **Requirements traced**: REQ-IF-004, HAZ-014
 
-### ITS-012-A1 (hazard-analysis.md present → HAZ verification tasks emitted)
+* **Integration Scenario: ITS-012-A1** (hazard-analysis.md present → HAZ verification tasks emitted)
+  * **Given** a fixture containing `hazard-analysis.md` with HAZ-001..HAZ-003
+  * **When** the tasks command runs
+  * **Then** `grep -E 'HAZ-00[123]' "$dir/tasks.md"` matches at least 3 lines
+    (one verification task per hazard) and the lines appear above implementation
+    tasks for the same MOD
 
-* **Given** a fixture containing `hazard-analysis.md` with HAZ-001..HAZ-003
-* **When** the tasks command runs
-* **Then** `grep -E 'HAZ-00[123]' "$dir/tasks.md"` matches at least 3 lines
-  (one verification task per hazard) and the lines appear above implementation
-  tasks for the same MOD
-
-### ITS-012-A2 (hazard-analysis.md absent → no HAZ tasks, no error)
-
-* **Given** a fixture with no `hazard-analysis.md`
-* **When** the tasks command runs
-* **Then** `assert_success` and `grep -c 'HAZ-' "$dir/tasks.md"` returns 0
+* **Integration Scenario: ITS-012-A2** (hazard-analysis.md absent → no HAZ tasks, no error)
+  * **Given** a fixture with no `hazard-analysis.md`
+  * **When** the tasks command runs
+  * **Then** `assert_success` and `grep -c 'HAZ-' "$dir/tasks.md"` returns 0
 
 ---
 
-## ITP-013 (Spec-Kit Schema Validator — `validate-core-schema.sh` CLI)
+### Module Verification: ARCH-013 (Schema Validator)
 
-**Covers**: ARCH-013 (NEW-SHELL → `scripts/bash/validate-core-schema.sh`)
 **Parent System Components**: SYS-010
+
+#### Test Case: ITP-013-A (Nominal contract — valid plan.md and tasks.md produce exit 0)
+
 **Test File**: `tests/unit/bridge-commands/validate-core-schema.bats`
 **Technique**: CLI Contract Testing + Fault Injection
 **Requirements traced**: REQ-015, REQ-NF-001, HAZ-024
 
-### ITS-013-A1 (`--plan` mode, all required sections present → exit 0)
+* **Integration Scenario: ITS-013-A1** (`--plan` mode, all required sections present → exit 0)
+  * **Given** a fixture `plan.md` containing every required section per
+    spec-kit-core v0.7.0
+  * **When**
+    ```bash
+    run bash "$SCRIPTS_DIR/validate-core-schema.sh" --plan "$FIXTURES_DIR/plan-valid.md"
+    ```
+  * **Then** `[ "$status" -eq 0 ]` and `assert_output --partial "schema: ok (spec-kit-core v0.7.0)"`
 
-* **Given** a fixture `plan.md` containing every required section per
-  spec-kit-core v0.7.0
-* **When**
-  ```bash
-  run bash "$SCRIPTS_DIR/validate-core-schema.sh" --plan "$FIXTURES_DIR/plan-valid.md"
-  ```
-* **Then** `[ "$status" -eq 0 ]` and `assert_output --partial "schema: ok (spec-kit-core v0.7.0)"`
+* **Integration Scenario: ITS-013-A2** (`--tasks` mode, all required sections present → exit 0)
+  * **Given** a fixture `tasks.md` containing the spec-kit-core required tasks-schema sections
+  * **When** the script runs in `--tasks` mode
+  * **Then** `assert_success` and `assert_output --partial "schema: ok"`
 
-### ITS-013-A2 (`--tasks` mode, all required sections present → exit 0)
+#### Test Case: ITP-013-B (Fault injection — missing section and unknown mode produce exit non-zero)
 
-* **Given** a fixture `tasks.md` containing the spec-kit-core required tasks-schema sections
-* **When** the script runs in `--tasks` mode
-* **Then** `assert_success` and `assert_output --partial "schema: ok"`
+**Test File**: `tests/unit/bridge-commands/validate-core-schema.bats`
+**Technique**: CLI Contract Testing + Fault Injection
+**Requirements traced**: REQ-015, REQ-NF-001, HAZ-024
 
-### ITS-013-B1 (`--plan` mode, missing `## Technical Context` → exit non-zero + named gap)
+* **Integration Scenario: ITS-013-B1** (`--plan` mode, missing `## Technical Context` → exit non-zero + named gap)
+  * **Given** a `plan.md` lacking the `## Technical Context` heading
+  * **When** the script runs in `--plan` mode
+  * **Then** `assert_failure` and `assert_output --partial "MISSING: ## Technical Context"`
 
-* **Given** a `plan.md` lacking the `## Technical Context` heading
-* **When** the script runs in `--plan` mode
-* **Then** `assert_failure` and `assert_output --partial "MISSING: ## Technical Context"`
-
-### ITS-013-B2 (unknown mode flag → usage + exit 1)
-
-* **Given** the flag `--bogus`
-* **When** the script runs
-* **Then** `assert_failure` and `assert_output --partial "Usage:"`
+* **Integration Scenario: ITS-013-B2** (unknown mode flag → usage + exit 1)
+  * **Given** the flag `--bogus`
+  * **When** the script runs
+  * **Then** `assert_failure` and `assert_output --partial "Usage:"`
 
 ---
 
-## ITP-014 (Reduced-Enrichment Fallback — hybrid path detection)
+### Module Verification: ARCH-014 (Reduced-Enrichment Fallback)
 
-**Covers**: ARCH-014 (NEW-PROMPT-SECTION → `commands/tasks.md` §Hybrid Path Detection)
 **Parent System Components**: SYS-002
+
+#### Test Case: ITP-014-A (Hybrid path detection — enriched plan.md vs. direct V-Model fallback)
+
 **Test File**: `tests/system/bridge-commands/tasks.bats`
 **Technique**: Fixture-Driven Black-Box
 **Requirements traced**: REQ-IF-005, REQ-NF-003
 
-### ITS-014-A1 (`plan.md` present and contains `<!-- vmodel:traces` → use plan as enrichment source)
+* **Integration Scenario: ITS-014-A1** (`plan.md` present and contains `<!-- vmodel:traces` → use plan as enrichment source)
+  * **Given** a fixture with both V-Model artifacts and a previously
+    enriched `plan.md`
+  * **When** the tasks command runs
+  * **Then** `assert_output --partial "enrichment source: plan.md"`
 
-* **Given** a fixture with both V-Model artifacts and a previously
-  enriched `plan.md`
-* **When** the tasks command runs
-* **Then** `assert_output --partial "enrichment source: plan.md"`
-
-### ITS-014-A2 (`plan.md` absent → fall back to direct V-Model traceability)
-
-* **Given** a fixture with V-Model artifacts but no `plan.md`
-* **When** the tasks command runs
-* **Then** `assert_output --partial "enrichment source: v-model artifacts"`
-  and the produced `tasks.md` still contains `<!-- traces-to: ... -->` comments
+* **Integration Scenario: ITS-014-A2** (`plan.md` absent → fall back to direct V-Model traceability)
+  * **Given** a fixture with V-Model artifacts but no `plan.md`
+  * **When** the tasks command runs
+  * **Then** `assert_output --partial "enrichment source: v-model artifacts"`
+    and the produced `tasks.md` still contains `<!-- traces-to: ... -->` comments
 
 ---
 
-## ITP-015 (Hook Registrar — `extension.yml` ↔ spec-kit-core CommandRegistrar)
+### Module Verification: ARCH-015 (Hook Registrar)
 
-**Covers**: ARCH-015 (REUSE-CORE → 3 YAML entries in `extension.yml`; wiring done by `src/specify_cli/extensions.py`)
 **Parent System Components**: SYS-011
+
+#### Test Case: ITP-015-A (Schema validation contract — extension.yml parses and contains three required hooks)
+
 **Test File**: `tests/bats/extension-manifest.bats`
 **Technique**: CLI Contract Testing + Idempotent Re-Run
 **Requirements traced**: REQ-IF-005, REQ-NF-005
 
-### ITS-015-A1 (extension.yml parses against the CommandRegistrar schema)
+* **Integration Scenario: ITS-015-A1** (extension.yml parses against the CommandRegistrar schema)
+  * **Given** the repo-root `extension.yml`
+  * **When**
+    ```bash
+    run python3 -c "import yaml; yaml.safe_load(open('extension.yml'))"
+    ```
+  * **Then** `[ "$status" -eq 0 ]` (deterministic YAML parse — no Python
+    module under test, only the manifest file)
 
-* **Given** the repo-root `extension.yml`
-* **When**
-  ```bash
-  run python3 -c "import yaml; yaml.safe_load(open('extension.yml'))"
-  ```
-* **Then** `[ "$status" -eq 0 ]` (deterministic YAML parse — no Python
-  module under test, only the manifest file)
+* **Integration Scenario: ITS-015-A2** (three required hook entries present in `extension.yml`)
+  * **Given** `extension.yml`
+  * **When**
+    ```bash
+    run grep -E '^[[:space:]]+(after_specify|before_implement|after_implement):' extension.yml
+    ```
+  * **Then** `assert_success` and `[ "$(echo "$output" | wc -l)" -eq 3 ]`
 
-### ITS-015-A2 (three required hook entries present in `extension.yml`)
+* **Integration Scenario: ITS-015-A3** (each hook entry references a real `commands/*.md` file)
+  * **Given** the entries from ITS-015-A2
+  * **When** the test extracts the referenced command name and checks
+    `commands/<name>.md` exists
+  * **Then** all three command files are present (`commands/plan.md`,
+    `commands/tasks.md`, `commands/implement.md`)
 
-* **Given** `extension.yml`
-* **When**
-  ```bash
-  run grep -E '^[[:space:]]+(after_specify|before_implement|after_implement):' extension.yml
-  ```
-* **Then** `assert_success` and `[ "$(echo "$output" | wc -l)" -eq 3 ]`
+#### Test Case: ITP-015-D (Idempotency — re-running CommandRegistrar produces identical hook state)
 
-### ITS-015-A3 (each hook entry references a real `commands/*.md` file)
+**Test File**: `tests/bats/extension-manifest.bats`
+**Technique**: CLI Contract Testing + Idempotent Re-Run
+**Requirements traced**: REQ-IF-005, REQ-NF-005
 
-* **Given** the entries from ITS-015-A2
-* **When** the test extracts the referenced command name and checks
-  `commands/<name>.md` exists
-* **Then** all three command files are present (`commands/plan.md`,
-  `commands/tasks.md`, `commands/implement.md`)
-
-### ITS-015-D1 (idempotent install — re-running CommandRegistrar produces identical state)
-
-* **Given** a clean `~/.specify/extensions/v-model/` install
-* **When** the install script is invoked twice in succession (real Spec
-  Kit Core `CommandRegistrar` from `src/specify_cli/extensions.py`)
-* **Then** `assert_success` both times and `diff` of the two resulting
-  `extensions.yml` registry files produces no output (REQ-NF-005)
+* **Integration Scenario: ITS-015-D1** (idempotent install — re-running CommandRegistrar produces identical state)
+  * **Given** a clean `~/.specify/extensions/v-model/` install
+  * **When** the install script is invoked twice in succession (real Spec
+    Kit Core `CommandRegistrar` from `src/specify_cli/extensions.py`)
+  * **Then** `assert_success` both times and `diff` of the two resulting
+    `extensions.yml` registry files produces no output (REQ-NF-005)
 
 ---
 
-## ITP-016 (Structured Summary Reporter — always-emit on every exit path)
+### Module Verification: ARCH-016 (Structured Summary Reporter)
 
-**Covers**: ARCH-016 (NEW-PROMPT-SECTION → §Structured Summary in all three `commands/*.md`)
 **Parent System Components**: SYS-012
+
+#### Test Case: ITP-016-A (Always-emit contract — summary on stdout for both success and failure paths)
+
 **Test File**: `tests/system/bridge-commands/{plan,tasks,implement}.bats`
 **Technique**: CLI Contract Testing + Fault Injection
 **Requirements traced**: REQ-019, HAZ-025
 
-### ITS-016-A1 (success path — summary on stdout for all three commands)
+* **Integration Scenario: ITS-016-A1** (success path — summary on stdout for all three commands)
+  * **Given** a happy-path fixture for each of plan / tasks / implement
+  * **When** each command runs
+  * **Then** for each: `assert_success` and `assert_output --partial "--- v-model run summary ---"`
+    and the block contains `inputs_read:`, `outputs_produced:`, `warnings:`, `fatal_errors: []`
 
-* **Given** a happy-path fixture for each of plan / tasks / implement
-* **When** each command runs
-* **Then** for each: `assert_success` and `assert_output --partial "--- v-model run summary ---"`
-  and the block contains `inputs_read:`, `outputs_produced:`, `warnings:`, `fatal_errors: []`
-
-### ITS-016-A2 (failure path — summary still emitted on non-zero exit)
-
-* **Given** a failing fixture (e.g. ITP-001 ITS-001-B1)
-* **When** the command runs and fails
-* **Then** `assert_failure` and `assert_output --partial "--- v-model run summary ---"`
-  and `fatal_errors:` is non-empty
+* **Integration Scenario: ITS-016-A2** (failure path — summary still emitted on non-zero exit)
+  * **Given** a failing fixture (e.g. ITP-001 ITS-001-B1)
+  * **When** the command runs and fails
+  * **Then** `assert_failure` and `assert_output --partial "--- v-model run summary ---"`
+    and `fatal_errors:` is non-empty
 
 ---
 
-## ITP-017 [DEFERRED — component dropped in paradigm shift]
+### Module Verification: ARCH-017 (Quality Compliance Harness)
+
+#### ITP-017 [DEFERRED — component dropped in paradigm shift]
 
 **Original target**: ARCH-017 (Quality Compliance Harness)
 **Status**: DROP per `drift-diff-plan.md`. The four-stack harness
@@ -613,31 +675,33 @@ component. ID retained for traceability; no scenarios authored.
 
 ---
 
-## ITP-018 (Commit Annotator — ID-suffixed commit messages)
+### Module Verification: ARCH-018 (Commit Annotator)
 
-**Covers**: ARCH-018 (NEW-PROMPT-SECTION → `commands/implement.md` §Commit Annotation)
 **Parent System Components**: SYS-014
+
+#### Test Case: ITP-018-A (ID-suffixed commit message and no-op skip contract)
+
 **Test File**: `tests/system/bridge-commands/implement.bats`
 **Technique**: Fixture-Driven Black-Box
 **Requirements traced**: REQ-021
 
-### ITS-018-A1 (commit message ends with `— <ID>, <ID>` suffix referencing implemented MODs)
+* **Integration Scenario: ITS-018-A1** (commit message ends with `— <ID>, <ID>` suffix referencing implemented MODs)
+  * **Given** a successful implement run that emitted source for MOD-001
+    and MOD-002
+  * **When** the test inspects `git log -1 --format=%s`
+  * **Then** `assert_output --partial "— MOD-001, MOD-002"` (em-dash + space + comma-separated ID list)
 
-* **Given** a successful implement run that emitted source for MOD-001
-  and MOD-002
-* **When** the test inspects `git log -1 --format=%s`
-* **Then** `assert_output --partial "— MOD-001, MOD-002"` (em-dash + space + comma-separated ID list)
-
-### ITS-018-A2 (no implementation commits when nothing was emitted)
-
-* **Given** a no-op re-run with `git diff --quiet` already true
-* **When** the implement command runs
-* **Then** `assert_output --partial "no source changes — commit skipped"`
-  and `git log -1 --format=%s` is unchanged from the previous commit
+* **Integration Scenario: ITS-018-A2** (no implementation commits when nothing was emitted)
+  * **Given** a no-op re-run with `git diff --quiet` already true
+  * **When** the implement command runs
+  * **Then** `assert_output --partial "no source changes — commit skipped"`
+    and `git log -1 --format=%s` is unchanged from the previous commit
 
 ---
 
-## ITP-019 [DEFERRED — component dropped in paradigm shift]
+### Module Verification: ARCH-019 (V-Model Artifact Reader (Deferred))
+
+#### ITP-019 [DEFERRED — component dropped in paradigm shift]
 
 **Original target**: ARCH-019 (V-Model Artifact Reader, Python parser)
 **Status**: DROP per `drift-diff-plan.md`. In the Markdown+shell
@@ -648,7 +712,9 @@ parser. ID retained for traceability; no scenarios authored.
 
 ---
 
-## ITP-020 [DEFERRED — component dropped in paradigm shift]
+### Module Verification: ARCH-020 (Subprocess Runner (Deferred))
+
+#### ITP-020 [DEFERRED — component dropped in paradigm shift]
 
 **Original target**: ARCH-020 (Subprocess Runner, Python wrapper)
 **Status**: DROP per `drift-diff-plan.md`. Shell scripts invoke other
@@ -659,7 +725,9 @@ ID retained for traceability; no scenarios authored.
 
 ---
 
-## ITP-021 [DEFERRED — component dropped in paradigm shift]
+### Module Verification: ARCH-021 (Filesystem Writer (Deferred))
+
+#### ITP-021 [DEFERRED — component dropped in paradigm shift]
 
 **Original target**: ARCH-021 (Filesystem Writer, Python atomic-write module)
 **Status**: DROP per `drift-diff-plan.md`. Atomic write in shell is the

@@ -113,7 +113,9 @@ entirely.
 
 ---
 
-### MOD-001 — Plan Synthesis Orchestrator
+### Module: MOD-001 (Plan Synthesis Orchestrator)
+
+**Parent Architecture Modules**: ARCH-001
 
 | Field | Value |
 |-------|-------|
@@ -189,7 +191,9 @@ canonical order.
 
 ---
 
-### MOD-002 — Canonical Output Emitter
+### Module: MOD-002 (Canonical Output Emitter)
+
+**Parent Architecture Modules**: ARCH-002
 
 | Field | Value |
 |-------|-------|
@@ -241,7 +245,9 @@ new content, never a partial file.
 
 ---
 
-### MOD-003 — Tasks Synthesis Orchestrator
+### Module: MOD-003 (Tasks Synthesis Orchestrator)
+
+**Parent Architecture Modules**: ARCH-003
 
 | Field | Value |
 |-------|-------|
@@ -308,7 +314,9 @@ asserting the six expected sections appear in canonical order.
 
 ---
 
-### MOD-004 — TDD Task List Builder
+### Module: MOD-004 (TDD Task List Builder)
+
+**Parent Architecture Modules**: ARCH-003
 
 | Field | Value |
 |-------|-------|
@@ -362,7 +370,9 @@ property assertion that no `implement` task precedes its sibling
 
 ---
 
-### MOD-005 — Implementation Orchestrator
+### Module: MOD-005 (Implementation Orchestrator)
+
+**Parent Architecture Modules**: ARCH-004
 
 | Field | Value |
 |-------|-------|
@@ -437,7 +447,9 @@ sections.
 
 ---
 
-### MOD-006 — Code Generator (per-MOD dispatch)
+### Module: MOD-006 (Code Generator (per-MOD dispatch))
+
+**Parent Architecture Modules**: ARCH-005
 
 | Field | Value |
 |-------|-------|
@@ -485,7 +497,9 @@ per REQ-025).
 
 ---
 
-### MOD-007 — Module Source Renderer
+### Module: MOD-007 (Module Source Renderer)
+
+**Parent Architecture Modules**: ARCH-005
 
 | Field | Value |
 |-------|-------|
@@ -532,7 +546,9 @@ tree.
 
 ---
 
-### MOD-008 — Test Generator (per-level dispatch)
+### Module: MOD-008 (Test Generator (per-level dispatch))
+
+**Parent Architecture Modules**: ARCH-006
 
 | Field | Value |
 |-------|-------|
@@ -575,7 +591,9 @@ exercised when present.
 
 ---
 
-### MOD-009 — Per-Level Test Renderer
+### Module: MOD-009 (Per-Level Test Renderer)
+
+**Parent Architecture Modules**: ARCH-006
 
 | Field | Value |
 |-------|-------|
@@ -621,7 +639,9 @@ syntactically valid and contains the expected `Implements` comment.
 
 ---
 
-### MOD-010 — Pre-Implementation Gate Coordinator
+### Module: MOD-010 (Pre-Implementation Gate Coordinator)
+
+**Parent Architecture Modules**: ARCH-007
 
 | Field | Value |
 |-------|-------|
@@ -696,7 +716,9 @@ matrix MUST NOT produce code).
 
 ---
 
-### MOD-011 — Plan Enrichment Encoder
+### Module: MOD-011 (Plan Enrichment Encoder)
+
+**Parent Architecture Modules**: ARCH-008
 
 | Field | Value |
 |-------|-------|
@@ -747,7 +769,9 @@ canonical order, (c) MOD-017 still exits 0.
 
 ---
 
-### MOD-012 — Tasks Traceability Comment Encoder
+### Module: MOD-012 (Tasks Traceability Comment Encoder)
+
+**Parent Architecture Modules**: ARCH-008
 
 | Field | Value |
 |-------|-------|
@@ -792,7 +816,9 @@ in-context chain exists; BATS assertion that
 
 ---
 
-### MOD-013 — Hallucination Guard
+### Module: MOD-013 (Hallucination Guard)
+
+**Parent Architecture Modules**: ARCH-009
 
 | Field | Value |
 |-------|-------|
@@ -874,7 +900,9 @@ fixture artifact set).
 
 ---
 
-### MOD-014 — Source Region Splicer
+### Module: MOD-014 (Source Region Splicer)
+
+**Parent Architecture Modules**: ARCH-010
 
 | Field | Value |
 |-------|-------|
@@ -956,7 +984,9 @@ mitigation: scanner consumes the spliced output without re-entry
 
 ---
 
-### MOD-015 — Domain Overlay Adapter
+### Module: MOD-015 (Domain Overlay Adapter)
+
+**Parent Architecture Modules**: ARCH-011
 
 | Field | Value |
 |-------|-------|
@@ -1011,7 +1041,9 @@ malformed-yaml}; BATS assertion that the malformed-yaml case produces
 
 ---
 
-### MOD-016 — Hazard-Driven Task Enricher
+### Module: MOD-016 (Hazard-Driven Task Enricher)
+
+**Parent Architecture Modules**: ARCH-012
 
 | Field | Value |
 |-------|-------|
@@ -1065,7 +1097,9 @@ have `priority >= 90`.
 
 ---
 
-### MOD-017 — Plan Schema Validator
+### Module: MOD-017 (Plan Schema Validator)
+
+**Parent Architecture Modules**: ARCH-013
 
 | Field | Value |
 |-------|-------|
@@ -1104,7 +1138,9 @@ PASS path.
 
 ---
 
-### MOD-018 — Tasks Schema Validator
+### Module: MOD-018 (Tasks Schema Validator)
+
+**Parent Architecture Modules**: ARCH-013
 
 | Field | Value |
 |-------|-------|
@@ -1182,7 +1218,9 @@ exit 0; (b) section deletion ⇒ exit 1 with the expected
 
 ---
 
-### MOD-019 — Hybrid Path Enrichment Detector
+### Module: MOD-019 (Hybrid Path Enrichment Detector)
+
+**Parent Architecture Modules**: ARCH-014
 
 | Field | Value |
 |-------|-------|
@@ -1231,7 +1269,9 @@ that the warnings entry appears exactly once in the core-only case.
 
 ---
 
-### MOD-020 — Hook Registrar
+### Module: MOD-020 (Hook Registrar)
+
+**Parent Architecture Modules**: ARCH-015
 
 | Field | Value |
 |-------|-------|
@@ -1290,7 +1330,9 @@ directory.
 
 ---
 
-### MOD-021 — Structured Summary Reporter
+### Module: MOD-021 (Structured Summary Reporter)
+
+**Parent Architecture Modules**: ARCH-016
 
 | Field | Value |
 |-------|-------|
@@ -1353,7 +1395,9 @@ the summary is observable even when the LLM aborts.
 
 ---
 
-### MOD-022 — Quality Compliance Harness
+### Module: MOD-022 (Quality Compliance Harness) [EXTERNAL]
+
+**Parent Architecture Modules**: ARCH-017
 
 | Field | Value |
 |-------|-------|
@@ -1383,7 +1427,9 @@ no in-tree assertion is owned by this MOD.
 
 ---
 
-### MOD-023 — Commit Annotator
+### Module: MOD-023 (Commit Annotator)
+
+**Parent Architecture Modules**: ARCH-018
 
 | Field | Value |
 |-------|-------|
@@ -1436,7 +1482,9 @@ commit (with a warnings entry).
 
 ---
 
-### MOD-024 — V-Model Artifact Loader
+### Module: MOD-024 (V-Model Artifact Loader) [EXTERNAL]
+
+**Parent Architecture Modules**: ARCH-019
 
 | Field | Value |
 |-------|-------|
@@ -1464,7 +1512,9 @@ drift.
 
 ---
 
-### MOD-025 — Canonical ID-Set Extractor
+### Module: MOD-025 (Canonical ID-Set Extractor)
+
+**Parent Architecture Modules**: ARCH-009
 
 | Field | Value |
 |-------|-------|
@@ -1509,7 +1559,9 @@ extracted set and that no duplicates appear.
 
 ---
 
-### MOD-026 — Subprocess Runner
+### Module: MOD-026 (Subprocess Runner) [EXTERNAL]
+
+**Parent Architecture Modules**: ARCH-020
 
 | Field | Value |
 |-------|-------|
@@ -1536,7 +1588,9 @@ LLM-orchestrated flow; system-binary calls inline in shell.
 
 ---
 
-### MOD-027 — Atomic Filesystem Writer
+### Module: MOD-027 (Atomic Filesystem Writer) [EXTERNAL]
+
+**Parent Architecture Modules**: ARCH-021
 
 | Field | Value |
 |-------|-------|
