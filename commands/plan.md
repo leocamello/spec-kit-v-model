@@ -55,7 +55,17 @@ If `VMODEL_DIR` exists, read **every** V-Model artefact present in it natively a
 
 ### 2. Run the spec-kit-core /speckit.plan workflow
 
-Faithfully execute the core procedure documented in `.github/agents/speckit.plan.agent.md` (Phase 0 → Phase 1):
+**Compatibility contract (non-negotiable)** — the synthesised `plan.md` MUST contain the following five H2 headings, **verbatim and in this exact order**, mirroring the pinned `.specify/templates/plan-template.md` (v0.7.0). This is the deterministic check that `bash scripts/bash/validate-core-schema.sh <plan.md> --plan` performs in Step 4 (it `grep -Fxq`-matches each `^## ` heading from the pinned template against the target), and it is what unmodified spec-kit-core `/speckit.tasks` and `/speckit.implement` consume on round-trip (REQ-002, REQ-IF-001, ARCH-002, ARCH-013, MOD-002, MOD-017):
+
+1. `## Summary`            — feature intent in 2–4 sentences derived from `requirements.md` (REQ-001, REQ-IF-001).
+2. `## Technical Context`  — language, frameworks, storage, testing stack, constraints, project type — populated from `requirements.md` (functional, NF, interface, constraint requirements) and `system-design.md` if present; mark unresolved items as `NEEDS CLARIFICATION` (REQ-002).
+3. `## Constitution Check` — gate verdicts against `.specify/memory/constitution.md`, both pre- and post-design (REQ-009).
+4. `## Project Structure`  — `### Documentation (this feature)` and `### Source Code (repository root)` sub-sections; pick the matching template option (single project / web / mobile) and remove the unused options (REQ-003).
+5. `## Complexity Tracking` — any deviations from Constitution simplicity rules with justification, or "no complexity deviations" if none (REQ-010).
+
+Additional H2 headings ARE permitted — additive only — and MUST appear **after** `## Complexity Tracking` (typically `## V-Model Trace Summary`, see §3 below). Inserting an extra H2 BETWEEN any of the five canonical ones VIOLATES the additive-only invariant (REQ-007, REQ-NF-003, ARCH-008, MOD-011) and will fail the Step 4 schema validation, mitigating HAZ-002 / HAZ-011 (enrichment-shape-drift).
+
+Then faithfully execute the core procedure documented in `.github/agents/speckit.plan.agent.md` (Phase 0 → Phase 1):
 
 1. Fill **Technical Context** from `requirements.md` (functional, NF, interface, constraint requirements) and `system-design.md` if present. Mark unresolved items as `NEEDS CLARIFICATION`.
 2. Fill **Constitution Check** from `.specify/memory/constitution.md`.

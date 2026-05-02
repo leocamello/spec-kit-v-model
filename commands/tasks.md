@@ -51,13 +51,30 @@ If `FEATURE_DIR/v-model/` exists, read **every** V-Model artefact present native
 
 ### 2. Run the spec-kit-core /speckit.tasks workflow
 
-Faithfully execute the canonical procedure documented in `.github/agents/speckit.tasks.agent.md` to produce a `tasks.md` skeleton: load plan.md + spec.md, extract tech stack and user stories with priorities, map entities/contracts/scenarios to stories, generate the per-story task lists, build the dependency graph, and emit parallel-execution examples (SYS-010, REQ-IF-002).
+**Compatibility contract (non-negotiable)** — the synthesised `tasks.md` MUST preserve the H2 heading set of the pinned `.specify/templates/tasks-template.md` (v0.7.0). This is the deterministic check that `bash scripts/bash/validate-core-schema.sh <tasks.md> --tasks` performs in Step 6 (it `grep -Fxq`-matches each `^## ` heading from the pinned template against the target). The required headings, **verbatim and in this exact order**, are (REQ-IF-002, ARCH-003, ARCH-013, MOD-003, MOD-017):
+
+1. `` ## Format: `[ID] [P?] [Story] Description` ``
+2. `## Path Conventions`
+3. `## Phase 1: Setup (Shared Infrastructure)`
+4. `## Phase 2: Foundational (Blocking Prerequisites)`
+5. `## Phase 3: User Story 1 - [Title] (Priority: P1) 🎯 MVP`
+6. `## Phase 4: User Story 2 - [Title] (Priority: P2)`
+7. `## Phase 5: User Story 3 - [Title] (Priority: P3)`
+8. `## Phase N: Polish & Cross-Cutting Concerns`
+9. `## Dependencies & Execution Order`
+10. `## Parallel Example: User Story 1`
+11. `## Implementation Strategy`
+12. `## Notes`
+
+The pinned validator is intentionally strict-equality on headings — including the placeholder `[Title]` text in the user-story phase headings. The on-disk template wins: if the spec has fewer than three user stories, retain the unused phase headings as documented stubs rather than deleting them, and substitute real titles/priorities in the body **below** each H2 (the H2 line itself remains byte-identical to the template). Additional H2 headings ARE permitted — additive only — and MUST appear **after** `## Notes` (typically `## V-Model Trace Summary`, see §5 below). Inserting an extra H2 BETWEEN any of the canonical ones VIOLATES the additive-only invariant (ARCH-008, MOD-012) and will fail Step 6 schema validation, mitigating HAZ-002 / HAZ-011 (enrichment-shape-drift).
+
+Then faithfully execute the canonical procedure documented in `.github/agents/speckit.tasks.agent.md` to produce a `tasks.md` skeleton: load plan.md + spec.md, extract tech stack and user stories with priorities, map entities/contracts/scenarios to stories, generate the per-story task lists, build the dependency graph, and emit parallel-execution examples (SYS-010, REQ-IF-002).
 
 **Do NOT mutate the canonical structure.** The V-Model overlay is purely additive (D-001, D-011 layered on the canonical document). The operative additivity contract is ARCH-008 + MOD-012.
 
 ### 3. TDD-ordered synthesis (per ARCH-003, MOD-004, D-006, REQ-011)
 
-Within each user story, enforce strict ordering — no exceptions:
+Within each user story phase emitted at Step 2, enforce strict ordering — no exceptions. Open each TDD transition with a literal bolded phase marker bullet (verbatim, including the `**` markdown emphasis) so the ordering is visually scannable in the rendered output and grep-extractable by downstream consumers / the structural eval at `tests/evals/test_tasks_order.py`:
 
 1. **Write unit tests** (RED) — one task per unit under test; cite ≥1 `UTP-NNN` / `UTS-NNN-XN`.
 2. **Implement modules** (GREEN) — one task per `MOD-NNN` named in `module-design.md`; cite the MOD plus its parent `ARCH-NNN`.

@@ -148,6 +148,18 @@ For each **optional** V-Model artefact missing from `FEATURE_DIR/v-model/` — t
 
 ### 10. Commit annotation (per ARCH-018, MOD-023, REQ-021, REQ-NF-005)
 
+**Commit subject grammar (non-negotiable)** — the prepared commit subject MUST conform to:
+
+```
+<base-subject> — <ID>[, <ID>]*
+```
+
+Where:
+- `<base-subject>` is the conventional spec-kit-core commit subject (≤72 chars before the em-dash); use Conventional Commits style if the repo already does (`feat(<scope>): <imperative>` etc.).
+- The separator is a literal **em-dash surrounded by single ASCII spaces** — `U+2014` — NOT `--`, NOT `-` (hyphen-minus), NOT `–` (U+2013 en-dash).
+- The ID list is **comma-and-space-separated** (`, `), in the order the IDs appear in the in-context generation plan (MOD-023). Each ID MUST satisfy the canonical regex enforced by `validate-implements-ids.sh` and `tests/conftest.py`: `(?:REQ|REQ-NF|REQ-CN|REQ-IF|SYS|ARCH|MOD|ITP|ITS|UTP|UTS|STP|STS|ATP|SCN|HAZ)-\d+(?:-[A-Z]\d*)?` plus `D-\d+`.
+- Empty ID list ⇒ omit the em-dash and the suffix entirely; record `warnings: ["empty implements list — commit subject not annotated"]` in §Structured Summary (Step 11) and emit the unannotated base subject (best-effort per ATP-021-A).
+
 Precondition: Step 7 emitted `GUARD: PASS` and Step 8 emitted `quality: PASS` (or recorded an explicit `--allow-failing-quality` risk acceptance).
 
 Construct the commit subject as the conventional spec-kit-core base message followed by an em-dash and a comma-separated list of every V-Model ID fulfilled by the change, derived from the in-context generation plan (MOD-023):
@@ -156,7 +168,9 @@ Construct the commit subject as the conventional spec-kit-core base message foll
 <base-message> — <ID>, <ID>, …
 ```
 
-Empty ID list ⇒ commit with the unannotated base message and a `warnings[]` entry; an annotation-construction failure is a warning, not fatal (best-effort per ATP-021-A). The body lists files modified, levels generated (U / I / S / A counts), gate verdict, guard verdict, and any active fallbacks.
+The body lists files modified, levels generated (U / I / S / A counts), gate verdict, guard verdict, and any active fallbacks.
+
+**The prepared subject MUST be echoed verbatim into §Structured Summary as the labeled field `commit_subject:` (Step 11) on every exit path** — success, failure, dry-run, or empty-diff — so downstream consumers (CI parsers, audit tooling, the commit-suffix eval at `tests/evals/test_commit_suffix.py`) can extract it deterministically without parsing prose. This is the machine-extractability contract for ARCH-016 / MOD-021.
 
 Issue `git commit -m "<message>"`. A `git commit` non-zero is fatal: append stderr to `fatal_errors[]`, emit §Structured Summary, exit 1.
 
@@ -174,7 +188,7 @@ artifacts_skipped:
   - <name>
 gate: PASS | FAIL (<details if FAIL>)
 codegen: <N> source files, <M> lines
-testgen: U=<n> I=<n> S=<n> A=<n>
+testgen: UTP=<n> (tests/unit/), ITP=<n> (tests/integration/), STP=<n> (tests/system/), ATP=<n> (tests/acceptance/)
 splice: <N> regions updated across <M> files
 guard: PASS | FAIL (<details if FAIL>)
 quality: PASS | FAIL (<harness summary>)
@@ -184,10 +198,13 @@ warnings:
   - <text>
 fatal_errors:
   - <text>          # omit key on success
+commit_subject: <base-subject> — <ID>, <ID>, …
 commit: <SHA> | <skipped — reason>
 fallbacks: <list, or "none">
 --- end summary ---
 ```
+
+The `commit_subject:` field is the machine-extractable mirror of the prepared commit subject from Step 10 (ARCH-018, MOD-023, REQ-021). It MUST be present on **every** exit path — success, gate-fail, guard-fail, quality-fail, dry-run, empty-diff — so downstream eval and audit tooling never has to parse prose to recover the planned subject. Record the unannotated base subject when the ID list is empty and surface that in `warnings[]`. The em-dash MUST be the literal `U+2014` and the ID separator MUST be `, ` per the grammar block in Step 10.
 
 This block is the contract for downstream consumers — CI parsers, the `v-model.trace` bridge, audit tooling. Truncation is itself a hazard (HAZ-025 mitigation).
 
