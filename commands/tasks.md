@@ -9,8 +9,8 @@ handoffs:
     agent: speckit.v-model.plan
     prompt: Re-run V-Model planning to refresh upstream enrichment
 scripts:
-  sh: .specify/scripts/bash/check-prerequisites.sh --json
-  ps: .specify/scripts/powershell/check-prerequisites.ps1 -Json
+  sh: scripts/bash/setup-tasks.sh --json --require-tasks --include-tasks
+  ps: scripts/powershell/setup-tasks.ps1 -Json -RequireTasks -IncludeTasks
 ---
 
 <!-- Implements: REQ-011, REQ-012, REQ-013, REQ-014, REQ-027, REQ-IF-002, SYS-002, SYS-005, SYS-009, SYS-010, SYS-012, ARCH-003, ARCH-008, ARCH-012, ARCH-013, ARCH-014, ARCH-016, MOD-003, MOD-004, MOD-012, MOD-016, MOD-019, MOD-021, HAZ-016, D-001, D-006, D-011 -->

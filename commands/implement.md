@@ -9,8 +9,8 @@ handoffs:
     agent: speckit.v-model.tasks
     prompt: Re-derive the V-Model task list if implementation surfaced new modules or hazards
 scripts:
-  sh: .specify/scripts/bash/check-prerequisites.sh --json
-  ps: .specify/scripts/powershell/check-prerequisites.ps1 -Json
+  sh: scripts/bash/setup-implement.sh --json --require-tasks --include-tasks
+  ps: scripts/powershell/setup-implement.ps1 -Json -RequireTasks -IncludeTasks
 ---
 
 <!-- Implements: REQ-015, REQ-016, REQ-017, REQ-018, REQ-019, REQ-020, REQ-021, REQ-022, REQ-023, REQ-027, REQ-NF-002, REQ-NF-004, REQ-NF-005, REQ-CN-002, REQ-CN-003, REQ-CN-004, SYS-003, SYS-004, SYS-006, SYS-007, SYS-008, SYS-012, SYS-014, ARCH-004, ARCH-005, ARCH-006, ARCH-007, ARCH-009, ARCH-010, ARCH-011, ARCH-016, ARCH-017, ARCH-018, MOD-005, MOD-006, MOD-007, MOD-008, MOD-009, MOD-013, MOD-015, MOD-021, MOD-022, MOD-023, HAZ-007, HAZ-009, HAZ-014, HAZ-021, HAZ-023, HAZ-025, D-001, D-014 -->
