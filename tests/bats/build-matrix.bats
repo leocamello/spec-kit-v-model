@@ -128,3 +128,59 @@ teardown() {
     assert_success
     refute_output --partial "Matrix D"
 }
+
+# ---- MF-3: same-directory temp files + cleanup ----
+
+@test "build-matrix concurrent runs do not corrupt each other's output" {
+    local dir_a="$TEST_TEMP_DIR/vmodel-a"
+    local dir_b="$TEST_TEMP_DIR/vmodel-b"
+    mkdir -p "$dir_a" "$dir_b"
+    cp "$FIXTURES_DIR/minimal/requirements.md" "$dir_a/"
+    cp "$FIXTURES_DIR/minimal/acceptance-plan.md" "$dir_a/"
+    cp "$FIXTURES_DIR/complex/requirements.md" "$dir_b/"
+    cp "$FIXTURES_DIR/complex/acceptance-plan.md" "$dir_b/"
+
+    local out_a="$TEST_TEMP_DIR/matrix-a.md"
+    local out_b="$TEST_TEMP_DIR/matrix-b.md"
+
+    bash "$SCRIPTS_DIR/build-matrix.sh" "$dir_a" --output "$out_a" >/dev/null &
+    local pid_a=$!
+    bash "$SCRIPTS_DIR/build-matrix.sh" "$dir_b" --output "$out_b" >/dev/null &
+    local pid_b=$!
+    wait "$pid_a"
+    wait "$pid_b"
+
+    [ -s "$out_a" ]
+    [ -s "$out_b" ]
+    [ "$(head -n 1 "$out_a")" = "# Traceability Matrix" ]
+    [ "$(head -n 1 "$out_b")" = "# Traceability Matrix" ]
+    ! diff -q "$out_a" "$out_b" >/dev/null
+
+    run find "$TEST_TEMP_DIR" "$dir_a" "$dir_b" -name '.vmodel-matrix-*'
+    assert_success
+    [ -z "$output" ]
+}
+
+@test "build-matrix cleans up its temp files after success" {
+    local vmdir="$TEST_TEMP_DIR/vmodel"
+    mkdir -p "$vmdir"
+    cp "$FIXTURES_DIR/minimal/requirements.md" "$vmdir/"
+    cp "$FIXTURES_DIR/minimal/acceptance-plan.md" "$vmdir/"
+    run bash "$SCRIPTS_DIR/build-matrix.sh" "$vmdir"
+    assert_success
+    run find "$vmdir" -name '.vmodel-matrix-*'
+    assert_success
+    [ -z "$output" ]
+}
+
+@test "build-matrix cleans up its temp files after failure" {
+    local vmdir="$TEST_TEMP_DIR/vmodel-bad"
+    mkdir -p "$vmdir"
+    cp "$FIXTURES_DIR/minimal/requirements.md" "$vmdir/"
+    # acceptance-plan.md missing → script should fail before/after temp creation
+    run bash "$SCRIPTS_DIR/build-matrix.sh" "$vmdir"
+    assert_failure
+    run find "$vmdir" -name '.vmodel-matrix-*'
+    assert_success
+    [ -z "$output" ]
+}

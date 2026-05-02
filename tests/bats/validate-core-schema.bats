@@ -93,3 +93,73 @@ teardown() {
     run bash "$SCHEMA_SCRIPT" "$TEST_TEMP_DIR/no-such.md" --plan
     assert_failure
 }
+
+# ---- MF-4: H2 ordering + wedge rejection ----
+
+# Helper: build a fixture plan.md from the canonical H2 sequence in the
+# pinned plan-template, so tests don't hard-code the canonical headings.
+# Args: <output-file> <H2 lines, one per arg, in desired order>
+build_plan_fixture() {
+    local out="$1"; shift
+    : > "$out"
+    local h
+    for h in "$@"; do
+        printf '%s\n\nFiller body for %s.\n\n' "$h" "$h" >> "$out"
+    done
+}
+
+@test "validate-core-schema rejects wrong H2 order in plan.md (MF-4 ORDER)" {
+    # Canonical order is: Summary, Technical Context, Constitution Check,
+    # Project Structure, Complexity Tracking. Swap CC and PS.
+    build_plan_fixture "$TEST_TEMP_DIR/plan.md" \
+        "## Summary" \
+        "## Technical Context" \
+        "## Project Structure" \
+        "## Constitution Check" \
+        "## Complexity Tracking"
+    run bash -c "bash '$SCHEMA_SCRIPT' '$TEST_TEMP_DIR/plan.md' --plan 2>&1"
+    assert_failure
+    assert_output --partial "ORDER: FAIL"
+    assert_output --partial "SCHEMA: FAIL"
+}
+
+@test "validate-core-schema rejects wedged non-canonical H2 in plan.md (MF-4 WEDGE)" {
+    build_plan_fixture "$TEST_TEMP_DIR/plan.md" \
+        "## Summary" \
+        "## Technical Context" \
+        "## Random Wedged Heading" \
+        "## Constitution Check" \
+        "## Project Structure" \
+        "## Complexity Tracking"
+    run bash -c "bash '$SCHEMA_SCRIPT' '$TEST_TEMP_DIR/plan.md' --plan 2>&1"
+    assert_failure
+    assert_output --partial "WEDGE: FAIL"
+    assert_output --partial "Random Wedged Heading"
+    assert_output --partial "SCHEMA: FAIL"
+}
+
+@test "validate-core-schema accepts trailing extra H2 after last canonical (MF-4)" {
+    build_plan_fixture "$TEST_TEMP_DIR/plan.md" \
+        "## Summary" \
+        "## Technical Context" \
+        "## Constitution Check" \
+        "## Project Structure" \
+        "## Complexity Tracking" \
+        "## Appendix Notes"
+    run bash "$SCHEMA_SCRIPT" "$TEST_TEMP_DIR/plan.md" --plan
+    assert_success
+    assert_output --partial "SCHEMA: PASS"
+}
+
+@test "validate-core-schema accepts preamble H2 before first canonical (MF-4)" {
+    build_plan_fixture "$TEST_TEMP_DIR/plan.md" \
+        "## Preamble Notes" \
+        "## Summary" \
+        "## Technical Context" \
+        "## Constitution Check" \
+        "## Project Structure" \
+        "## Complexity Tracking"
+    run bash "$SCHEMA_SCRIPT" "$TEST_TEMP_DIR/plan.md" --plan
+    assert_success
+    assert_output --partial "SCHEMA: PASS"
+}

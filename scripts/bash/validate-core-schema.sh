@@ -8,6 +8,18 @@
 #
 # CLI: validate-core-schema.sh <target> --plan|--tasks
 #  (mode flag may also precede target; both orderings accepted)
+#
+# SCHEMA CHECKS (3 passes):
+#   1. Existence — every canonical H2 from the pinned template is present
+#      somewhere in the target (exact-match line). Missing → "<H2>: MISSING".
+#   2. Order     — canonical H2s in the target appear in the same relative
+#      order as in the template. Mismatch → "ORDER: FAIL" + unified diff.
+#   3. Wedge     — between the first and last canonical H2 in the target,
+#      every H2 must itself be canonical. Non-canonical H2s wedged between
+#      canonical ones are rejected with "WEDGE: FAIL — non-canonical H2
+#      between canonical H2s: <heading>". Extra H2s before the first or
+#      after the last canonical H2 are tolerated (preamble / trailing).
+# Any failed pass → final "SCHEMA: FAIL" line + exit 1.
 
 set -euo pipefail
 IFS=$'\n\t'
@@ -61,6 +73,7 @@ if [ ! -f "$template" ]; then
 fi
 
 required="$(grep -E '^## ' "$template" || true)"
+fail=0
 missing=0
 while IFS= read -r heading; do
     [ -z "$heading" ] && continue
@@ -73,6 +86,41 @@ $required
 EOF
 
 if [ "$missing" -gt 0 ]; then
+    fail=1
+fi
+
+# Pass 2: ordering — canonical H2s in target must follow template order.
+# Pass 3: wedge   — no non-canonical H2 may appear between the first and
+# last canonical H2 in the target.
+tmpdir="$(mktemp -d)"
+trap 'rm -rf "$tmpdir"' EXIT
+
+grep -E '^## ' "$template" > "$tmpdir/expected.txt" || true
+grep -E '^## ' "$target"   > "$tmpdir/target-h2-all.txt" || true
+grep -Fxf "$tmpdir/expected.txt" "$tmpdir/target-h2-all.txt" \
+    > "$tmpdir/target-canonical-in-order.txt" || true
+
+if ! diff -q "$tmpdir/expected.txt" "$tmpdir/target-canonical-in-order.txt" >/dev/null 2>&1; then
+    echo "ORDER: FAIL" >&2
+    diff -u "$tmpdir/expected.txt" "$tmpdir/target-canonical-in-order.txt" >&2 || true
+    fail=1
+fi
+
+first_canonical_line="$(grep -nFxf "$tmpdir/expected.txt" "$target" | head -n1 | cut -d: -f1 || true)"
+last_canonical_line="$(grep -nFxf "$tmpdir/expected.txt" "$target" | tail -n1 | cut -d: -f1 || true)"
+if [ -n "$first_canonical_line" ] && [ -n "$last_canonical_line" ] && [ "$first_canonical_line" -lt "$last_canonical_line" ]; then
+    sed -n "${first_canonical_line},${last_canonical_line}p" "$target" \
+        | grep -E '^## ' \
+        | grep -vFxf "$tmpdir/expected.txt" > "$tmpdir/wedged.txt" || true
+    if [ -s "$tmpdir/wedged.txt" ]; then
+        while IFS= read -r h; do
+            echo "WEDGE: FAIL — non-canonical H2 between canonical H2s: $h" >&2
+        done < "$tmpdir/wedged.txt"
+        fail=1
+    fi
+fi
+
+if [ "$fail" -gt 0 ]; then
     echo "SCHEMA: FAIL"
     exit 1
 fi

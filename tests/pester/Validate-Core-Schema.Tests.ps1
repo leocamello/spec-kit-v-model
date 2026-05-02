@@ -97,4 +97,84 @@ Describe 'Validate-Core-Schema (PowerShell mirror — D-009)' {
         & pwsh -NoProfile -File $script:SchemaScript (Join-Path $TestDrive 'no-such.md') -Plan 2>&1 | Out-Null
         $LASTEXITCODE | Should -Not -Be 0
     }
+
+    # ---- MF-4: H2 ordering + wedge rejection ----
+
+    BeforeAll {
+        function script:New-PlanFixture {
+            param([string]$Path, [string[]]$Headings)
+            $body = [System.Collections.Generic.List[string]]::new()
+            foreach ($h in $Headings) {
+                $body.Add($h)
+                $body.Add('')
+                $body.Add("Filler body for $h.")
+                $body.Add('')
+            }
+            Set-Content -LiteralPath $Path -Value $body
+        }
+    }
+
+    It 'rejects wrong H2 order in plan.md (MF-4 ORDER)' {
+        $plan = Join-Path $TestDrive ([System.IO.Path]::GetRandomFileName())
+        script:New-PlanFixture -Path $plan -Headings @(
+            '## Summary',
+            '## Technical Context',
+            '## Project Structure',
+            '## Constitution Check',
+            '## Complexity Tracking'
+        )
+        $output = & pwsh -NoProfile -File $script:SchemaScript $plan -Plan 2>&1
+        $LASTEXITCODE | Should -Not -Be 0
+        $text = ($output | Out-String)
+        $text | Should -Match 'ORDER: FAIL'
+        $text | Should -Match 'SCHEMA: FAIL'
+    }
+
+    It 'rejects wedged non-canonical H2 in plan.md (MF-4 WEDGE)' {
+        $plan = Join-Path $TestDrive ([System.IO.Path]::GetRandomFileName())
+        New-PlanFixture -Path $plan -Headings @(
+            '## Summary',
+            '## Technical Context',
+            '## Random Wedged Heading',
+            '## Constitution Check',
+            '## Project Structure',
+            '## Complexity Tracking'
+        )
+        $output = & pwsh -NoProfile -File $script:SchemaScript $plan -Plan 2>&1
+        $LASTEXITCODE | Should -Not -Be 0
+        $text = ($output | Out-String)
+        $text | Should -Match 'WEDGE: FAIL'
+        $text | Should -Match 'Random Wedged Heading'
+        $text | Should -Match 'SCHEMA: FAIL'
+    }
+
+    It 'accepts trailing extra H2 after last canonical (MF-4)' {
+        $plan = Join-Path $TestDrive ([System.IO.Path]::GetRandomFileName())
+        New-PlanFixture -Path $plan -Headings @(
+            '## Summary',
+            '## Technical Context',
+            '## Constitution Check',
+            '## Project Structure',
+            '## Complexity Tracking',
+            '## Appendix Notes'
+        )
+        $output = & pwsh -NoProfile -File $script:SchemaScript $plan -Plan 2>&1
+        $LASTEXITCODE | Should -Be 0
+        ($output | Out-String) | Should -Match 'SCHEMA: PASS'
+    }
+
+    It 'accepts preamble H2 before first canonical (MF-4)' {
+        $plan = Join-Path $TestDrive ([System.IO.Path]::GetRandomFileName())
+        New-PlanFixture -Path $plan -Headings @(
+            '## Preamble Notes',
+            '## Summary',
+            '## Technical Context',
+            '## Constitution Check',
+            '## Project Structure',
+            '## Complexity Tracking'
+        )
+        $output = & pwsh -NoProfile -File $script:SchemaScript $plan -Plan 2>&1
+        $LASTEXITCODE | Should -Be 0
+        ($output | Out-String) | Should -Match 'SCHEMA: PASS'
+    }
 }
