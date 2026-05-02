@@ -50,8 +50,8 @@ traceability.
 ## ID Schema
 
 - **Integration Test Case**: `ITP-{NNN}` where `NNN` matches the parent
-  ARCH module. One ITP per active ARCH (ARCH-017, ARCH-019, ARCH-020,
-  ARCH-021 are dropped — their ITPs are preserved as DEFERRED).
+  ARCH module. One ITP per active ARCH (ARCH-019, ARCH-020, ARCH-021
+  are dropped — their ITPs are preserved as DEFERRED).
 - **Integration Test Scenario**: `ITS-{NNN}-{LETTER}{#}` — nested under
   the parent ITP, with technique-suffix letter and numeric suffix.
   - **A** = Happy-path / nominal contract
@@ -664,14 +664,32 @@ per-mode coverage *is* the integration-coverage matrix.
 
 ### Module Verification: ARCH-017 (Quality Compliance Harness)
 
-#### ITP-017 [DEFERRED — component dropped in paradigm shift]
+**Parent System Components**: SYS-003
 
-**Original target**: ARCH-017 (Quality Compliance Harness)
-**Status**: DROP per `drift-diff-plan.md`. The four-stack harness
-(BATS / Pester / DeepEval / pytest) is a CI-process concern, enforced by
-GitHub Actions branch protection and the existing `tests/bats/`,
-`tests/pester/`, `tests/evals/` suites — not a runtime command
-component. ID retained for traceability; no scenarios authored.
+#### Test Case: ITP-017-A (Merge-gate blocks on harness <100% and audit failures)
+
+**Test File**: `tests/system/bridge-commands/implement.bats`
+**Technique**: Fixture-Driven Black-Box (mocked harness invocations)
+**Requirements traced**: REQ-NF-002
+
+* **Integration Scenario: ITS-017-A1** (any harness <100% ⇒ merge-gate `block` and non-zero exit)
+  * **Given** a feature directory whose mocked four-stack harness (BATS,
+    Pester, structural eval, LLM eval) shim returns a coverage report
+    with one stack at 99%
+  * **When** `commands/implement.md` runs to its §Quality Compliance step
+    via the implement.bats harness
+  * **Then** `assert_failure` and `assert_output --partial "merge-gate: block"`
+    and the structured summary `quality_compliance:` block records the
+    failing stack name with its <100% figure
+
+* **Integration Scenario: ITS-017-A2** (scope-guardrail / dogfood-discipline audit failure ⇒ exit 1)
+  * **Given** a feature directory whose mocked harnesses all report 100%
+    but whose scope-guardrail audit detects an orchestrator/sandbox
+    addition outside the declared module set
+  * **When** `commands/implement.md` runs to its §Quality Compliance step
+  * **Then** `assert_failure` with exit code 1 and
+    `assert_output --partial "scope-guardrail: fail"` and the structured
+    summary records the offending path
 
 ---
 
@@ -784,7 +802,7 @@ New fixtures needed:
 | ARCH-014 | NEW-PROMPT-SECTION | `tests/system/bridge-commands/tasks.bats` | ITP-014 | active |
 | ARCH-015 | REUSE-CORE | `tests/bats/extension-manifest.bats` | ITP-015 | active |
 | ARCH-016 | NEW-PROMPT-SECTION | all three e2e bats files | ITP-016 | active |
-| ARCH-017 | DROP | — | ITP-017 | DEFERRED |
+| ARCH-017 | NEW-PROMPT-SECTION | `tests/system/bridge-commands/implement.bats` | ITP-017 | active |
 | ARCH-018 | NEW-PROMPT-SECTION | `tests/system/bridge-commands/implement.bats` | ITP-018 | active |
 | ARCH-019 | DROP | — | ITP-019 | DEFERRED |
 | ARCH-020 | DROP | — | ITP-020 | DEFERRED |
@@ -793,7 +811,7 @@ New fixtures needed:
 ### Entry Criteria Check (IEEE 1012:2016 §5.6.1)
 
 - ✅ `architecture-design.md` is current (rewritten on 2026-05-01 per `drift-diff-plan.md`)
-- ✅ Every active `ARCH-NNN` module has at least one `ITP-NNN` test case (17/17 = 100% forward coverage)
+- ✅ Every active `ARCH-NNN` module has at least one `ITP-NNN` test case (18/18 = 100% forward coverage)
 - ✅ All active `ITP-NNN` test cases have at least one `ITS-NNN-X#` executable scenario
 - ✅ DROP'd ARCHs (017, 019, 020, 021) have DEFERRED placeholders preserving traceability IDs
 - ✅ Every test scenario uses observable boundaries (stdout / exit code / file system / `extension.yml` content)
@@ -806,12 +824,12 @@ New fixtures needed:
 
 | Metric | Count |
 |--------|-------|
-| Total Architecture Modules (ARCH) | 21 (17 active, 4 DROP) |
-| Active ITPs | 17 |
-| DEFERRED ITPs (placeholder, no scenarios) | 4 (ITP-017, ITP-019, ITP-020, ITP-021) |
-| Total executable Scenarios (ITS) | 39 |
-| Active ARCHs with ≥1 ITP | 17 / 17 (100%) |
-| Active ITPs with ≥1 ITS | 17 / 17 (100%) |
+| Total Architecture Modules (ARCH) | 21 (18 active, 3 DROP) |
+| Active ITPs | 18 |
+| DEFERRED ITPs (placeholder, no scenarios) | 3 (ITP-019, ITP-020, ITP-021) |
+| Total executable Scenarios (ITS) | 41 |
+| Active ARCHs with ≥1 ITP | 18 / 18 (100%) |
+| Active ITPs with ≥1 ITS | 18 / 18 (100%) |
 | **Forward Coverage (active ARCH→ITP)** | **100%** |
 
 ### Technique Distribution
@@ -827,7 +845,7 @@ above test cases as the **B** and **D** scenario suffixes.)
 
 ## Uncovered Modules
 
-None — all 17 active architecture modules covered. The 4 DROP'd modules
-(ARCH-017, ARCH-019, ARCH-020, ARCH-021) have DEFERRED placeholders per
+None — all 18 active architecture modules covered. The 3 DROP'd modules
+(ARCH-019, ARCH-020, ARCH-021) have DEFERRED placeholders per
 the paradigm-shift contract; they do not exist at runtime and therefore
 have no observable boundary to test.
