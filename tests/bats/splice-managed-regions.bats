@@ -115,7 +115,7 @@ EOF
     bash "$SPLICER_SCRIPT" "$TARGET" "$GENERATED" bash > "$tmp"
     mv "$tmp" "$TARGET"
     # No tmp.* leftovers in target dir.
-    leftovers=$(find "$target_dir" -maxdepth 1 -name 'tmp.*' -o -name "$(basename "$TARGET").*" | wc -l)
+    leftovers=$(find "$target_dir" -mindepth 1 -maxdepth 1 \( -name 'tmp.*' -o -name "$(basename "$TARGET").*" \) | wc -l)
     [ "$leftovers" -eq 0 ]
     assert_file_contains "$TARGET" "FRESH GENERATED CONTENT"
 }
