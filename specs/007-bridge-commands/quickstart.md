@@ -1,7 +1,7 @@
 # Quickstart: Bridge Commands (V-Model ↔ Spec-Kit Core)
 
 **Feature**: 007-bridge-commands
-**Branch**: `feature/007-bridge-commands` @ `8a2dc5d`
+**Branch**: `feature/007-bridge-commands` @ `618d706`
 **Audience**: contributors validating end-to-end behaviour against
 the acceptance plan; CI authors wiring the three new commands;
 adopters trying the v0.7.0 surface for the first time.

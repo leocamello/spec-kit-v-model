@@ -7,7 +7,7 @@ description: "TDD-ordered task list for feature 007-bridge-commands (v0.7.0)"
 **Input**: Design documents from `/specs/007-bridge-commands/`
 **Prerequisites**: plan.md, spec.md, research.md, data-model.md, quickstart.md, contracts/, v-model/
 **Branch**: `feature/007-bridge-commands` @ `36e556d` (Step A.1)
-**V-Model artifact set**: frozen at `8a2dc5d` — do not edit
+**V-Model artifact set**: frozen at `618d706` — do not edit
 
 ## Format: `[ID] [P?] [Story?] Description`
 
@@ -133,7 +133,7 @@ Single-repository CLI extension (per `plan.md` §Project Structure). All paths a
 ## Phase 11: Polish — docs, changelog, release notes
 
 - [x] T030 [P] Update `README.md`, `docs/extensions.md` (or equivalent), and add `docs/commands/v-model-{plan,tasks,implement}.md` reference pages summarising each command's inputs, outputs, exit codes, and structured-summary grammar (REQ-IF-004, REQ-027; SYS-012; ARCH-016; MOD-021; D-001).
-- [x] T031 [P] Add `CHANGELOG.md` entry under v0.7.0: list the 3 commands + 4 scripts + PS mirrors + 3 hook entries; net-new Python = 0 lines; reference the frozen V-Model artifact set commit `8a2dc5d` (REQ-CN-001; D-001, D-002).
+- [x] T031 [P] Add `CHANGELOG.md` entry under v0.7.0: list the 3 commands + 4 scripts + PS mirrors + 3 hook entries; net-new Python = 0 lines; reference the frozen V-Model artifact set commit `618d706` (REQ-CN-001; D-001, D-002).
 - [x] T032 Author release notes / migration guide `docs/releases/v0.7.0.md`: cover the four-stack coverage gate, the hallucination-guard invariant (D-008), the sentinel-managed-region contract for re-runs (D-015, D-016), and PowerShell parity (D-009); link Walkthroughs 1–3 of `quickstart.md` (REQ-NF-001, REQ-NF-005, REQ-NF-006; HAZ-014, HAZ-020, HAZ-025; D-001, D-005, D-008, D-009, D-015, D-016).
 
 ---

@@ -1,7 +1,7 @@
 # Data Model: Bridge Commands (V-Model ↔ Spec-Kit Core)
 
 **Feature**: 007-bridge-commands
-**Branch**: `feature/007-bridge-commands` @ `8a2dc5d`
+**Branch**: `feature/007-bridge-commands` @ `618d706`
 **Source of truth**: `specs/007-bridge-commands/v-model/system-design.md` §Data Design View (lines 435–456) and §Interface View — External (lines 395–433).
 
 This document enumerates the eleven persistent / transient data

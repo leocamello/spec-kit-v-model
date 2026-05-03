@@ -81,7 +81,7 @@ All four hooks are `optional: true` in v0.7.0 and become mandatory under the upc
 - **EPIC-8** Per-domain trace-matrix presets — narrower validators per regulatory regime.
 - **EPIC-9** Plan/Tasks schema migration tooling — versioned schema upgrade path beyond v0.7.0.
 - **EPIC-10** Multi-domain projects — per-feature `domain:` overlays in monorepos.
-- **`specs/007-bridge-commands/` cross-cutting modules** ARCH-008 / ARCH-014 / ARCH-016 lack dedicated ITP coverage; the V-Model artifact set is frozen at `8a2dc5d` per the Phase B paradigm lock and remediation is deferred to v0.8.0.
+- **`specs/007-bridge-commands/` cross-cutting modules** ARCH-008 / ARCH-014 / ARCH-016 lack dedicated ITP coverage; the V-Model artifact set is frozen at `618d706` per the Phase B paradigm lock and remediation is deferred to v0.8.0.
 
 ---
 

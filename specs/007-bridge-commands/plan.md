@@ -2,7 +2,7 @@
 
 **Branch**: `feature/007-bridge-commands` | **Date**: 2026-05-02 | **Spec**: [spec.md](./spec.md)
 **Input**: Feature specification from `/specs/007-bridge-commands/spec.md`
-**V-Model artifact set**: [`./v-model/`](./v-model/) (frozen at `8a2dc5d`)
+**V-Model artifact set**: [`./v-model/`](./v-model/) (frozen at `618d706`)
 
 > This `plan.md` is the Step A.1 output of the v0.7.0 finishing plan.
 > It supersedes the reverted commit `9c23ea4`. The earlier plan

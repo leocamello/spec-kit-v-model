@@ -1,7 +1,7 @@
 # Research: Bridge Commands (V-Model ↔ Spec-Kit Core)
 
 **Feature**: 007-bridge-commands
-**Branch**: `feature/007-bridge-commands` @ `8a2dc5d`
+**Branch**: `feature/007-bridge-commands` @ `618d706`
 **Status**: Phase 0 output of `/speckit.plan` (D-001 … D-016)
 
 This document records every substantive design decision taken for
@@ -410,7 +410,7 @@ the former preserves both exit code and content.
 `drift-diff-plan.md §Cascading Impact on Other Artifacts` (the
 matrix regeneration during the rework hit this very pitfall) and
 is the reason the matrix was regenerated cleanly under
-`8a2dc5d`. (b) REQ-NF-004 mandates 100% refusal on incomplete
+`618d706`. (b) REQ-NF-004 mandates 100% refusal on incomplete
 matrix; a silently-truncated matrix would defeat the gate
 (HAZ-009 false-negative). (c) ARCH-007's stdout-schema contract
 ("final line `GATE: PASS` or `GATE: FAIL`") is built on the
