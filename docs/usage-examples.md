@@ -244,7 +244,7 @@ The command reads `system-design.md` and generates `specs/{feature}/v-model/syst
 /speckit.v-model.architecture-design
 ```
 
-The command reads `system-design.md` and generates `specs/{feature}/v-model/architecture-design.md` with architecture elements aligned to IEEE 42010/Kruchten 4+1 views:
+The command reads `system-design.md` and generates `specs/{feature}/v-model/architecture-design.md` with architecture elements aligned to IEEE 42010/Kruchten 4+1 views. For pure-software review workflows, use `/speckit.v-model.system-architecture-design` to generate a single combined system-and-architecture design artifact in one pass.
 
 ```markdown
 ### Logical View
@@ -666,6 +666,7 @@ This generates the missing ATPs/SCNs for REQ-008, then re-run trace to verify co
 /speckit.v-model.system-design       → System design elements (SYS-NNN, IEEE 1016 views)
 /speckit.v-model.system-test        → Test procedures + steps (STP/STS, ISO 29119-4 techniques)
 /speckit.v-model.architecture-design→ Architecture elements (ARCH-NNN, IEEE 42010/4+1 views)
+/speckit.v-model.system-architecture-design → Combined system+architecture design artifact (SYS-NNN + ARCH-NNN, IEEE 1016 + IEEE 42010 views)
 /speckit.v-model.integration-test   → Integration test procedures + steps (ITP/ITS, ISO 29119-4 techniques)
 /speckit.v-model.module-design      → Module designs (MOD-NNN, pseudocode + 4 views)
 /speckit.v-model.unit-test          → Unit test procedures + scenarios (UTP/UTS, white-box techniques)

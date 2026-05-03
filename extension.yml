@@ -38,6 +38,10 @@ provides:
       file: "commands/architecture-design.md"
       description: "Decompose system components into IEEE 42010/Kruchten 4+1 architecture modules with four mandatory views"
 
+    - name: "speckit.v-model.system-architecture-design"
+      file: "commands/system-architecture-design.md"
+      description: "Generate a combined system-level and architecture-level design in one document to preserve traceability and reduce review handoffs"
+
     - name: "speckit.v-model.integration-test"
       file: "commands/integration-test.md"
       description: "Generate ISO 29119-4 integration test plan with four named techniques for every architecture module"
