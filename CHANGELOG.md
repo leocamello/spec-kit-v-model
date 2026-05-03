@@ -16,7 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added — Lifecycle Hooks
 
 - **`after_specify`** — wires the V-Model directory layout under each new feature folder.
-- **`after_tasks`** — re-runs `validate-core-schema.sh --tasks`.
+- **`after_tasks`** — re-runs `/speckit.v-model.trace` to refresh the trace matrix after `/speckit.v-model.tasks`.
 - **`before_implement`** — re-runs the 8-stage `run-v-model-gate.sh` as a fail-fast pre-implementation check.
 - **`after_implement`** — re-runs `/speckit.v-model.trace` to refresh the trace matrix.
 

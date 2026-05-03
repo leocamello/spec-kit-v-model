@@ -81,7 +81,7 @@ The gate is the deterministic backbone of the bridge. Every stage is a single su
 | 3 | `build-matrix --check` | The traceability matrix builds without orphans or cycles. |
 | 4 | `validate-requirement-coverage` | REQ ↔ ATP/SCN coverage. |
 | 5 | `validate-system-coverage` | SYS ↔ STP coverage. |
-| 6 | `validate-architecture-coverage` | ARCH ↔ ITP coverage. |
+| 6 | `validate-architecture-coverage` | ARCH ↔ ITP coverage. ⚠️ Currently FAILs on the v0.7.0 dogfood feature `specs/007-bridge-commands/` — see [v0.7.0 Known Limitations](../community/changelog.md#known-limitations-deferred-to-v080). |
 | 7 | `validate-module-coverage` | MOD ↔ UTP coverage. |
 | 8 | `validate-hazard-coverage` | HAZ ↔ mitigation/verification coverage. |
 

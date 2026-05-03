@@ -20,7 +20,7 @@ All notable changes to the V-Model Extension Pack are documented here. The forma
 ### Added — Lifecycle Hooks
 
 - **`after_specify`** — wires the V-Model directory layout under each new feature folder.
-- **`after_tasks`** — re-runs `validate-core-schema.sh --tasks`.
+- **`after_tasks`** — re-runs `/speckit.v-model.trace` to refresh the trace matrix after `/speckit.v-model.tasks`.
 - **`before_implement`** — re-runs the 8-stage `run-v-model-gate.sh` as a fail-fast check.
 - **`after_implement`** — re-runs `/speckit.v-model.trace` to refresh the matrix.
 
@@ -68,6 +68,20 @@ All four hooks are `optional: true` in v0.7.0 and become mandatory under the upc
 | Structural evals | 89 | 89 |
 | LLM evals | 42 | 53 |
 | End-to-end (E2E) tests | — | 32 (newly disclosed) |
+
+### Known Limitations (deferred to v0.8.0)
+
+- **EPIC-1** `compliance_mode: strict` profile — flips the 4 lifecycle hooks from `optional: true` to mandatory.
+- **EPIC-2** Sealed baseline — cryptographic seal of the canonical V-Model artifact set per release tag.
+- **EPIC-3** Immutable-artifact protection — pre-receive hook rejecting post-freeze edits to canonical artifacts.
+- **EPIC-4** Semantic `Implements`-directive validation — beyond ID-existence to ID-relevance.
+- **EPIC-5** `v-model verify` aggregator — single-command SARIF/JSON summary across all 8 gate stages.
+- **EPIC-6** Authorized managed regions — splicer ACL by region `id`.
+- **EPIC-7** Hybrid-mode telemetry — count and report bypassed gates.
+- **EPIC-8** Per-domain trace-matrix presets — narrower validators per regulatory regime.
+- **EPIC-9** Plan/Tasks schema migration tooling — versioned schema upgrade path beyond v0.7.0.
+- **EPIC-10** Multi-domain projects — per-feature `domain:` overlays in monorepos.
+- **`specs/007-bridge-commands/` cross-cutting modules** ARCH-008 / ARCH-014 / ARCH-016 lack dedicated ITP coverage; the V-Model artifact set is frozen at the Phase B paradigm lock and remediation is deferred to v0.8.0. Running `run-v-model-gate.sh specs/007-bridge-commands` will report 7/8 inner validators PASS and `validate-architecture-coverage` FAIL. This is the only known coverage gap on the dogfood feature.
 
 ---
 
