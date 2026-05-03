@@ -132,6 +132,10 @@ if $REGION_MODE; then
                 id = $0
                 sub(/^<<<REGION id="/, "", id)
                 sub(/">>>[[:space:]]*$/, "", id)
+                if (id ~ /[\/\\]/ || id ~ /^\./) {
+                    print "ERROR: regions file: unsafe id \"" id "\" at line " NR " (must not contain '/' or '\\\\' or start with '.')" > "/dev/stderr"
+                    exit 2
+                }
                 if (id in seen) {
                     print "ERROR: regions file: duplicate id \"" id "\" at line " NR > "/dev/stderr"
                     exit 2
@@ -199,6 +203,10 @@ awk -v prefix="$prefix" \
 
         if (is_begin) {
             bid = extract_id($0)
+            if (bid ~ /[\/\\]/ || bid ~ /^\./) {
+                print "ERROR: unsafe region id \"" bid "\" at line " NR " (must not contain '/' or '\\\\' or start with '.')" > "/dev/stderr"
+                exit_code = 2; exit exit_code
+            }
             if (depth > 0) {
                 print "ERROR: nested BEGIN MANAGED at line " NR ": " $0 > "/dev/stderr"
                 exit_code = 1; exit exit_code

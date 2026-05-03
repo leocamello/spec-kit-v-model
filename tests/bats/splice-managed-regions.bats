@@ -298,6 +298,35 @@ EOF
     assert_output --partial 'regions file: duplicate id "A"'
 }
 
+@test "MF-5: --region-from rejects path-traversal id (D.5 hardening)" {
+    cat > "$TARGET" <<'EOF'
+#!/bin/sh
+echo "no envelope"
+EOF
+    REGIONS="$TEST_TEMP_DIR/regions.txt"
+    cat > "$REGIONS" <<'EOF'
+<<<REGION id="../../etc/passwd">>>
+malicious
+<<<END>>>
+EOF
+    run bash "$SPLICER_SCRIPT" --region-from "$REGIONS" "$TARGET" bash
+    [ "$status" -eq 2 ]
+    assert_output --partial 'unsafe id'
+}
+
+@test "MF-5: target with path-traversal BEGIN id → exit 2 (D.5 hardening)" {
+    cat > "$TARGET" <<'EOF'
+#!/bin/sh
+# BEGIN MANAGED id="../../tmp/x"
+old
+# END MANAGED id="../../tmp/x"
+EOF
+    write_generated
+    run bash "$SPLICER_SCRIPT" "$TARGET" "$GENERATED" bash
+    [ "$status" -eq 2 ]
+    assert_output --partial 'unsafe region id'
+}
+
 @test "MF-5: diff -u on stderr for non-empty splice (legacy mode)" {
     write_target_with_envelope
     write_generated

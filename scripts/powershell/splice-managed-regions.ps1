@@ -147,6 +147,10 @@ if ($RegionMode) {
                 exit 2
             }
             $currentId = $Matches[1]
+            if ($currentId -match '[\\/]' -or $currentId.StartsWith('.')) {
+                [Console]::Error.WriteLine("ERROR: regions file: unsafe id `"$currentId`" at line $rLine (must not contain '/' or '\' or start with '.')")
+                exit 2
+            }
             if ($regionPayloads.ContainsKey($currentId)) {
                 [Console]::Error.WriteLine("ERROR: regions file: duplicate id `"$currentId`" at line $rLine")
                 exit 2
@@ -196,6 +200,10 @@ foreach ($line in $lines) {
 
     if ($line -match $beginRe) {
         $bid = $Matches[1]
+        if ($bid -match '[\\/]' -or $bid.StartsWith('.')) {
+            [Console]::Error.WriteLine("ERROR: unsafe region id `"$bid`" at line ${lineNo} (must not contain '/' or '\' or start with '.')")
+            exit 2
+        }
         if ($depth -gt 0) {
             [Console]::Error.WriteLine("ERROR: nested BEGIN MANAGED at line ${lineNo}: $line")
             exit 1

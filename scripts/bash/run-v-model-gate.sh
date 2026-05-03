@@ -22,7 +22,7 @@ INNERS=(validate-artifact-status.sh validate-domain-profile.sh build-matrix.sh \
         validate-architecture-coverage.sh validate-module-coverage.sh validate-hazard-coverage.sh)
 
 NAMES=(); RCS=(); overall=0
-matrix_out="$(mktemp -p "$FEATURE_DIR" matrix.XXXXXX)"
+matrix_out="$(mktemp "$FEATURE_DIR/matrix.XXXXXX")"
 trap 'rm -f "$matrix_out"' EXIT
 
 for inner in "${INNERS[@]}"; do

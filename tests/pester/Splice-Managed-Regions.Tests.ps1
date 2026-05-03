@@ -331,6 +331,39 @@ two
         $stderr | Should -Match 'regions file: duplicate id "A"'
     }
 
+    It 'MF-5: --region-from rejects path-traversal id (D.5 hardening)' {
+        $f = Initialize-Splice $TestDrive
+        @"
+#!/bin/sh
+echo "no envelope"
+"@ | Set-Content -LiteralPath $f.Target
+        $regions = Join-Path (Split-Path -Parent $f.Target) 'regions.txt'
+        @"
+<<<REGION id="../../etc/passwd">>>
+malicious
+<<<END>>>
+"@ | Set-Content -LiteralPath $regions
+        $res = Invoke-SplicerStderr -ScriptArgs @('--region-from', $regions, $f.Target, 'bash')
+        $stderr = $res.Stderr
+        $res.ExitCode | Should -Be 2
+        $stderr | Should -Match 'unsafe id'
+    }
+
+    It 'MF-5: target with path-traversal BEGIN id → exit 2 (D.5 hardening)' {
+        $f = Initialize-Splice $TestDrive
+        @"
+#!/bin/sh
+# BEGIN MANAGED id="../../tmp/x"
+old
+# END MANAGED id="../../tmp/x"
+"@ | Set-Content -LiteralPath $f.Target
+        Write-Generated $f.Generated
+        $res = Invoke-SplicerStderr -ScriptArgs @($f.Target, $f.Generated, 'bash')
+        $stderr = $res.Stderr
+        $res.ExitCode | Should -Be 2
+        $stderr | Should -Match 'unsafe region id'
+    }
+
     It 'MF-5: diff summary on stderr for non-empty splice (legacy mode)' {
         $f = Initialize-Splice $TestDrive
         Write-Envelope $f.Target
