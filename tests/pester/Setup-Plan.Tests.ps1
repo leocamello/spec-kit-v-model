@@ -15,7 +15,7 @@ BeforeAll {
         New-Item -ItemType Directory -Path $FeatureDir -Force | Out-Null
         $stub = @"
 [CmdletBinding()] param([switch]`$Json, [Parameter(ValueFromRemainingArguments=`$true)] `$Rest)
-Write-Output '{"FEATURE_SPEC":"$FeatureDir/spec.md","IMPL_PLAN":"$FeatureDir/plan.md","SPECS_DIR":"$FeatureDir","BRANCH":"007","HAS_GIT":"true"}'
+@{ FEATURE_SPEC = '$($FeatureDir -replace "'", "''")/spec.md'; IMPL_PLAN = '$($FeatureDir -replace "'", "''")/plan.md'; SPECS_DIR = '$($FeatureDir -replace "'", "''")'; BRANCH = '007'; HAS_GIT = 'true' } | ConvertTo-Json -Compress
 exit $ExitCode
 "@
         Set-Content -LiteralPath (Join-Path $upstreamDir 'setup-plan.ps1') -Value $stub -Encoding utf8

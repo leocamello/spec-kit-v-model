@@ -15,7 +15,7 @@ BeforeAll {
         New-Item -ItemType Directory -Path $FeatureDir -Force | Out-Null
         $stub = @"
 [CmdletBinding()] param([switch]`$Json, [Parameter(ValueFromRemainingArguments=`$true)] `$Rest)
-Write-Output '{"FEATURE_DIR":"$FeatureDir","AVAILABLE_DOCS":["research.md"]}'
+@{ FEATURE_DIR = '$($FeatureDir -replace "'", "''")'; AVAILABLE_DOCS = @('research.md') } | ConvertTo-Json -Compress
 exit $ExitCode
 "@
         Set-Content -LiteralPath (Join-Path $upstreamDir 'check-prerequisites.ps1') -Value $stub -Encoding utf8
