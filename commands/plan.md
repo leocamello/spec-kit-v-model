@@ -5,9 +5,12 @@ handoffs:
     agent: speckit.v-model.tasks
     prompt: Break the V-Model-enriched plan into TDD-ordered tasks
     send: true
-  - label: Implement Plan
-    agent: speckit.v-model.implement
-    prompt: Implement the V-Model-enriched plan
+# NOTE (MF-10, Red Team C-01): the previous "Implement Plan" handoff to
+# speckit.v-model.implement was removed in v0.7.0. The V-Model lifecycle is
+# plan → tasks → implement; jumping plan → implement skips the TDD-ordered
+# task decomposition the rest of the system expects. Use the "Break Into
+# Tasks" handoff above, then invoke speckit.v-model.implement on the
+# generated tasks.md.
 scripts:
   sh: scripts/bash/setup-plan.sh --json
   ps: scripts/powershell/setup-plan.ps1 -Json

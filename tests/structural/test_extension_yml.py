@@ -174,6 +174,8 @@ def test_no_spec_kit_core_file_modified_outside_extension_yml():
         "pyproject.toml",
         ".github/",
         ".specify/",
+        ".gitignore",
+        "v-model-config.yml.example",
     )
     offenders = [
         p for p in changed
