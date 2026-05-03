@@ -11,6 +11,8 @@
 
 load "test_helper"
 
+bats_require_minimum_version 1.5.0
+
 SPLICER_SCRIPT="${SCRIPTS_DIR}/splice-managed-regions.sh"
 
 setup() {
@@ -47,7 +49,9 @@ EOF
 @test "managed region replaced; user prologue + epilogue preserved (UTP-014-A, ATP-018-A)" {
     write_target_with_envelope
     write_generated
-    run bash "$SPLICER_SCRIPT" "$TARGET" "$GENERATED" bash
+    # MF-5: stderr now carries the diff which would include `-OLD GENERATED
+    # CONTENT`; capture stdout only so refute_output stays meaningful.
+    run --separate-stderr bash "$SPLICER_SCRIPT" "$TARGET" "$GENERATED" bash
     assert_success
     assert_output --partial "user prologue"
     assert_output --partial "user epilogue"
@@ -67,15 +71,14 @@ EOF
 @test "idempotent re-run: second splice with same input is byte-identical (REQ-022, SCN-018-A1)" {
     write_target_with_envelope
     write_generated
-    run bash "$SPLICER_SCRIPT" "$TARGET" "$GENERATED" bash
-    assert_success
-    first="$output"
+    # MF-5: splicer now emits diff -u on stderr; capture stdout only so the
+    # idempotent comparison stays a pure stdout-byte-equality check.
+    first=$(bash "$SPLICER_SCRIPT" "$TARGET" "$GENERATED" bash 2>/dev/null)
     # Apply the first splice result to the target then splice again with the
     # same generated content; result must be unchanged.
     printf '%s\n' "$first" > "$TARGET"
-    run bash "$SPLICER_SCRIPT" "$TARGET" "$GENERATED" bash
-    assert_success
-    [ "$output" = "$first" ]
+    second=$(bash "$SPLICER_SCRIPT" "$TARGET" "$GENERATED" bash 2>/dev/null)
+    [ "$second" = "$first" ]
 }
 
 @test "unbalanced markers (BEGIN without END) → exit non-zero, original untouched (HAZ-014, UTP-014-B)" {
@@ -156,4 +159,182 @@ EOF
     assert_output --partial "user prologue"
     assert_output --partial "user epilogue"
     assert_output --partial "FRESH GENERATED CONTENT"
+}
+
+# ---------------------------------------------------------------------------
+# MF-5 hardening: id-match, duplicate-id, --region-from, diff-on-stderr.
+# ---------------------------------------------------------------------------
+
+@test "MF-5: BEGIN/END id-mismatch → exit 2 with diagnostic; original untouched (HAZ-014)" {
+    cat > "$TARGET" <<'EOF'
+#!/bin/sh
+# BEGIN MANAGED id="A"
+echo "old"
+# END MANAGED id="B"
+EOF
+    write_generated
+    pre=$(cat "$TARGET")
+    run bash "$SPLICER_SCRIPT" "$TARGET" "$GENERATED" bash
+    [ "$status" -eq 2 ]
+    assert_output --partial 'id mismatch at line 4'
+    assert_output --partial 'BEGIN id="A"'
+    assert_output --partial 'END id="B"'
+    post=$(cat "$TARGET")
+    [ "$pre" = "$post" ]
+}
+
+@test "MF-5: duplicate region id in target → exit 2 with diagnostic; original untouched (HAZ-007)" {
+    cat > "$TARGET" <<'EOF'
+#!/bin/sh
+# BEGIN MANAGED id="DUP"
+echo "first"
+# END MANAGED id="DUP"
+
+# BEGIN MANAGED id="DUP"
+echo "second"
+# END MANAGED id="DUP"
+EOF
+    write_generated
+    pre=$(cat "$TARGET")
+    run bash "$SPLICER_SCRIPT" "$TARGET" "$GENERATED" bash
+    [ "$status" -eq 2 ]
+    assert_output --partial 'duplicate region id "DUP"'
+    assert_output --partial 'first seen at line 2'
+    post=$(cat "$TARGET")
+    [ "$pre" = "$post" ]
+}
+
+@test "MF-5: --region-from happy path: per-id payload splicing (REQ-022)" {
+    cat > "$TARGET" <<'EOF'
+#!/bin/sh
+echo "prologue"
+# BEGIN MANAGED id="A"
+OLD_A
+# END MANAGED id="A"
+
+echo "middle"
+# BEGIN MANAGED id="B"
+OLD_B
+# END MANAGED id="B"
+echo "epilogue"
+EOF
+    REGIONS="$TEST_TEMP_DIR/regions.txt"
+    cat > "$REGIONS" <<'EOF'
+<<<REGION id="A">>>
+echo "fresh A line 1"
+echo "fresh A line 2"
+<<<END>>>
+<<<REGION id="B">>>
+echo "fresh B"
+<<<END>>>
+EOF
+    run --separate-stderr bash "$SPLICER_SCRIPT" --region-from "$REGIONS" "$TARGET" bash
+    assert_success
+    assert_output --partial 'prologue'
+    assert_output --partial 'middle'
+    assert_output --partial 'epilogue'
+    assert_output --partial 'fresh A line 1'
+    assert_output --partial 'fresh A line 2'
+    assert_output --partial 'fresh B'
+    refute_output --partial 'OLD_A'
+    refute_output --partial 'OLD_B'
+    # Sentinels preserved.
+    assert_output --partial 'BEGIN MANAGED id="A"'
+    assert_output --partial 'END MANAGED id="B"'
+}
+
+@test "MF-5: --region-from missing payload → exit 2 (HAZ-007)" {
+    cat > "$TARGET" <<'EOF'
+#!/bin/sh
+# BEGIN MANAGED id="C"
+OLD_C
+# END MANAGED id="C"
+EOF
+    REGIONS="$TEST_TEMP_DIR/regions.txt"
+    cat > "$REGIONS" <<'EOF'
+<<<REGION id="A">>>
+echo "fresh A"
+<<<END>>>
+EOF
+    pre=$(cat "$TARGET")
+    run bash "$SPLICER_SCRIPT" --region-from "$REGIONS" "$TARGET" bash
+    [ "$status" -eq 2 ]
+    assert_output --partial 'no payload provided for region id "C"'
+    post=$(cat "$TARGET")
+    [ "$pre" = "$post" ]
+}
+
+@test "MF-5: --region-from regions file with unbalanced markers → exit 2" {
+    cat > "$TARGET" <<'EOF'
+#!/bin/sh
+echo "no envelope"
+EOF
+    REGIONS="$TEST_TEMP_DIR/regions.txt"
+    cat > "$REGIONS" <<'EOF'
+<<<REGION id="A">>>
+echo "dangling"
+EOF
+    run bash "$SPLICER_SCRIPT" --region-from "$REGIONS" "$TARGET" bash
+    [ "$status" -eq 2 ]
+    assert_output --partial 'regions file: unbalanced REGION/END'
+}
+
+@test "MF-5: --region-from regions file with duplicate id → exit 2" {
+    cat > "$TARGET" <<'EOF'
+#!/bin/sh
+echo "no envelope"
+EOF
+    REGIONS="$TEST_TEMP_DIR/regions.txt"
+    cat > "$REGIONS" <<'EOF'
+<<<REGION id="A">>>
+one
+<<<END>>>
+<<<REGION id="A">>>
+two
+<<<END>>>
+EOF
+    run bash "$SPLICER_SCRIPT" --region-from "$REGIONS" "$TARGET" bash
+    [ "$status" -eq 2 ]
+    assert_output --partial 'regions file: duplicate id "A"'
+}
+
+@test "MF-5: diff -u on stderr for non-empty splice (legacy mode)" {
+    write_target_with_envelope
+    write_generated
+    stderr_file="$TEST_TEMP_DIR/stderr.log"
+    bash "$SPLICER_SCRIPT" "$TARGET" "$GENERATED" bash >/dev/null 2>"$stderr_file"
+    grep -q '^--- ' "$stderr_file"
+    grep -q '^+++ ' "$stderr_file"
+    grep -q 'FRESH GENERATED CONTENT' "$stderr_file"
+}
+
+@test "MF-5: diff stderr is empty for sentinel-free no-op (HAZ-025)" {
+    cat > "$TARGET" <<'EOF'
+#!/bin/sh
+echo "no envelope here"
+EOF
+    write_generated
+    stderr_file="$TEST_TEMP_DIR/stderr.log"
+    bash "$SPLICER_SCRIPT" "$TARGET" "$GENERATED" bash >/dev/null 2>"$stderr_file"
+    [ ! -s "$stderr_file" ]
+}
+
+@test "MF-5: diff stderr is empty for idempotent re-splice (no-change run)" {
+    write_target_with_envelope
+    write_generated
+    # First splice writes the canonical content into target.
+    bash "$SPLICER_SCRIPT" "$TARGET" "$GENERATED" bash 2>/dev/null > "$TEST_TEMP_DIR/spliced"
+    cp "$TEST_TEMP_DIR/spliced" "$TARGET"
+    stderr_file="$TEST_TEMP_DIR/stderr.log"
+    bash "$SPLICER_SCRIPT" "$TARGET" "$GENERATED" bash >/dev/null 2>"$stderr_file"
+    [ ! -s "$stderr_file" ]
+}
+
+@test "MF-5: no temp leftovers in target dir after successful splice (D-016)" {
+    write_target_with_envelope
+    write_generated
+    target_dir=$(dirname "$TARGET")
+    bash "$SPLICER_SCRIPT" "$TARGET" "$GENERATED" bash >/dev/null 2>/dev/null
+    leftovers=$(find "$target_dir" -mindepth 1 -maxdepth 1 -name '.splice-*' | wc -l)
+    [ "$leftovers" -eq 0 ]
 }

@@ -95,22 +95,39 @@ A test-plan artefact that is present but fails to parse is fail-closed: append t
 
 ### 6. Sentinel-managed splicing into existing sources (per ARCH-010, REQ-022, REQ-CN-003, REQ-CN-004, REQ-NF-005, D-001, D-015, D-016)
 
-For any modification of a **pre-existing** source file (Steps 4 and 5 above, when the target file already exists on disk), use the splicer delivered in Step B.2 / T010 — never write the whole file:
+For any modification of a **pre-existing** source file (Steps 4 and 5 above, when the target file already exists on disk), use the splicer delivered in Step B.2 / T010 (hardened in Step C.5 / MF-5) — never write the whole file. Two invocation modes are supported:
+
+**Single-region mode (legacy positional)** — use when only one MANAGED region in the target needs replacement, or when every region in the target should receive the same payload:
 
 ```bash
 bash scripts/bash/splice-managed-regions.sh \
     "<target-file>" "<generated-region-file>" "<language>"
 ```
 
+**Per-region mode (`--region-from`, RECOMMENDED for multi-region targets)** — use when Steps 4/5 emit multiple `Implements:` regions that all land in the same source file. Build a regions file with one `<<<REGION id="…">>> … <<<END>>>` block per id and pass it via `--region-from`:
+
+```bash
+bash scripts/bash/splice-managed-regions.sh \
+    --region-from "<regions-file>" "<target-file>" "<language>"
+```
+
 The script writes the spliced content to **stdout only**; the **caller** is responsible for the atomic-rename idiom (D-016, REQ-NF-005, MOD-002 — the same `mktemp` + `mv` pattern enforced in `commands/plan.md` Step 4):
 
 ```bash
 tmp=$(mktemp -p "$(dirname "$target")")
-bash scripts/bash/splice-managed-regions.sh "$target" "$gen" "$lang" > "$tmp"
+bash scripts/bash/splice-managed-regions.sh "$target" "$gen" "$lang" > "$tmp" \
+    2>> tests/.splicer-diffs.log
 mv "$tmp" "$target"
 ```
 
-Marker grammar per D-015: `<!-- BEGIN MANAGED id="<region>" -->` / `<!-- END MANAGED id="<region>" -->` (or the language-equivalent comment syntax — `# … #`, `// … //`). On unbalanced, overlapping, or duplicate markers the splicer exits 1 with a diff on stderr and **leaves the original file untouched**; propagate the diff into `fatal_errors[]`, emit §Structured Summary, exit 1 (HAZ-014 region-marker corruption, HAZ-025 truncated-content). **Never write to `/tmp`** — the `-p "$(dirname "$target")"` argument keeps the temporary file on the same filesystem as its destination.
+On every successful run with a non-empty diff, the splicer emits `diff -u <target> <spliced>` on **stderr** for audit-trail purposes (MF-5). Tee to `tests/.splicer-diffs.log` (or any workspace log) to capture the byte-level evidence of what was changed; no-op runs (idempotent re-splice, sentinel-free target) emit nothing on stderr so the pass-through path stays clean.
+
+Marker grammar per D-015: `<!-- BEGIN MANAGED id="<region>" -->` / `<!-- END MANAGED id="<region>" -->` (or the language-equivalent comment syntax — `# … #`, `// … //`). Exit-code grammar (HAZ-025) distinguishes corruption-class errors from input-class errors:
+
+- **Exit 1** — file-not-found, unbalanced/orphan/nested MANAGED markers, bad CLI usage.
+- **Exit 2** — hardening violations (MF-5): BEGIN/END id-mismatch (HAZ-014 region-marker corruption from copy-paste), duplicate region id within a target (HAZ-007), missing payload for a target region under `--region-from`, or a malformed regions file (unbalanced or duplicate `<<<REGION>>>` ids).
+
+On any non-zero exit the splicer **leaves the original file untouched** (validation is fail-fast and the `mktemp + mv` envelope only commits on exit 0). Propagate the diagnostic into `fatal_errors[]`, emit §Structured Summary, exit 1. **Never write to `/tmp`** — the `-p "$(dirname "$target")"` argument keeps the temporary file on the same filesystem as its destination.
 
 Code outside the managed region must remain byte-identical (ATP-022-A). This is the SOLE concurrency safeguard delivered for pre-existing sources in v0.7.0 — process-wide locking is deferred (SYS-007 / SYS-015 §Risk Note).
 
