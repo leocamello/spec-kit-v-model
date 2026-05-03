@@ -176,6 +176,10 @@ def test_no_spec_kit_core_file_modified_outside_extension_yml():
         ".specify/",
         ".gitignore",
         "v-model-config.yml.example",
+        "site/",
+        "CONTRIBUTING.md",
+        "SECURITY.md",
+        "CODE_OF_CONDUCT.md",
     )
     offenders = [
         p for p in changed
