@@ -2,7 +2,7 @@
 
 **Feature Branch**: `feature/007-bridge-commands`
 **Created**: 2026-04-26
-**Status**: Draft
+**Status**: Approved
 **Source**: `specs/007-bridge-commands/v-model/system-design.md`
 
 ## Overview

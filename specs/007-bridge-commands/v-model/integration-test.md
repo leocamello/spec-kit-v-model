@@ -3,7 +3,7 @@
 **Feature Branch**: `feature/007-bridge-commands`
 **Created**: 2026-04-26
 **Last Rewritten**: 2026-05-01 (paradigm-drift correction — see `drift-diff-plan.md`)
-**Status**: Draft
+**Status**: Approved
 **Source**: `specs/007-bridge-commands/v-model/architecture-design.md`
 
 ## Overview

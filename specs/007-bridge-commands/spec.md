@@ -2,7 +2,7 @@
 
 **Feature Branch**: `feature/007-bridge-commands`
 **Created**: 2026-04-26
-**Status**: Draft
+**Status**: Approved
 **Input**: User description: "Add three bridge commands to spec-kit-v-model that connect V-Model specification artifacts to actual code generation: `v-model.plan`, `v-model.tasks`, and `v-model.implement`. All three must produce outputs that are byte-compatible with spec-kit core's canonical schemas, with V-Model traceability metadata layered as additive enrichment that spec-kit core tools harmlessly ignore. Users can mix and match `v-model.*` and `speckit.*` commands at any layer (full ceremony, direct path, or hybrid). `v-model.implement` uses a hybrid pattern: agent-driven code generation plus reuse of existing deterministic scripts as the pre-implementation gate (Matrix A+B+C+D+H validation)."
 
 ## User Scenarios & Testing *(mandatory)*

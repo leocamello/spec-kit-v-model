@@ -176,6 +176,7 @@ def test_no_spec_kit_core_file_modified_outside_extension_yml():
         ".specify/",
         ".gitignore",
         "v-model-config.yml.example",
+        "catalog-entry.json",
         "site/",
         "CONTRIBUTING.md",
         "SECURITY.md",

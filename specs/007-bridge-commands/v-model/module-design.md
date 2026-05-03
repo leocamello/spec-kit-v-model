@@ -3,7 +3,7 @@
 **Feature Branch**: `feature/007-bridge-commands`
 **Created**: 2026-04-26
 **Reworked**: 2026-05-01 (paradigm-drift correction per `drift-diff-plan.md`)
-**Status**: Draft
+**Status**: Approved
 **Source**: `specs/007-bridge-commands/v-model/architecture-design.md`
 **Standards**: IEEE 1016:2009 §5 (Software Design Description), ISO/IEC/IEEE 12207:2017 §8.4.4 (Software Detailed Design Process)
 
