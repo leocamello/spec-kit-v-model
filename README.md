@@ -30,15 +30,16 @@ AI-native teams ship fast but produce no traceability. Regulated teams have full
 | **Test Planning** | `acceptance` · `system-test` · `integration-test` · `unit-test` |
 | **Cross-Cutting** | `hazard-analysis` · `impact-analysis` · `peer-review` |
 | **Verification** | `trace` · `test-results` · `audit-report` |
+| **Bridge to Implementation** | `plan` · `tasks` · `implement` |
 
-**14 commands** across 4 V-Model levels, with deterministic coverage validation, 5 traceability matrices (A–D + H), and compliance gating for regulated industries.
+**17 commands** across 4 V-Model levels plus the bridge to implementation, with deterministic coverage validation, 5 traceability matrices (A–D + H), an 8-stage validation gate (`run-v-model-gate.sh`), 4 lifecycle hooks, and compliance gating for regulated industries.
 
 ## Quick Start
 
 ```bash
 # Install the extension
 specify extension add v-model \
-  --from https://github.com/leocamello/spec-kit-v-model/archive/refs/tags/v0.5.0.zip
+  --from https://github.com/leocamello/spec-kit-v-model/archive/refs/tags/v0.7.0.zip
 
 # Generate requirements from your spec
 /speckit.v-model.requirements
@@ -105,10 +106,11 @@ v0.8.0 will introduce a `compliance_mode: strict` profile (see [EPIC-1 in the v0
 
 | Layer | Tests | What it validates |
 |-------|-------|-------------------|
-| BATS | **364** | Bash script logic across 14 test files |
-| Pester | **347** | PowerShell script parity |
+| BATS | **455** | Bash script logic across all script files |
+| Pester | **431** | PowerShell script parity |
 | Structural | **89** | ID format, template conformance, section completeness |
-| LLM evals | **42** | Requirements quality, BDD quality, traceability |
+| LLM evals | **53** | Requirements quality, BDD quality, traceability |
+| End-to-end (E2E) | **32** | Bash + golden-output fixtures (advisory in v0.7.0; gated in v0.8.0 via EPIC-7) |
 
 ## 📖 Documentation
 
@@ -118,7 +120,7 @@ v0.8.0 will introduce a `compliance_mode: strict` profile (see [EPIC-1 in the v0
 - [Guides](https://leocamello.github.io/spec-kit-v-model/guide/concepts/) — V-Model concepts, level-by-level guides, CI integration
 - [Compliance](https://leocamello.github.io/spec-kit-v-model/compliance/) — IEC 62304, ISO 26262, DO-178C artifact mapping
 - [Tutorials](https://leocamello.github.io/spec-kit-v-model/tutorials/medical-device/) — End-to-end walkthroughs for medical, automotive, and aerospace
-- [Reference](https://leocamello.github.io/spec-kit-v-model/reference/commands/) — All 14 commands, ID schema, scripts, templates, configuration
+- [Reference](https://leocamello.github.io/spec-kit-v-model/reference/commands/) — All 17 commands, ID schema, scripts, templates, configuration
 - [Contributing](CONTRIBUTING.md) — Development setup, testing, PR process
 
 ## License

@@ -5,7 +5,7 @@ description: Complete reference for all validator, checker, parser, and generato
 
 # Scripts Reference
 
-The V-Model Extension Pack includes **27 scripts** — 13 Bash, 13 PowerShell, and 1 Python — that handle all compliance-critical calculations deterministically.
+The V-Model Extension Pack includes **34 scripts** — 16 Bash, 16 PowerShell, 1 Python, plus the `run-v-model-gate.sh` 8-stage orchestrator — that handle all compliance-critical calculations deterministically.
 
 !!! tip "Key Principle"
     AI generates content (requirements, test plans). **Scripts verify** coverage, parse results, and build reports. This separation ensures reproducibility and auditability.
@@ -19,7 +19,14 @@ The V-Model Extension Pack includes **27 scripts** — 13 Bash, 13 PowerShell, a
 | validate-architecture-coverage | ✅ | ✅ | Validator |
 | validate-module-coverage | ✅ | ✅ | Validator |
 | validate-hazard-coverage | ✅ | ✅ | Validator |
+| validate-artifact-status | ✅ | ✅ | Validator (status gate, MF-6, v0.7.0) |
+| validate-domain-profile | ✅ | ✅ | Validator (domain config, MF-7, v0.7.0) |
+| validate-implements-ids | ✅ | ✅ | Validator (hallucination guard, v0.7.0) |
+| validate-core-schema | ✅ | ✅ | Validator (plan/tasks H2 ordering, MF-4, v0.7.0) |
 | validate-level | ✅ | ✅ | Validator (dispatch) |
+| run-v-model-gate | ✅ | ✅ | Orchestrator (8-stage pipeline, v0.7.0) |
+| splice-managed-regions | ✅ | ✅ | Generator (sentinel splicer, MF-5, v0.7.0) |
+| setup-plan / setup-tasks / setup-implement | ✅ | ✅ | Utility (bridge-command wrappers, MF-1, v0.7.0) |
 | build-matrix | ✅ | ✅ | Generator |
 | build-audit-report | ✅ | ✅ | Generator |
 | impact-analysis | ✅ | ✅ | Generator |
@@ -553,13 +560,98 @@ V-Model directory setup and prerequisite checking.
 
 ---
 
+## v0.7.0 Bridge & Stabilization Scripts
+
+The v0.7.0 release adds the gate orchestrator, two new validators, the hardened splicer, the hallucination guard, and the bridge-command setup wrappers. These scripts power the [Bridge Commands](../guide/bridge-commands.md) (`/speckit.v-model.{plan,tasks,implement}`).
+
+### `run-v-model-gate.sh`/`.ps1`
+
+Orchestrates the deterministic 8-stage validation pipeline that gates `/speckit.v-model.implement`. Each stage is a single sub-validator; any non-zero exit aborts the pipeline.
+
+| Stage | Sub-validator | What it enforces |
+|-------|---------------|------------------|
+| 1 | `validate-artifact-status` | Every canonical V-Model artifact carries `**Status**: Approved` (configurable via `--required-status`). |
+| 2 | `validate-domain-profile` | `v-model-config.yml` (when present) names a valid domain (`iso_26262`, `do_178c`, `iec_62304`). Absent file → non-fatal SKIP. |
+| 3 | `build-matrix --check` | The traceability matrix builds without orphans or cycles. |
+| 4 | `validate-requirement-coverage` | REQ ↔ ATP/SCN coverage. |
+| 5 | `validate-system-coverage` | SYS ↔ STP coverage. |
+| 6 | `validate-architecture-coverage` | ARCH ↔ ITP coverage. |
+| 7 | `validate-module-coverage` | MOD ↔ UTP coverage. |
+| 8 | `validate-hazard-coverage` | HAZ ↔ mitigation/verification coverage. |
+
+### `validate-artifact-status.sh`/`.ps1` (MF-6)
+
+Approval-status gate. Default: every canonical V-Model artifact must carry `**Status**: Approved`. Flags:
+
+- `--required-status <value>` (repeatable) — accept any of the listed statuses (e.g. `--required-status Draft --required-status Approved` during migration).
+- `--vmodel-dir <path>` — explicit V-Model directory; defaults to `specs/<feature>/v-model/`.
+
+Exit 0 on success, 1 on any artifact carrying a disallowed status.
+
+### `validate-domain-profile.sh`/`.ps1` (MF-7)
+
+Validates `v-model-config.yml` against the canonical domain set (`iso_26262`, `do_178c`, `iec_62304`). The companion `v-model-config.yml.example` documents the three valid values.
+
+- **No file present** → exit 0 (non-fatal SKIP). Suitable for non-regulated repositories.
+- **File present and valid** → exit 0.
+- **File present and invalid** → exit 1 with a precise error message naming the offending key/value.
+
+### `validate-implements-ids.sh`/`.ps1` (hallucination guard)
+
+Validates that every `Implements`-directive header in generated source/tests cites a V-Model ID that exists in the canonical artifact set. v0.7.0 adds three flags critical for the bridge pipeline:
+
+| Flag | Purpose |
+|------|---------|
+| `--canonical <vmodel-dir>` | The authoritative ID source — typically `specs/<feature>/v-model/`. |
+| `--scan <root>` | Where to look for `Implements`-directive headers — typically the repo root, so `src/` and `tests/{unit,integration,system,acceptance}/` are in scope. |
+| `--changed-only` | Intersect the scan set with `git diff --name-only` so the guard only inspects files modified in the current branch / working tree. |
+
+Exit 0 on success; exit 1 on any cited ID absent from the canonical set.
+
+### `validate-core-schema.sh`/`.ps1` (MF-4)
+
+Three-pass validator for `plan.md` and `tasks.md`:
+
+1. **Existence** — every required H2 section is present.
+2. **Ordering** — sections appear in the pinned order (5 H2s for `plan.md`, 12 H2s for `tasks.md`).
+3. **Wedge rejection** — no unknown H2s appear between or around the pinned sections; enforced via `diff -u` against the canonical heading sequence.
+
+Flags: `--plan` (5-H2 ruleset for `plan.md`) or `--tasks` (12-H2 ruleset for `tasks.md`).
+
+### `splice-managed-regions.sh`/`.ps1` (MF-5)
+
+Sentinel-managed region splicer used by `/speckit.v-model.implement` to inject generated code into existing source files without disturbing surrounding hand-written code. Recognises `<<<REGION id="X">>>` … `<<<END>>>` markers.
+
+| Mode / Flag | Behaviour |
+|-------------|-----------|
+| Single-payload (legacy) | Replace every region in the target with the supplied payload. Stdout byte-identical to v0.6.x. |
+| `--region-from <regions-file>` | Replace each region with its matching payload from a regions file (per-region payload mode, new in v0.7.0). |
+| `2>&1` capture | Every successful run emits `diff -u original spliced` on **stderr** — capture it (e.g. `2>> tests/.splicer-diffs.log`) for audit-trail evidence. |
+
+Exit codes:
+
+| Code | Cause |
+|------|-------|
+| 0 | Successful splice. |
+| 1 | File not found, unbalanced markers, orphan markers, nested markers, or bad CLI usage. |
+| 2 | BEGIN/END `id` mismatch, duplicate region `id`, missing payload for a declared region, or malformed regions file. |
+
+### `setup-plan.sh` / `setup-tasks.sh` / `setup-implement.sh` (and `.ps1` mirrors) (MF-1)
+
+Thin V-Model-aware wrappers around the upstream `spec-kit-core` `setup-*` scripts. They surface `VMODEL_DIR` and the canonical artifact paths to the bridge prompts.
+
+---
+
 ## Test Coverage
 
 All scripts are extensively tested:
 
 | Suite | Tests | Framework |
 |-------|-------|-----------|
-| BATS (Bash) | 364 | [bats-core](https://github.com/bats-core/bats-core) |
-| Pester (PowerShell) | 347 | [Pester](https://pester.dev/) |
+| BATS (Bash) | 455 | [bats-core](https://github.com/bats-core/bats-core) |
+| Pester (PowerShell) | 431 | [Pester](https://pester.dev/) |
+| Structural evals (pytest) | 89 | [pytest](https://pytest.org) + DeepEval |
+| LLM-as-judge evals | 53 | DeepEval GEval |
+| End-to-end (E2E) | 32 | Bash + golden-output fixtures (advisory in v0.7.0; hardened to gate in v0.8.0 via [EPIC-7](../community/roadmap.md)) |
 
 The tests validate script logic across all scenarios: gaps, orphans, coverage violations, cross-cutting modules, external modules, partial validation, JSON output, and change impact traversal.

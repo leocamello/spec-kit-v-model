@@ -55,6 +55,21 @@ Controls safety-critical section generation across V-Model commands.
 | `do_178c` | DO-178C | Aerospace software assurance |
 | `iec_62304` | IEC 62304 | Medical device software lifecycle |
 
+!!! info "Reference: `v-model-config.yml.example`"
+    A canonical, minimal `v-model-config.yml.example` lives at the repository root from v0.7.0 onward. It documents the three valid `domain:` values (`iso_26262`, `do_178c`, `iec_62304`) and is the source consulted by the new `validate-domain-profile.sh`/`.ps1` validator (MF-7). Copy it to `v-model-config.yml` and edit; `validate-domain-profile` skips silently when no config file is present.
+
+!!! warning "Migration from v0.6.0 industry-vernacular values"
+    Earlier docs occasionally referenced `automotive`, `medical`, and `aerospace` as `domain:` values. v0.7.0's `validate-domain-profile` rejects these and only accepts the standard IDs that match the directories under `commands/overlays/`:
+
+    | Old (industry vernacular) | New (standard ID, v0.7.0) |
+    |---------------------------|---------------------------|
+    | `automotive` | `iso_26262` |
+    | `medical` | `iec_62304` |
+    | `aerospace` | `do_178c` |
+    | `general` | *(removed — omit the `domain:` key for non-regulated repositories)* |
+
+    The `general` overlay no longer exists; non-regulated repositories should either omit `v-model-config.yml` entirely or set `domain: ""`.
+
 ---
 
 ## Domain Effects by Command

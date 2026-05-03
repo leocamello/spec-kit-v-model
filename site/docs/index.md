@@ -59,7 +59,7 @@ graph LR
 
 ## :material-feature-search: Key Features
 
-### :octicons-id-badge-16: 14 Commands Across the Full V-Model
+### :octicons-id-badge-16: 17 Commands Across the Full V-Model
 
 From requirements to audit reports — every V-Model level is covered with dedicated commands for specification, design, testing, and verification.
 

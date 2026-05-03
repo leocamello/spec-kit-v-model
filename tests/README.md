@@ -29,9 +29,13 @@ ATP) under `specs/<feature>/v-model/`.
 # Unit (POSIX shell)
 ./tests/bats/lib/bats-core/bin/bats tests/bats/
 
-# Integration / system / acceptance shells
+# Integration / system / acceptance shells (currently scaffolds; populated as features land)
 ./tests/bats/lib/bats-core/bin/bats tests/integration/ tests/system/ tests/acceptance/
-```
 
-PowerShell suites and DeepEval evals are wired in their respective harnesses
-once Phase 4 / Phase 7 land.
+# PowerShell parity (Windows / pwsh)
+Invoke-Pester tests/pester/ -CI
+
+# Structural + LLM-as-judge evals (Python)
+pytest tests/evals/ -m structural -v
+GOOGLE_API_KEY=... pytest tests/evals/ -m eval -v
+```

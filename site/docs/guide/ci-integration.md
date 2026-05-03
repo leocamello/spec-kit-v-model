@@ -26,7 +26,7 @@ env:
   VMODEL_DIR: specs/v-model
 
   # spec-kit-v-model release tag to install
-  SPECKIT_VMODEL_VERSION: v0.5.0
+  SPECKIT_VMODEL_VERSION: v0.7.0
 ```
 
 ---
