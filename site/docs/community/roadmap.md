@@ -7,9 +7,9 @@ description: What's available now in the V-Model Extension Pack, what's been shi
 
 The V-Model Extension Pack is actively developed. Here's where we are, where we've been, and where we're going.
 
-## Current Release: v0.6.0
+## Current Release: v0.7.0
 
-The extension provides **14 commands** covering four V-Model levels plus cross-cutting safety and quality concerns:
+The extension provides **17 commands** covering four V-Model levels plus cross-cutting safety/quality concerns and the bridge to deterministic, gated implementation:
 
 ### V-Model Levels
 
@@ -31,11 +31,19 @@ The extension provides **14 commands** covering four V-Model levels plus cross-c
 | `test-results` | JUnit XML + Cobertura XML ingestor for matrix status updates |
 | `audit-report` | Deterministic release audit report with compliance gating |
 
+### Bridge to Implementation (v0.7.0)
+
+| Command | Purpose |
+|---------|---------|
+| `plan` | V-Model-enriched `plan.md` synthesis with pinned-schema validation |
+| `tasks` | TDD-ordered `tasks.md` with hazard-driven priority elevation and per-task `Implements`-directive headers |
+| `implement` | 12-step gated pipeline: 8-stage `run-v-model-gate.sh` → codegen → 4-level test gen → splice → hallucination guard → trace post-hook |
+
 !!! success "Test coverage"
 
-    - 364 BATS tests (Bash) · 347 Pester tests (PowerShell)
-    - 89 structural evaluations · 42 LLM evaluations
-    - Agent definitions for all 14 commands
+    - 455 BATS tests (Bash) · 431 Pester tests (PowerShell)
+    - 89 structural evaluations · 53 LLM evaluations · 32 E2E tests (advisory in v0.7.0)
+    - Agent definitions for all 17 commands
 
 ## Shipped Milestones
 
@@ -47,20 +55,26 @@ The extension provides **14 commands** covering four V-Model levels plus cross-c
 | **v0.4.0** | 2026-02-22 | `module-design`, `unit-test` commands, four-tier ID schema, quadruple-matrix (A + B + C + D), id-schema-guide documentation |
 | **v0.5.0** | 2026-04-06 | `hazard-analysis`, `impact-analysis`, `peer-review`, `test-results`, `audit-report` commands, Matrix H, 14 agent definitions, 4× test growth |
 | **v0.6.0** | 2026-04-23 | Domain Overlay Architecture (36 overlay files), ID Lifecycle Model (deprecation + suspect cascade), Standards Enrichment (26 standards, Governing Standards sections in all 11 commands), features 002–006 evolved |
+| **v0.7.0** | 2026-05-03 | Bridge commands (`plan`, `tasks`, `implement`), 8-stage `run-v-model-gate.sh` pipeline, `validate-artifact-status` (MF-6) and `validate-domain-profile` (MF-7) validators, splicer hardening (MF-5: id-match, duplicate detection, `--region-from`, `diff -u` audit trail), hallucination guard `--canonical/--scan/--changed-only`, Compliance & Hybrid Modes documentation, 4 lifecycle hooks |
 
 For detailed release notes, see the [Changelog](changelog.md).
 
 ## What's Next
 
-### Implementation Gating (M1 — Bridge Commands)
+### v0.8.0 Stabilization Backlog
 
-The next milestone delivers three commands that read all V-Model artifacts and gate implementation behind verified specifications — preventing code from being written against incomplete or unverified artifact chains:
+The pre-v0.8.0 architectural audit identified ten Epics that did not fit the v0.7.x patch envelope. They are tracked in `.tmp/pre-v0.8.0-audit/ultimate-stabilization-blueprint.md` and summarised in [the v0.7.0 release notes](https://github.com/leocamello/spec-kit-v-model/blob/main/docs/releases/v0.7.0.md):
 
-- **`v-model.plan`** — Reads all V-Model artifacts and produces a structured implementation plan, ordering work by dependency and traceability
-- **`v-model.tasks`** — Breaks the implementation plan into concrete, traceable task items, each linked to specific requirements and design artifacts
-- **`v-model.implement`** — Reads the full artifact chain and scaffolds implementation, gating code generation behind verified coverage
-
-Together these commands close the loop: specifications flow down the V-Model, then bridge commands ensure implementation is grounded in verified, traceable artifacts. Code cannot proceed until coverage checks pass.
+- **EPIC-1** — `compliance_mode: strict` profile (flips hook `optional: true` → `false`; makes hybrid mode mechanically detectable in CI).
+- **EPIC-2** — Sealed baseline + signed run attestation (append-only ledger, `.specify/v-model/baseline.lock`, `validate-task-provenance.sh`).
+- **EPIC-3** — Immutable compliance-artifact protection (snapshot diff in `before_implement` / `after_implement`).
+- **EPIC-4** — Semantic directive validation (path/symbol/reachability checks layered onto the existence-only check shipped in v0.7.0).
+- **EPIC-5** — Single `v-model verify` aggregator with SARIF/JSON output.
+- **EPIC-6** — Authorized managed regions (region IDs encode authorized V IDs; splicer cross-validates against `module-design.md`'s `Target Source File(s)`).
+- **EPIC-7** — Deterministic golden-output e2e fixtures (LLM-judge demoted to advisory regression detector).
+- **EPIC-8** — Package-install smoke test (assert all 17 commands + 4 hooks register after a clean install).
+- **EPIC-9** — Strict prompt-injection containment (net-new linter for prompt-injection patterns in V-Model artifacts).
+- **EPIC-10** — Reviewer/signoff schema (per-artifact `reviewers:` and `signoff:` fields validated against domain-specific minimums).
 
 ### Pre-built Regulatory Template Packs
 

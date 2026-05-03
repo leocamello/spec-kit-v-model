@@ -53,4 +53,19 @@ Before you begin, make sure you have the following installed:
 1. **[Installation](installation.md)** — Three ways to install, plus optional domain configuration for regulated industries.
 2. **[Your First V-Model Project](first-project.md)** — A hands-on tutorial covering Level 1 of the V-Model (Requirements ↔ Acceptance Testing).
 
-Once you've completed the first project tutorial, explore the deeper V-Model levels in the [Guides](../guide/concepts.md) section.
+## Bridge to Implementation
+
+Once your V-Model artifacts are in place (requirements through unit tests, plus the trace matrix), the **bridge commands** introduced in v0.7.0 carry them forward into deterministic, gated implementation:
+
+```
+/speckit.v-model.plan       →  plan.md (V-Model-enriched, schema-validated)
+/speckit.v-model.tasks      →  tasks.md (TDD-ordered, with `Implements` headers)
+/speckit.v-model.implement  →  source + tests + hallucination guard + trace post-hook
+```
+
+Every step runs `run-v-model-gate.sh` (the 8-stage pipeline `status → domain → matrix → 5 coverage validators`) and the deterministic `Implements`-directive hallucination guard. Artifacts under `specs/<feature>/v-model/` must carry `**Status**: Approved` (enforced by `validate-artifact-status.sh` since v0.7.0).
+
+!!! warning "Compliant vs. hybrid mode"
+    It is technically possible to feed a V-Model `tasks.md` to **core** `/speckit.implement`. That hybrid path bypasses the V-Model gates, the hallucination guard, and the trace post-hook — use it only for prototyping. See the [Bridge Commands guide](../guide/bridge-commands.md) for the canonical compliant-vs-hybrid distinction.
+
+Once you've completed the first project tutorial, explore the deeper V-Model levels in the [Guides](../guide/concepts.md) section and follow the [Bridge Commands guide](../guide/bridge-commands.md) to ship code from your verified specifications.

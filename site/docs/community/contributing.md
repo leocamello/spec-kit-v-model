@@ -62,13 +62,13 @@ spec-kit-v-model/
 │   ├── powershell/         # Helper scripts (Windows) — 13 scripts
 │   └── python/             # Python helper scripts
 ├── tests/
-│   ├── bats/               # BATS-core Bash unit tests (364 tests)
-│   ├── pester/             # Pester PowerShell unit tests (347 tests)
+│   ├── bats/               # BATS-core Bash unit tests (455 tests)
+│   ├── pester/             # Pester PowerShell unit tests (431 tests)
 │   ├── fixtures/           # Shared test data & golden examples
-│   └── evals/              # DeepEval prompt evaluations (89 structural + 42 LLM)
+│   └── evals/              # DeepEval prompt evaluations (89 structural + 53 LLM, +32 E2E)
 ├── docs/                   # Additional documentation
 ├── .github/
-│   ├── agents/             # Agent definitions for all 14 commands
+│   ├── agents/             # Agent definitions for all 17 commands
 │   └── workflows/          # CI and evaluation pipelines
 ├── extension.yml           # Extension manifest
 ├── config-template.yml     # Configuration template

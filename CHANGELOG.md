@@ -5,6 +5,86 @@ All notable changes to the V-Model Extension Pack are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.0] — Bridge Commands & Pre-v0.8.0 Stabilization — 2026-05-03
+
+### Added — Bridge Commands
+
+- **`/speckit.v-model.plan`** — wraps `/speckit.plan`; synthesises a V-Model-enriched `plan.md` (5 H2 sections in fixed order: Summary, Technical Context, Constitution Check, Project Structure, Complexity Tracking) with additive HTML-comment annotations from the V-Model artifact set; output validated against pinned `plan-schema-v0.7.0.json`.
+- **`/speckit.v-model.tasks`** — wraps `/speckit.tasks`; produces a TDD-ordered `tasks.md` (12 H2s preserved verbatim) with hazard-driven priority elevation and per-`HAZ` verification tasks. Each task carries an `Implements`-directive header bound to a V-Model module / integration / system test ID.
+- **`/speckit.v-model.implement`** — wraps `/speckit.implement`; runs the deterministic 12-step pipeline (setup → 8-stage gate → domain overlay → codegen → 4-level test gen → splice → hallucination guard → quality harness → reduced-enrichment fallback → commit annotation → structured summary → handoffs).
+
+### Added — Lifecycle Hooks
+
+- **`after_specify`** — wires the V-Model directory layout under each new feature folder.
+- **`after_tasks`** — re-runs `/speckit.v-model.trace` to refresh the trace matrix after `/speckit.v-model.tasks`.
+- **`before_implement`** — re-runs the 8-stage `run-v-model-gate.sh` as a fail-fast pre-implementation check.
+- **`after_implement`** — re-runs `/speckit.v-model.trace` to refresh the trace matrix.
+
+All four hooks are `optional: true` in v0.7.0 and become mandatory under the upcoming `compliance_mode: strict` profile (EPIC-1, v0.8.0).
+
+### Added — Validators & Orchestrator
+
+- **`run-v-model-gate.sh` / `.ps1`** — 8-stage orchestrator: `status → domain → matrix → requirement-coverage → system-coverage → architecture-coverage → module-coverage → hazard-coverage`.
+- **`validate-artifact-status.sh` / `.ps1`** (MF-6) — approval-status gate; default required = `**Status**: Approved` per artifact, configurable via `--required-status`.
+- **`validate-domain-profile.sh` / `.ps1`** (MF-7) — domain config validator; absent `v-model-config.yml` = SKIP, present-and-invalid = fatal. Accepts only `iso_26262`, `do_178c`, `iec_62304`. Companion file: **`v-model-config.yml.example`** at repo root.
+- **`validate-core-schema.sh` / `.ps1`** (MF-4) — three-pass validator (existence → ordering → wedge rejection) for `plan.md` (5 H2s) and `tasks.md` (12 H2s); enforced via `diff -u` against pinned heading sequences.
+- **`validate-implements-ids.sh` / `.ps1`** (MF-2) — adds `--canonical / --scan / --changed-only`. The hallucination guard now scans the **repo root** (not just the V-Model dir) and intersects with `git diff` so that `src/` and `tests/{unit,integration,system,acceptance}/` are in scope.
+- **`setup-{plan,tasks,implement}.sh` / `.ps1`** (MF-1) — V-Model-aware wrappers around the upstream `setup-*` scripts; surface `VMODEL_DIR` to the bridge prompts.
+
+### Changed — Splicer Hardening (MF-5)
+
+- **`splice-managed-regions.sh` / `.ps1`** — BEGIN/END `id` mismatch and duplicate-`id` detection (exit 2); new `--region-from <regions-file>` per-region payload mode using `<<<REGION id="X">>>...<<<END>>>` syntax; `diff -u original spliced` emitted on **stderr** on every successful run for audit-trail capture. Single-payload invocations remain byte-identical on stdout.
+
+### Changed — Build-Matrix Hardening (MF-3)
+
+- **`build-matrix.sh`** — same-dir `mktemp` plus `EXIT/INT/TERM` trap. No more `/tmp` writes; concurrent matrix builds are now safe.
+
+### Changed — Prompt + Docs Alignment (MF-9 + MF-10)
+
+- `commands/plan.md` no longer advertises a direct `Implement Plan` handoff; the V-Model lifecycle is now `plan → tasks → implement` (no shortcut around `tasks`).
+- `README.md` adds the **Compliance & Hybrid Modes** section distinguishing the **compliant** end-to-end V-Model bridge from the **hybrid** mode (feeding a V-Model `tasks.md` to core `/speckit.implement`). Hybrid mode is documented as a prototyping-only escape hatch.
+- New release notes: `docs/releases/v0.7.0.md`.
+
+### Changed — Domain Set Narrowed (semantic break from v0.6.0)
+
+- The valid `domain:` value set is now strictly `{iso_26262, do_178c, iec_62304}`. The pre-v0.7.0 industry-vernacular synonyms `automotive`, `medical`, `aerospace` are rejected by `validate-domain-profile`. The **`general` overlay has been removed** with no replacement; non-regulated repositories should omit the `domain:` key (or the entire `v-model-config.yml`).
+- **Migration:** rename `domain: automotive` → `domain: iso_26262`, `domain: medical` → `domain: iec_62304`, `domain: aerospace` → `domain: do_178c`. If you used `domain: general`, delete the key. See [Configuration — Migration](https://leocamello.github.io/spec-kit-v-model/reference/configuration/#domain).
+
+### Documentation
+
+- New guide: **[Bridge Commands](https://leocamello.github.io/spec-kit-v-model/guide/bridge-commands/)** — end-to-end bridge workflow, the 8-stage gate, the splicer, the compliant-vs-hybrid distinction.
+- MkDocs site refreshed for v0.7.0 (`reference/commands.md`, `reference/scripts.md`, `reference/configuration.md`, `community/changelog.md`, `community/roadmap.md`, `getting-started/*`).
+- Root docs updated: `README.md` (17 commands, refreshed test counts, Compliance & Hybrid Modes), `tests/README.md`, `CONTRIBUTING.md` (V-Model gate subsection), `SECURITY.md` (0.6.x / 0.7.x supported), `CLAUDE.md` (template tokens resolved).
+
+### Stats
+
+| Metric | v0.6.0 | v0.7.0 |
+|--------|-------:|-------:|
+| Commands | 14 | **17** |
+| Lifecycle hooks | 1 | **4** |
+| Gate stages | 6 | **8** |
+| BATS tests | 364 | **455** |
+| Pester tests | 347 | **431** |
+| Structural pytest | 89 | 89 |
+| LLM-as-judge evals | 53 | 53 |
+| End-to-end (E2E) tests | — | 32 (newly disclosed) |
+
+### Known Limitations (deferred to v0.8.0)
+
+- **EPIC-1** `compliance_mode: strict` profile — flips the 4 lifecycle hooks from `optional: true` to mandatory.
+- **EPIC-2** Sealed baseline — cryptographic seal of the canonical V-Model artifact set per release tag.
+- **EPIC-3** Immutable-artifact protection — pre-receive hook rejecting post-freeze edits to canonical artifacts.
+- **EPIC-4** Semantic `Implements`-directive validation — beyond ID-existence to ID-relevance.
+- **EPIC-5** `v-model verify` aggregator — single-command SARIF/JSON summary across all 8 gate stages.
+- **EPIC-6** Authorized managed regions — splicer ACL by region `id`.
+- **EPIC-7** Hybrid-mode telemetry — count and report bypassed gates.
+- **EPIC-8** Per-domain trace-matrix presets — narrower validators per regulatory regime.
+- **EPIC-9** Plan/Tasks schema migration tooling — versioned schema upgrade path beyond v0.7.0.
+- **EPIC-10** Multi-domain projects — per-feature `domain:` overlays in monorepos.
+- **`specs/007-bridge-commands/` cross-cutting modules** ARCH-008 / ARCH-014 / ARCH-016 lack dedicated ITP coverage; the V-Model artifact set is frozen at `618d706` per the Phase B paradigm lock and remediation is deferred to v0.8.0.
+
+---
+
 ## [0.6.0] — 2026-04-25
 
 ### Added — Domain Overlay Architecture
@@ -34,7 +114,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Flight Warning Computer (FWC) golden fixture** — DO-178C DAL-A avionics benchmark: 10 artifact files covering a 5-function FWC system (overspeed, stall, altitude alerting, GPWS, attitude limit) with ARP4761A hazard analysis, 9 SYS components, 9 ARCH modules
 - **11 new LLM-as-judge eval tests** for the FWC domain (BDD quality, architecture completeness, FMEA completeness, operational state coverage, traceability, requirements quality, system design, system test, integration quality, module completeness, unit test quality)
-- **`docs/brownfield-evolution-guide.md`** — step-by-step guide for adopting V-Model on existing projects
+- **[Brownfield Evolution Guide](https://leocamello.github.io/spec-kit-v-model/guide/brownfield-evolution/)** (`site/docs/guide/brownfield-evolution.md`) — step-by-step guide for adopting V-Model on existing projects
 
 ### Added — Test Infrastructure
 

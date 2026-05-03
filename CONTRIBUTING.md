@@ -102,13 +102,13 @@ spec-kit-v-model/
 │   └── python/             # Python helper scripts
 │       └── parse_test_results.py
 ├── tests/
-│   ├── bats/               # BATS-core bash unit tests (364 tests)
-│   ├── pester/             # Pester PowerShell unit tests (347 tests)
+│   ├── bats/               # BATS-core bash unit tests (455 tests)
+│   ├── pester/             # Pester PowerShell unit tests (431 tests)
 │   ├── fixtures/           # Shared test data (4 scenarios + malformed + 2 golden examples + impact/peer-review/test-results/audit-report fixtures)
 │   ├── validators/         # Deterministic structural validators (Python)
 │   └── evals/              # DeepEval prompt evaluations
 │       ├── metrics/        # Custom eval metrics (structural + GEval)
-│       ├── test_*_eval.py  # Eval test cases (67 structural + 42 LLM)
+│       ├── test_*_eval.py  # Eval test cases (89 structural + 53 LLM, plus 32 E2E)
 │       └── conftest.py     # Shared pytest fixtures
 ├── docs/                   # Additional documentation
 ├── extension.yml           # Extension manifest
@@ -229,7 +229,26 @@ Templates define the structure of generated output files. Keep them:
 
 ## Testing
 
-The project has a comprehensive test suite across three layers.
+The project has a comprehensive test suite across five layers (BATS, Pester, structural evals, LLM-as-judge evals, and end-to-end fixtures), plus a deterministic V-Model gate that runs as a pre-implement check.
+
+### V-Model Gate (8-stage pipeline)
+
+Since v0.7.0, `scripts/bash/run-v-model-gate.sh` (and the PowerShell mirror) orchestrates an 8-stage validation pipeline that any contribution touching V-Model artifacts must pass:
+
+1. `validate-artifact-status` — every canonical artifact carries `**Status**: Approved` (mandate documented in the v0.7.0 release notes).
+2. `validate-domain-profile` — `v-model-config.yml` (when present) names a valid domain (`iso_26262`, `do_178c`, `iec_62304`).
+3. `build-matrix --check` — traceability matrix builds without orphans or cycles.
+4. `validate-requirement-coverage` — REQ ↔ ATP/SCN coverage.
+5. `validate-system-coverage` — SYS ↔ STP coverage.
+6. `validate-architecture-coverage` — ARCH ↔ ITP coverage.
+7. `validate-module-coverage` — MOD ↔ UTP coverage.
+8. `validate-hazard-coverage` — HAZ ↔ mitigation/verification coverage.
+
+Run the gate locally before opening a PR that touches `specs/<feature>/v-model/`:
+
+```bash
+bash scripts/bash/run-v-model-gate.sh specs/<feature>/v-model
+```
 
 ### Running Tests
 
@@ -252,10 +271,11 @@ GOOGLE_API_KEY=... pytest tests/evals/ -m eval -v
 
 | Layer | Framework | Tests | What it validates |
 |-------|-----------|-------|-------------------|
-| **BATS** | bats-core | 364 | Bash script logic: setup, coverage validation, impact analysis, matrix building, diff detection, peer review check, test result ingestion, audit report building |
-| **Pester** | Pester 5 | 347 | PowerShell script parity with Bash |
-| **Structural evals** | pytest + DeepEval | 67 | ID format/hierarchy, template conformance, BDD scenario completeness, impact analysis graph properties |
-| **LLM-as-judge evals** | pytest + DeepEval GEval | 42 | Requirements quality (IEEE 29148), BDD quality, traceability completeness |
+| **BATS** | bats-core | 455 | Bash script logic: setup, coverage validation, impact analysis, matrix building, diff detection, peer review check, test result ingestion, audit report building, and the v0.7.0 bridge/stabilization scripts (`run-v-model-gate`, `validate-artifact-status`, `validate-domain-profile`, `validate-implements-ids`, `validate-core-schema`, `splice-managed-regions`, `setup-{plan,tasks,implement}`) |
+| **Pester** | Pester 5 | 431 | PowerShell script parity with Bash |
+| **Structural evals** | pytest + DeepEval | 89 | ID format/hierarchy, template conformance, BDD scenario completeness, impact analysis graph properties |
+| **LLM-as-judge evals** | pytest + DeepEval GEval | 53 | Requirements quality (IEEE 29148), BDD quality, traceability completeness |
+| **End-to-end (E2E)** | Bash + golden-output fixtures | 32 | Advisory in v0.7.0; hardened to release-gate in v0.8.0 (EPIC-7). |
 
 ### Test Fixtures
 

@@ -1,0 +1,16 @@
+# spec-kit-v-model — domain overlay configuration (example)
+#
+# Copy this file to `v-model-config.yml` (which is gitignored) to opt into a
+# domain-specific compliance overlay. The `domain:` value selects an overlay
+# directory under `commands/overlays/`. Valid values:
+#
+#   - iso_26262   ISO 26262 (Road Vehicles — Functional Safety)
+#   - do_178c     DO-178C    (Avionics — Software Considerations in Airborne Systems)
+#   - iec_62304   IEC 62304  (Medical Device Software — Software Lifecycle Processes)
+#
+# Overlays are purely additive — base /speckit.v-model.* command behaviour is
+# unchanged when no config is present. See commands/implement.md Step 3.
+#
+# Implements: REQ-024, SYS-008, ARCH-011, MOD-015, HAZ-015, HAZ-024
+
+domain: iso_26262

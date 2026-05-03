@@ -39,7 +39,7 @@ If you haven't installed the extension yet, do so now:
 
 ```bash
 specify extension add v-model \
-  --from https://github.com/leocamello/spec-kit-v-model/archive/refs/tags/v0.5.0.zip
+  --from https://github.com/leocamello/spec-kit-v-model/archive/refs/tags/v0.7.0.zip
 ```
 
 !!! tip "Already installed?"

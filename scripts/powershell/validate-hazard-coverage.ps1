@@ -150,7 +150,7 @@ foreach ($line in ($systemDesign -split "`n")) {
         break
     }
     if ($inStateSection) {
-        if ($line -match '^\|\s*([A-Z][A-Z_]+)\s*\|') {
+        if ($line -match '^\|\s*([A-Z][A-Z_-]+)\s*\|') {
             $state = $Matches[1]
             if ($state -ne 'STATE' -and $state -ne 'STATE_NAME' -and $state -ne 'NAME') {
                 $definedStates += $state
@@ -166,15 +166,22 @@ if ($definedStates.Count -eq 0) {
 }
 $definedStates += 'ALL'
 
-# Extract operational states from HAZ FMEA table (column 5 in split)
+# Extract operational states from HAZ FMEA table (column 5 in split).
+# A single cell may carry a comma-separated list of states (e.g.
+# "DRY-RUN, COMMITTING") — each is validated independently.
+# Skip rows from non-FMEA "justification" tables (fewer than 11 columns).
 $hazStates = @()
 $stateWarnings = @()
 foreach ($line in ($hazardAnalysis -split "`n")) {
     if ($line -match '^\|\s*HAZ-[0-9]{3}\s*\|') {
         $cols = $line -split '\|'
-        if ($cols.Count -ge 6) {
-            $state = $cols[4].Trim()
-            if ($state) { $hazStates += $state }
+        if ($cols.Count -lt 11) { continue }
+        $cell = $cols[4].Trim()
+        if ($cell) {
+            foreach ($part in ($cell -split ',')) {
+                $trimmed = $part.Trim()
+                if ($trimmed) { $hazStates += $trimmed }
+            }
         }
     }
 }

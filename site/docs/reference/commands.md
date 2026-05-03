@@ -1,11 +1,11 @@
 ---
 title: Command Reference
-description: Complete reference for all 14 V-Model Extension Pack commands — syntax, parameters, inputs, outputs, and related scripts.
+description: Complete reference for all 17 V-Model Extension Pack commands — syntax, parameters, inputs, outputs, and related scripts.
 ---
 
 # Command Reference
 
-The V-Model Extension Pack provides **14 commands** organized into four categories:
+The V-Model Extension Pack provides **17 commands** organized into five categories:
 
 | Category | Commands |
 |----------|----------|
@@ -13,10 +13,11 @@ The V-Model Extension Pack provides **14 commands** organized into four categori
 | **Test Planning** | `acceptance`, `system-test`, `integration-test`, `unit-test` |
 | **Cross-Cutting** | `hazard-analysis`, `impact-analysis`, `peer-review` |
 | **Verification** | `trace`, `test-results`, `audit-report` |
+| **Bridge to Implementation** | `plan`, `tasks`, `implement` |
 
 !!! tip "Recommended Execution Order"
     Follow the [Proactive Workflow](../guide/concepts.md) for the intended order:
-    requirements → acceptance → trace → system-design → system-test → hazard-analysis → trace → architecture-design → integration-test → trace → module-design → unit-test → trace.
+    requirements → acceptance → trace → system-design → system-test → hazard-analysis → trace → architecture-design → integration-test → trace → module-design → unit-test → trace → **plan → tasks → implement** (bridge sequence; see [Bridge Commands](../guide/bridge-commands.md)).
 
 ---
 
@@ -665,3 +666,94 @@ Build a point-in-time release audit report — the single document for the audit
     - [ID Schema — Waivers](id-schema.md#waiver-wav-nnn)
     - [Scripts — build-audit-report](scripts.md#build-audit-reportshbuild-audit-reportps1)
     - [Templates — audit-report-template.md](templates.md#audit-report-templatemd)
+
+---
+
+## Bridge to Implementation Commands
+
+The bridge commands (introduced in v0.7.0) close the gap between V-Model artifacts and executable implementation. They wrap the corresponding `spec-kit-core` commands and add V-Model awareness, deterministic gates, and a hallucination guard. See the [Bridge Commands guide](../guide/bridge-commands.md) for the end-to-end workflow and the [Compliance & Hybrid Modes](../guide/bridge-commands.md#compliance-and-hybrid-modes) discussion.
+
+### `/speckit.v-model.plan`
+
+Synthesise a V-Model-enriched `plan.md` from the canonical artifacts produced by the specification and test-planning commands.
+
+| Attribute | Value |
+|-----------|-------|
+| **Purpose** | Produce a canonical `plan.md` (5 H2 sections in fixed order: Summary, Technical Context, Constitution Check, Project Structure, Complexity Tracking) enriched with additive HTML-comment annotations from V-Model artifacts |
+| **Input** | All V-Model artifacts in `specs/{feature}/v-model/` (requirements, designs, tests, hazard analysis) |
+| **Output** | `specs/{feature}/plan.md` (schema-validated against pinned `plan-schema-v0.7.0.json`) |
+| **Validator** | `validate-core-schema.sh --plan` (three-pass: existence → ordering → wedge rejection) |
+| **Gate behaviour** | Pre-flight: read-only artifact ingest. Post-write: schema validation rejects out-of-order H2s and unknown sections via `diff -u`. |
+
+**Syntax:**
+
+```bash
+/speckit.v-model.plan
+```
+
+**Inputs consumed:** every canonical V-Model artifact present under `specs/{feature}/v-model/` plus `v-model-config.yml` (for domain context).
+
+**Outputs produced:** `specs/{feature}/plan.md` only; HTML-comment enrichment carries V-Model IDs (REQ/SYS/ARCH/MOD/HAZ) into the plan without altering the upstream `spec-kit-core` schema.
+
+**Governing standards:** IEEE 29148:2018 (planning artifacts), the project's pinned `plan-schema-v0.7.0.json`.
+
+### `/speckit.v-model.tasks`
+
+Decompose the plan into TDD-ordered tasks with hazard-driven priority elevation and per-hazard verification tasks.
+
+| Attribute | Value |
+|-----------|-------|
+| **Purpose** | Generate a `tasks.md` whose 12 H2 sections (preserved verbatim from `spec-kit-core`) are populated in TDD order: tests first, then implementation. Tasks tied to mitigations of `HAZ-NNN` items are elevated in priority and paired with explicit per-HAZ verification tasks. |
+| **Input** | `specs/{feature}/plan.md`, all V-Model artifacts, `hazard-analysis.md` |
+| **Output** | `specs/{feature}/tasks.md` |
+| **Validator** | `validate-core-schema.sh --tasks` (12 H2s, fixed order, no wedges) |
+| **Gate behaviour** | Each task includes an `Implements`-directive header listing the V-Model IDs it realises; downstream `implement` validates these directives. |
+
+**Syntax:**
+
+```bash
+/speckit.v-model.tasks
+```
+
+**Inputs consumed:** `plan.md` plus `requirements.md`, `acceptance-plan.md`, `system-test.md`, `integration-test.md`, `unit-test.md`, and `hazard-analysis.md`.
+
+**Outputs produced:** `specs/{feature}/tasks.md` with each task carrying an `Implements`-directive header (e.g. `` `Implements`-directive citing REQ/SYS/ARCH/MOD/HAZ IDs ``).
+
+**Governing standards:** IEEE 1012:2016 (V&V planning), ISO 29119-4 (test design techniques), IEC 60812:2018 (FMEA-driven priority).
+
+### `/speckit.v-model.implement`
+
+Execute the deterministic, gated 12-step implementation pipeline.
+
+| Attribute | Value |
+|-----------|-------|
+| **Purpose** | Run the full implement pipeline: setup → 8-stage gate → domain overlay → codegen → 4-level test gen → splice (sentinel-managed regions) → hallucination guard → quality harness → reduced-enrichment fallback → commit annotation → structured summary → handoffs |
+| **Input** | `tasks.md`, full V-Model artifact set, existing `src/` and `tests/{unit,integration,system,acceptance}/` |
+| **Output** | New / updated source under `src/`, paired tests under each of the four test trees, an annotated commit, a structured run summary |
+| **Validator** | `run-v-model-gate.sh` (8 stages); `validate-implements-ids.sh --canonical … --scan … --changed-only` (hallucination guard) |
+| **Gate behaviour** | Any non-zero validator exits the pipeline before codegen. The hallucination guard scans the actually-generated files and rejects directives that cite IDs absent from the canonical V-Model artifact set. The em-dash `—` (U+2014, literal) is the commit-subject ID separator. |
+
+**Syntax:**
+
+```bash
+/speckit.v-model.implement
+```
+
+**Inputs consumed:** `tasks.md`, all V-Model artifacts, `v-model-config.yml`, the existing source tree, the existing test trees.
+
+**Outputs produced:** new and modified files under `src/`, paired tests under each of the four test trees, sentinel-managed regions spliced into existing files (`<<<REGION id="X">>>` … `<<<END>>>`), an annotated commit on the active feature branch, and a structured stdout/stderr summary including a `diff -u` of every spliced file.
+
+**Governing standards:** IEEE 1012:2016 (verification gates), IEEE 1016:2009 (design conformance), ISO 29119 (test execution), the project's `Implements`-directive contract enforced by `validate-implements-ids.sh`.
+
+---
+
+## Hooks
+
+v0.7.0 ships **4 lifecycle hooks** that the bridge commands invoke automatically. They live under `commands/hooks/` and may be made mandatory in v0.8.0 via `compliance_mode: strict` (see [EPIC-1](../community/roadmap.md)). All four are currently `optional: true`.
+
+| Hook | Triggered after | Purpose |
+|------|-----------------|---------|
+| `after_specify` | `/speckit.specify` | Wire the V-Model directory layout under the new feature folder. |
+| `after_tasks` | `/speckit.v-model.tasks` | Re-run `validate-core-schema.sh --tasks` to confirm the H2 order survived edits. |
+| `before_implement` | (before) `/speckit.v-model.implement` | Re-run the 8-stage `run-v-model-gate.sh` pipeline as a fail-fast check. |
+| `after_implement` | `/speckit.v-model.implement` | Re-run `/speckit.v-model.trace` to update the traceability matrix with the newly produced source/test pairs. |

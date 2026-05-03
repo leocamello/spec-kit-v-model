@@ -130,6 +130,7 @@ nav:
       - ID Lifecycle: guide/id-lifecycle.md
       - Standards Enrichment: guide/standards-enrichment.md
       - Brownfield Evolution: guide/brownfield-evolution.md
+      - Bridge Commands: guide/bridge-commands.md
       - Peer Review: guide/peer-review.md
       - Test Results: guide/test-results.md
       - Audit Report: guide/audit-report.md

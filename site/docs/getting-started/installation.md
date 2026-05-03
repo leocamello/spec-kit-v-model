@@ -25,12 +25,12 @@ Install a specific release directly from GitHub:
 
 ```bash
 specify extension add v-model \
-  --from https://github.com/leocamello/spec-kit-v-model/archive/refs/tags/v0.5.0.zip
+  --from https://github.com/leocamello/spec-kit-v-model/archive/refs/tags/v0.7.0.zip
 ```
 
 !!! tip "Pinning a version"
 
-    Replace `v0.5.0` in the URL with the [release tag](https://github.com/leocamello/spec-kit-v-model/releases) you want. Pinning ensures reproducible builds across your team.
+    Replace `v0.7.0` in the URL with the [release tag](https://github.com/leocamello/spec-kit-v-model/releases) you want. Pinning ensures reproducible builds across your team.
 
 ### Method 3: From a Local Directory (Development)
 
