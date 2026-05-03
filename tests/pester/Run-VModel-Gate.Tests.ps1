@@ -1,14 +1,18 @@
 #Requires -Modules Pester
 #
-# Implements: REQ-NF-006, REQ-CN-001, REQ-017, REQ-CN-002, REQ-027,
-#             SYS-004, SYS-012, ARCH-007, ARCH-016, MOD-010, MOD-021,
-#             UTP-010-A, UTP-010-B, D-009, D-003.
+# Implements: REQ-NF-006, REQ-CN-001, REQ-016, REQ-017, REQ-024, REQ-CN-002, REQ-027,
+#             SYS-004, SYS-008, SYS-012, ARCH-007, ARCH-011, ARCH-016, MOD-010,
+#             MOD-015, MOD-021, UTP-010-A, UTP-010-B, HAZ-009, HAZ-010, HAZ-015,
+#             HAZ-024, D-009, D-003.
 
 BeforeAll {
     $script:ScriptsDir  = Resolve-Path (Join-Path $PSScriptRoot '../../scripts/powershell')
     $script:FixturesDir = Resolve-Path (Join-Path $PSScriptRoot '../fixtures')
     $script:GateScript  = Join-Path $ScriptsDir 'run-v-model-gate.ps1'
+    # Order mirrors run-v-model-gate.ps1 INNERS array (status + domain + matrix + 5 coverage).
     $script:Inners      = @(
+        'validate-artifact-status.ps1',
+        'validate-domain-profile.ps1',
         'build-matrix.ps1',
         'validate-requirement-coverage.ps1',
         'validate-system-coverage.ps1',
@@ -55,6 +59,41 @@ Describe 'Run-VModel-Gate (PowerShell mirror — D-009)' {
         $LASTEXITCODE | Should -Be 0
         $trace = Get-Content -Raw -LiteralPath $env_.TraceLog
         foreach ($s in $script:Inners) { $trace | Should -Match ([regex]::Escape($s)) }
+    }
+
+    It 'composition: status validator runs BEFORE build-matrix (MF-6 fail-fast ordering)' {
+        $env_ = Initialize-Stage $TestDrive
+        foreach ($s in $script:Inners) { New-Shim -Dir $env_.Stage -Name $s -Rc 0 -TraceLog $env_.TraceLog }
+        & pwsh -NoProfile -File (Join-Path $env_.Stage 'run-v-model-gate.ps1') $env_.Feature 2>&1 | Out-Null
+        $LASTEXITCODE | Should -Be 0
+        $lines = Get-Content -LiteralPath $env_.TraceLog
+        $statusIdx = ($lines | Select-String -Pattern 'validate-artifact-status\.ps1' | Select-Object -First 1).LineNumber
+        $matrixIdx = ($lines | Select-String -Pattern 'build-matrix\.ps1' | Select-Object -First 1).LineNumber
+        $statusIdx | Should -BeLessThan $matrixIdx
+    }
+
+    It 'MF-6 integration: real validate-artifact-status FAIL on Draft fixture → GATE: FAIL' {
+        $env_ = Initialize-Stage $TestDrive
+        foreach ($s in $script:Inners) {
+            if ($s -eq 'validate-artifact-status.ps1') { continue }
+            New-Shim -Dir $env_.Stage -Name $s -Rc 0 -TraceLog $env_.TraceLog
+        }
+        Copy-Item (Join-Path $script:ScriptsDir 'validate-artifact-status.ps1') (Join-Path $env_.Stage 'validate-artifact-status.ps1')
+        # Force a Draft header into a canonical artifact.
+        @"
+# Requirements
+
+**Status**: Draft
+
+| ID | Description |
+|----|-------------|
+| REQ-001 | Example |
+"@ | Set-Content -LiteralPath (Join-Path $env_.Feature 'v-model/requirements.md')
+        $output = & pwsh -NoProfile -File (Join-Path $env_.Stage 'run-v-model-gate.ps1') $env_.Feature 2>&1
+        $LASTEXITCODE | Should -Not -Be 0
+        ($output | Out-String) | Should -Match 'validate-artifact-status\.ps1: FAIL'
+        $lines = @($output | ForEach-Object { $_.ToString() })
+        $lines[-1] | Should -BeExactly 'GATE: FAIL'
     }
 
     It 'composition: gate invokes no other wrapper beyond the six (HAZ-010)' {

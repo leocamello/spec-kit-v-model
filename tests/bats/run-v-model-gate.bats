@@ -9,7 +9,8 @@ load "test_helper"
 GATE_SCRIPT="${SCRIPTS_DIR}/run-v-model-gate.sh"
 
 # Inner-script set per ARCH-007 §Inner-script set (REUSE — D-003).
-INNER_SCRIPTS="build-matrix.sh validate-requirement-coverage.sh validate-system-coverage.sh validate-architecture-coverage.sh validate-module-coverage.sh validate-hazard-coverage.sh"
+# Order matches run-v-model-gate.sh INNERS array (status + domain + matrix + 5 coverage).
+INNER_SCRIPTS="validate-artifact-status.sh validate-domain-profile.sh build-matrix.sh validate-requirement-coverage.sh validate-system-coverage.sh validate-architecture-coverage.sh validate-module-coverage.sh validate-hazard-coverage.sh"
 
 setup() {
     # RED guard: every test in this file requires the script to exist. Until
@@ -61,6 +62,47 @@ stage_gate() {
         run grep -F "$s" "$TRACE_LOG"
         assert_success
     done
+}
+
+@test "composition: status validator runs BEFORE build-matrix (MF-6 fail-fast ordering)" {
+    for s in $INNER_SCRIPTS; do make_shim "$s" 0; done
+    stage_gate
+    run bash "$SHIM_DIR/run-v-model-gate.sh" "$FEATURE_DIR"
+    assert_success
+    # Trace lines are appended in invocation order.
+    status_line="$(grep -nF 'validate-artifact-status.sh' "$TRACE_LOG" | head -n1 | cut -d: -f1)"
+    matrix_line="$(grep -nF 'build-matrix.sh' "$TRACE_LOG" | head -n1 | cut -d: -f1)"
+    [ -n "$status_line" ] && [ -n "$matrix_line" ]
+    [ "$status_line" -lt "$matrix_line" ]
+}
+
+@test "MF-6 integration: real validate-artifact-status FAIL on Draft fixture → GATE: FAIL" {
+    # Force the real status validator to surface a Draft → fail flow.
+    # Stage shims only for the OTHER inners so the real status validator runs.
+    for s in $INNER_SCRIPTS; do
+        if [ "$s" = "validate-artifact-status.sh" ]; then continue; fi
+        make_shim "$s" 0
+    done
+    # Make sure the real status validator is reachable from $SHIM_DIR via copy
+    # (sibling-relative resolution).
+    cp "$SCRIPTS_DIR/validate-artifact-status.sh" "$SHIM_DIR/validate-artifact-status.sh"
+    chmod +x "$SHIM_DIR/validate-artifact-status.sh"
+    # Fixture: ensure at least one canonical artifact is Draft.
+    cat > "$FEATURE_DIR/v-model/requirements.md" <<'EOF'
+# Requirements
+
+**Status**: Draft
+
+| ID | Description |
+|----|-------------|
+| REQ-001 | Example |
+EOF
+    stage_gate
+    run bash "$SHIM_DIR/run-v-model-gate.sh" "$FEATURE_DIR"
+    assert_failure
+    assert_output --partial "validate-artifact-status.sh: FAIL"
+    last_line=$(printf '%s\n' "$output" | tail -n 1)
+    [ "$last_line" = "GATE: FAIL" ]
 }
 
 @test "composition: gate invokes no other wrapper beyond the six (HAZ-010, SCN-017-A1)" {

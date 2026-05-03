@@ -16,9 +16,10 @@
     pwsh -File ./run-v-model-gate.ps1 ./specs/007-bridge-commands
 
 .NOTES
-    Implements: REQ-NF-006, REQ-CN-001, REQ-017, REQ-CN-002, REQ-027,
-                SYS-004, SYS-012, ARCH-007, ARCH-016, MOD-010, MOD-021,
-                UTP-010-A, D-009, D-003.
+    Implements: REQ-NF-006, REQ-CN-001, REQ-016, REQ-017, REQ-024, REQ-CN-002, REQ-027,
+                SYS-004, SYS-008, SYS-012, ARCH-007, ARCH-011, ARCH-016, MOD-010,
+                MOD-015, MOD-021, UTP-010-A, UTP-010-B, HAZ-009, HAZ-010, HAZ-015,
+                HAZ-024, D-009, D-003.
     Final-line + summary-block framing MUST stay byte-identical to the bash
     sibling — the gate contract (ARCH-007 §stdout schema) is the cross-shell
     parity surface, not the inner-validator chatter (HAZ-010).
@@ -49,10 +50,19 @@ if (-not (Test-Path -LiteralPath $FeatureDir -PathType Container)) {
 
 $VModelDir = Join-Path $FeatureDir 'v-model'
 $ScriptDir = Split-Path -Parent $PSCommandPath
+# Repo root: parent of feature dir's parent (specs/<feat>/.. = specs, ../.. = root).
+try {
+    $RepoRoot = (Resolve-Path (Join-Path $FeatureDir '../..')).Path
+} catch {
+    try { $RepoRoot = (& git -C $FeatureDir rev-parse --show-toplevel 2>$null).Trim() } catch { $RepoRoot = $FeatureDir }
+    if ([string]::IsNullOrEmpty($RepoRoot)) { $RepoRoot = $FeatureDir }
+}
 
-# Inner-script set per ARCH-007 §Inner-script set (REUSE of the five sibling
-# coverage validators + build-matrix; D-003).
+# Inner-script set per ARCH-007 §Inner-script set (status + domain + the five
+# sibling coverage validators + build-matrix; D-003).
 $Inners = @(
+    'validate-artifact-status.ps1',
+    'validate-domain-profile.ps1',
     'build-matrix.ps1',
     'validate-requirement-coverage.ps1',
     'validate-system-coverage.ps1',
@@ -83,6 +93,8 @@ try {
         $rc = 0
         if ($inner -eq 'build-matrix.ps1') {
             & pwsh -NoProfile -File $path $VModelDir -Output $matrixOut
+        } elseif ($inner -eq 'validate-domain-profile.ps1') {
+            & pwsh -NoProfile -File $path $RepoRoot
         } else {
             & pwsh -NoProfile -File $path $VModelDir
         }

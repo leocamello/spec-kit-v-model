@@ -66,7 +66,7 @@ The wrapper concatenates `build-matrix.sh` + the five `validate-*-coverage.sh` s
 
 ### 3. Domain overlay (per ARCH-011, MOD-015, REQ-024)
 
-If `v-model-config.yml` exists at the repository root, parse its `domain:` value (e.g. `automotive`, `medical`, `aerospace`) and load any prompt augmentation under `overlays/<domain>/`. Augmentation is **purely additive** — base instructions for §Code Generation and §Test Generation are NEVER overridden (ARCH-011, MOD-015 = Domain Overlay Adapter; cf. SYS-008).
+If `v-model-config.yml` exists at the repository root, parse its `domain:` value (e.g. `iso_26262`, `do_178c`, `iec_62304`) and load any prompt augmentation under `overlays/<domain>/`. See `v-model-config.yml.example` at the repository root for the canonical schema; valid values match the directory names under `commands/overlays/`. Augmentation is **purely additive** — base instructions for §Code Generation and §Test Generation are NEVER overridden (ARCH-011, MOD-015 = Domain Overlay Adapter; cf. SYS-008).
 
 A malformed `v-model-config.yml` (unparseable YAML, missing `domain:` key, or the named overlay directory is absent) is fail-closed: append the parser stderr to `fatal_errors[]`, emit §Structured Summary, exit 1. Absence of the file is normal — base behaviour applies.
 

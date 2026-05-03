@@ -1,5 +1,9 @@
 # Local configuration overrides
 *-config.local.yml
+
+# V-Model domain overlay (real config is local-only; example IS tracked)
+/v-model-config.yml
+!/v-model-config.yml.example
 .env
 .env.local
 
