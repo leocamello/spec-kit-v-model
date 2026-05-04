@@ -29,6 +29,8 @@ This same principle applies at every level of the V-Model — from requirements 
 | Peer Review (advisory) | `PRF-{ARTIFACT}-NNN` | — | — | — |
 | Waiver (advisory) | `WAV-NNN` | — | — | — |
 
+> **Note:** The `ARCH-NNN` ID is produced by either `architecture-design.md` (from `SYS-NNN`) or `software-architecture-design.md` (from `REQ-NNN` directly). Both produce the same ID format and are accepted by `integration-test.md` and `module-design.md`.
+
 **Format conventions** (consistent across all levels):
 
 - **`NNN`** — Zero-padded 3-digit number (`001`, `002`, ..., `999`). This is the numeric link to the parent design artifact.
@@ -61,7 +63,10 @@ This applies at every level: `STP-002-A` links to `SYS-002`, `ITP-005-A` links t
 |-----------------|----------|---------|------------|--------|
 | REQ → SYS | `system-design.md` | Decomposition View table | `Parent Requirements` | Comma-separated REQ IDs |
 | SYS → ARCH | `architecture-design.md` | Logical View table | `Parent System Components` | Comma-separated SYS IDs |
+| REQ → ARCH | `software-architecture-design.md` | Logical View table | `Parent Requirements` | Comma-separated REQ IDs |
 | ARCH → MOD | `module-design.md` | Module heading metadata | `Parent Architecture Modules` | Comma-separated ARCH IDs |
+
+> **Note:** `REQ → ARCH` is an alternative path used by `software-architecture-design.md`. It bypasses the `SYS-NNN` layer, linking `ARCH` directly to `REQ`. The `build-matrix.sh` script detects which architecture source is present and traces accordingly.
 
 These explicit fields are what the deterministic scripts parse to build the traceability matrices. The `build-matrix.sh` script extracts these fields using section-scoped regex matching (only parsing the Decomposition View for SYS, only the Logical View for ARCH, etc.) to avoid false positives from IDs appearing in other sections.
 

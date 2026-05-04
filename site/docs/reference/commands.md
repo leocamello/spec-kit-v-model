@@ -5,11 +5,11 @@ description: Complete reference for all 17 V-Model Extension Pack commands — s
 
 # Command Reference
 
-The V-Model Extension Pack provides **17 commands** organized into five categories:
+The V-Model Extension Pack provides **18 commands** organized into five categories:
 
 | Category | Commands |
 |----------|----------|
-| **Specification** | `requirements`, `system-design`, `architecture-design`, `module-design` |
+| **Specification** | `requirements`, `system-design`, `architecture-design`, `software-architecture-design`, `module-design` |
 | **Test Planning** | `acceptance`, `system-test`, `integration-test`, `unit-test` |
 | **Cross-Cutting** | `hazard-analysis`, `impact-analysis`, `peer-review` |
 | **Verification** | `trace`, `test-results`, `audit-report` |
@@ -18,6 +18,9 @@ The V-Model Extension Pack provides **17 commands** organized into five categori
 !!! tip "Recommended Execution Order"
     Follow the [Proactive Workflow](../guide/concepts.md) for the intended order:
     requirements → acceptance → trace → system-design → system-test → hazard-analysis → trace → architecture-design → integration-test → trace → module-design → unit-test → trace → **plan → tasks → implement** (bridge sequence; see [Bridge Commands](../guide/bridge-commands.md)).
+    **Path A (Traditional):** `requirements` → `acceptance` → `trace` → `system-design` → `system-test` → `hazard-analysis` → `trace` → `architecture-design` → `integration-test` → `trace` → `module-design` → `unit-test` → `trace`.
+
+    **Path B (Combined):** `requirements` → `acceptance` → `trace` → `software-architecture-design` → `integration-test` → `trace` → `module-design` → `unit-test` → `trace`.
 
 ---
 
@@ -142,6 +145,49 @@ Generate an IEEE 42010 / Kruchten 4+1 architecture decomposition.
 
 ---
 
+### `/speckit.v-model.software-architecture-design`
+
+Generate a combined software architecture design from requirements only (Path B — merges system-design + architecture-design into a single artifact).
+
+| Attribute | Value |
+|-----------|-------|
+| **Purpose** | Read `requirements.md` directly and produce a consolidated architecture design synthesizing IEEE 1016 design entities within IEEE 42010 viewpoints |
+| **Input** | `requirements.md` must exist in the v-model directory (no `system-design.md` dependency) |
+| **Output** | `specs/{feature}/v-model/software-architecture-design.md` |
+| **ID Schema** | `ARCH-NNN` (traces directly to `REQ-NNN` — no `SYS-NNN` layer) |
+| **Standard** | IEEE 1016:2009 (design entity model) synthesized within IEEE 42010:2011 (viewpoints); ASPICE SWE.2 BP1–BP9 when `domain: iso_26262` |
+| **Template** | `software-architecture-design-template.md` |
+
+**Syntax:**
+
+```bash
+/speckit.v-model.software-architecture-design
+```
+
+**Views generated (IEEE 1016 synthesized within IEEE 42010):**
+
+- **Logical View** — Architecture decomposition with IEEE 1016 design entity attributes (purpose, function, dependencies)
+- **Process View** — Runtime interactions and concurrency model (IEEE 42010 / Kruchten 4+1)
+- **Interface View** — Element-to-element contracts per IEEE 1016 §5.3 + IEEE 42010 protocol bindings
+- **Data Flow View** — Transformation chain per IEEE 1016 §5.4 Data Design + IEEE 42010 pipeline semantics
+
+**Domain-gated features:**
+
+| Domain | Additional Sections |
+|--------|-------------------|
+| `iso_26262` | ASPICE SWE.2 BP1–BP9 process guidance |
+| `do_178c` | DAL allocation, temporal constraints (stub) |
+| `iec_62304` | Safety class allocation, defensive coding (stub) |
+| (none) | IEEE 42010 views only |
+
+**Path A coexistence:** If `architecture-design.md` (Path A) already exists, a warning is emitted but generation proceeds; both artifacts coexist. `integration-test` prefers `software-architecture-design.md`.
+
+!!! info "See Also"
+    - [ID Schema — ARCH](id-schema.md#arch-nnn-architecture-element)
+    - [V-Model Overview — Combined Software Architecture Design](../../docs/v-model-overview.md#combined-software-architecture-design)
+
+---
+
 ### `/speckit.v-model.module-design`
 
 Generate detailed module designs with pseudocode, state machines, and data structures.
@@ -149,7 +195,7 @@ Generate detailed module designs with pseudocode, state machines, and data struc
 | Attribute | Value |
 |-----------|-------|
 | **Purpose** | Specify each module at implementation-ready detail |
-| **Input** | `architecture-design.md` must exist in the v-model directory |
+| **Input** | `architecture-design.md` (Path A) or `software-architecture-design.md` (Path B) must exist in the v-model directory |
 | **Output** | `specs/{feature}/v-model/module-design.md` |
 | **ID Schema** | `MOD-NNN` |
 | **Validator** | `validate-module-coverage.sh` / `.ps1` (partial — forward only until unit-test exists) |
@@ -261,7 +307,7 @@ Generate ISO 29119-4 integration test plans.
 | Attribute | Value |
 |-----------|-------|
 | **Purpose** | Create test procedures (ITP) and test steps (ITS) for module interactions |
-| **Input** | `architecture-design.md` must exist in the v-model directory |
+| **Input** | `architecture-design.md` (Path A) or `software-architecture-design.md` (Path B) must exist. When both exist, `software-architecture-design.md` is preferred. |
 | **Output** | `specs/{feature}/v-model/integration-test.md` |
 | **ID Schema** | `ITP-NNN-X` (test procedures), `ITS-NNN-X#` (test steps) |
 | **Validator** | `validate-architecture-coverage.sh` / `.ps1` |
@@ -337,7 +383,7 @@ Generate an ISO 14971 / ISO 26262 Failure Mode and Effects Analysis (FMEA).
 | Attribute | Value |
 |-----------|-------|
 | **Purpose** | Identify hazards, assess risk, and link mitigations to requirements/design |
-| **Input** | `requirements.md` + `system-design.md` (+ optional `architecture-design.md`) |
+| **Input** | `requirements.md` + `system-design.md` (+ optional `architecture-design.md` or `software-architecture-design.md`) |
 | **Output** | `specs/{feature}/v-model/hazard-analysis.md` |
 | **ID Schema** | `HAZ-NNN` |
 | **Validator** | `validate-hazard-coverage.sh` / `.ps1` |
@@ -453,6 +499,7 @@ AI-powered stateless linter for any V-Model artifact.
 | `system-design.md` | IEEE 1016 | `SYS` |
 | `system-test.md` | ISO 29119 | `STP` |
 | `architecture-design.md` | IEEE 42010 / Kruchten 4+1 | `ARCH` |
+| `software-architecture-design.md` | IEEE 1016 within IEEE 42010; ASPICE SWE.2 when `domain: iso_26262` | `ARCH` |
 | `integration-test.md` | ISO 29119-4 | `ITP` |
 | `module-design.md` | DO-178C / ISO 26262 | `MOD` |
 | `unit-test.md` | ISO 29119-4 | `UTP` |

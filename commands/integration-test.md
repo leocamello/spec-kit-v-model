@@ -9,8 +9,8 @@ handoffs:
     agent: speckit.v-model.architecture-design
     prompt: Review or update the architecture design
 scripts:
-  sh: scripts/bash/setup-v-model.sh --json --require-reqs --require-architecture-design
-  ps: scripts/powershell/setup-v-model.ps1 -Json -RequireReqs -RequireArchitectureDesign
+  sh: scripts/bash/setup-v-model.sh --json --require-reqs
+  ps: scripts/powershell/setup-v-model.ps1 -Json -RequireReqs
 ---
 
 ## User Input
@@ -23,7 +23,7 @@ You **MUST** consider the user input before proceeding (if not empty).
 
 ## Goal
 
-Generate an ISO 29119-compliant Integration Test Plan where **every architecture module** (`ARCH-NNN`) from `architecture-design.md` has at least one test case (`ITP-NNN-X`) and every test case has at least one executable integration scenario (`ITS-NNN-X#`). Unlike system tests (which verify design views), integration tests verify the **seams and handshakes between modules** — they target architecture module boundaries using four mandatory techniques.
+Generate an ISO 29119-compliant Integration Test Plan where **every architecture module** (`ARCH-NNN`) from `architecture-design.md` or `software-architecture-design.md` has at least one test case (`ITP-NNN-X`) and every test case has at least one executable integration scenario (`ITS-NNN-X#`). Unlike system tests (which verify design views), integration tests verify the **seams and handshakes between modules** — they target architecture module boundaries using four mandatory techniques.
 
 CRITICAL DISTINCTION: integration tests do NOT test internal module logic (that's unit testing) and do NOT test user journeys (that's acceptance testing). They test the INTERFACES BETWEEN modules.
 
@@ -38,7 +38,7 @@ The script returns JSON with these keys:
 - `FEATURE_DIR`: Path to `specs/{feature}/` directory
 - `BRANCH`: Current branch name
 - `REQUIREMENTS`: Path to `requirements.md` (MUST exist — script uses `--require-reqs`)
-- `ARCH_DESIGN`: Path to `architecture-design.md` (MUST exist — script uses `--require-architecture-design`)
+- `ARCH_DESIGN`: Path to `architecture-design.md` or `software-architecture-design.md` (MUST exist as one of them)
 - `AVAILABLE_DOCS`: Array of documents that currently exist
 
 For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\''m Groot' (or double-quote if possible: "I'm Groot").
@@ -47,8 +47,9 @@ For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\''m Groot
 
 1. **Load the template**: Read `templates/integration-test-template.md` from the extension directory to understand the required output structure.
 
-2. **Load architecture design**: Read `architecture-design.md` from the `VMODEL_DIR` path.
-   - If `architecture-design.md` does NOT exist: ERROR — "Architecture design not found. Run `/speckit.v-model.architecture-design` first."
+2. **Load architecture design**: Read `architecture-design.md` or `software-architecture-design.md` from the `VMODEL_DIR` path.
+   - If neither exists: ERROR — "Architecture design not found. Run `/speckit.v-model.architecture-design` or `/speckit.v-model.software-architecture-design` first."
+   - If both exist, prefer `software-architecture-design.md` as the more complete artifact
    - Extract ALL `ARCH-NNN` identifiers from the Logical View
    - Extract the Process View (feeds Concurrency & Race Condition tests)
    - Extract the Interface View (feeds Interface Contract Testing + Fault Injection)
@@ -232,7 +233,7 @@ IEEE 1012:2016 §5.6 requires every architecture module interface to be exercise
 
 Confirm these entry criteria before the test plan is considered complete:
 
-- `architecture-design.md` is current and has been peer-reviewed
+- `architecture-design.md` or `software-architecture-design.md` is current and has been peer-reviewed
 - Every `ARCH-NNN` module has at least one `ITP-NNN-X` test case (100% forward coverage)
 - All `ITP-NNN-X` test cases have at least one `ITS-NNN-X#` executable scenario
 - V&V gap list is empty (all integration boundaries covered)
@@ -288,7 +289,7 @@ This command is governed by the following standards for integration testing:
 
 ### Strict Translation Rules
 
-When generating from `architecture-design.md`:
+When generating from `architecture-design.md` or `software-architecture-design.md`:
 - **DO NOT** invent test conditions for interfaces not in the architecture design
 - **DO NOT** test user journeys — that is the acceptance test plan's job
 - **DO NOT** test internal module logic — that is the unit test's job

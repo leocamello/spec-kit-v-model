@@ -100,6 +100,7 @@ jobs:
           check_file has_system_design       system-design.md
           check_file has_system_test         system-test.md
           check_file has_architecture_design architecture-design.md
+          check_file has_software_architecture_design software-architecture-design.md
           check_file has_integration_test    integration-test.md
           check_file has_module_design       module-design.md
           check_file has_unit_test           unit-test.md
@@ -174,14 +175,33 @@ jobs:
           fi
 
       # -----------------------------------------------------------------------
-      # 7. Module Coverage (ARCH → MOD → UTP → UTS)
-      #    Requires: architecture-design.md, module-design.md
+      # 7. Software Architecture Coverage (REQ → ARCH → ITP → ITS)
+      #    Requires: requirements.md, software-architecture-design.md
+      #    Partial mode: runs forward-only if integration-test.md is absent
+      # -----------------------------------------------------------------------
+      - name: Validate software architecture coverage
+        id: software_arch_coverage
+        if: >-
+          steps.detect.outputs.has_requirements == 'true' &&
+          steps.detect.outputs.has_software_architecture_design == 'true'
+        run: |
+          echo "--- Validating REQ → ARCH → ITP → ITS coverage ---"
+          if "$VMODEL_SCRIPTS/validate-software-architecture-coverage.sh" "$VMODEL_DIR"; then
+            echo "result=✅ Pass" >> "$GITHUB_OUTPUT"
+          else
+            echo "result=❌ Fail" >> "$GITHUB_OUTPUT"
+            exit 1
+          fi
+
+      # -----------------------------------------------------------------------
+      # 8. Module Coverage (ARCH → MOD → UTP → UTS)
+      #    Requires: architecture-design.md or software-architecture-design.md, module-design.md
       #    Partial mode: runs forward-only if unit-test.md is absent
       # -----------------------------------------------------------------------
       - name: Validate module coverage
         id: mod_coverage
         if: >-
-          steps.detect.outputs.has_architecture_design == 'true' &&
+          (steps.detect.outputs.has_architecture_design == 'true' || steps.detect.outputs.has_software_architecture_design == 'true') &&
           steps.detect.outputs.has_module_design == 'true'
         run: |
           echo "--- Validating ARCH → MOD → UTP → UTS coverage ---"
@@ -322,6 +342,8 @@ jobs:
                 "${{ steps.sys_coverage.outputs.result }}"
             row "Architecture coverage (SYS → ARCH → ITP → ITS)" \
                 "${{ steps.arch_coverage.outputs.result }}"
+            row "Software architecture coverage (REQ → ARCH → ITP → ITS)" \
+                "${{ steps.software_arch_coverage.outputs.result }}"
             row "Module coverage (ARCH → MOD → UTP → UTS)" \
                 "${{ steps.mod_coverage.outputs.result }}"
             row "Hazard coverage (HAZ → mitigation)" \

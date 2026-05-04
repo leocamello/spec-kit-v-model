@@ -23,6 +23,7 @@ overlay_commands:
   - system-design         # Part 6 §6.5 — FFI, restricted complexity, safety mechanisms allocation
   - system-test           # Part 6 §6.9 + Table 11 — MC/DC, WCET, structural coverage by ASIL
   - architecture-design   # Part 9 §5 — ASIL decomposition, Part 6 §6.5 — defensive programming, temporal constraints
+  - software-architecture-design   # Software architecture design overlay for ISO 26262
   - integration-test      # Part 6 §6.8 — SIL/HIL, resource contention, back-to-back testing
   - module-design         # Part 6 §6.6 — MISRA C/C++, single entry/exit, complexity constraints
   - unit-test             # Part 6 §6.7 — MC/DC coverage, variable-level fault injection

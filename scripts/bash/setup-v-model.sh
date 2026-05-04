@@ -27,6 +27,7 @@ REQUIRE_ACCEPTANCE=false
 REQUIRE_SYSTEM_DESIGN=false
 REQUIRE_SYSTEM_TEST=false
 REQUIRE_ARCHITECTURE_DESIGN=false
+REQUIRE_SOFTWARE_ARCHITECTURE_DESIGN=false
 REQUIRE_INTEGRATION_TEST=false
 REQUIRE_MODULE_DESIGN=false
 REQUIRE_UNIT_TEST=false
@@ -39,6 +40,7 @@ for arg in "$@"; do
         --require-system-design) REQUIRE_SYSTEM_DESIGN=true ;;
         --require-system-test) REQUIRE_SYSTEM_TEST=true ;;
         --require-architecture-design) REQUIRE_ARCHITECTURE_DESIGN=true ;;
+        --require-software-architecture-design) REQUIRE_SOFTWARE_ARCHITECTURE_DESIGN=true ;;
         --require-integration-test) REQUIRE_INTEGRATION_TEST=true ;;
         --require-module-design) REQUIRE_MODULE_DESIGN=true ;;
         --require-unit-test) REQUIRE_UNIT_TEST=true ;;
@@ -55,6 +57,7 @@ OPTIONS:
   --require-system-design       Require system-design.md to exist
   --require-system-test         Require system-test.md to exist
   --require-architecture-design Require architecture-design.md to exist
+  --require-software-architecture-design Require software-architecture-design.md to exist
   --require-integration-test    Require integration-test.md to exist
   --require-module-design       Require module-design.md to exist
   --require-unit-test           Require unit-test.md to exist
@@ -141,6 +144,7 @@ TRACE_MATRIX="$VMODEL_DIR/traceability-matrix.md"
 SYSTEM_DESIGN="$VMODEL_DIR/system-design.md"
 SYSTEM_TEST="$VMODEL_DIR/system-test.md"
 ARCH_DESIGN="$VMODEL_DIR/architecture-design.md"
+SOFTWARE_ARCHITECTURE_DESIGN="$VMODEL_DIR/software-architecture-design.md"
 INTEGRATION_TEST="$VMODEL_DIR/integration-test.md"
 MODULE_DESIGN="$VMODEL_DIR/module-design.md"
 UNIT_TEST="$VMODEL_DIR/unit-test.md"
@@ -177,6 +181,12 @@ if $REQUIRE_ARCHITECTURE_DESIGN && [[ ! -f "$ARCH_DESIGN" ]]; then
     exit 1
 fi
 
+if $REQUIRE_SOFTWARE_ARCHITECTURE_DESIGN && [[ ! -f "$SOFTWARE_ARCHITECTURE_DESIGN" ]]; then
+    echo "ERROR: software-architecture-design.md not found in $VMODEL_DIR" >&2
+    echo "Run /speckit.v-model.software-architecture-design first." >&2
+    exit 1
+fi
+
 if $REQUIRE_INTEGRATION_TEST && [[ ! -f "$INTEGRATION_TEST" ]]; then
     echo "ERROR: integration-test.md not found in $VMODEL_DIR" >&2
     echo "Run /speckit.v-model.integration-test first." >&2
@@ -204,6 +214,7 @@ docs=()
 [[ -f "$SYSTEM_DESIGN" ]] && docs+=("system-design.md")
 [[ -f "$SYSTEM_TEST" ]] && docs+=("system-test.md")
 [[ -f "$ARCH_DESIGN" ]] && docs+=("architecture-design.md")
+[[ -f "$SOFTWARE_ARCHITECTURE_DESIGN" ]] && docs+=("software-architecture-design.md")
 [[ -f "$INTEGRATION_TEST" ]] && docs+=("integration-test.md")
 [[ -f "$MODULE_DESIGN" ]] && docs+=("module-design.md")
 [[ -f "$UNIT_TEST" ]] && docs+=("unit-test.md")
@@ -215,8 +226,8 @@ if $JSON_MODE; then
         json_docs=$(printf '"%s",' "${docs[@]}")
         json_docs="[${json_docs%,}]"
     fi
-    printf '{"REPO_ROOT":"%s","BRANCH":"%s","FEATURE_DIR":"%s","VMODEL_DIR":"%s","SPEC":"%s","REQUIREMENTS":"%s","ACCEPTANCE":"%s","TRACE_MATRIX":"%s","SYSTEM_DESIGN":"%s","SYSTEM_TEST":"%s","ARCH_DESIGN":"%s","INTEGRATION_TEST":"%s","MODULE_DESIGN":"%s","UNIT_TEST":"%s","AVAILABLE_DOCS":%s}\n' \
-        "$REPO_ROOT" "$BRANCH" "$FEATURE_DIR" "$VMODEL_DIR" "$SPEC" "$REQUIREMENTS" "$ACCEPTANCE" "$TRACE_MATRIX" "$SYSTEM_DESIGN" "$SYSTEM_TEST" "$ARCH_DESIGN" "$INTEGRATION_TEST" "$MODULE_DESIGN" "$UNIT_TEST" "$json_docs"
+    printf '{"REPO_ROOT":"%s","BRANCH":"%s","FEATURE_DIR":"%s","VMODEL_DIR":"%s","SPEC":"%s","REQUIREMENTS":"%s","ACCEPTANCE":"%s","TRACE_MATRIX":"%s","SYSTEM_DESIGN":"%s","SYSTEM_TEST":"%s","ARCH_DESIGN":"%s","SOFTWARE_ARCHITECTURE_DESIGN":"%s","INTEGRATION_TEST":"%s","MODULE_DESIGN":"%s","UNIT_TEST":"%s","AVAILABLE_DOCS":%s}\n' \
+        "$REPO_ROOT" "$BRANCH" "$FEATURE_DIR" "$VMODEL_DIR" "$SPEC" "$REQUIREMENTS" "$ACCEPTANCE" "$TRACE_MATRIX" "$SYSTEM_DESIGN" "$SYSTEM_TEST" "$ARCH_DESIGN" "$SOFTWARE_ARCHITECTURE_DESIGN" "$INTEGRATION_TEST" "$MODULE_DESIGN" "$UNIT_TEST" "$json_docs"
 else
     echo "REPO_ROOT: $REPO_ROOT"
     echo "BRANCH: $BRANCH"

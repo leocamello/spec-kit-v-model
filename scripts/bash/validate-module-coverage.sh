@@ -2,7 +2,7 @@
 
 # Deterministic coverage validation for module-level V-Model artifacts
 #
-# Parses architecture-design.md, module-design.md, and unit-test.md
+# Parses software-architecture-design.md or architecture-design.md, module-design.md, and unit-test.md
 # using regex to extract ARCH-NNN, MOD-NNN, UTP-NNN-X, and UTS-NNN-X# IDs.
 # Cross-references them to verify:
 #   - Forward coverage: every ARCH has at least one MOD
@@ -43,12 +43,21 @@ if [[ -z "$VMODEL_DIR" ]]; then
     exit 1
 fi
 
-ARCH_DESIGN="$VMODEL_DIR/architecture-design.md"
+if [[ -f "$VMODEL_DIR/software-architecture-design.md" ]]; then
+    ARCH_DESIGN="$VMODEL_DIR/software-architecture-design.md"
+    ARCH_SOURCE="software-architecture-design.md"
+elif [[ -f "$VMODEL_DIR/architecture-design.md" ]]; then
+    ARCH_DESIGN="$VMODEL_DIR/architecture-design.md"
+    ARCH_SOURCE="architecture-design.md"
+else
+    ARCH_DESIGN=""
+    ARCH_SOURCE=""
+fi
 MODULE_DESIGN="$VMODEL_DIR/module-design.md"
 UNIT_TEST="$VMODEL_DIR/unit-test.md"
 
-if [[ ! -f "$ARCH_DESIGN" ]]; then
-    echo "ERROR: architecture-design.md not found in $VMODEL_DIR" >&2
+if [[ -z "$ARCH_DESIGN" ]] || [[ ! -f "$ARCH_DESIGN" ]]; then
+    echo "ERROR: architecture-design.md or software-architecture-design.md not found in $VMODEL_DIR" >&2
     exit 1
 fi
 

@@ -16,6 +16,7 @@ id_prefixes:
   requirements: "REQ"
   test_cases: "ATP"
   scenarios: "SCN"
+  software_architecture: "ARCH"
 
 # Minimum coverage percentage required for validation gate to pass
 # Set to 100 for regulated industries, lower for exploratory projects

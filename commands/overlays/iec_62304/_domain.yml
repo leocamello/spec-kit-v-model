@@ -21,6 +21,7 @@ overlay_commands:
   - system-design         # §5.3 — software item identification, risk control measures in architecture
   - system-test           # §5.7 — system testing per safety class, requirements coverage verification
   - architecture-design   # §5.3 — architecture with safety class considerations, interface documentation
+  - software-architecture-design   # Combined Path B: IEC 62304 software architecture design — safety class allocation, defensive coding (stub)
   - integration-test      # §5.6 — integration testing per safety class, interface verification
   - module-design         # §5.4 — detailed design per safety class, coding standards
   - unit-test             # §5.5 — unit verification per safety class, code review requirements

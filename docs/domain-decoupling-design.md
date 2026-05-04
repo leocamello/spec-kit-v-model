@@ -784,8 +784,8 @@ This table traces exactly what moves from each source file to which destination:
 | Adding a new domain (e.g., EN 50128 Railway) | Edit ~10 command files + ~7 templates to add new conditional branches | Create `overlays/en_50128/` with domain-specific overlay files |
 | Updating a domain | Find safety content scattered across 10+ files | All content in one directory — `overlays/{domain}/` |
 | Removing a domain | Surgically remove conditionals from every file | Delete the overlay directory |
-| Testing | Must test all 14 commands × all domains (42+ test combinations) | Test base independently; test each overlay independently |
-| Domain expert review | Expert must read all 14 command files to find relevant content | Expert reads only their `overlays/{domain}/` directory |
+| Testing | Must test all 15 commands × all domains (45+ test combinations) | Test base independently; test each overlay independently |
+| Domain expert review | Expert must read all 15 command files to find relevant content | Expert reads only their `overlays/{domain}/` directory |
 
 ---
 

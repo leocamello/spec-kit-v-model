@@ -18,6 +18,7 @@ Templates are located in the `templates/` directory of the extension.
 | `system-design-template.md` | `system-design` | `SYS-NNN` | IEEE 1016 |
 | `system-test-template.md` | `system-test` | `STP-NNN-X`, `STS-NNN-X#` | ISO 29119-4 |
 | `architecture-design-template.md` | `architecture-design` | `ARCH-NNN` | IEEE 42010 |
+| `software-architecture-design-template.md` | `software-architecture-design` | `ARCH-NNN` | IEEE 1016 within IEEE 42010; + ASPICE SWE.2 when `domain: iso_26262` |
 | `integration-test-template.md` | `integration-test` | `ITP-NNN-X`, `ITS-NNN-X#` | ISO 29119-4 |
 | `module-design-template.md` | `module-design` | `MOD-NNN` | DO-178C / ISO 26262 |
 | `unit-test-template.md` | `unit-test` | `UTP-NNN-X`, `UTS-NNN-X#` | ISO 29119-4 |
@@ -110,6 +111,38 @@ Generates the IEEE 42010 / Kruchten 4+1 architecture decomposition.
 
 !!! info "See Also"
     [Command Reference — architecture-design](commands.md#speckitv-modelarchitecture-design) · [ID Schema — ARCH](id-schema.md#arch-nnn-architecture-element)
+
+---
+
+### `software-architecture-design-template.md`
+
+Generates a combined software architecture design from requirements only — synthesizing IEEE 1016:2009 design entity description within IEEE 42010 architecture viewpoints. Includes ASPICE SWE.2 process guidance when `domain: iso_26262` is configured.
+
+| Attribute | Value |
+|-----------|-------|
+| **Command** | `/speckit.v-model.software-architecture-design` |
+| **Output file** | `software-architecture-design.md` |
+| **ID Schema** | `ARCH-NNN` |
+| **Standard** | IEEE 1016:2009 (design entity model) synthesized within IEEE 42010:2011 (viewpoints); ASPICE SWE.2 when `domain: iso_26262` |
+
+**Key sections:**
+
+- **Metadata** — Feature branch, date, status, source (`requirements.md`)
+- **Overview** — Software architecture scope, decomposition rationale, and IEEE 1016/42010 standards reference
+- **Architecture Design: IEEE 1016 / IEEE 42010 Synthesized Views** — Four views with explicit IEEE 1016 section references:
+  - **Logical View** ← IEEE 1016 Decomposition View (§5.1) + Dependency View (§5.2)
+  - **Process View** ← IEEE 42010 / Kruchten 4+1 (no IEEE 1016 counterpart)
+  - **Interface View** ← IEEE 1016 Interface Identification (§5.3) + IEEE 42010 Interface View
+  - **Data Flow View** ← IEEE 1016 Data Design (§5.4) + IEEE 42010 Data Flow View
+- **ASPICE SWE.2 Process Guidance** — BP1–BP9 process practices for software architectural design (included only when `domain: iso_26262`)
+- **Traceability Summary** — `REQ → ARCH` mapping and coverage metrics
+- **Derived Requirements and Modules** — Flagged `[DERIVED]` items for human review
+
+!!! note "Combined Path"
+    This template produces the same `ARCH-NNN` ID format as `architecture-design-template.md`, making it compatible with `integration-test.md` and `module-design.md` downstream. Use this template when you want a single consolidated artifact instead of separate `system-design.md` + `architecture-design.md` files.
+
+!!! info "See Also"
+    [Command Reference — software-architecture-design](commands.md#speckitv-modelsoftware-architecture-design) · [ID Schema — ARCH](id-schema.md#arch-nnn-architecture-element)
 
 ---
 
@@ -213,7 +246,7 @@ Generates ISO 29119-4 integration test plans.
 
 **Key sections:**
 
-- **Metadata** — Feature branch, date, status, source (`architecture-design.md`)
+| **Metadata** — Feature branch, date, status, source (`architecture-design.md` or `software-architecture-design.md`)
 - **Overview** — Integration test scope (module seams and handshakes)
 - **Per-module blocks** (each containing):
     - Architecture module reference

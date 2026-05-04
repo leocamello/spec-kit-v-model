@@ -228,6 +228,12 @@ The trace command validates **forward traceability** (every REQ has at least one
 
 ## Step 4 — Level 2: System Design → System Tests
 
+!!! tip "Alternative: Combined Path (Path B)"
+
+    The V-Model Extension Pack also supports a **combined path** where `/speckit.v-model.software-architecture-design` reads `requirements.md` directly and produces `software-architecture-design.md` synthesizing IEEE 1016 design entity description within IEEE 42010 architecture views — skipping the separate `system-design` + `architecture-design` steps. For automotive projects (ISO 26262), this path also includes ASPICE SWE.2 process guidance. For medical devices (IEC 62304), the overlay provides safety class allocation guidance. Integration tests then use the combined artifact. See the [Architecture Design Overview](../../docs/v-model-overview.md#combined-software-architecture-design) for details.
+
+This tutorial follows **Path A** (traditional four-level V-Model) below.
+
 ### 4a. Generate System Design
 
 ```
@@ -315,6 +321,12 @@ Generates test procedures mapped to **ISO 29119-4** techniques for each system d
 ---
 
 ## Step 5 — Level 3: Architecture Design → Integration Tests
+
+!!! tip "Alternative Path Reminder"
+
+    If you used the combined `/speckit.v-model.software-architecture-design` command (Path B), skip this step — your `software-architecture-design.md` already contains the architecture design with IEEE 42010 views and IEC 62304 safety class guidance. Go directly to Step 5b for integration tests.
+
+This tutorial follows **Path A** below.
 
 ### 5a. Generate Architecture Design
 
