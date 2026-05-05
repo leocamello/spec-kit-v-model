@@ -7,11 +7,11 @@
 
 ## Overview
 
-This software architecture design decomposes the 24 functional requirements and 4 non-functional requirements (REQ-001 through REQ-NF-004) into 16 architecture elements (ARCH-001 through ARCH-016). The decomposition synthesizes IEEE 1016:2009 design entity description within IEEE 42010 / Kruchten 4+1 architecture viewpoints, organizing elements across four mandatory views: Logical (component breakdown with IEEE 1016 design entity attributes — purpose, function, subordinates, dependencies), Process (runtime interaction sequences), Interface (entity-to-entity contracts per IEEE 1016 §5.3 + IEEE 42010 protocol bindings), and Data Flow (data transformation chains per IEEE 1016 §5.4 Data Design + IEEE 42010 pipeline semantics).
+This software architecture design decomposes the 24 functional requirements and 4 non-functional requirements (REQ-001 through REQ-NF-004) into 16 architecture elements (ARCH-001 through ARCH-016). The decomposition organizes elements across four views: Logical (component breakdown with purpose, function, and dependency attributes), Process (runtime interaction sequences), Interface (entity-to-entity contracts with external/internal distinction), and Data Flow (data transformation chains with data design).
 
-The architecture follows a pipeline pattern: requirements are parsed → domain configuration is loaded → requirements are decomposed into architecture elements → four IEEE 42010 views are generated → SWE.2 sections are generated (when `domain: iso_26262`) → output is assembled and written. A coexistence detector checks for Path A artifacts and emits warnings without blocking generation.
+The architecture follows a pipeline pattern: requirements are parsed → domain configuration is loaded → requirements are decomposed into architecture elements → four architecture views are generated → SWE.2 sections are generated (when `domain: iso_26262`) → output is assembled and written. A coexistence detector checks for Path A artifacts and emits warnings without blocking generation.
 
-This is a **Path B (combined)** artifact — ARCH elements trace strictly to `REQ-NNN` identifiers with no `SYS-NNN` references. IEEE 42010 views are domain-agnostic and always generated. ASPICE SWE.2 BP1–BP9 sections are included because the domain is configured as `iso_26262` in `v-model-config.yml`.
+This is a **Path B (combined)** artifact — ARCH elements trace strictly to `REQ-NNN` identifiers with no `SYS-NNN` references. The four architecture views are domain-agnostic and always generated. ASPICE SWE.2 BP1–BP9 sections are included because the domain is configured as `iso_26262` in `v-model-config.yml`.
 
 ## ID Schema
 
@@ -20,9 +20,7 @@ This is a **Path B (combined)** artifact — ARCH elements trace strictly to `RE
 - **Cross-Cutting Tag**: `[CROSS-CUTTING]` for infrastructure/utility elements that serve the system as a whole
 - Example: `ARCH-001` with Parent Requirements `REQ-001, REQ-020` — Requirements Parser serves both input validation and graceful error handling.
 
-## Architecture Design: IEEE 1016 / IEEE 42010 Synthesized Views
-
-> The four views below use IEEE 42010 as the structural framework. IEEE 1016 design entity concepts are embedded within each view. See the [Governing Standards](#governing-standards) in the feature spec for the full mapping.
+## Architecture Design
 
 ### Logical View
 
@@ -32,20 +30,20 @@ This is a **Path B (combined)** artifact — ARCH elements trace strictly to `RE
 | ARCH-002 | Domain Config Loader | Reads `v-model-config.yml` from the repository root and extracts the `domain` field. Returns the domain value (`iso_26262`, `do_178c`, `iec_62304`, or null when absent/empty). Serves as the single source of truth for domain-gated behavior across all downstream generators. | REQ-008, REQ-009, REQ-010 | Component |
 | ARCH-003 | Overlay Loader | Discovers and loads domain overlay files from `commands/overlays/{domain}/software-architecture-design.md` based on the domain value from ARCH-002. When `domain: iso_26262`, loads SWE.2 BP1–BP9 guidance content. When domain is `do_178c` or `iec_62304`, loads stub content (future extensibility hook). Returns null when no domain is configured or overlay file does not exist. | REQ-008, REQ-009 | Component |
 | ARCH-004 | Architecture Element Decomposer | Receives parsed requirements and decomposes them into `ARCH-NNN` elements. Assigns sequential IDs (never renumbered), maps each element to parent REQ-NNN identifiers (many-to-many), classifies element type (Component, Service, Library, Utility, Adapter, Cross-Cutting), and tags `[CROSS-CUTTING]` elements with rationale. Flags `[DERIVED MODULE]` items when a necessary technical element has no corresponding requirement. Flags `[DERIVED REQUIREMENT]` when an architecture-implied capability lacks a requirement. Enforces the strict translator constraint — does not invent capabilities beyond requirements.md. | REQ-002, REQ-003, REQ-007, REQ-013, REQ-014, REQ-015, REQ-021, REQ-022, REQ-023 | Component |
-| ARCH-005 | Logical View Generator | Generates the IEEE 42010 Logical View component breakdown table from ARCH element definitions. Formats each element as a table row with ARCH ID, name, description, parent requirements (comma-separated REQ-NNN list or `[CROSS-CUTTING]` tag with rationale), and type classification. Ensures every REQ-NNN appears as a parent in at least one row (forward coverage). Distinguishes business-logic elements from cross-cutting elements visually. | REQ-003, REQ-021, REQ-023 | Component |
+| ARCH-005 | Logical View Generator | Generates the component breakdown table from ARCH element definitions. Formats each element as a table row with ARCH ID, name, description, parent requirements (comma-separated REQ-NNN list or `[CROSS-CUTTING]` tag with rationale), and type classification. Ensures every REQ-NNN appears as a parent in at least one row (forward coverage). Distinguishes business-logic elements from cross-cutting elements visually. | REQ-003, REQ-021, REQ-023 | Component |
 | ARCH-006 | Process View Generator | Generates Mermaid `sequenceDiagram` blocks documenting runtime interactions between ARCH elements. Uses ARCH-NNN IDs as participants. Documents the pipeline execution order: requirements parsing → domain loading → decomposition → view generation → SWE.2 generation → output assembly. Shows synchronization points and decision branches (e.g., SWE.2 generation only when domain is iso_26262). Produces syntactically valid Mermaid markup. | REQ-004 | Component |
 | ARCH-007 | Interface View Generator | Generates strict API contract tables for every ARCH-NNN element. Each contract specifies interface name, direction (Input/Output/Bidirectional), protocol, input format, output format, and error handling strategy. Covers both internal element-to-element interfaces and the external command interface (CLI args, file I/O). Rejects black-box descriptions with anti-pattern warnings. | REQ-005 | Component |
-| ARCH-008 | Data Flow View Generator | Generates data transformation chain tables tracing data through ARCH elements. Each chain documents stage number, module reference (ARCH-NNN), input format, transformation description, and output format. Shows the complete pipeline: Raw requirements.md text → structured REQ data → ARCH element definitions → four IEEE 42010 views → SWE.2 sections → final markdown output. | REQ-006 | Component |
+| ARCH-008 | Data Flow View Generator | Generates data transformation chain tables tracing data through ARCH elements. Each chain documents stage number, module reference (ARCH-NNN), input format, transformation description, and output format. Shows the complete pipeline: Raw requirements.md text → structured REQ data → ARCH element definitions → four architecture views → SWE.2 sections → final markdown output. | REQ-006 | Component |
 | ARCH-009 | SWE.2 Section Generator | Generates ASPICE SWE.2 BP1–BP9 process guidance sections when the domain is `iso_26262`. Produces nine subsections: BP1 (develop architectural design), BP2 (allocate requirements with REQ→ARCH mapping), BP3 (define interfaces with contract summaries), BP4 (describe dynamic behavior with interaction summaries), BP5 (define resource consumption objectives — CPU, memory, latency, throughput), BP6 (evaluate alternative architectures with trade-off rationale), BP7 (establish bidirectional traceability), BP8 (ensure consistency with requirements), BP9 (communicate agreed design). When domain is not `iso_26262`, this generator is skipped entirely. | REQ-008, REQ-011 | Component |
 | ARCH-010 | Traceability Summary Generator | Generates the REQ → ARCH mapping table and forward coverage metrics. Computes total requirements, total architecture elements, and coverage percentage (requirements with at least one ARCH parent mapping). Includes a per-requirement breakdown showing which ARCH elements address each REQ-NNN. | REQ-016 | Component |
 | ARCH-011 | Coexistence Detector | Checks whether `architecture-design.md` (Path A artifact) already exists in the v-model directory before generation begins. When detected, emits a warning message (does not block generation) and allows `software-architecture-design.md` to be created alongside the existing Path A artifact. Both artifacts coexist; downstream `integration-test` has a documented preference for `software-architecture-design.md`. | REQ-012 | Component |
 | ARCH-012 | Lifecycle Manager | Manages existing `ARCH-NNN` identifiers when regenerating `software-architecture-design.md`. Applies lifecycle rules: never renumbers existing IDs, marks replaced modules as `[DEPRECATED — Superseded by ARCH-NNN]`, marks removed modules as `[DEPRECATED — Withdrawn: reason]`, and preserves deprecated modules in output (never deletes). Ensures existing traceability links are not broken by regeneration. | REQ-019 | Component |
-| ARCH-013 | Output Assembler | Assembles all generated sections (four IEEE 42010 views, SWE.2 sections if applicable, traceability summary, derived items list) into a single `software-architecture-design.md` document. Applies the template structure from ARCH-016. Writes the final artifact to `{VMODEL_DIR}/software-architecture-design.md`. | REQ-001 | Component |
+| ARCH-013 | Output Assembler | Assembles all generated sections (four architecture views, SWE.2 sections if applicable, traceability summary, derived items list) into a single `software-architecture-design.md` document. Applies the template structure from ARCH-016. Writes the final artifact to `{VMODEL_DIR}/software-architecture-design.md`. | REQ-001 | Component |
 | ARCH-014 | Setup Script Adapter | Extends `setup-v-model.sh` and `setup-v-model.ps1` with `--require-reqs` flag support. Verifies `requirements.md` exists in the v-model directory before the command proceeds; returns non-zero exit code with error message if missing. Adds `software-architecture-design.md` to the `AVAILABLE_DOCS` detection list so downstream commands (e.g., `integration-test`) can discover and prefer it. | REQ-017, REQ-018 | Component |
 | ARCH-015 | ID Pattern Library | Shared library of compiled regex patterns for deterministic extraction of V-Model identifiers: `REQ-[A-Z]{0,5}-[0-9]{3}` (requirements), `ARCH-[0-9]{3}` (architecture elements). Provides consistent ID extraction logic across parsing, decomposition, and traceability generation. Patterns are POSIX ERE compatible requiring no external tooling. | [CROSS-CUTTING] — Shared regex patterns used by ARCH-001, ARCH-004, ARCH-010, and ARCH-012 for deterministic ID extraction and traceability validation across the entire generation pipeline. | Library |
-| ARCH-016 | Software Architecture Design Template | Markdown template defining the required output structure for IEEE 42010-compliant software architecture design. Provides section headers, HTML comment field definitions, and placeholder tables for four mandatory views: Logical View (ARCH-NNN table with Parent Requirements), Process View (Mermaid sequenceDiagram placeholders), Interface View (contract table format), and Data Flow View (transformation chain format). Includes conditional SWE.2 section placeholders (BP1–BP9) populated only when the iso_26262 domain overlay is loaded. | REQ-024 | Library |
+| ARCH-016 | Software Architecture Design Template | Markdown template defining the required output structure. Provides section headers, HTML comment field definitions, and placeholder tables for four views: Logical View (ARCH-NNN table with Parent Requirements), Process View (Mermaid sequenceDiagram placeholders), Interface View (contract table format), and Data Flow View (transformation chain format). Includes conditional SWE.2 section placeholders (BP1–BP9) populated only when the iso_26262 domain overlay is loaded. | REQ-024 | Library |
 
-## Process View — Dynamic Behavior (Kruchten 4+1)
+## Process View — Dynamic Behavior
 
 ### Interaction: Software Architecture Design Generation (Full Pipeline)
 
@@ -95,7 +93,7 @@ sequenceDiagram
     A012-->>A004: Lifecycle state (new/existing/deprecated)
     A004-->>CLI: 16 ARCH elements with REQ→ARCH mappings
 
-    Note over A005,A008: IEEE 42010 View Generation
+    Note over A005,A008: View Generation
     CLI->>A016: Load template structure
     A016-->>CLI: Section placeholders & format
     CLI->>A005: Generate Logical View
@@ -147,11 +145,11 @@ sequenceDiagram
     else domain absent/empty
         Note over CMD,A003: No overlay loading
         Note over CMD: SWE.2 Generator SKIPPED
-        CMD->>A013: Assemble — IEEE 42010 views only
+        CMD->>A013: Assemble — domain-agnostic views only
     end
 ```
 
-## Interface View — External Interface Contracts (IEEE 1016 §5.3 + IEEE 42010)
+## Interface View — External Interface Contracts
 
 > External interfaces: CLI entry point and file I/O boundaries.
 
@@ -202,7 +200,7 @@ sequenceDiagram
 | 9. Traceability Computation | ARCH-010, ARCH-015 | ARCH element definitions + REQ data | Cross-reference every REQ-NNN against ARCH parent requirements. Compute total REQs, total ARCHs, coverage count, coverage percentage. Generate per-requirement mapping rows. | Traceability Summary table + coverage metrics |
 | 10. Final Assembly | ARCH-013, ARCH-016 | All generated sections + template structure | Merge sections into template structure. Apply header metadata (feature, branch, date). Write to `{VMODEL_DIR}/software-architecture-design.md`. | Complete `software-architecture-design.md` file |
 
-### Data Design (IEEE 1016 §5.4)
+### Data Design
 
 > Data entities, their storage, protection, and lifecycle within the architecture pipeline.
 
@@ -215,34 +213,36 @@ sequenceDiagram
 | Generated Markdown sections | ARCH-005..ARCH-010 | In-memory strings; accumulated by ARCH-013 | Template-placeholder validation before write | Each view generator produces; assembler merges; written to disk |
 | Final `software-architecture-design.md` | ARCH-013 | Git-tracked file in `v-model/` directory | Git cryptographic commit hashes provide immutable audit trail | Written once per generation; version-controlled; diffable on regeneration |
 
-## Architecture Evaluation (ISO/IEC 42030:2019 / ISO/IEC 25010:2023)
+## Architecture Evaluation
 
-> The following evaluation completes the IEEE 42010 "describe" → ISO 42030 "evaluate" cycle.
+> The following evaluation assesses the architecture's fitness for purpose across quality attributes.
 
-### Quality Attribute Cross-Check (ISO/IEC 25010:2023)
+### Quality Attribute Cross-Check
 
-| Quality Characteristic | ISO 25010 Ref | Design Evidence | Status |
-|------------------------|---------------|-----------------|--------|
-| Functional Suitability — Completeness | §4.2.1 | Every REQ-NNN mapped to ≥1 ARCH-NNN (Logical View + BP2 allocation table) | ✅ Addressed |
-| Functional Suitability — Correctness | §4.2.1 | Strict translator constraint (ARCH-004) prevents invented capabilities | ✅ Addressed |
-| Reliability — Fault Tolerance | §4.2.2 | Interface View documents error handling for every element; graceful failure on missing input | ✅ Addressed |
-| Reliability — Recoverability | §4.2.2 | Lifecycle rules (ARCH-012) preserve deprecated elements; coexistence detector prevents data loss | ✅ Addressed |
-| Performance Efficiency — Time Behaviour | §4.2.3 | Pipeline completes < 30s for 10,000-word input (SC-001); single-threaded sequential | ✅ Addressed |
-| Performance Efficiency — Resource Utilisation | §4.2.3 | Peak memory < 512 MB for 50+ REQ input (SC-005); in-memory pipeline, no external DB | ✅ Addressed |
-| Security — Integrity | §4.2.5 | Output written to Git-tracked file with cryptographic commit hashes; no external network calls | ✅ Addressed |
-| Maintainability — Modularity | §4.2.7 | Pipeline architecture with 16 independently testable ARCH elements; each has single responsibility | ✅ Addressed |
-| Maintainability — Reusability | §4.2.7 | ARCH-015 (ID Pattern Library) shared across parsing/decomposition/traceability | ✅ Addressed |
-| Maintainability — Testability | §4.2.7 | Every ARCH element has explicit interface contract; integration tests cover all 16 elements | ✅ Addressed |
+| Quality Characteristic | Reference | Design Evidence | Status |
+|------------------------|-----------|-----------------|--------|
+| Functional Suitability — Completeness | SC-002 | Every REQ-NNN mapped to ≥1 ARCH-NNN (Logical View + BP2 allocation table) | ✅ Addressed |
+| Functional Suitability — Correctness | SC-002 | Strict translator constraint (ARCH-004) prevents invented capabilities | ✅ Addressed |
+| Reliability — Fault Tolerance | — | Interface View documents error handling for every element; graceful failure on missing input | ✅ Addressed |
+| Reliability — Recoverability | — | Lifecycle rules (ARCH-012) preserve deprecated elements; coexistence detector prevents data loss | ✅ Addressed |
+| Performance Efficiency — Time Behaviour | SC-001 | Pipeline completes < 30s for 10,000-word input (SC-001); single-threaded sequential | ✅ Addressed |
+| Performance Efficiency — Resource Utilisation | SC-005 | Peak memory < 512 MB for 50+ REQ input; in-memory pipeline, no external DB | ✅ Addressed |
+| Security — Integrity | — | Output written to Git-tracked file with cryptographic commit hashes; no external network calls | ✅ Addressed |
+| Maintainability — Modularity | — | Pipeline architecture with 16 independently testable ARCH elements; each has single responsibility | ✅ Addressed |
+| Maintainability — Reusability | — | ARCH-015 (ID Pattern Library) shared across parsing/decomposition/traceability | ✅ Addressed |
+| Maintainability — Testability | — | Every ARCH element has explicit interface contract; integration tests cover all 16 elements | ✅ Addressed |
 
-### Quality Attribute Justification (ISO/IEC 42030:2019)
+### Quality Attribute Justification
 
-| Architecture Decision | Quality Characteristic (ISO 25010) | Trade-off Accepted |
-|----------------------|------------------------------------|--------------------|
-| Pipeline architecture (sequential stages) | Maintainability §4.2.7 ↑, Performance Efficiency §4.2.3 ↓ | Sequential dependency accepted for modularity and independent testability; no parallelism needed for single-artifact generation |
-| Domain overlay mechanism (ARCH-003) | Maintainability §4.2.7 ↑, Functional Suitability §4.2.1 ↑ | Overlay files add file I/O overhead but enable zero-modification domain extensibility |
-| In-memory pipeline (no external DB) | Performance Efficiency §4.2.3 ↑, Reliability §4.2.2 ↓ | Fast read/write but no crash recovery; acceptable for CLI tool that re-runs on failure |
-| Single-threaded concurrency model | Reliability §4.2.2 ↑, Performance Efficiency §4.2.3 ↓ | No race conditions or deadlocks but no parallelism; acceptable for deterministic document generation |
-| Coexistence-first (Path A warning, not error) | Maintainability §4.2.7 ↑ | Allows both Path A and Path B artifacts; downstream preference rule resolves ambiguity |
+For each significant architectural decision (one that affects more than one view or introduces a cross-cutting element), document its quality attribute rationale:
+
+| Architecture Decision | Quality Characteristic | Trade-off Accepted |
+|----------------------|------------------------|--------------------|
+| Pipeline architecture (sequential stages) | Maintainability ↑, Performance Efficiency ↓ | Sequential dependency accepted for modularity and independent testability; no parallelism needed for single-artifact generation |
+| Domain overlay mechanism (ARCH-003) | Maintainability ↑, Functional Suitability ↑ | Overlay files add file I/O overhead but enable zero-modification domain extensibility |
+| In-memory pipeline (no external DB) | Performance Efficiency ↑, Reliability ↓ | Fast read/write but no crash recovery; acceptable for CLI tool that re-runs on failure |
+| Single-threaded concurrency model | Reliability ↑, Performance Efficiency ↓ | No race conditions or deadlocks but no parallelism; acceptable for deterministic document generation |
+| Coexistence-first (Path A warning, not error) | Maintainability ↑ | Allows both Path A and Path B artifacts; downstream preference rule resolves ambiguity |
 
 ### Sensitivity and Trade-off Points
 
@@ -268,7 +268,7 @@ sequenceDiagram
 
 ### SWE.2.BP1 — Develop Software Architectural Design
 
-The software architecture design was developed by reading `requirements.md` (28 requirements: REQ-001 through REQ-NF-004) and decomposing them into 16 architecture elements (ARCH-001 through ARCH-016). The decomposition follows IEEE 42010 / Kruchten 4+1, organizing elements into four mandatory views plus SWE.2 process structure. The architecture employs a pipeline pattern: parse → load config → decompose → generate views → generate SWE.2 → assemble output.
+The software architecture design was developed by reading `requirements.md` (28 requirements: REQ-001 through REQ-NF-004) and decomposing them into 16 architecture elements (ARCH-001 through ARCH-016). The decomposition organizes elements into four views plus SWE.2 process structure. The architecture employs a pipeline pattern: parse → load config → decompose → generate views → generate SWE.2 → assemble output.
 
 Key design decisions:
 - **Pipeline architecture**: Each stage produces structured output consumed by the next, enabling independent testability of each ARCH element.
