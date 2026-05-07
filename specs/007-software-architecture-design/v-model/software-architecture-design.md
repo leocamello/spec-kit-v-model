@@ -151,39 +151,99 @@ sequenceDiagram
 
 ## Interface View — External Interface Contracts
 
-> External interfaces: CLI entry point and file I/O boundaries.
+> External interfaces: CLI entry point and file I/O boundaries. Each ARCH-NNN has a dedicated sub-section with per-item Input/Output/Exception rows.
 
-| ARCH ID | Interface Name | Direction | Protocol | Input | Output | Error Handling |
-|---------|---------------|-----------|----------|-------|--------|----------------|
-| ARCH-001 | Parse Requirements | Input | File I/O (Markdown) | Path to `requirements.md` (string) | Structured REQ data: `{id: REQ-NNN, description, priority, rationale, verification}[]` | Returns error object with message when file missing, empty, or contains zero REQ-NNN identifiers |
-| ARCH-002 | Load Domain Config | Input | File I/O (YAML) | Path to `v-model-config.yml` (string) | Domain value: `"iso_26262"` \| `"do_178c"` \| `"iec_62304"` \| `null` | Returns `null` when config file absent; returns `null` when domain field absent/empty |
-| ARCH-003 | Load Overlay | Input | File I/O (Markdown) | Domain value (string), base path (string) | Overlay content (string) or `null` | Returns `null` when overlay file does not exist; logs warning when domain is set but overlay missing |
-| ARCH-011 | Detect Coexistence | Input | File I/O | Path to v-model directory | Warning message (string) or `null` | Never blocks generation; returns warning when `architecture-design.md` exists |
-| ARCH-013 | Assemble Output | Output | File I/O (Markdown) | All generated sections, template structure | Written `software-architecture-design.md` file | Returns error when write fails (permissions, disk space) |
-| ARCH-014 | Setup Script Adapter | CLI | Shell/PowerShell script | `--require-reqs` flag, feature directory path | JSON: `{VMODEL_DIR, FEATURE_DIR, BRANCH, REQUIREMENTS, AVAILABLE_DOCS}` | Exits non-zero when requirements.md missing with `--require-reqs` |
+<!--
+  RULES:
+  - No "black box" elements — every ARCH must have explicit contracts
+  - Distinguish synchronous / asynchronous interfaces
+  - Error contracts directly drive Interface Fault Injection testing
+  - Input/output contracts directly drive Interface Contract Testing
+-->
+
+#### ARCH-001: Requirements Parser
+
+| Direction | Name | Type | Format | Constraints |
+|-----------|------|------|--------|-------------|
+| Input | requirements_path | String | File path to `requirements.md` | Required; file must exist and be non-empty |
+| Input | id_patterns | Regex | Compiled REQ-NNN pattern from ARCH-015 | Required; must match `REQ-[A-Z]{0,5}-[0-9]{3}` |
+| Output | req_data | Array | `[{id: REQ-NNN, description, priority, rationale, verification}]` | Guaranteed non-empty; zero REQs treated as error |
+| Exception | FILE_NOT_FOUND | Error | Plain text | "requirements.md not found in {path}" |
+| Exception | EMPTY_INPUT | Error | Plain text | "No REQ-NNN identifiers found in requirements.md" |
+
+#### ARCH-002: Domain Config Loader
+
+| Direction | Name | Type | Format | Constraints |
+|-----------|------|------|--------|-------------|
+| Input | config_path | String | File path to `v-model-config.yml` | Required; relative to repository root |
+| Output | domain_value | String \| null | `"iso_26262"` \| `"do_178c"` \| `"iec_62304"` \| `null` | Returns `null` when config file absent or domain field missing |
+| Exception | MALFORMED_YAML | Error | Plain text | "v-model-config.yml is malformed: {parse error}" |
+
+#### ARCH-003: Overlay Loader
+
+| Direction | Name | Type | Format | Constraints |
+|-----------|------|------|--------|-------------|
+| Input | domain_value | String \| null | Domain string from ARCH-002 | Required; non-null triggers overlay resolution |
+| Input | overlay_base_path | String | Base path to `commands/overlays/` | Required |
+| Output | overlay_content | String \| null | Markdown content from overlay file | `null` when overlay file does not exist |
+| Exception | MISSING_OVERLAY | Warning | Plain text | "Overlay file not found for domain {domain}" — logged, does not block generation |
+
+#### ARCH-011: Coexistence Detector
+
+| Direction | Name | Type | Format | Constraints |
+|-----------|------|------|--------|-------------|
+| Input | vmodel_dir | String | Path to feature v-model directory | Required |
+| Output | coexistence_warning | String \| null | Warning message when `architecture-design.md` exists | Never blocks generation; `null` when no Path A artifact detected |
+
+#### ARCH-013: Output Assembler
+
+| Direction | Name | Type | Format | Constraints |
+|-----------|------|------|--------|-------------|
+| Input | all_sections | Array | Generated view sections (Logical, Process, Interface, Data Flow) | Required; at least Logical View must be non-empty |
+| Input | template_structure | String | Template with section placeholders from ARCH-016 | Required; provides section ordering and header metadata |
+| Output | assembled_document | File | Markdown written to `{VMODEL_DIR}/software-architecture-design.md` | Written via atomic `mktemp` + `mv` pattern; Git-tracked |
+| Exception | WRITE_FAILURE | Error | Plain text | "Failed to write software-architecture-design.md: {reason}" (permissions, disk space) |
+
+#### ARCH-014: Setup Script Adapter
+
+| Direction | Name | Type | Format | Constraints |
+|-----------|------|------|--------|-------------|
+| Input | require_reqs_flag | Boolean | CLI flag `--require-reqs` | Default: false |
+| Input | feature_dir | String | Path to feature directory | Required |
+| Output | setup_json | JSON | `{VMODEL_DIR, FEATURE_DIR, BRANCH, REQUIREMENTS, AVAILABLE_DOCS}` | Includes `software-architecture-design.md` in AVAILABLE_DOCS |
+| Exception | PREREQUISITE_MISSING | Error | Plain text | "requirements.md not found in {vmodel_dir}" — exits non-zero when `--require-reqs` is set |
 
 ## Interface View — Internal Interface Contracts
 
-> Internal interfaces: element-to-element communication within the pipeline.
+> Internal interfaces: element-to-element communication within the pipeline. Each row documents one Source→Target data flow contract.
 
-| Source ARCH | Target ARCH | Interface Name | Protocol | Data Format | Error Handling |
-|-------------|-------------|----------------|----------|-------------|----------------|
-| ARCH-001 | ARCH-004 | Requirements → Decomposer | In-process call | `Array<{id, description, priority, rationale, verification}>` | EMPTY_INPUT exception raised when zero REQs found |
-| ARCH-002 | ARCH-003 | Domain → Overlay Loader | In-process call | Domain string or `null` | Returns `null` when domain absent; logs warning when overlay missing |
-| ARCH-003 | ARCH-009 | Overlay → SWE.2 Generator | In-process call | Overlay content string or `null` | When `null`, SWE.2 generator skips entirely |
-| ARCH-004 | ARCH-005 | Decomposer → Logical View Gen | In-process call | `Array<{id, name, description, parentReqs, type, tags}>` | Returns error when zero ARCH elements provided |
-| ARCH-004 | ARCH-006 | Decomposer → Process View Gen | In-process call | ARCH element definitions + interaction paths | Returns error when Mermaid syntax is invalid |
-| ARCH-004 | ARCH-007 | Decomposer → Interface View Gen | In-process call | ARCH element definitions | Emits anti-pattern warning for black-box elements |
-| ARCH-004 | ARCH-008 | Decomposer → Data Flow View Gen | In-process call | ARCH element definitions + data flow paths | Returns error when data flow chain is broken |
-| ARCH-005 | ARCH-013 | Logical View → Output Assembler | In-process call | Markdown table string | N/A (structural — validated at generation) |
-| ARCH-006 | ARCH-013 | Process View → Output Assembler | In-process call | Mermaid diagram string | N/A (structural) |
-| ARCH-007 | ARCH-013 | Interface View → Output Assembler | In-process call | Interface contract Markdown tables | N/A (structural) |
-| ARCH-008 | ARCH-013 | Data Flow View → Output Assembler | In-process call | Transformation chain Markdown table | N/A (structural) |
-| ARCH-009 | ARCH-013 | SWE.2 Sections → Output Assembler | In-process call | SWE.2 BP1–BP9 Markdown or `null` | When `null`, SWE.2 placeholder replaced with omission note |
-| ARCH-010 | ARCH-013 | Traceability → Output Assembler | In-process call | Coverage report: `{total_reqs, total_arch, coverage_pct, uncovered[]}` | Handles many-to-many without double-counting |
-| ARCH-012 | ARCH-004 | Lifecycle → Decomposer | In-process call | Annotated ARCH definitions with lifecycle tags | Preserves deprecated entries; never renumbers |
-| ARCH-015 | ARCH-001, ARCH-004, ARCH-010 | ID Pattern Library → Consumers | In-process call | Compiled regex objects | Returns empty array when no matches (no false positives) |
-| ARCH-016 | ARCH-013 | Template → Output Assembler | In-process call | Template string with section placeholders | N/A — static template; validated at authoring time |
+<!--
+  RULES:
+  - Direction: Unidirectional (Source→Target), Bidirectional, or Callback
+  - Type: The runtime type of the data exchanged
+  - Format: The precise data structure/format
+  - Constraints: Guarantees, invariants, error handling
+  - Exceptions are documented in the External Interface section of the Source ARCH
+-->
+
+| Source ARCH | Target ARCH | Interface Name | Direction | Type | Format | Constraints |
+|-------------|-------------|----------------|-----------|------|--------|-------------|
+| ARCH-001 | ARCH-004 | Requirements → Decomposer | Unidirectional | Array | `[{id: REQ-NNN, description, priority, rationale, verification}]` | Must be non-empty; EMPTY_INPUT exception raised when zero REQs found |
+| ARCH-002 | ARCH-003 | Domain → Overlay Loader | Unidirectional | String \| null | Domain string or `null` | null → overlay loading skipped; warning logged when domain set but overlay missing |
+| ARCH-003 | ARCH-009 | Overlay → SWE.2 Generator | Unidirectional | String \| null | Overlay content (Markdown) or `null` | `null` → SWE.2 generator skips entirely |
+| ARCH-004 | ARCH-005 | Decomposer → Logical View Gen | Unidirectional | Array | `[{id: ARCH-NNN, name, description, parentReqs, type, tags, lifecycleState}]` | Returns error when zero ARCH elements provided |
+| ARCH-004 | ARCH-006 | Decomposer → Process View Gen | Unidirectional | Object | `{arch_definitions, interaction_paths}` | Returns error when Mermaid syntax is invalid |
+| ARCH-004 | ARCH-007 | Decomposer → Interface View Gen | Unidirectional | Array | ARCH element definitions | Emits anti-pattern warning for black-box elements |
+| ARCH-004 | ARCH-008 | Decomposer → Data Flow View Gen | Unidirectional | Object | `{arch_definitions, data_flow_paths}` | Returns error when data flow chain is broken |
+| ARCH-005 | ARCH-013 | Logical View → Output Assembler | Unidirectional | String | Markdown table string | Structural; validated at generation time |
+| ARCH-006 | ARCH-013 | Process View → Output Assembler | Unidirectional | String | Mermaid diagram string | Structural; validated at generation time |
+| ARCH-007 | ARCH-013 | Interface View → Output Assembler | Unidirectional | String | Interface contract Markdown tables | Structural; validated at generation time |
+| ARCH-008 | ARCH-013 | Data Flow View → Output Assembler | Unidirectional | String | Transformation chain Markdown table | Structural; validated at generation time |
+| ARCH-009 | ARCH-013 | SWE.2 Sections → Output Assembler | Unidirectional | String \| null | SWE.2 BP1–BP9 Markdown or `null` | `null` → SWE.2 placeholder replaced with omission note |
+| ARCH-010 | ARCH-013 | Traceability → Output Assembler | Unidirectional | Object | `{total_reqs, total_arch, coverage_pct, uncovered[]}` | Handles many-to-many without double-counting |
+| ARCH-012 | ARCH-004 | Lifecycle → Decomposer | Unidirectional | Object | `[{arch_id, lifecycle_state, superseded_by, reason}]` | Preserves deprecated entries; never renumbers existing IDs |
+| ARCH-015 | ARCH-001, ARCH-004, ARCH-010 | ID Pattern Library → Consumers | Bidirectional | Regex | Compiled regex objects for `REQ-[A-Z]{0,5}-[0-9]{3}`, `ARCH-[0-9]{3}` | Returns empty array when no matches (no false positives) |
+| ARCH-016 | ARCH-013 | Template → Output Assembler | Unidirectional | String | Template string with section placeholders | Static template; validated at authoring time |
 
 ## Data Flow View — Data Transformation Chain
 

@@ -35,11 +35,47 @@ sequenceDiagram
   ARCH-002-->>ARCH-001: [Response]
 ```
 
-### Interface View
+### Interface View — External Interface Contracts
 
-| ARCH ID | Interface Name | Direction | Protocol | Input | Output | Error Handling |
-|----------|----------------|-----------|----------|-------|--------|----------------|
-| ARCH-001 | [Name] | Input | [Protocol] | [Format] | [Format] | [Strategy] |
+<!--
+  每个 ARCH-NNN 必须在此定义外部接口契约（CLI entry point + file I/O boundaries）。
+
+  RULES:
+  - No "black box" elements — every ARCH must have explicit contracts
+  - 区分 synchronous / asynchronous 接口
+  - Error contracts directly drive Interface Fault Injection testing
+  - Input/output contracts directly drive Interface Contract Testing
+  - 每个 ARCH 至少有一个 Input 和一个 Output
+
+  For each module, document the parameters using the following format:
+  - Inputs Accepted: Types, formats, ranges, required/optional
+  - Outputs Produced: Types, guarantees, formats
+  - Exceptions Thrown: Error codes, failure modes, recovery hints
+-->
+
+#### ARCH-001: [Element Name]
+
+| Direction | Name | Type | Format | Constraints |
+|-----------|------|------|--------|-------------|
+| Input | [param] | [type] | [format] | [range/required] |
+| Output | [return] | [type] | [format] | [guarantees] |
+| Exception | [error] | [code] | [format] | [when thrown] |
+
+### Interface View — Internal Interface Contracts
+
+<!--
+  内部接口：pipeline 中 element-to-element 的数据传递契约。
+
+  RULES:
+  - 每条连接必须定义 Source 和 Target
+  - Direction 描述数据流向（单向 / 双向 / 回调）
+  - Type / Format / Constraints 与 External 保持同等详细程度
+  - 异常通过 Source ARCH 的 External Exception 契约覆盖
+-->
+
+| Source ARCH | Target ARCH | Interface Name | Direction | Type | Format | Constraints |
+|-------------|-------------|----------------|-----------|------|--------|-------------|
+| ARCH-001 | ARCH-002 | [interface name] | [direction] | [type] | [format] | [constraint] |
 
 ### Data Flow View
 
