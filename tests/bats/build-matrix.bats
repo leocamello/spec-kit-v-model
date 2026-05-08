@@ -184,3 +184,42 @@ teardown() {
     assert_success
     [ -z "$output" ]
 }
+
+# ---- Path B (Combined): software-architecture-design replaces system-design + architecture-design ----
+
+@test "Path B: no Matrix B (no system-design.md)" {
+    run bash "$SCRIPTS_DIR/build-matrix.sh" "$FIXTURES_DIR/path-b-combined"
+    assert_success
+    refute_output --partial "Matrix B"
+}
+
+@test "Path B: no Matrix C (no architecture-design.md)" {
+    run bash "$SCRIPTS_DIR/build-matrix.sh" "$FIXTURES_DIR/path-b-combined"
+    assert_success
+    refute_output --partial "Matrix C"
+}
+
+@test "Path B: no Matrix D (no architecture-design.md)" {
+    run bash "$SCRIPTS_DIR/build-matrix.sh" "$FIXTURES_DIR/path-b-combined"
+    assert_success
+    refute_output --partial "Matrix D"
+}
+
+@test "Path B: Matrix A still present" {
+    run bash "$SCRIPTS_DIR/build-matrix.sh" "$FIXTURES_DIR/path-b-combined"
+    assert_success
+    assert_output --partial "Matrix A — Validation"
+}
+
+@test "Path B: correct REQ→ATP coverage metrics" {
+    run bash "$SCRIPTS_DIR/build-matrix.sh" "$FIXTURES_DIR/path-b-combined"
+    assert_success
+    assert_output --partial "Matrix A Coverage"
+    assert_output --partial "REQ → ATP Coverage"
+}
+
+@test "Path B: no system-level gap analysis" {
+    run bash "$SCRIPTS_DIR/build-matrix.sh" "$FIXTURES_DIR/path-b-combined"
+    assert_success
+    refute_output --partial "Uncovered Requirements — System Level"
+}
