@@ -169,6 +169,7 @@ def test_no_spec_kit_core_file_modified_outside_extension_yml():
         "overlays/",
         "docs/",
         "CHANGELOG.md",
+        "AGENTS.md",
         "CLAUDE.md",
         "README.md",
         "pyproject.toml",
