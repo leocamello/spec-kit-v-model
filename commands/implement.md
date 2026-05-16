@@ -9,8 +9,8 @@ handoffs:
     agent: speckit.v-model.tasks
     prompt: Re-derive the V-Model task list if implementation surfaced new modules or hazards
 scripts:
-  sh: scripts/bash/setup-implement.sh --json --require-tasks --include-tasks
-  ps: scripts/powershell/setup-implement.ps1 -Json -RequireTasks -IncludeTasks
+  sh: scripts/bash/setup-implement.sh --json --include-tasks
+  ps: scripts/powershell/setup-implement.ps1 -Json -IncludeTasks
 ---
 
 <!-- Implements: REQ-015, REQ-016, REQ-017, REQ-018, REQ-019, REQ-020, REQ-021, REQ-022, REQ-023, REQ-027, REQ-NF-002, REQ-NF-004, REQ-NF-005, REQ-CN-002, REQ-CN-003, REQ-CN-004, SYS-003, SYS-004, SYS-006, SYS-007, SYS-008, SYS-012, SYS-014, ARCH-004, ARCH-005, ARCH-006, ARCH-007, ARCH-009, ARCH-010, ARCH-011, ARCH-016, ARCH-017, ARCH-018, MOD-005, MOD-006, MOD-007, MOD-008, MOD-009, MOD-013, MOD-015, MOD-021, MOD-022, MOD-023, HAZ-007, HAZ-009, HAZ-014, HAZ-021, HAZ-023, HAZ-025, D-001, D-014 -->
@@ -25,15 +25,19 @@ You **MUST** consider the user input before proceeding (if not empty).
 
 ## Goal
 
-Drive the right-hand side of the V-Model from a TDD-ordered `tasks.md` to a single annotated commit. This command is the third and heaviest of the bridge commands: it orchestrates the pre-implementation gate, V-Model-aware code and test generation across four levels, sentinel-managed splicing into pre-existing sources, an `Implements:` hallucination self-check, the project quality harness, and a commit-subject suffix that pins the change to the V-Model identifiers it satisfies (REQ-015, REQ-016, SYS-003, ARCH-004, MOD-005).
+Generate **a fully working and validated implementation** of the software designed through the V-Model cycle, with full traceability from every emitted source file and test back to the V-Model identifier it satisfies. A complete V-Model specification goes in; working code and four-level tests come out; a single annotated commit records the chain.
+
+The command reads all 8 V-Model artefacts directly from `FEATURE_DIR/v-model/` (per REQ-015): the four dev-side artefacts (`requirements.md`, `system-design.md`, `architecture-design.md`, `module-design.md`) drive *what to build*; the four test-side artefacts (`unit-test.md`, `integration-test.md`, `system-test.md`, `acceptance-plan.md`) drive *what "working" means*. Neither `plan.md` nor `tasks.md` is required — when present they enrich the run, but the V-Model artefacts are the source of truth.
 
 The operative philosophy is **fail-fast**: the V-Model gate (ARCH-007) runs **before any codegen**, the hallucination guard (ARCH-009) runs **before any commit**, and either non-zero verdict aborts with an empty workspace and a populated `fatal_errors[]` (REQ-016, REQ-NF-004, REQ-CN-002, HAZ-007, HAZ-009). Code and tests are emitted with explicit `Implements: <ID>` traceability comments — these are the input to the guard, so the order is: generate → guard → commit, never any other permutation (REQ-018, REQ-019, REQ-023, D-004, D-008).
 
-Modifications of pre-existing source files are **never** ad-hoc: every write goes through the sentinel-managed region splicer (ARCH-010, MOD-014 — not enumerated in T016 but the underlying mechanism), which atomically replaces only the bytes between `<!-- BEGIN MANAGED id="<region>" -->` and `<!-- END MANAGED id="<region>" -->` and refuses on unbalanced or overlapping markers (REQ-022, REQ-CN-003, REQ-CN-004, D-001, D-015, D-016, HAZ-014, HAZ-025). The paradigm remains Markdown prompt + shell + YAML; no new Python is introduced (D-001).
+Modifications of pre-existing source files are **never** ad-hoc: every write goes through the sentinel-managed region splicer (ARCH-010, MOD-014), which atomically replaces only the bytes between `<!-- BEGIN MANAGED id="<region>" -->` and `<!-- END MANAGED id="<region>" -->` and refuses on unbalanced or overlapping markers (REQ-022, REQ-CN-003, REQ-CN-004, D-001, D-015, D-016, HAZ-014, HAZ-025).
 
-The command is **graceful** in exactly one direction: missing optional V-Model artefacts trigger the reduced-enrichment fallback (ARCH-014 conceptually; D-014) — never silently. The gate, the splicer, and the guard remain hard gates regardless of fallback state. On every exit path — success or failure — the structured run summary is flushed to stdout (REQ-027, ARCH-016, MOD-021, SYS-012).
+**Missing V-Model artefacts are fatal, not graceful.** Any of the 8 V-Model artefacts absent ⇒ the command refuses, names every missing artefact in `fatal_errors[]`, exits non-zero. Partial implementation contradicts the "fully working and validated software" contract. `hazard-analysis.md` is the sole auxiliary exception — its absence is a warning.
 
-**Non-goals**: this command does NOT mutate any V-Model artefact, re-run hazard analysis, regenerate the traceability matrix, or rewrite `tasks.md`. It is a pure executor over the inputs handed to it by `/speckit.v-model.tasks`.
+On every exit path — success or failure — the structured run summary is flushed to stdout (REQ-027, ARCH-016, MOD-021, SYS-012). The paradigm remains Markdown prompt + shell + YAML; no new Python is introduced (D-001).
+
+**Non-goals**: this command does NOT mutate any V-Model artefact, re-run hazard analysis, regenerate the traceability matrix, or rewrite `tasks.md`. It is a code generator over the V-Model artefact set.
 
 ## Execution Steps
 
@@ -45,11 +49,16 @@ Also derive `REPO_ROOT="$(git rev-parse --show-toplevel)"` for use by Step 7 —
 
 For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\''m Groot' (or double-quote if possible: "I'm Groot").
 
-Read `.specify/memory/constitution.md`. Read `FEATURE_DIR/tasks.md` (required — this is the V-Model-ordered task list from `/speckit.v-model.tasks`). Read `FEATURE_DIR/plan.md`, `FEATURE_DIR/spec.md`, and every doc named in `AVAILABLE_DOCS` (`data-model.md`, `contracts/`, `research.md`, `quickstart.md`).
+Read `.specify/memory/constitution.md`. Read `FEATURE_DIR/spec.md`, every doc named in `AVAILABLE_DOCS` (`data-model.md`, `contracts/`, `research.md`, `quickstart.md`), and `FEATURE_DIR/plan.md` and `FEATURE_DIR/tasks.md` if present (both are OPTIONAL enrichment — when produced by `/speckit.v-model.plan` / `/speckit.v-model.tasks` they provide additional context, but neither is the authoritative iteration source for code generation per REQ-015 / MOD-005).
 
-If `FEATURE_DIR/v-model/` exists, read **every** V-Model artefact present natively as Markdown — no parser is shipped. Record the read set as `inputs_read[]` and the missing optional set as `artifacts_skipped[]`. The expected set per ARCH-004 preconditions is `requirements.md`, `module-design.md`, `unit-test.md`, `integration-test.md`, `system-test.md`, `acceptance-plan.md`; `hazard-analysis.md` is optional but its absence triggers the reduced-enrichment branch in Step 9 (D-014, MOD-005).
+Read **every** V-Model artefact in `FEATURE_DIR/v-model/` natively as Markdown — no parser is shipped. Record the read set as `inputs_read[]`. **All 8 V-Model artefacts are required** for this command:
 
-**Refuse to proceed** if `tasks.md` is absent or unparseable: emit §Structured Summary with `fatal_errors: ["tasks.md required"]`, exit 1.
+- **Dev-side (high-level → detailed):** `requirements.md` anchors the verifiable intent; `system-design.md` supplies system decomposition and operational states; `architecture-design.md` supplies module boundaries and interface contracts; `module-design.md` supplies algorithms, data structures, and Target Source Files.
+- **Test-side (the validation documents that define "working"):** `acceptance-plan.md`, `system-test.md`, `integration-test.md`, `unit-test.md` — every level of the V has a paired validation document, and the generated code MUST be compliant with all four.
+
+`hazard-analysis.md` is auxiliary but recommended; its absence is logged as a `warnings[]` entry and does not block the run.
+
+**Refuse to proceed** if any of the 8 V-Model artefacts is absent or unparseable: emit §Structured Summary with `fatal_errors[]` naming every missing artefact, exit 1. Partial implementation contradicts the "fully working and validated software" contract that defines this command's purpose.
 
 ### 2. Pre-implementation gate (per ARCH-007, MOD-010 → T008, REQ-016, REQ-NF-004, REQ-CN-002, D-003)
 
@@ -72,10 +81,21 @@ A malformed `v-model-config.yml` (unparseable YAML, missing `domain:` key, or th
 
 ### 4. Code generation (per ARCH-005, MOD-006, MOD-007, REQ-018, REQ-019)
 
-For each pending task in `tasks.md` whose subject is a `MOD-NNN` row in `module-design.md`:
+**Iteration source: `module-design.md`.** For each `MOD-NNN` row (skipping rows marked `[DEPRECATED]` or classified `DROP-recharacterized`) — one code-generation unit per MOD entry. `tasks.md`, when present, serves only as supplemental ordering / parallelisation context; it is not the iteration source.
+
+**Generation inputs (all consulted per MOD):** code generation is informed by the full V-Model artefact set. For each MOD, the generated code MUST simultaneously satisfy:
+
+- **`module-design.md`** (the MOD entry itself) — algorithm, data structures, error handling, Target Source File, target language.
+- **`unit-test.md`** (test-first discipline) — the `UTP-NNN` / `UTS-NNN-XN` cases scoped to this MOD define the verifiable behavior the generated code MUST exhibit. The tests are already specified; the code is written to make them pass.
+- **`architecture-design.md`** — the parent `ARCH-NNN` module's Interface contract (error codes, data formats, module boundaries) the code MUST honor.
+- **`system-design.md`** — system-level context (operational states, data design, system decomposition) the code MUST fit within.
+- **`requirements.md`** — the parent `REQ-NNN` (functional, non-functional, interface, constraint) intent the MOD ultimately satisfies. Code MUST be compliant with every cited requirement.
+- **`integration-test.md`, `system-test.md`, `acceptance-plan.md`** — describe higher-level behaviors the MOD's interfaces participate in; the code MUST be compatible with these test scenarios.
+
+**Per-MOD generation steps:**
 
 1. Resolve the Target Source File and target language declared in the MOD row.
-2. Render the module body following the task description and any §Domain Overlay augmentation.
+2. Render the module body so it (a) implements the MOD's specified algorithm / data structures; (b) makes the corresponding `UTP-NNN` / `UTS-NNN-XN` cases pass (test-first); (c) honors the parent `ARCH-NNN` interface contract; (d) fits the system-level context; (e) satisfies the parent `REQ-NNN` intent; (f) applies any §Domain Overlay augmentation.
 3. Emit a language-appropriate `Implements: <ID, ID, …>` header comment listing every V-Model ID the file satisfies — at minimum the `MOD-NNN` and its parent `ARCH-NNN`; per public symbol, attach an additional `Implements: <ID>` line per REQ-019 / SCN-019-A1.
 
 These `Implements:` comments are the **sole** input to the hallucination guard in Step 7 — every cited ID must already exist in the V-Model artefact set or the guard will reject the change (REQ-023, REQ-NF-002, MOD-013, MOD-025).
@@ -87,9 +107,9 @@ Emit tests at **all four V-Model levels** into the project's existing test direc
 - **Unit** (`tests/unit/`) — one or more files per `UTP-NNN` / `UTS-NNN-XN` in `unit-test.md`.
 - **Integration** (`tests/integration/`) — per `ITP-NNN` / `ITS-NNN-XN` in `integration-test.md`.
 - **System** (`tests/system/`) — per `STP-NNN` / `STS-NNN-XN` in `system-test.md`.
-- **Acceptance** (`tests/acceptance/`) — per `ATP-NNN` / `SCN-NNN-XN` in `acceptance-plan.md` (subject to the reduced-enrichment branch in Step 9 if `acceptance-plan.md` is absent).
+- **Acceptance** (`tests/acceptance/`) — per `ATP-NNN` / `SCN-NNN-XN` in `acceptance-plan.md`.
 
-Each generated test carries the same `Implements: <UTP|ITP|STP|ATP|SCN-NNN, …>` directive convention as Step 4. At least one file MUST appear under each of the four directories on the success path per SCN-020-A1 (or be explicitly accounted for in `artifacts_skipped[]`).
+Each generated test carries the same `Implements: <UTP|ITP|STP|ATP|SCN-NNN, …>` directive convention as Step 4. **At least one file MUST appear under each of the four directories on the success path** per SCN-020-A1 — all four test plans are mandatory inputs (Step 1) and produce mandatory outputs.
 
 A test-plan artefact that is present but fails to parse is fail-closed: append the parser diagnostic to `fatal_errors[]`, emit §Structured Summary, exit 1 (ARCH-006 error path).
 
@@ -158,17 +178,7 @@ Run the project's existing four-stack harnesses; do not introduce new tooling:
 
 Aggregate exit codes; any non-zero ⇒ append the failing harness summary into `fatal_errors[]`, emit §Structured Summary, **block the commit**, exit 1 (ARCH-017 merge-gate). The sole escape hatch is an explicit `--allow-failing-quality` argument on the `$ARGUMENTS` line; if present, downgrade the failure to a `warnings[]` entry and record the override under `risk_acceptances[]` of the §Structured Summary so the bypass is auditable (HAZ-021 — coverage-gate-not-enforced).
 
-### 9. Reduced-enrichment fallback (per ARCH-014 conceptually; D-014)
-
-For each **optional** V-Model artefact missing from `FEATURE_DIR/v-model/` — typically `acceptance-plan.md` (skips Step 5 acceptance-level emission) or `hazard-analysis.md` (skips hazard-driven elevation in upstream `tasks.md` consumption) — record an explanatory marker in the run summary and an inline HTML comment in any generated file whose content was reduced:
-
-```
-<!-- v-model: <step> reduced — <artefact> missing/empty -->
-```
-
-**Never silently degrade.** Reduced enrichment is a successful, observable outcome — exit 0 with `warnings[]` populated and `artifacts_skipped[]` listing the missing inputs (D-014). The hard gates of Steps 2 and 7 are NOT bypassed by this branch.
-
-### 10. Commit annotation (per ARCH-018, MOD-023, REQ-021, REQ-NF-005)
+### 9. Commit annotation (per ARCH-018, MOD-023, REQ-021, REQ-NF-005)
 
 **Commit subject grammar (non-negotiable)** — the prepared commit subject MUST conform to:
 
@@ -180,7 +190,7 @@ Where:
 - `<base-subject>` is the conventional spec-kit-core commit subject (≤72 chars before the em-dash); use Conventional Commits style if the repo already does (`feat(<scope>): <imperative>` etc.).
 - The separator is a literal **em-dash surrounded by single ASCII spaces** — `U+2014` — NOT `--`, NOT `-` (hyphen-minus), NOT `–` (U+2013 en-dash).
 - The ID list is **comma-and-space-separated** (`, `), in the order the IDs appear in the in-context generation plan (MOD-023). Each ID MUST satisfy the canonical regex enforced by `validate-implements-ids.sh` and `tests/conftest.py`: `(?:REQ|REQ-NF|REQ-CN|REQ-IF|SYS|ARCH|MOD|ITP|ITS|UTP|UTS|STP|STS|ATP|SCN|HAZ)-\d+(?:-[A-Z]\d*)?` plus `D-\d+`.
-- Empty ID list ⇒ omit the em-dash and the suffix entirely; record `warnings: ["empty implements list — commit subject not annotated"]` in §Structured Summary (Step 11) and emit the unannotated base subject (best-effort per ATP-021-A).
+- Empty ID list ⇒ omit the em-dash and the suffix entirely; record `warnings: ["empty implements list — commit subject not annotated"]` in §Structured Summary (Step 10) and emit the unannotated base subject (best-effort per ATP-021-A).
 
 Precondition: Step 7 emitted `GUARD: PASS` and Step 8 emitted `quality: PASS` (or recorded an explicit `--allow-failing-quality` risk acceptance).
 
@@ -192,11 +202,11 @@ Construct the commit subject as the conventional spec-kit-core base message foll
 
 The body lists files modified, levels generated (U / I / S / A counts), gate verdict, guard verdict, and any active fallbacks.
 
-**The prepared subject MUST be echoed verbatim into §Structured Summary as the labeled field `commit_subject:` (Step 11) on every exit path** — success, failure, dry-run, or empty-diff — so downstream consumers (CI parsers, audit tooling, the commit-suffix eval at `tests/evals/test_commit_suffix.py`) can extract it deterministically without parsing prose. This is the machine-extractability contract for ARCH-016 / MOD-021.
+**The prepared subject MUST be echoed verbatim into §Structured Summary as the labeled field `commit_subject:` (Step 10) on every exit path** — success, failure, dry-run, or empty-diff — so downstream consumers (CI parsers, audit tooling, the commit-suffix eval at `tests/evals/test_commit_suffix.py`) can extract it deterministically without parsing prose. This is the machine-extractability contract for ARCH-016 / MOD-021.
 
 Issue `git commit -m "<message>"`. A `git commit` non-zero is fatal: append stderr to `fatal_errors[]`, emit §Structured Summary, exit 1.
 
-### 11. Structured Summary (per ARCH-016, MOD-021, SYS-012, REQ-027)
+### 10. Structured Summary (per ARCH-016, MOD-021, SYS-012, REQ-027)
 
 On every exit path (success **and** failure), flush stdout and emit:
 
@@ -230,7 +240,7 @@ The `commit_subject:` field is the machine-extractable mirror of the prepared co
 
 This block is the contract for downstream consumers — CI parsers, the `v-model.trace` bridge, audit tooling. Truncation is itself a hazard (HAZ-025 mitigation).
 
-### 12. Handoffs
+### 11. Handoffs
 
 On success, recommend `/speckit.v-model.trace` to validate the full upstream-to-downstream trace after implementation. The frontmatter's secondary handoff exposes a re-tasks path for when implementation surfaced new modules or hazards.
 
@@ -242,7 +252,7 @@ Self-check **every** invariant below; any violation forces re-emission with the 
 - The hallucination guard (Step 7) ran and emitted `GUARD: PASS` **before** any `git commit` was issued (REQ-023, ARCH-009, MOD-013).
 - Every generated source and test file carries an `Implements: <ID, …>` header naming ≥1 V-Model ID; every public symbol additionally carries an `Implements: <ID>` comment per REQ-019.
 - Every modification of a pre-existing source went through `splice-managed-regions.sh` and the caller's `mktemp` + `mv` atomic-rename idiom; **no write touched `/tmp`** (REQ-CN-003, REQ-CN-004, REQ-NF-005, D-016).
-- Tests appear at all four V-Model levels (U / I / S / A) — or each absent level is named in `artifacts_skipped[]` with the upstream artefact that triggered the reduction (REQ-020, SYS-003, D-014).
+- Tests appear at all four V-Model levels (U / I / S / A); a missing test plan is fatal at Step 1 — all four test-side artefacts are required inputs, never gracefully skipped (REQ-020, SYS-003, REQ-NF-005b).
 - The §Structured Summary is flushed on success **and** every failure exit path; `fatal_errors[]` is empty on success and present-with-content on every failure (REQ-027, MOD-021, SYS-012, HAZ-025).
 - No fabricated V-Model identifiers appear anywhere in generated content — every cited ID is grep-resolvable in `FEATURE_DIR/v-model/` (REQ-NF-002, MOD-013, HAZ-007).
 - The commit subject matches the `<base> — <ID>, <ID>, …` regex on the success path, or carries the documented unannotated-warning entry (REQ-021, ARCH-018, MOD-023).
@@ -251,7 +261,7 @@ Self-check **every** invariant below; any violation forces re-emission with the 
 
 | Failure | Detection | User-facing recovery |
 |---|---|---|
-| `tasks.md` missing/unparseable | Step 1 read | `fatal_errors: ["tasks.md required"]`, exit 1; user runs `/speckit.v-model.tasks` first. |
+| Any of the 8 V-Model artefacts missing/unparseable | Step 1 read | `fatal_errors[]` naming every missing artefact, exit 1; user creates or completes the missing artefact(s) via the corresponding `/speckit.v-model.<level>` command (e.g. `/speckit.v-model.requirements`, `/speckit.v-model.module-design`, `/speckit.v-model.unit-test`) before re-running (REQ-NF-005b). |
 | `GATE: FAIL` from `run-v-model-gate.sh` | Step 2 | Append wrapper stdout to `fatal_errors[]`; **no codegen**; exit 1; user closes the missing-coverage rows reported by the inner validators (HAZ-009, HAZ-010). |
 | `v-model-config.yml` malformed | Step 3 parse | Fail-closed; exit 1; user fixes the YAML or removes the file (ARCH-011). |
 | Test-plan artefact present but unparseable | Step 5 parse | `fatal_errors: ["<artefact> unparseable"]`, exit 1; user repairs the plan (ARCH-006). |
@@ -260,10 +270,10 @@ Self-check **every** invariant below; any violation forces re-emission with the 
 | `GUARD: FAIL` from `validate-implements-ids.sh` | Step 7 | Append offending `<file>:<line>: unknown id <id>` lines to `fatal_errors[]`; **no commit**; exit 1; user removes or corrects the hallucinated IDs (HAZ-007, HAZ-012, HAZ-023). |
 | Quality harness <100% (no override) | Step 8 | `fatal_errors[]` populated with the failing harness summary; commit blocked; exit 1 (ARCH-017, HAZ-021). |
 | Quality harness <100% with `--allow-failing-quality` | Step 8 + arg parse | Downgrade to `warnings[]`; record under `risk_acceptances[]`; proceed; commit subject body annotates the override (HAZ-021 explicit acceptance). |
-| Optional artefact missing | Step 1 read; Step 9 | Reduced-enrichment fallback; named in `artifacts_skipped[]`; inline `<!-- v-model: … reduced -->` markers; exit 0 (D-014). |
-| `git commit` non-zero | Step 10 | `fatal_errors: ["git commit failed: <stderr>"]`, exit 1; user resolves the staging-area or hook failure (ARCH-018). |
+| `hazard-analysis.md` missing (auxiliary only) | Step 1 read | `warnings[]` entry naming the missing auxiliary; run proceeds. `hazard-analysis.md` is the sole non-blocking V-Model input. |
+| `git commit` non-zero | Step 9 | `fatal_errors: ["git commit failed: <stderr>"]`, exit 1; user resolves the staging-area or hook failure (ARCH-018). |
 | Partial codegen interrupted (signal, OOM) | post-mortem | Re-run is idempotent: gate re-evaluates, splicer regenerates only the managed regions, guard re-validates; commit will only annotate IDs from the completed run (D-016, ARCH-010). |
-| §Structured Summary truncated | Step 11 flush failure | Last-resort: emit `--- v-model implement summary --- fatal_errors: [summary truncated] --- end summary ---`; exit 1 (HAZ-025, MOD-021). |
+| §Structured Summary truncated | Step 10 flush failure | Last-resort: emit `--- v-model implement summary --- fatal_errors: [summary truncated] --- end summary ---`; exit 1 (HAZ-025, MOD-021). |
 
 ## Operating Constraints
 
@@ -281,4 +291,4 @@ Every write to disk uses the inline `mktemp -p "$(dirname "$f")"` + `mv` idiom o
 
 ### Stateless re-runnability
 
-Every run regenerates outputs from `tasks.md` + the V-Model artefact set; there is no cache. Sentinel-managed splicing (D-015, D-016) and the `Implements: <ID>` directive convention together make re-runs idempotent: a no-op input produces a no-op commit (`git commit` exits non-zero on an empty diff and the structured summary records `commit: skipped — empty diff` as a warning, not a fatal error). The paradigm remains Markdown prompt + shell + YAML; no Python is introduced (D-001).
+Every run regenerates outputs from the V-Model artefact set (optionally enriched by `tasks.md` when present); there is no cache. Sentinel-managed splicing (D-015, D-016) and the `Implements: <ID>` directive convention together make re-runs idempotent: a no-op input produces a no-op commit (`git commit` exits non-zero on an empty diff and the structured summary records `commit: skipped — empty diff` as a warning, not a fatal error). The paradigm remains Markdown prompt + shell + YAML; no new Python is introduced (D-001).
