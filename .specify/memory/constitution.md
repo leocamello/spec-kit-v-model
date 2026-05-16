@@ -15,9 +15,10 @@
     - .specify/templates/tasks-template.md ✅ (already present)
     - AGENTS.md ✅ (created in same change; references this constitution as authoritative)
   Follow-up TODOs:
-    - Substance validators (validate-test-plan-implementation.sh,
-      validate-module-implementation-depth.sh) must be wired into CI
-      before they are cited as enforcement in PR reviews.
+    - The substance-over-shape rule (§Bridge Command Discipline #4)
+      MUST be implemented before it is cited as enforcement in PR
+      reviews. The implementation choice (dedicated script, in-prompt
+      check, structural eval) is left to the bridges.
 
   Prior history:
     1.0.0 — Initial ratification (2026-02-19): five core principles, regulatory standards,
@@ -242,12 +243,14 @@ substance"):
    V-Model source MUST be detected and resolved before bridges re-run.
 
 4. **Substance over shape.** Schema validation is necessary but never
-   sufficient. The substance validators — `validate-test-plan-implementation.sh`
-   and `validate-module-implementation-depth.sh` — MUST run as part of the
-   bridge pre-flight and MUST fail closed when substance is missing.
-   Examples of substance failures that MUST be caught: a test plan that
-   names methods but defines no scenarios; a module design that lists
-   functions but specifies no behavior or invariants.
+   sufficient. Bridges MUST check that the upstream artifacts have
+   verification substance to translate, not merely the right structure;
+   when substance is missing, the bridge refuses and routes the user
+   back to fix the upstream artifact. Examples of substance failures:
+   a test plan that names methods but defines no scenarios; a module
+   design that lists functions but specifies no behavior or invariants.
+   How a bridge implements this check is an implementation choice — not
+   a constitutional pre-commitment to any specific tooling.
 
 5. **Bridges never modify compliance-critical artifacts.** Bridges read
    the eight V-Model artifacts; they do not write to them. Any change a

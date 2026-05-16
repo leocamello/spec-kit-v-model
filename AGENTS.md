@@ -116,12 +116,25 @@ files; sibling files never authorize V-Model artifacts.
 ## 5. Bridge command discipline
 
 The three **bridge commands** — `speckit.v-model.plan`,
-`speckit.v-model.tasks`, `speckit.v-model.implement` — translate the
-V-Model artifact set into Spec-Kit-canonical outputs. They are the place
-where the V-Model meets generated code, and they are the place where
-v0.7.0 went wrong: bridges produced structurally valid outputs that
-lacked verification substance — passing schema checks while leaving
-compliance-critical content empty or trivial.
+`speckit.v-model.tasks`, `speckit.v-model.implement` — connect the
+V-Model artifact set to its downstream outputs. They split into two
+purposes:
+
+- `v-model.plan` and `v-model.tasks` (both OPTIONAL) translate the
+  V-Model set into Spec-Kit-canonical artifacts (`plan.md`, `tasks.md`,
+  and siblings) so users can mix V-Model with `speckit.*` commands.
+- `v-model.implement` (CORE) reads the V-Model set directly and produces
+  **a fully working and validated implementation** — source code plus
+  tests at all four levels (unit, integration, system, acceptance) —
+  with every output tied to its V-Model identifier. This is the
+  load-bearing user-facing capability: the implement command exists to
+  close the gap from V-Model specification to working software.
+
+These three commands are the place where the V-Model meets generated
+code, and they are the place where v0.7.0 went wrong: bridges produced
+structurally valid outputs that lacked verification substance —
+passing schema checks while leaving compliance-critical content empty
+or trivial.
 
 The locked-in discipline (codified in
 [constitution §Bridge Command Discipline](.specify/memory/constitution.md)):
@@ -132,10 +145,11 @@ The locked-in discipline (codified in
 2. **Bridges translate, never invent.** When translation is not possible,
    bridges refuse and surface `[NEEDS CLARIFICATION]` on the upstream
    V-Model artifact.
-3. **Substance over shape.** Substance validators
-   (`validate-test-plan-implementation.sh`,
-   `validate-module-implementation-depth.sh`) run as pre-flight and
-   fail closed.
+3. **Substance over shape.** Bridges check that upstream artifacts have
+   verification substance, not just the right structure. How this check
+   is implemented (dedicated validator, in-prompt assertion, structural
+   eval) is up to the bridge — what matters is that empty or trivial
+   substance fails closed, never silently passes.
 4. **Bridges never write to V-Model artifacts.** Read-only access. Any
    needed change is routed back through the relevant
    `speckit.v-model.<level>` command.
@@ -169,8 +183,9 @@ substance failures that MUST be caught:
 - An architecture module listed as `[Implements REQ-NNN]` where the
   module's behavior does not address the requirement's verifiable claim.
 
-If substance validators do not yet exist for a given level, an agent
-MUST flag this in its Report Completion and not silently approve.
+If a level lacks any substance check at the time the bridge runs, the
+agent MUST flag this in its Report Completion rather than silently
+declaring the substance acceptable.
 
 ---
 
