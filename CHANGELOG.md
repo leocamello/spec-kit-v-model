@@ -5,6 +5,38 @@ All notable changes to the V-Model Extension Pack are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.2] — Extension Packaging Hygiene & Handoff Documentation — 2026-05-17
+
+> **Release theme**: address two drift hazards surfaced during the v0.7.1 release and subsequent dogfood-refresh investigation — (1) the README's hardcoded install-URL drift, (2) the `specify extension add` install vendoring the entire repo because no `.extensionignore` existed — plus two Epic 3 stabilization tasks land: handoff-graph documentation and template-overlay mismatch cleanup. No new commands. No new features. No new functionality.
+
+### Fixed
+
+- **README install URL drift.** The Quick Start snippet in `README.md` hardcoded `v0.7.0.zip`, so end users following the README after v0.7.1 were still installing v0.7.0. Updated to `v0.7.1.zip` mid-cycle (during this release's preparation) and to `v0.7.2.zip` as part of the v0.7.2 ceremony. Going forward, the release ceremony bumps this URL alongside `pyproject.toml` / `extension.yml` / `catalog-entry.json`.
+
+### Changed — Extension packaging hygiene
+
+- **New `.extensionignore` at repo root.** Tells `specify extension add` to skip development sources (`tests/`, `specs/`, `docs/`, `site/`, `.specify/`, `.github/`, `examples/`, `media/`, `presentations/`, `refactoring_plan/`, plus build/IDE/OS cruft) when vendoring the extension into a user's project. Without this file, an install via the GitHub archive zip vendored the entire repo (~700 files at v0.7.1), including the recursive-vendor hazard `.specify/extensions/v-model/.specify/...`. With this file, the install footprint drops to ~165 files — commands, scripts, templates, and extension metadata. Takes effect when consumers use a `specify-cli` recent enough to honour `.extensionignore`.
+
+### Changed — Epic 3 stabilization
+
+- **Handoff graph documented (Epic 3 Task 5).** New `AGENTS.md` §11 inventories every handoff declared in `commands/*.md` frontmatter: the forward V-Model lifecycle (L1–L4 design→test→trace), cross-cutting handoffs (hazard-analysis, impact-analysis, peer-review, test-results, audit-report), bridge handoffs (plan→tasks→implement), and the nine backward "Back to X" user buttons. Documents the **three intentional cycles** (peer-review self-loop; trace↔acceptance gap-fix loop; plan↔tasks↔implement bridge refinement) with their termination conditions. Documents the **one historically-removed handoff** (`plan` → `implement` direct, removed in v0.7.0 per MF-10) so it doesn't get re-introduced. States the invariants the graph enforces (every auto-dispatch converges on `trace`; backward handoffs are user-button only; every handoff has all four fields). Renumbers existing §11/§12/§13 → §12/§13/§14.
+
+- **Template overlay mismatch resolved (Epic 3 Task 7).** `commands/requirements.md` and `commands/acceptance.md` instructed the LLM to read domain-specific template overlays (`templates/overlays/{domain}/*-template.md`), but those files never existed — only empty `.gitkeep` placeholders in the three domain directories. Per the audit's Definition of Done ("either implement OR remove the instructions"), the instructions are removed. The empty directories are kept as placeholders for future intent. The `commands/overlays/{domain}/<command>.md` mechanism (which IS populated and DOES work) is unchanged.
+
+### Test infrastructure
+
+- `tests/structural/test_extension_yml.py::test_no_spec_kit_core_file_modified_outside_extension_yml` allow-list now permits `.extensionignore` at the repo root.
+
+### Deferred to a later v0.7.x or v0.8.0
+
+- **Epic 3 Tasks 2, 3, 4** (extract shared prompt policies; reduce each command to single responsibility; refactor bridge prompts especially `implement`). The audit's Definition of Done for these tasks presupposes either a build-time generator or an install-time include mechanism — tooling we don't have. Lightweight versions (standardize-and-CI-test rather than extract-and-include) were considered but defer the bigger architectural decision (build the tooling, redesign the prompts, or adapt the DoDs) to a later release.
+
+### Known Limitations
+
+(unchanged from v0.7.1 — see [0.7.1] entry below for the two LLM-eval variance flakes and the PowerShell mirror gap for `update-agent-context.sh`.)
+
+---
+
 ## [0.7.1] — Bridge Command Reconciliation & Governance — 2026-05-17
 
 > **Release theme**: reconcile the v0.7.0 bridge commands with their user-facing intent — that `/speckit.v-model.implement` produces *a fully working and validated implementation* from the V-Model artefact set — and adopt a real contributor operating manual + an additive constitution amendment that codifies the discipline the v0.7.0 design did not yet capture. No new commands, no new features, no new functionality. Surgical reconciliation.
