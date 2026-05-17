@@ -303,7 +303,107 @@ When introducing a new command, an agent MUST:
 
 ---
 
-## 11. Cleanup is welcome; sprawl needs approval
+## 11. Handoff graph
+
+Every `commands/*.md` declares zero or more handoffs in its YAML
+frontmatter. A handoff names a **target command**, a one-line **reason**
+(the `prompt:` field), and whether it **auto-dispatches** (`send: true`)
+or is offered to the user as a button (`send: false` or omitted). This
+section documents the resulting graph so contributors can reason about
+workflow ergonomics without re-reading 17 frontmatter blocks. Every
+handoff has all four fields; reasons live in the source files.
+
+### Forward V-Model lifecycle (`send: true`)
+
+Each design-side command auto-dispatches to its paired test-side
+command; each test-side command auto-dispatches to `trace`:
+
+| Level | Design → Test | Test → Trace |
+|---|---|---|
+| L1 — Acceptance | `requirements` → `acceptance` | `acceptance` → `trace` |
+| L2 — System | `system-design` → `system-test` | `system-test` → `trace` |
+| L3 — Architecture | `architecture-design` → `integration-test` | `integration-test` → `trace` |
+| L4 — Module | `module-design` → `unit-test` | `unit-test` → `trace` |
+
+`trace` is the convergence point — every test-side level and most
+cross-cutting commands route through it.
+
+### Cross-cutting and reporting
+
+| Source | Forward (`send: true`) | Backward (user button) |
+|---|---|---|
+| `hazard-analysis` | `trace` | `system-design` |
+| `impact-analysis` | `trace` | `peer-review` |
+| `peer-review` | `trace` | `peer-review` (self-loop — see Cycles) |
+| `test-results` | `trace` | `impact-analysis` |
+| `audit-report` | `trace` + `test-results` (both `send: true`) | (none) |
+
+### Bridge commands (v0.7.x reconciliation flow)
+
+| Source | Forward (`send: true`) | Backward (user button) |
+|---|---|---|
+| `plan` (OPTIONAL) | `tasks` | (none) |
+| `tasks` (OPTIONAL) | `implement` | `plan` (Re-Plan) |
+| `implement` (CORE) | `trace` | `tasks` (Re-Tasks) |
+
+### Backward / refinement handoffs (user buttons)
+
+Every design-side and test-side command offers a backward handoff to
+its parent so users can iterate without re-typing slash commands:
+
+- `acceptance` → `requirements` (Back to Requirements)
+- `system-design` → `requirements` (Back to Requirements)
+- `system-test` → `system-design` (Back to System Design)
+- `architecture-design` → `system-design` (Back to System Design)
+- `integration-test` → `architecture-design` (Back to Architecture Design)
+- `module-design` → `architecture-design` (Back to Architecture Design)
+- `unit-test` → `module-design` (Back to Module Design)
+- `requirements` → `specify` (Back to Specify — into spec-kit core)
+- `trace` → `requirements` (Update Requirements)
+
+### Intentional cycles
+
+Three cycles exist in the graph; **all three are intentional**:
+
+1. **`peer-review` → `peer-review` (self-loop, user button).** "Review
+   Another Artifact" lets a user run consecutive peer-review passes on
+   different artefacts without re-typing the slash command.
+2. **`trace` ↔ `acceptance` (gap-fix loop, auto-dispatch).** When
+   `trace` detects coverage gaps, its forward dispatches `acceptance`
+   ("Fix Coverage Gaps"). `acceptance` then dispatches back to `trace`.
+   The loop terminates when coverage closes.
+3. **`plan` ↔ `tasks` ↔ `implement` (bridge refinement, user buttons).**
+   Each consecutive bridge offers a backward "Re-X" button to the
+   previous one. If `implement` surfaces new modules/hazards, it
+   suggests re-running `tasks`; if `tasks` finds the upstream plan
+   missing context, it suggests re-running `plan`. Refinement is
+   user-initiated to prevent runaway loops.
+
+Adding any new cycle requires documenting it here with its termination
+condition.
+
+### Removed handoffs (do not re-introduce)
+
+- **`plan` → `implement` (direct):** removed in v0.7.0 per MF-10. The
+  V-Model lifecycle is `plan` → `tasks` → `implement`; jumping
+  `plan` → `implement` skips the TDD-ordered task decomposition the
+  rest of the system expects. The rationale is preserved as a comment
+  in `commands/plan.md`'s frontmatter.
+
+### Invariants enforced by this graph
+
+- Every auto-dispatched (`send: true`) forward chain converges
+  eventually on `trace` — no auto-dispatch terminates before
+  traceability is validated.
+- Every backward handoff is a user button (never `send: true`) —
+  auto-dispatching backward would create unintended infinite loops.
+- All four handoff fields (`label`, `agent`, `prompt`, `send`) MUST
+  be present in every handoff entry; the `prompt:` field is the
+  one-line reason a contributor or audit reader can consult.
+
+---
+
+## 12. Cleanup is welcome; sprawl needs approval
 
 The project periodically enters **stabilization cycles** to pay down
 the kind of debt that accumulates when features ship faster than the
@@ -341,7 +441,7 @@ absence does not relax the rule above.
 
 ---
 
-## 12. Common pitfalls
+## 13. Common pitfalls
 
 Drawn from the v0.7.0 audit. An agent that finds itself about to do one
 of these things should stop and ask.
@@ -372,7 +472,7 @@ of these things should stop and ask.
 
 ---
 
-## 13. When in doubt
+## 14. When in doubt
 
 1. Re-read [`.specify/memory/constitution.md`](.specify/memory/constitution.md).
 2. Re-read [`docs/product-vision.md`](docs/product-vision.md) for *why*.
