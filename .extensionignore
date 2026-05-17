@@ -1,0 +1,69 @@
+# .extensionignore — files and directories NOT to vendor when this
+# extension is installed via `specify extension add v-model`.
+#
+# Pattern syntax: gitignore-compatible (per upstream spec-kit's
+# _load_extensionignore). This reduces install footprint from the full
+# repo (~700 files at v0.7.1) to runtime essentials — commands, scripts,
+# templates, and extension metadata.
+
+# === Version control ===
+.git/
+.gitignore
+.gitmodules
+
+# === Spec-Kit dogfooding state (recursive-vendor hazard) ===
+# This repo dogfoods the extension on itself, which means
+# .specify/extensions/v-model/ already contains a vendored copy of the
+# extension. Including .specify/ in the install would recursively vendor
+# the extension into itself on every refresh.
+.specify/
+
+# === GitHub workflows + dogfood agent files ===
+# These belong to THIS repo's CI/dogfood state, not to consumers.
+.github/
+
+# === Development sources not needed at install time ===
+tests/             # Unit / integration / system test suites for the extension itself
+specs/             # Historical feature specifications (development artifacts)
+docs/              # User-facing documentation (rendered to the project's website)
+site/              # MkDocs build output (generated from docs/)
+media/             # Project images
+presentations/     # Talks / decks (not extension content)
+refactoring_plan/  # Transient stabilization roadmap (cycle-local)
+
+# === Build / tooling artifacts ===
+.editorconfig
+.pytest_cache/
+.deepeval/
+__pycache__/
+*.pyc
+*.pyo
+.coverage
+htmlcov/
+*.egg-info/
+dist/
+build/
+node_modules/
+
+# === IDE / OS cruft ===
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# === Local environment files (defensive; already in .gitignore) ===
+.env
+.env.local
+.env.example
+
+# === Project-internal files not for end users ===
+testResults.xml
+conftest.py             # Root pytest conftest, not extension code
+requirements-dev.txt    # Development-only Python dependencies
+AGENTS.md               # Contributor operating manual (read on GitHub)
+
+# === This file itself ===
+.extensionignore
