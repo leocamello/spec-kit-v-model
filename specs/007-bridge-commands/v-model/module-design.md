@@ -571,7 +571,7 @@ test case.
 - For each level in {unit, integration, system, acceptance}: read the
   corresponding test plan; if absent, refuse to proceed — emit
   `fatal_errors[]` naming the missing artifact and exit 1. The four
-  test plans are mandatory for `v-model.implement` per REQ-NF-005b;
+  test plans are mandatory for `v-model.implement` per REQ-NF-005B;
   partial implementation contradicts the "fully working and validated
   software" contract that defines the command's purpose.
 - For each test case in the plan, dispatch to §Test Levels (MOD-009).

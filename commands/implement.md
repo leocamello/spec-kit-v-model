@@ -189,7 +189,7 @@ Aggregate exit codes; any non-zero ⇒ append the failing harness summary into `
 Where:
 - `<base-subject>` is the conventional spec-kit-core commit subject (≤72 chars before the em-dash); use Conventional Commits style if the repo already does (`feat(<scope>): <imperative>` etc.).
 - The separator is a literal **em-dash surrounded by single ASCII spaces** — `U+2014` — NOT `--`, NOT `-` (hyphen-minus), NOT `–` (U+2013 en-dash).
-- The ID list is **comma-and-space-separated** (`, `), in the order the IDs appear in the in-context generation plan (MOD-023). Each ID MUST satisfy the canonical regex enforced by `validate-implements-ids.sh` and `tests/conftest.py`: `(?:REQ|REQ-NF|REQ-CN|REQ-IF|SYS|ARCH|MOD|ITP|ITS|UTP|UTS|STP|STS|ATP|SCN|HAZ)-\d+(?:-[A-Z]\d*)?` plus `D-\d+`.
+- The ID list is **comma-and-space-separated** (`, `), in the order the IDs appear in the in-context generation plan (MOD-023). Each ID MUST satisfy the canonical regex enforced by `validate-implements-ids.sh` and `tests/conftest.py`: `(?:REQ|SYS|ARCH|MOD|ITP|ITS|UTP|UTS|STP|STS|ATP|SCN|HAZ)(?:-[A-Z]{2,3})?-\d+(?:-[A-Z]\d*)?` plus `D-\d+`. The optional `(?:-[A-Z]{2,3})?` sub-prefix slot accepts derived-category IDs like `REQ-NF`, `REQ-CN`, `REQ-IF`, `REQ-DR`, `REQ-LC`, `REQ-SEC`, `SYS-DR`, `ATP-NF`, `SCN-LC`, etc.
 - Empty ID list ⇒ omit the em-dash and the suffix entirely; record `warnings: ["empty implements list — commit subject not annotated"]` in §Structured Summary (Step 10) and emit the unannotated base subject (best-effort per ATP-021-A).
 
 Precondition: Step 7 emitted `GUARD: PASS` and Step 8 emitted `quality: PASS` (or recorded an explicit `--allow-failing-quality` risk acceptance).
@@ -252,7 +252,7 @@ Self-check **every** invariant below; any violation forces re-emission with the 
 - The hallucination guard (Step 7) ran and emitted `GUARD: PASS` **before** any `git commit` was issued (REQ-023, ARCH-009, MOD-013).
 - Every generated source and test file carries an `Implements: <ID, …>` header naming ≥1 V-Model ID; every public symbol additionally carries an `Implements: <ID>` comment per REQ-019.
 - Every modification of a pre-existing source went through `splice-managed-regions.sh` and the caller's `mktemp` + `mv` atomic-rename idiom; **no write touched `/tmp`** (REQ-CN-003, REQ-CN-004, REQ-NF-005, D-016).
-- Tests appear at all four V-Model levels (U / I / S / A); a missing test plan is fatal at Step 1 — all four test-side artefacts are required inputs, never gracefully skipped (REQ-020, SYS-003, REQ-NF-005b).
+- Tests appear at all four V-Model levels (U / I / S / A); a missing test plan is fatal at Step 1 — all four test-side artefacts are required inputs, never gracefully skipped (REQ-020, SYS-003, REQ-NF-005B).
 - The §Structured Summary is flushed on success **and** every failure exit path; `fatal_errors[]` is empty on success and present-with-content on every failure (REQ-027, MOD-021, SYS-012, HAZ-025).
 - No fabricated V-Model identifiers appear anywhere in generated content — every cited ID is grep-resolvable in `FEATURE_DIR/v-model/` (REQ-NF-002, MOD-013, HAZ-007).
 - The commit subject matches the `<base> — <ID>, <ID>, …` regex on the success path, or carries the documented unannotated-warning entry (REQ-021, ARCH-018, MOD-023).
@@ -261,7 +261,7 @@ Self-check **every** invariant below; any violation forces re-emission with the 
 
 | Failure | Detection | User-facing recovery |
 |---|---|---|
-| Any of the 8 V-Model artefacts missing/unparseable | Step 1 read | `fatal_errors[]` naming every missing artefact, exit 1; user creates or completes the missing artefact(s) via the corresponding `/speckit.v-model.<level>` command (e.g. `/speckit.v-model.requirements`, `/speckit.v-model.module-design`, `/speckit.v-model.unit-test`) before re-running (REQ-NF-005b). |
+| Any of the 8 V-Model artefacts missing/unparseable | Step 1 read | `fatal_errors[]` naming every missing artefact, exit 1; user creates or completes the missing artefact(s) via the corresponding `/speckit.v-model.<level>` command (e.g. `/speckit.v-model.requirements`, `/speckit.v-model.module-design`, `/speckit.v-model.unit-test`) before re-running (REQ-NF-005B). |
 | `GATE: FAIL` from `run-v-model-gate.sh` | Step 2 | Append wrapper stdout to `fatal_errors[]`; **no codegen**; exit 1; user closes the missing-coverage rows reported by the inner validators (HAZ-009, HAZ-010). |
 | `v-model-config.yml` malformed | Step 3 parse | Fail-closed; exit 1; user fixes the YAML or removes the file (ARCH-011). |
 | Test-plan artefact present but unparseable | Step 5 parse | `fatal_errors: ["<artefact> unparseable"]`, exit 1; user repairs the plan (ARCH-006). |

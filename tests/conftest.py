@@ -19,11 +19,15 @@ SPECS_ROOT = REPO_ROOT / "specs"
 
 _CANONICAL_PATTERN = re.compile(
     r"\b("
-    r"REQ|REQ-NF|REQ-CN|REQ-IF|"
-    r"SYS|ARCH|MOD|"
+    r"REQ|SYS|ARCH|MOD|"
     r"ITP|ITS|UTP|UTS|STP|STS|ATP|SCN|HAZ"
-    r")-[0-9]+(-[A-Z][0-9]*)?\b"
+    r")(-[A-Z]{2,3})?"
+    r"-[0-9]+(-[A-Z][0-9]*)?\b"
 )
+# Sub-prefix slot (-[A-Z]{2,3})? generalises the prior REQ-NF/REQ-CN/REQ-IF
+# enumeration to every root the project actually uses derived categories
+# under (REQ-DR, REQ-LC, REQ-SEC, SYS-DR, ATP-NF/CN/IF/LC, SCN-NF/CN/IF/LC,
+# STP-NF). Inventory taken 2026-05-17.
 
 
 def load_canonical_ids(feature: str) -> set[str]:

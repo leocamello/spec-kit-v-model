@@ -26,7 +26,16 @@ IMPLEMENT_MD = REPO_ROOT / "commands" / "implement.md"
 # Em-dash separated subject grammar. ID grammar matches the canonical
 # regex used by tests/conftest.py and validate-implements-ids.sh:
 #   <PREFIX>-<digits>[-<UPPERCASE-ALNUM>]+   plus optional D-NNN.
-_ID = r"(?:REQ|REQ-NF|REQ-CN|REQ-IF|SYS|ARCH|MOD|ITP|ITS|UTP|UTS|STP|STS|ATP|SCN|HAZ)-\d+(?:-[A-Z]\d*)?|D-\d+"
+_ID = (
+    r"(?:REQ|SYS|ARCH|MOD|ITP|ITS|UTP|UTS|STP|STS|ATP|SCN|HAZ)"
+    r"(?:-[A-Z]{2,3})?"
+    r"-\d+(?:-[A-Z]\d*)?"
+    r"|D-\d+"
+)
+# Sub-prefix slot (-[A-Z]{2,3})? generalises the prior REQ-NF/REQ-CN/REQ-IF
+# enumeration to every root the project actually uses derived categories
+# under (REQ-DR, REQ-LC, REQ-SEC, SYS-DR, ATP-NF/CN/IF/LC, SCN-NF/CN/IF/LC,
+# STP-NF). Mirrors tests/conftest.py _CANONICAL_PATTERN.
 COMMIT_SUFFIX_RE = re.compile(
     rf"^.+\s—\s({_ID})(?:,\s({_ID}))*\s*$"
 )
