@@ -52,7 +52,9 @@ Five core principles unchanged. Per the constitution's own amendment procedure (
 
 ### Known Limitations
 
-- **`tests/evals/test_implements_per_symbol.py::test_every_public_symbol_has_implements_comment`** — historically flaky LLM-judge test on the `complete` fixture due to LLM emission variability (137–182 public symbols, 124–134 `Implements:` directives observed across re-runs over a strict `>=` threshold). Passed in the v0.7.1 pre-tag gate re-run, but the underlying noisiness has not been addressed. A later patch may tighten the implement command's per-symbol `Implements` wording, relax the test threshold, or restrict `_PUBLIC_SYMBOL_RE` to V-Model-mappable symbols (exclude internal helpers / error classes).
+- **LLM-eval variance over strict thresholds.** Two `llm_judge`-marked tests fail intermittently on the `complete` fixture due to LLM emission non-determinism over strict thresholds. Both pass on targeted re-runs:
+  - `tests/evals/test_implements_per_symbol.py::test_every_public_symbol_has_implements_comment` — checks that `Implements:` directive count ≥ detected public-symbol count. Symbol count swings widely between runs (137–182 observed). A later patch may tighten the implement command's per-symbol `Implements` wording or restrict `_PUBLIC_SYMBOL_RE` to V-Model-mappable symbols.
+  - `tests/evals/test_tasks_order.py::test_complete_fixture_emits_tdd_ordering` — checks that ≥ 4 of the 8 `**Write unit tests**`-style bold phase markers appear in the synthesised `tasks.md`. Some runs emit the tasks.md without the bold phase headers; re-running produces them. A later patch may tighten the tasks command's §TDD Ordering instructions.
 - **PowerShell mirror gap for `update-agent-context.sh`** — the upstream `.specify/scripts/bash/update-agent-context.sh` has no PowerShell counterpart anywhere in the repo. This is an upstream spec-kit-core parity gap that the v-model extension does not own. On Windows / pwsh-only environments the agent-context auto-update workflow has no equivalent.
 
 ---
