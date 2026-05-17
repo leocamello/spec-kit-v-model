@@ -26,7 +26,16 @@ IMPLEMENT_MD = REPO_ROOT / "commands" / "implement.md"
 # Em-dash separated subject grammar. ID grammar matches the canonical
 # regex used by tests/conftest.py and validate-implements-ids.sh:
 #   <PREFIX>-<digits>[-<UPPERCASE-ALNUM>]+   plus optional D-NNN.
-_ID = r"(?:REQ|REQ-NF|REQ-CN|REQ-IF|SYS|ARCH|MOD|ITP|ITS|UTP|UTS|STP|STS|ATP|SCN|HAZ)-\d+(?:-[A-Z]\d*)?|D-\d+"
+_ID = (
+    r"(?:REQ|SYS|ARCH|MOD|ITP|ITS|UTP|UTS|STP|STS|ATP|SCN|HAZ)"
+    r"(?:-[A-Z]{2,3})?"
+    r"-\d+(?:-[A-Z]\d*)?"
+    r"|D-\d+"
+)
+# Sub-prefix slot (-[A-Z]{2,3})? generalises the prior REQ-NF/REQ-CN/REQ-IF
+# enumeration to every root the project actually uses derived categories
+# under (REQ-DR, REQ-LC, REQ-SEC, SYS-DR, ATP-NF/CN/IF/LC, SCN-NF/CN/IF/LC,
+# STP-NF). Mirrors tests/conftest.py _CANONICAL_PATTERN.
 COMMIT_SUFFIX_RE = re.compile(
     rf"^.+\s—\s({_ID})(?:,\s({_ID}))*\s*$"
 )
@@ -84,15 +93,25 @@ def _load_fixture(name: str) -> dict[str, str]:
 
 
 def _extract_commit_subject(output: str) -> str | None:
-    # Look for a line beginning with `git commit -m "..."` or a fenced
-    # commit subject. Prefer the quoted git-commit form.
+    # Prefer the literal `git commit -m "..."` invocation when present.
     m = re.search(r"git commit\s+-m\s+[\"']([^\"'\n]+)[\"']", output)
     if m:
         return m.group(1).strip()
-    # Fallback: any line containing an em-dash followed by a canonical ID.
+    # Next: the §Structured Summary `commit_subject:` field. commands/implement.md
+    # documents this as "the machine-extractable mirror of the prepared commit
+    # subject" — i.e. the contractual extraction target. Match both YAML
+    # (`commit_subject: <subject>`) and JSON (`"commit_subject": "<subject>"`)
+    # forms; strip enclosing quotes so the subject hits COMMIT_SUFFIX_RE cleanly.
+    m = re.search(r'"commit_subject"\s*:\s*"([^"\n]+)"', output)
+    if m:
+        return m.group(1).strip()
+    m = re.search(r"^\s*commit_subject\s*:\s*(.+?)\s*$", output, re.MULTILINE)
+    if m:
+        return m.group(1).strip().strip('"').strip("'").rstrip(",")
+    # Last-resort: any line containing an em-dash followed by a canonical ID.
     for line in output.splitlines():
         if "—" in line and re.search(_ID, line):
-            return line.strip()
+            return line.strip().strip('"').strip("'").rstrip(",")
     return None
 
 

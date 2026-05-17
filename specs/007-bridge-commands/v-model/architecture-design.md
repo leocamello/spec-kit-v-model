@@ -274,7 +274,7 @@ sequenceDiagram
 | Field | Value |
 |-------|-------|
 | Realised By | `commands/implement.md` §Execution Flow |
-| Preconditions | `feature_dir` contains `requirements.md`, `module-design.md`, all four V-Model test plans; gate (ARCH-007) exits 0 |
+| Preconditions | `feature_dir` contains all 8 V-Model artifacts — the four dev-side (`requirements.md`, `system-design.md`, `architecture-design.md`, `module-design.md`) plus the four test-side (`acceptance-plan.md`, `system-test.md`, `integration-test.md`, `unit-test.md`) — and gate (ARCH-007) exits 0 |
 | Postconditions | Source + test files written; ARCH-009 exits 0; commit produced via ARCH-018 |
 | Expected sections in `commands/implement.md` | §Execution Flow, §Code Generation, §Traceability Comments, §Test Generation, §Test Levels, §Domain Overlay, §Quality Compliance, §Commit Annotation, §Structured Summary |
 | Error path | Any of {gate, splicer, hallucination guard} non-zero ⇒ abort before commit; emit `fatal_errors[]`, exit 1 |

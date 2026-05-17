@@ -418,8 +418,14 @@ gate → generate → verify → commit, fail-closed at every step.
 8. §Structured Summary (MOD-021), exit 0.
 
 ## LLM-checkable preconditions
-- All four V-Model test plans + `module-design.md` exist in
-  `<feature_dir>/v-model/`.
+- All 8 V-Model artifacts exist in `<feature_dir>/v-model/` and
+  carry `[Approved]` status (per constitution §Bridge Command
+  Discipline rule #1): the four dev-side artifacts
+  (`requirements.md`, `system-design.md`, `architecture-design.md`,
+  `module-design.md`) PLUS the four test-side artifacts
+  (`acceptance-plan.md`, `system-test.md`, `integration-test.md`,
+  `unit-test.md`). All four dev-side artifacts are equally
+  load-bearing for code generation; missing any one is fatal.
 - `commands/implement.md` frontmatter declares
   `scripts: { sh: scripts/bash/run-v-model-gate.sh, ps: ... }`.
 
@@ -563,8 +569,11 @@ test case.
 
 **Responsibilities**:
 - For each level in {unit, integration, system, acceptance}: read the
-  corresponding test plan; if absent, skip silently and append the
-  artifact name to `artifacts_skipped[]`.
+  corresponding test plan; if absent, refuse to proceed — emit
+  `fatal_errors[]` naming the missing artifact and exit 1. The four
+  test plans are mandatory for `v-model.implement` per REQ-NF-005B;
+  partial implementation contradicts the "fully working and validated
+  software" contract that defines the command's purpose.
 - For each test case in the plan, dispatch to §Test Levels (MOD-009).
 
 **Pseudocode / Structural Sketch** (prompt outline):
@@ -577,7 +586,9 @@ For each (level, artifact, target_dir) in:
   (integration, integration-test.md, tests/<harness>/integration/),
   (system,      system-test.md,      tests/<harness>/system/),
   (acceptance,  acceptance-plan.md,  tests/<harness>/acceptance/):
-  if artifact absent: append to artifacts_skipped[], continue.
+  if artifact absent:
+    fatal_errors[] += "<artifact> required for v-model.implement"
+    exit 1.
   Render per §Test Levels (MOD-009).
 ```
 

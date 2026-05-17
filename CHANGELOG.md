@@ -5,6 +5,60 @@ All notable changes to the V-Model Extension Pack are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.1] — Bridge Command Reconciliation & Governance — 2026-05-17
+
+> **Release theme**: reconcile the v0.7.0 bridge commands with their user-facing intent — that `/speckit.v-model.implement` produces *a fully working and validated implementation* from the V-Model artefact set — and adopt a real contributor operating manual + an additive constitution amendment that codifies the discipline the v0.7.0 design did not yet capture. No new commands, no new features, no new functionality. Surgical reconciliation.
+
+### Changed — `/speckit.v-model.implement` aligned with north-star intent
+
+- **Direct Path now works.** Per REQ-015 the command reads the V-Model artefact set directly and produces a fully working and validated implementation without needing `/speckit.v-model.plan` or `/speckit.v-model.tasks` to have run first. The `--require-tasks` flag was removed from the frontmatter `scripts.sh` invocation; `tasks.md`, when present, is consumed as supplemental ordering context only.
+- **Iteration source restored to `module-design.md`.** Per MOD-006 pseudocode, `§Code Generation` iterates `module-design.md` `MOD-NNN` rows directly rather than filtering through `tasks.md` rows. Per-MOD rendering explicitly consults `unit-test.md` (test-first behaviour the code must exhibit), `architecture-design.md` (interface contracts to honour), `system-design.md` (system context to fit within), `requirements.md` (REQ intent to satisfy), and the higher-level test plans as compatibility inputs alongside `module-design.md`.
+- **All 8 V-Model artefacts mandatory.** The four dev-side (`requirements.md`, `system-design.md`, `architecture-design.md`, `module-design.md`) AND the four test-side (`acceptance-plan.md`, `system-test.md`, `integration-test.md`, `unit-test.md`) are equally load-bearing for code generation. Missing any of the 8 is fatal — partial implementation contradicts the "fully working and validated software" contract. `hazard-analysis.md` remains the sole auxiliary input (its absence is a warning). The `§Reduced-enrichment fallback` step (formerly Step 9) was removed; remaining Steps 10–12 renumbered to 9–11. (REQ-NF-005B)
+
+### Changed — `/speckit.v-model.plan` and `/speckit.v-model.tasks` marked OPTIONAL
+
+- Both Goal sections now open with "**This is an OPTIONAL bridge command.**" and explain when to use them (handoff to spec-kit-core tooling, human review of canonical artefacts) versus the Direct Path via `/speckit.v-model.implement`.
+- REQ-NF-005 was split: **REQ-NF-005A** governs plan/tasks (graceful degradation when optional artefacts are absent — schema-compatibility is their contract, not working software); **REQ-NF-005B** governs implement (refuses on any missing V-Model artefact).
+
+### Changed — Constitution v1.0.0 → v1.1.0 (MINOR, additive)
+
+Five core principles unchanged. Per the constitution's own amendment procedure (PR + rationale + Sync Impact Report + version bump). Adds:
+
+- **§V-Model Artifact Map** — the 8 paired artefacts (L1–L4 dev-side and test-side) that form the single source of truth for everything downstream.
+- **§Bridge Command Discipline** — strict mode (all 8 artefacts `[Approved]` before any bridge runs), V-Model artefacts as single source of truth, sibling-file projections, **substance over shape**, read-only access to compliance-critical artefacts, versioned Report Completion JSON.
+- **Expanded §ID Schema** — full identifier set across REQ/ATP/SCN, SYS/STP/STS, ARCH/ITP/ITS, MOD/UTP/UTS, HAZ, PRF, WAV + lifecycle invariants (never-renumber, `[DEPRECATED]` / `[SUSPECT]` markers, scope markers `[EXTERNAL]` / `[CROSS-CUTTING]`).
+- **Audience preamble** — the constitution governs the development of the V-Model Extension Pack itself. Teams using the extension on their own project have their own constitution; this one is ours.
+
+### Added — `AGENTS.md` as the contributor operating manual
+
+- New `AGENTS.md` replaces the auto-generated `CLAUDE.md` boilerplate. Vendor-neutral (matches upstream `spec-kit`'s convention), hand-curated, scoped explicitly to contributors evolving the extension — **not** to end users running the extension on their own safety-critical project (who maintain their own `AGENTS.md` and constitution).
+- Sections: audience boundary, the mantra ("AI drafts, human decides, scripts verify, Git remembers"), trust separation table (AI / scripts / humans / Git roles), the 8 V-Model artefacts as single source of truth, bridge command discipline, substance over shape, ID schema, repo map of canonical sources, command naming convention, working conventions (Bash `set -euo pipefail`; PowerShell `[CmdletBinding()]`; atomic `mktemp`+`mv`), the cleanup-vs-sprawl rule, and common pitfalls.
+- Auto-managed footer (`## Active Technologies` / `## Recent Changes`) so `.specify/scripts/bash/update-agent-context.sh` can continue to update those two sections in place without disturbing the hand-curated body.
+
+### Changed — Canonical-ID grammar generalised
+
+- The canonical regex in `commands/implement.md` Step 9, `tests/conftest.py::_CANONICAL_PATTERN`, and `tests/evals/test_commit_suffix.py::_ID` now accepts any 2–3-letter uppercase sub-prefix on any root: `(?:REQ|SYS|ARCH|MOD|…)(?:-[A-Z]{2,3})?-\d+(?:-[A-Z]\d*)?`. This generalises the prior REQ-NF/REQ-CN/REQ-IF enumeration to cover every derived-category convention the project actually uses (REQ-DR, REQ-LC, REQ-SEC, SYS-DR, ATP-NF/CN/IF/LC, SCN-NF/CN/IF/LC, STP-NF). Previously-silent non-compliers (e.g. `SYS-DR-NNN` in fixtures and v0.6.0 specs) now validate cleanly.
+- Uppercase fixup for the new split: `REQ-NF-005A` and `REQ-NF-005B` (lowercase `a`/`b` introduced during reconciliation didn't match the canonical suffix grammar `-[A-Z]\d*`).
+
+### Documentation
+
+- Consolidate release narratives to `CHANGELOG.md` as the single source of truth. The parallel `docs/releases/vX.Y.Z.md` pattern (introduced in v0.7.0) is removed along with its sole occupant `docs/releases/v0.7.0.md`. README's EPIC-1 cross-reference retargeted to `CHANGELOG.md#known-limitations-deferred-to-v080`.
+- Bridge command Goal sections rewritten to lead with user-facing capability rather than schema-compatibility framing.
+
+### Fixed
+
+- `tests/structural/test_extension_yml.py::test_no_spec_kit_core_file_modified_outside_extension_yml` allow-list now permits `AGENTS.md` (the test previously listed only `CLAUDE.md`).
+- `tests/evals/test_commit_suffix.py::_extract_commit_subject` now honours the §Structured Summary contract — the implement command's prompt documents `commit_subject:` as "the machine-extractable mirror of the prepared commit subject," but the extractor previously only looked for a literal `git commit -m "..."` invocation and fell through to a too-permissive line-based fallback that grabbed JSON-formatting characters from the Structured Summary line. Added JSON (`"commit_subject": "..."`) and YAML (`commit_subject: ...`) extraction strategies between the literal-command lookup and the line-based fallback.
+
+### Known Limitations
+
+- **LLM-eval variance over strict thresholds.** Two `llm_judge`-marked tests fail intermittently on the `complete` fixture due to LLM emission non-determinism over strict thresholds. Both pass on targeted re-runs:
+  - `tests/evals/test_implements_per_symbol.py::test_every_public_symbol_has_implements_comment` — checks that `Implements:` directive count ≥ detected public-symbol count. Symbol count swings widely between runs (137–182 observed). A later patch may tighten the implement command's per-symbol `Implements` wording or restrict `_PUBLIC_SYMBOL_RE` to V-Model-mappable symbols.
+  - `tests/evals/test_tasks_order.py::test_complete_fixture_emits_tdd_ordering` — checks that ≥ 4 of the 8 `**Write unit tests**`-style bold phase markers appear in the synthesised `tasks.md`. Some runs emit the tasks.md without the bold phase headers; re-running produces them. A later patch may tighten the tasks command's §TDD Ordering instructions.
+- **PowerShell mirror gap for `update-agent-context.sh`** — the upstream `.specify/scripts/bash/update-agent-context.sh` has no PowerShell counterpart anywhere in the repo. This is an upstream spec-kit-core parity gap that the v-model extension does not own. On Windows / pwsh-only environments the agent-context auto-update workflow has no equivalent.
+
+---
+
 ## [0.7.0] — Bridge Commands & Pre-v0.8.0 Stabilization — 2026-05-03
 
 ### Added — Bridge Commands

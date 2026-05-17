@@ -1,26 +1,41 @@
 <!--
   Sync Impact Report
-  Version change: N/A → 1.0.0 (initial ratification)
-  Added principles:
-    - I. V-Model Discipline (TDD bridge to Spec Kit's Test-First Imperative)
-    - II. Deterministic Verification
-    - III. Specification as Source of Truth
-    - IV. Git as Quality Management System
-    - V. Human-in-the-Loop (PR-based approval, NEEDS CLARIFICATION mandate)
+  Version change: 1.0.0 → 1.1.0 (MINOR — additive operational rules absorbing v0.7.x learnings)
+  Principles: unchanged (I–V still hold; no semantic redefinition)
   Added sections:
-    - Regulatory Compliance Standards
-    - Development Workflow (with hard-fail CI gates)
-    - Governance (equal-weight principles preamble)
+    - Development Workflow → §Bridge Command Discipline (strict mode, single source of truth,
+      sibling-file projections, substance over shape, substance validators)
+    - Development Workflow → §V-Model Artifact Map (8 paired artifacts + auxiliaries)
+  Expanded sections:
+    - Development Workflow → §ID Schema and Artifact Naming (extended to full identifier set:
+      REQ/ATP/SCN, SYS/STP/STS, ARCH/ITP/ITS, MOD/UTP/UTS, HAZ, PRF, WAV)
   Templates requiring updates:
-    - .specify/templates/plan-template.md ✅ (Constitution Check section already present)
-    - .specify/templates/spec-template.md ✅ (User Scenarios + Requirements sections align;
-      NEEDS CLARIFICATION pattern already demonstrated in FR-006/FR-007 examples)
-    - .specify/templates/tasks-template.md ✅ (Phase structure supports V-Model pairing;
-      Test-First checkpoint pattern present)
-  Follow-up TODOs: None
+    - .specify/templates/plan-template.md ✅ (already present)
+    - .specify/templates/spec-template.md ✅ (already present)
+    - .specify/templates/tasks-template.md ✅ (already present)
+    - AGENTS.md ✅ (created in same change; references this constitution as authoritative)
+  Follow-up TODOs:
+    - The substance-over-shape rule (§Bridge Command Discipline #4)
+      MUST be implemented before it is cited as enforcement in PR
+      reviews. The implementation choice (dedicated script, in-prompt
+      check, structural eval) is left to the bridges.
+
+  Prior history:
+    1.0.0 — Initial ratification (2026-02-19): five core principles, regulatory standards,
+            development workflow, governance. See git log of this file for full diff.
 -->
 
 # Spec Kit V-Model Extension Pack Constitution
+
+**Audience.** This constitution governs the **development of the V-Model
+Extension Pack itself**. The maintainer and contributors evolving
+`spec-kit-v-model` follow these principles when changing the extension's
+prompts, scripts, templates, tests, and documentation.
+
+Teams *using* `spec-kit-v-model` on their own safety-critical project
+will maintain their own `.specify/memory/constitution.md` inside their
+own repository, governing *their* project. That constitution is theirs
+to write. This one is ours.
 
 ## Core Principles
 
@@ -120,14 +135,58 @@ auditors expect, reducing the burden of manual documentation.
 
 ## Development Workflow
 
+### V-Model Artifact Map
+
+The V-Model is paired across four levels. Each development artifact has a
+sibling test artifact at the same level. The eight artifacts below — produced
+by their respective `speckit.v-model.<command>` — are the **single source of
+truth** for everything downstream (`plan.md`, `tasks.md`, source code, test code).
+
+| Level | Dev-side (left of the V) | Test-side (right of the V) |
+|---|---|---|
+| L1 — Acceptance | Requirements Specification (`REQ-NNN`) | Acceptance Test Plan (`ATP-NNN-X` → `SCN-NNN-X#`) |
+| L2 — System | System Design (`SYS-NNN`) | System Test Plan (`STP-NNN-X` → `STS-NNN-X#`) |
+| L3 — Architecture | Architecture Design (`ARCH-NNN`) | Integration Test Plan (`ITP-NNN-X` → `ITS-NNN-X#`) |
+| L4 — Module | Module Design (`MOD-NNN`) | Unit Test Plan (`UTP-NNN-X` → `UTS-NNN-X#`) |
+
+**Cross-cutting auxiliaries** (not part of the eight, but governed by the same
+principles): Hazard Analysis (`HAZ-NNN`), Peer Review Findings (`PRF-{ARTIFACT}-NNN`),
+Waivers (`WAV-NNN`), the Bidirectional Traceability Matrix, and the Release
+Audit Report.
+
 ### ID Schema and Artifact Naming
 
 | Artifact | Pattern | Example |
 |---|---|---|
 | Requirement | `REQ-{NNN}` | `REQ-001` |
-| Test Case | `ATP-{NNN}-{X}` | `ATP-001-A` |
-| BDD Scenario | `SCN-{NNN}-{X#}` | `SCN-001-A1` |
+| Acceptance Test Case | `ATP-{NNN}-{X}` | `ATP-001-A` |
+| Acceptance BDD Scenario | `SCN-{NNN}-{X#}` | `SCN-001-A1` |
+| System Component | `SYS-{NNN}` | `SYS-001` |
+| System Test Case | `STP-{NNN}-{X}` | `STP-001-A` |
+| System Test Scenario | `STS-{NNN}-{X#}` | `STS-001-A1` |
+| Architecture Module | `ARCH-{NNN}` | `ARCH-001` |
+| Integration Test Case | `ITP-{NNN}-{X}` | `ITP-001-A` |
+| Integration Test Scenario | `ITS-{NNN}-{X#}` | `ITS-001-A1` |
+| Module Design | `MOD-{NNN}` | `MOD-001` |
+| Unit Test Case | `UTP-{NNN}-{X}` | `UTP-001-A` |
+| Unit Test Scenario | `UTS-{NNN}-{X#}` | `UTS-001-A1` |
+| Hazard | `HAZ-{NNN}` | `HAZ-001` |
+| Peer Review Finding | `PRF-{ARTIFACT}-{NNN}` | `PRF-REQ-001` |
+| Waiver | `WAV-{NNN}` | `WAV-001` |
 | Requirement Category | `[FN]`, `[NF]`, `[IF]`, `[CN]` | `[FN] REQ-001` |
+| Scope Markers | `[EXTERNAL]`, `[CROSS-CUTTING]` | `[EXTERNAL] REQ-042` |
+
+**Identifier invariants** (enforced by deterministic scripts, never by AI):
+
+- IDs MUST NOT be renumbered once assigned, even when intervening items are
+  deprecated. Stable IDs are a regulatory record-keeping requirement.
+- Deprecated artifacts MUST carry the `[DEPRECATED]` lifecycle marker and
+  remain in the document for traceability.
+- Artifacts in transient inconsistent states MUST carry `[SUSPECT]` until
+  a human resolves them.
+- The category and scope marker semantics (`[EXTERNAL]`, `[CROSS-CUTTING]`)
+  MUST have one authoritative definition shared by all docs, templates, and
+  validators. Synonym drift is a documentation defect.
 
 ### Quality Gates
 
@@ -151,6 +210,58 @@ auditors expect, reducing the burden of manual documentation.
 - **pytest + DeepEval**: Structural validators and LLM-as-judge evals.
 - **Google Gemini** (`gemini-2.5-flash`): LLM backend for semantic
   evaluation metrics.
+
+### Bridge Command Discipline
+
+The three bridge commands — `speckit.v-model.plan`, `speckit.v-model.tasks`,
+`speckit.v-model.implement` — translate the V-Model artifact set into
+Spec-Kit-canonical outputs (`plan.md`, `tasks.md`, source code, test code).
+They MUST operate under the following rules, established in response to
+the v0.7.x failure mode where bridges produced structurally valid outputs
+that lacked verification substance ("satisfied shape but missed
+substance"):
+
+1. **Strict mode only.** All eight V-Model artifacts MUST exist and MUST
+   carry the `[Approved]` status marker before any bridge command runs.
+   A missing or non-approved artifact MUST cause the bridge to refuse
+   execution and route the user back to fix the upstream artifact. There
+   is no permissive mode and no hybrid fallback.
+
+2. **V-Model artifacts are the single source of truth.** The bridge
+   commands MUST translate V-Model artifacts faithfully into their
+   downstream outputs. The LLM never invents content during translation;
+   it only routes (`plan`) or renders (`implement`). When translation is
+   not possible because the upstream artifact is silent on a required
+   point, the bridge MUST refuse and surface a `[NEEDS CLARIFICATION]`
+   marker on the upstream artifact rather than guessing.
+
+3. **Sibling files are editable projections, not parallel sources.**
+   Files such as `data-model.md`, `quickstart.md`, `research.md`, and
+   `contracts/` are projections of one or more V-Model artifacts. Human
+   edits to these files MUST be propagated back to their V-Model source
+   via HTML-comment anchors. A divergence between a sibling file and its
+   V-Model source MUST be detected and resolved before bridges re-run.
+
+4. **Substance over shape.** Schema validation is necessary but never
+   sufficient. Bridges MUST check that the upstream artifacts have
+   verification substance to translate, not merely the right structure;
+   when substance is missing, the bridge refuses and routes the user
+   back to fix the upstream artifact. Examples of substance failures:
+   a test plan that names methods but defines no scenarios; a module
+   design that lists functions but specifies no behavior or invariants.
+   How a bridge implements this check is an implementation choice — not
+   a constitutional pre-commitment to any specific tooling.
+
+5. **Bridges never modify compliance-critical artifacts.** Bridges read
+   the eight V-Model artifacts; they do not write to them. Any change a
+   bridge would need to make to an upstream artifact MUST instead be
+   surfaced as a `[NEEDS CLARIFICATION]` and routed back to the human via
+   the relevant `speckit.v-model.<level>` command.
+
+6. **Report Completion is versioned and persisted.** Every bridge run
+   MUST emit a structured JSON Report Completion record with a
+   `schema_version` field, written to `.runs/`. The Report Completion
+   shape is part of the bridge contract and changes only via PR review.
 
 ## Governance
 
@@ -178,4 +289,4 @@ MUST comply with these principles.
 - The Constitution Check section in `plan-template.md` MUST be completed
   before implementation begins on any new feature.
 
-**Version**: 1.0.0 | **Ratified**: 2026-02-19 | **Last Amended**: 2026-02-19
+**Version**: 1.1.0 | **Ratified**: 2026-02-19 | **Last Amended**: 2026-05-17
