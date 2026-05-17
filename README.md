@@ -100,7 +100,7 @@ It is technically possible to feed a `tasks.md` produced by `/speckit.v-model.ta
 
 > **Audit guidance**: a build that ran `/speckit.implement` against a V-Model `tasks.md` is **not** evidence of V-Model compliance, regardless of how the artifacts look. The deterministic gates left no record because they were not invoked.
 
-v0.8.0 will introduce a `compliance_mode: strict` profile (see [EPIC-1 in the v0.8.0 backlog](docs/releases/v0.7.0.md)) that makes this distinction mechanically detectable in CI.
+v0.8.0 will introduce a `compliance_mode: strict` profile (see [EPIC-1 in the v0.7.0 Known Limitations](CHANGELOG.md#known-limitations-deferred-to-v080)) that makes this distinction mechanically detectable in CI.
 
 ## Testing
 
