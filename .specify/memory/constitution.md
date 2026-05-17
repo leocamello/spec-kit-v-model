@@ -289,4 +289,4 @@ MUST comply with these principles.
 - The Constitution Check section in `plan-template.md` MUST be completed
   before implementation begins on any new feature.
 
-**Version**: 1.1.0 | **Ratified**: 2026-02-19 | **Last Amended**: 2026-05-16
+**Version**: 1.1.0 | **Ratified**: 2026-02-19 | **Last Amended**: 2026-05-17
