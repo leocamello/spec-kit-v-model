@@ -49,10 +49,7 @@ Load `v-model-config.yml` (if it exists at the repository root).
 1. Read the command overlay: `commands/overlays/{domain}/requirements.md`
    - If it exists: note its additional sections and preferences
    - If it does not exist: this domain does not extend this command — proceed with base only
-2. Read the template overlay: `templates/overlays/{domain}/requirements-template.md`
-   - If it exists: its output sections will be appended after the base template's output
-   - If it does not exist: use the base template only
-3. Where the base command has a domain-variant section (marked with "If a domain overlay is loaded, prefer its content"), use the overlay's version instead of the base default
+2. Where the base command has a domain-variant section (marked with "If a domain overlay is loaded, prefer its content"), use the overlay's version instead of the base default
 
 **If `domain` is empty or absent:**
 - Proceed with the base command only

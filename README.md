@@ -39,7 +39,7 @@ AI-native teams ship fast but produce no traceability. Regulated teams have full
 ```bash
 # Install the extension
 specify extension add v-model \
-  --from https://github.com/leocamello/spec-kit-v-model/archive/refs/tags/v0.7.0.zip
+  --from https://github.com/leocamello/spec-kit-v-model/archive/refs/tags/v0.7.2.zip
 
 # Generate requirements from your spec
 /speckit.v-model.requirements
