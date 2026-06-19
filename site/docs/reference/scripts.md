@@ -17,6 +17,7 @@ The V-Model Extension Pack includes **34 scripts** — 16 Bash, 16 PowerShell, 1
 | validate-requirement-coverage | ✅ | ✅ | Validator |
 | validate-system-coverage | ✅ | ✅ | Validator |
 | validate-architecture-coverage | ✅ | ✅ | Validator |
+| validate-software-architecture-coverage | ✅ | — | Validator |
 | validate-module-coverage | ✅ | ✅ | Validator |
 | validate-hazard-coverage | ✅ | ✅ | Validator |
 | validate-artifact-status | ✅ | ✅ | Validator (status gate, MF-6, v0.7.0) |
@@ -171,7 +172,7 @@ Validates Level 4 (Module Design ↔ Unit Test) coverage.
 
 | Parameter | Description |
 |-----------|-------------|
-| `<vmodel-dir>` | Path to v-model directory containing `architecture-design.md`, `module-design.md`, and `unit-test.md` |
+| `<vmodel-dir>` | Path to v-model directory containing `architecture-design.md` (or `software-architecture-design.md`), `module-design.md`, and `unit-test.md` |
 | `--json` / `-Json` | Output in JSON format |
 
 **Checks performed:**
@@ -181,6 +182,38 @@ Validates Level 4 (Module Design ↔ Unit Test) coverage.
 - **External handling**: `[EXTERNAL]` modules bypassed for UTP requirement
 - **Cross-cutting**: `[CROSS-CUTTING]` parent ARCHs tested normally
 - **Orphan detection**: `MOD` referencing non-existent `ARCH`; `UTP` referencing non-existent `MOD`
+
+> **Architecture source:** The script detects which architecture artifact exists: `software-architecture-design.md` is preferred; when absent, it falls back to `architecture-design.md`.
+
+**Exit codes:**
+
+| Code | Meaning |
+|------|---------|
+| 0 | Full coverage |
+| 1 | Gaps found |
+
+---
+
+### `validate-software-architecture-coverage.sh`
+
+Validates the combined software architecture design coverage (Path B). Parses `requirements.md`, `software-architecture-design.md`, and `integration-test.md` to verify `REQ → ARCH → ITP` traceability.
+
+=== "Bash"
+
+    ```bash
+    validate-software-architecture-coverage.sh [OPTIONS] <vmodel-dir>
+    ```
+
+| Parameter | Description |
+|-----------|-------------|
+| `<vmodel-dir>` | Path to v-model directory containing `requirements.md`, `software-architecture-design.md`, and `integration-test.md` |
+| `--json` / `-Json` | Output in JSON format |
+
+**Checks performed:**
+
+- **Forward**: Every `REQ` → at least one `ARCH` (via `Parent Requirements` column in Logical View)
+- **Backward**: Every `ARCH` → at least one `ITP` → at least one `ITS`
+- **Orphan detection**: `ARCH` referencing non-existent `REQ`; `ITP` referencing non-existent `ARCH`
 
 **Exit codes:**
 
@@ -542,6 +575,7 @@ V-Model directory setup and prerequisite checking.
 | `--require-reqs` / `-RequireReqs` | Require `requirements.md` to exist |
 | `--require-acceptance` / `-RequireAcceptance` | Require `acceptance-plan.md` to exist |
 | `--require-system-design` / `-RequireSystemDesign` | Require `system-design.md` to exist |
+| `--require-software-architecture-design` / `-RequireSoftwareArchitectureDesign` | Require `software-architecture-design.md` to exist |
 | `--require-system-test` / `-RequireSystemTest` | Require `system-test.md` to exist |
 | `--require-architecture-design` / `-RequireArchitectureDesign` | Require `architecture-design.md` to exist |
 | `--require-integration-test` / `-RequireIntegrationTest` | Require `integration-test.md` to exist |

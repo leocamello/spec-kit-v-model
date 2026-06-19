@@ -23,7 +23,8 @@
 
 .PARAMETER RequireArchitectureDesign
     Require architecture-design.md to exist.
-
+.PARAMETER RequireSoftwareArchitectureDesign
+    Require software-architecture-design.md to exist.
 .PARAMETER RequireIntegrationTest
     Require integration-test.md to exist.
 
@@ -45,6 +46,7 @@ param(
     [switch]$RequireSystemDesign,
     [switch]$RequireSystemTest,
     [switch]$RequireArchitectureDesign,
+    [switch]$RequireSoftwareArchitectureDesign,
     [switch]$RequireIntegrationTest,
     [switch]$RequireModuleDesign,
     [switch]$RequireUnitTest
@@ -133,6 +135,7 @@ $TraceMatrix = Join-Path $VModelDir 'traceability-matrix.md'
 $SystemDesign = Join-Path $VModelDir 'system-design.md'
 $SystemTest = Join-Path $VModelDir 'system-test.md'
 $ArchDesign = Join-Path $VModelDir 'architecture-design.md'
+$SoftwareArchitectureDesign = Join-Path $VModelDir 'software-architecture-design.md'
 $IntegrationTest = Join-Path $VModelDir 'integration-test.md'
 $ModuleDesign = Join-Path $VModelDir 'module-design.md'
 $UnitTestDoc = Join-Path $VModelDir 'unit-test.md'
@@ -164,6 +167,11 @@ if ($RequireArchitectureDesign -and -not (Test-Path $ArchDesign)) {
     exit 1
 }
 
+if ($RequireSoftwareArchitectureDesign -and -not (Test-Path $SoftwareArchitectureDesign)) {
+    Write-Error "ERROR: software-architecture-design.md not found in $VModelDir`nRun /speckit.v-model.software-architecture-design first."
+    exit 1
+}
+
 if ($RequireIntegrationTest -and -not (Test-Path $IntegrationTest)) {
     Write-Error "ERROR: integration-test.md not found in $VModelDir`nRun /speckit.v-model.integration-test first."
     exit 1
@@ -188,6 +196,7 @@ if (Test-Path $TraceMatrix)  { $docs += 'traceability-matrix.md' }
 if (Test-Path $SystemDesign) { $docs += 'system-design.md' }
 if (Test-Path $SystemTest)   { $docs += 'system-test.md' }
 if (Test-Path $ArchDesign)   { $docs += 'architecture-design.md' }
+if (Test-Path $SoftwareArchitectureDesign) { $docs += 'software-architecture-design.md' }
 if (Test-Path $IntegrationTest) { $docs += 'integration-test.md' }
 if (Test-Path $ModuleDesign) { $docs += 'module-design.md' }
 if (Test-Path $UnitTestDoc)  { $docs += 'unit-test.md' }
@@ -205,6 +214,7 @@ if ($Json) {
         SYSTEM_DESIGN    = $SystemDesign
         SYSTEM_TEST      = $SystemTest
         ARCH_DESIGN      = $ArchDesign
+        SOFTWARE_ARCHITECTURE_DESIGN = $SoftwareArchitectureDesign
         INTEGRATION_TEST = $IntegrationTest
         MODULE_DESIGN    = $ModuleDesign
         UNIT_TEST        = $UnitTestDoc

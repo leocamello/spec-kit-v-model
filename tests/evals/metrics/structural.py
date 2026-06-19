@@ -25,6 +25,12 @@ from tests.validators.architecture_validators import (
     validate_id_format as arch_validate_id_format,
     extract_parent_system_components,
 )
+from tests.validators.software_architecture_validators import (
+    extract_ids as swarch_extract_ids,
+    validate_id_format as swarch_validate_id_format,
+    extract_parent_requirements as swarch_extract_parent_requirements,
+    validate_views_present as swarch_validate_views_present,
+)
 from tests.validators.module_validators import (
     validate_module_design as mv_validate_module_design,
     validate_unit_test as mv_validate_unit_test,
@@ -373,6 +379,74 @@ class StructuralArchitectureDesignMetric(BaseMetric):
             self.reason = "; ".join(issues[:5])
         else:
             self.reason = "All architecture design structural checks pass"
+        return self.score
+
+    def is_successful(self) -> bool:
+        return self.success if self.success is not None else False
+
+
+class StructuralSoftwareArchitectureDesignMetric(BaseMetric):
+    """Deterministic metric for software architecture design structural validation.
+
+    Checks ARCH-NNN ID format, IEEE 42010 views presence, and parent REQ references
+    (no SYS intermediate layer — Path B).
+    """
+
+    _IEEE_42010_VIEWS = [
+        "Logical",
+        "Process",
+        "Interface",
+        "Data Flow",
+    ]
+
+    def __init__(self, threshold: float = 0.95):
+        self.threshold = threshold
+        self.score = None
+        self.reason = None
+        self.success = None
+
+    @property
+    def __name__(self):
+        return "Software Architecture Design Structural Compliance"
+
+    async def a_measure(self, test_case: LLMTestCase, *args, **kwargs) -> float:
+        return self.measure(test_case)
+
+    def measure(self, test_case: LLMTestCase, *args, **kwargs) -> float:
+        text = test_case.actual_output or ""
+        issues: list[str] = []
+        total_checks = 0
+
+        # 1. ARCH-NNN ID format compliance
+        arch_ids = swarch_extract_ids(text, "ARCH")
+        unique_arch = list(dict.fromkeys(arch_ids))
+        total_checks += max(len(unique_arch), 1)
+        bad = swarch_validate_id_format(unique_arch, "ARCH")
+        for b in bad:
+            issues.append(f"Malformed ARCH ID: {b}")
+
+        # 2. IEEE 42010 views presence
+        for view in self._IEEE_42010_VIEWS:
+            total_checks += 1
+            if view.lower() not in text.lower():
+                issues.append(f"Missing IEEE 42010 view: {view}")
+
+        # 3. Parent REQ references in every ARCH row (no SYS layer in Path B)
+        for arch_id in unique_arch:
+            total_checks += 1
+            parents = swarch_extract_parent_requirements(text, arch_id)
+            if not parents:
+                issues.append(f"{arch_id} has no parent REQ reference")
+
+        if total_checks == 0:
+            self.score = 0.0
+        else:
+            self.score = round(max(0.0, 1.0 - len(issues) / total_checks), 2)
+        self.success = self.score >= self.threshold
+        if issues:
+            self.reason = "; ".join(issues[:5])
+        else:
+            self.reason = "All software architecture design structural checks pass"
         return self.score
 
     def is_successful(self) -> bool:

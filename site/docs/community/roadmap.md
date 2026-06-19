@@ -9,7 +9,7 @@ The V-Model Extension Pack is actively developed. Here's where we are, where we'
 
 ## Current Release: v0.7.0
 
-The extension provides **17 commands** covering four V-Model levels plus cross-cutting safety/quality concerns and the bridge to deterministic, gated implementation:
+The extension provides **18 commands** covering four V-Model levels plus cross-cutting safety/quality concerns and the bridge to deterministic, gated implementation:
 
 ### V-Model Levels
 
@@ -17,7 +17,7 @@ The extension provides **17 commands** covering four V-Model levels plus cross-c
 |-------|---------------|-------------|--------------|
 | **Requirements ↔ Acceptance** | `requirements` | `acceptance` | Matrix A |
 | **System Design ↔ System Test** | `system-design` | `system-test` | Matrix B |
-| **Architecture ↔ Integration Test** | `architecture-design` | `integration-test` | Matrix C |
+| **Architecture ↔ Integration Test** | `architecture-design` (Path A) or `software-architecture-design` (Path B) | `integration-test` | Matrix C |
 | **Module Design ↔ Unit Test** | `module-design` | `unit-test` | Matrix D |
 
 ### Cross-Cutting Commands
@@ -43,7 +43,7 @@ The extension provides **17 commands** covering four V-Model levels plus cross-c
 
     - 455 BATS tests (Bash) · 431 Pester tests (PowerShell)
     - 89 structural evaluations · 53 LLM evaluations · 32 E2E tests (advisory in v0.7.0)
-    - Agent definitions for all 17 commands
+    - Agent definitions for all 18 commands
 
 ## Shipped Milestones
 

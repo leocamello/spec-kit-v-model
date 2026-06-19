@@ -66,7 +66,9 @@ Auditors in safety-critical domains verify that architecture decisions are:
 - Traceable using the `ARCH-NNN` → `ITP-NNN-X` → `ITS-NNN-X#` ID schema
 - Decomposed per **ISO 26262-9 §5** when ASIL allocation applies
 
-**How we satisfy this**: The `/speckit.v-model.architecture-design` command generates architecture elements aligned with IEEE 42010 views. The `/speckit.v-model.integration-test` command generates integration test procedures mapped to ISO 29119-4 techniques. CROSS-CUTTING modules are validated across all dependent modules.
+**How we satisfy this (Path A — Traditional):** The `/speckit.v-model.architecture-design` command generates architecture elements aligned with IEEE 42010 views from `system-design.md`. The `/speckit.v-model.integration-test` command generates integration test procedures mapped to ISO 29119-4 techniques. CROSS-CUTTING modules are validated across all dependent modules.
+
+**How we satisfy this (Path B — Combined):** The `/speckit.v-model.software-architecture-design` command generates a combined software architecture design from `requirements.md` directly — merging what would otherwise be done in `system-design` + `architecture-design`. It synthesizes IEEE 1016:2009 design entity description within IEEE 42010 architecture viewpoints and, when `domain: iso_26262`, includes ASPICE SWE.2 process guidance. The `/speckit.v-model.integration-test` command accepts either `architecture-design.md` (Path A) or `software-architecture-design.md` (Path B) as its source.
 
 ### 6. Module Design Traceability (DO-178C Low-Level Requirements + ISO 26262 Part 6)
 

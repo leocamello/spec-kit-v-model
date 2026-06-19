@@ -23,6 +23,7 @@ overlay_commands:
   - system-design         # §5.2.2 — partitioning, derived requirements from design, data/control coupling
   - system-test           # §6.4, Table A-7/A-8 — requirements-based testing, structural coverage analysis by DAL
   - architecture-design   # §5.2.2, Table A-5 — DAL-driven architecture verification, partitioning requirements
+  - software-architecture-design   # Combined Path B: DO-178C software architecture design — DAL allocation, temporal constraints (stub)
   - integration-test      # §5.4, Table A-8 — integration process verification, interface testing by DAL
   - module-design         # §5.2.3, Table A-6 — low-level requirements, coding standards, complexity limits
   - unit-test             # §6.4.4, Table A-7 — structural coverage by DAL (MC/DC for A, decision for B, statement for C)

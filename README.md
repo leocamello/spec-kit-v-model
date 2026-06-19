@@ -51,7 +51,10 @@ specify extension add v-model \
 /speckit.v-model.trace
 ```
 
-That's Level 1. Go deeper with `system-design` → `system-test` → `architecture-design` → `integration-test` → `module-design` → `unit-test`, running `trace` after each pair.
+That's Level 1. Go deeper with either path:
+
+- **Path A (Traditional):** `system-design` → `system-test` → `architecture-design` → `integration-test` → `module-design` → `unit-test`, running `trace` after each pair.
+- **Path B (Combined):** `software-architecture-design` → `integration-test` → `module-design` → `unit-test`, with ASPICE SWE.2 process guidance.
 
 ## Built for Regulated Industries
 

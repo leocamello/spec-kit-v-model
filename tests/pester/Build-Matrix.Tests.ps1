@@ -137,4 +137,42 @@ Describe 'Build-Matrix' {
             ($output -join "`n") | Should -Not -Match 'Matrix D'
         }
     }
+
+    Context 'Path B - combined flow (no system-design.md)' {
+        It 'no Matrix B with Path B artifacts' {
+            $output = & pwsh -NoProfile -File "$ScriptsDir/build-matrix.ps1" "$FixturesDir/path-b-combined" 2>&1
+            $LASTEXITCODE | Should -Be 0
+            ($output -join "`n") | Should -Not -Match 'Matrix B'
+        }
+
+        It 'no Matrix C with Path B artifacts' {
+            $output = & pwsh -NoProfile -File "$ScriptsDir/build-matrix.ps1" "$FixturesDir/path-b-combined" 2>&1
+            $LASTEXITCODE | Should -Be 0
+            ($output -join "`n") | Should -Not -Match 'Matrix C'
+        }
+
+        It 'no Matrix D with Path B artifacts' {
+            $output = & pwsh -NoProfile -File "$ScriptsDir/build-matrix.ps1" "$FixturesDir/path-b-combined" 2>&1
+            $LASTEXITCODE | Should -Be 0
+            ($output -join "`n") | Should -Not -Match 'Matrix D'
+        }
+
+        It 'Matrix A still present with Path B artifacts' {
+            $output = & pwsh -NoProfile -File "$ScriptsDir/build-matrix.ps1" "$FixturesDir/path-b-combined" 2>&1
+            $LASTEXITCODE | Should -Be 0
+            ($output -join "`n") | Should -Match 'Matrix A'
+        }
+
+        It 'Path B has correct REQ->ATP coverage' {
+            $output = & pwsh -NoProfile -File "$ScriptsDir/build-matrix.ps1" "$FixturesDir/path-b-combined" 2>&1
+            $LASTEXITCODE | Should -Be 0
+            ($output -join "`n") | Should -Match 'Matrix A Coverage'
+        }
+
+        It 'Path B does not show system-level gaps' {
+            $output = & pwsh -NoProfile -File "$ScriptsDir/build-matrix.ps1" "$FixturesDir/path-b-combined" 2>&1
+            $LASTEXITCODE | Should -Be 0
+            ($output -join "`n") | Should -Not -Match 'Uncovered Requirements'
+        }
+    }
 }

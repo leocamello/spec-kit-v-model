@@ -99,6 +99,16 @@ def automotive_adas_unit_test():
 
 
 @pytest.fixture
+def medical_device_software_architecture_design():
+    return (GOLDEN_DIR / "medical-device" / "expected-software-architecture-design.md").read_text()
+
+
+@pytest.fixture
+def automotive_adas_software_architecture_design():
+    return (GOLDEN_DIR / "automotive-adas" / "expected-software-architecture-design.md").read_text()
+
+
+@pytest.fixture
 def medical_device_hazard_analysis():
     return (GOLDEN_DIR / "medical-device" / "expected-hazard-analysis.md").read_text()
 

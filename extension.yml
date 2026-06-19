@@ -38,6 +38,10 @@ provides:
       file: "commands/architecture-design.md"
       description: "Decompose system components into IEEE 42010/Kruchten 4+1 architecture modules with four mandatory views"
 
+    - name: "speckit.v-model.software-architecture-design"
+      file: "commands/software-architecture-design.md"
+      description: "Generate a software architecture design from requirements only with IEEE 42010 architecture views and ASPICE SWE.2 guidance"
+
     - name: "speckit.v-model.integration-test"
       file: "commands/integration-test.md"
       description: "Generate ISO 29119-4 integration test plan with four named techniques for every architecture module"

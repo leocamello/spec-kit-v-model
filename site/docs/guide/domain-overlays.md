@@ -174,7 +174,7 @@ commands/overlays/
 
 When `domain:` is empty (or `v-model-config.yml` is absent), the extension operates in **pure best-practice mode**:
 
-- All 17 commands produce output governed only by universal standards: IEEE 29148, ISO/IEC 25010, IEEE 1016, IEEE 42010, ISO 29119, IEC 60812, and the other 11 best-practice standards referenced across the command set
+- All 18 commands produce output governed only by universal standards: IEEE 29148, ISO/IEC 25010, IEEE 1016, IEEE 42010, ISO 29119, IEC 60812, and the other 11 best-practice standards referenced across the command set
 - The bridge commands (`plan`, `tasks`, `implement`) inherit overlay context indirectly: they consume artifacts already produced by the 11 base commands, so any domain-specific sections injected at generation time flow through to the planning, task decomposition, and implementation steps
 - No ASIL tables, DAL classifications, or safety class constraints appear in any output
 - The output is clean and directly relevant to non-regulated software projects

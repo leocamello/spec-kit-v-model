@@ -176,7 +176,20 @@ Notice the quality criteria in action:
 - **Declarative**: Scenarios describe behavior ("the system activates an alarm"), not UI mechanics ("click the alarm button")
 - **Observable**: Every `Then` is a concrete, verifiable outcome
 
-### Step 4: Generate System Design
+### Step 4: Choose Your Architecture Path
+
+The V-Model Extension Pack offers **two paths** for the architecture layer:
+
+| Path | Steps | Description |
+|------|-------|-------------|
+| **Path A** (Traditional) | `system-design` → `architecture-design` | Two-step decomposition: `REQ` → `SYS` (IEEE 1016) → `ARCH` (IEEE 42010) |
+| **Path B** (Combined) | `software-architecture-design` | Single-step: `REQ` → `ARCH` (IEEE 1016 design entities within IEEE 42010 views; + ASPICE SWE.2 when `domain: iso_26262`) |
+
+Choose **Path B** when you want a consolidated architecture artifact with ASPICE process guidance. Choose **Path A** when you need the intermediate `SYS-NNN` decomposition layer.
+
+The following sections walk through Path A (Steps 5–7), then Path B (Step 8).
+
+### Step 5: Generate System Design (Path A)
 
 ```
 /speckit.v-model.system-design
@@ -201,7 +214,7 @@ The command reads `requirements.md` and generates `specs/{feature}/v-model/syste
 | SYS-005 | AlarmEngine → ClinicalDashboard | Emits AlarmEvent(severity, vitalSignType, triggeringValue, timestamp) | Interface |
 ```
 
-### Step 5: Generate System Test Plan
+### Step 6: Generate System Test Plan (Path A)
 
 ```
 /speckit.v-model.system-test
@@ -238,7 +251,7 @@ The command reads `system-design.md` and generates `specs/{feature}/v-model/syst
   * **Then** the AlarmEngine emits a SensorDisconnected event (not a clinical alarm)
 ```
 
-### Step 6: Generate Architecture Design
+### Step 7: Generate Architecture Design (Path A)
 
 ```
 /speckit.v-model.architecture-design
@@ -275,13 +288,24 @@ The command reads `system-design.md` and generates `specs/{feature}/v-model/arch
 | ARCH-007 | AuditLogger | Structured logging for all alarm events and sensor state changes | CROSS-CUTTING |
 ```
 
-### Step 7: Generate Integration Test Plan
+### Step 8: Generate Software Architecture Design (Path B — Combined)
+
+```
+/speckit.v-model.software-architecture-design
+```
+
+The command reads `requirements.md` directly (no `system-design.md` needed) and generates `specs/{feature}/v-model/software-architecture-design.md` with:
+- IEEE 1016:2009 design entity description synthesized within IEEE 42010 architecture viewpoints
+- ASPICE SWE.2 software architectural process guidance (only when `domain: iso_26262` in `v-model-config.yml`)
+- REQ → ARCH bidirectional traceability
+
+### Step 9: Generate Integration Test Plan
 
 ```
 /speckit.v-model.integration-test
 ```
 
-The command reads `architecture-design.md` and generates `specs/{feature}/v-model/integration-test.md` with test procedures mapped to ISO 29119-4 integration techniques:
+The command reads `architecture-design.md` (Path A) or `software-architecture-design.md` (Path B) and generates `specs/{feature}/v-model/integration-test.md` with test procedures mapped to ISO 29119-4 integration techniques. When both architecture artifacts exist, `software-architecture-design.md` is preferred.
 
 ```markdown
 ### Architecture Element Validation: ARCH-004 (SensorProtocolAdapter → ThresholdEvaluator Interface)
@@ -317,7 +341,7 @@ The command reads `architecture-design.md` and generates `specs/{feature}/v-mode
   * **Then** the ThresholdEvaluator emits a SensorTimeout event (not a false alarm)
 ```
 
-### Step 8: Build the Traceability Matrix (Progressive)
+### Step 9: Build the Traceability Matrix (Progressive)
 
 ```
 /speckit.v-model.trace
@@ -421,7 +445,7 @@ Run after acceptance for Matrix A, after system-test for A+B, after integration-
 
 This matrix is the audit artifact that IEC 62304 auditors will review to verify software verification completeness.
 
-### Step 9: Generate Module Design
+### Step 10: Generate Module Design
 
 ```
 /speckit.v-model.module-design
@@ -472,7 +496,7 @@ N/A — Stateless
 | Out-of-range value | Error("Value out of range") | ARCH-001 Interface View: logged and discarded |
 ```
 
-### Step 10: Generate Unit Test Plan
+### Step 11: Generate Unit Test Plan
 
 ```
 /speckit.v-model.unit-test
@@ -518,7 +542,7 @@ The command reads `module-design.md` and generates `specs/{feature}/v-model/unit
   * **Assert:** Returns Error("Value out of range for HR")
 ```
 
-### Step 11: Continue with Spec Kit Core
+### Step 12: Continue with Spec Kit Core
 
 ```
 /speckit.plan

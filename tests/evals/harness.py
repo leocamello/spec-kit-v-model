@@ -33,6 +33,7 @@ COMMAND_TEMPLATES = {
     "system-design": "system-design-template.md",
     "system-test": "system-test-template.md",
     "architecture-design": "architecture-design-template.md",
+    "software-architecture-design": "software-architecture-design-template.md",
     "integration-test": "integration-test-template.md",
     "module-design": "module-design-template.md",
     "unit-test": "unit-test-template.md",
@@ -55,6 +56,10 @@ COMMAND_AVAILABLE_DOCS = {
     ),
     "architecture-design": lambda ctx: (
         ["requirements.md", "system-design.md"]
+        + (["spec.md"] if "spec.md" in ctx else [])
+    ),
+    "software-architecture-design": lambda ctx: (
+        ["requirements.md"]
         + (["spec.md"] if "spec.md" in ctx else [])
     ),
     "integration-test": lambda ctx: (
@@ -123,6 +128,7 @@ def _build_script_json(command_name: str, context_files: dict[str, str]) -> str:
         "SYSTEM_DESIGN": f"{_SIM_VMODEL}/system-design.md",
         "SYSTEM_TEST": f"{_SIM_VMODEL}/system-test.md",
         "ARCH_DESIGN": f"{_SIM_VMODEL}/architecture-design.md",
+        "SOFTWARE_ARCH_DESIGN": f"{_SIM_VMODEL}/software-architecture-design.md",
         "INTEGRATION_TEST": f"{_SIM_VMODEL}/integration-test.md",
         "MODULE_DESIGN": f"{_SIM_VMODEL}/module-design.md",
         "UNIT_TEST": f"{_SIM_VMODEL}/unit-test.md",
@@ -154,6 +160,7 @@ def _build_file_contents(
         "system-design.md": f"{_SIM_VMODEL}/system-design.md",
         "system-test.md": f"{_SIM_VMODEL}/system-test.md",
         "architecture-design.md": f"{_SIM_VMODEL}/architecture-design.md",
+        "software-architecture-design.md": f"{_SIM_VMODEL}/software-architecture-design.md",
         "integration-test.md": f"{_SIM_VMODEL}/integration-test.md",
         "module-design.md": f"{_SIM_VMODEL}/module-design.md",
         "unit-test.md": f"{_SIM_VMODEL}/unit-test.md",

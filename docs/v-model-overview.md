@@ -68,6 +68,8 @@ Reading `SCN-001-A1` tells you: this scenario validates test case `ATP-001-A`, w
 
 The second V-Model layer pairs **System Design** (left side) with **System Testing** (right side). While the Requirements ↔ Acceptance Testing level validates *what* the system must do, this level validates *how* the system is structured to do it.
 
+> **Note:** The System Design ↔ System Testing level is part of **Path A** (traditional four-level V-Model). Projects using **Path B** (`software-architecture-design`) skip this level — the software architecture design reads `requirements.md` directly and replaces the `system-design` + `architecture-design` chain. See [Architecture Design ↔ Integration Testing Level](#architecture-design--integration-testing-level) for details.
+
 ### Standards Alignment
 
 - **IEEE 1016:2009** (Software Design Description) defines 4 design viewpoints used to describe the system design:
@@ -95,6 +97,19 @@ Reading `STS-001-A1` tells you: this step validates test procedure `STP-001-A`, 
 ## Architecture Design ↔ Integration Testing Level
 
 The third V-Model layer pairs **Architecture Design** (left side) with **Integration Testing** (right side). While the System Design ↔ System Testing level validates *how* the system is structured, this level validates *how modules interact across boundaries* — interfaces, data flows, concurrency, and fault propagation between components.
+
+There are **two paths** to reach this level:
+
+**Path A — Traditional (two-step):** `system-design` → `architecture-design` → `integration-test`
+- System design decomposes requirements into `SYS-NNN` components (IEEE 1016).
+- Architecture design further decomposes into `ARCH-NNN` modules (IEEE 42010).
+- Integration tests validate `ARCH` boundaries.
+
+**Path B — Combined (single-step):** `software-architecture-design` → `integration-test`
+- Software architecture design reads `requirements.md` directly.
+- It produces `ARCH-NNN` elements with IEEE 42010 views and ASPICE SWE.2 process guidance — combining what would otherwise be done in system-design + architecture-design.
+- Integration tests then validate `ARCH` boundaries from either `architecture-design.md` or `software-architecture-design.md`.
+- When both artifacts are present, `integration-test` prefers `software-architecture-design.md`.
 
 ### Standards Alignment
 
@@ -128,6 +143,27 @@ Matrix C extends the traceability chain one level deeper:
 - **Backward**: Every integration test step → traces to an architecture element → traces to a system design element (no orphans)
 
 Architecture modules tagged as `CROSS-CUTTING` (e.g., logging, authentication, configuration) are validated across all dependent modules rather than in isolation.
+
+### Combined Software Architecture Design
+
+The `/speckit.v-model.software-architecture-design` command provides an **alternative, combined path** that merges the system design and architecture design steps into a single artifact. Instead of the two-step `system-design` → `architecture-design` chain, this command:
+
+- Reads `requirements.md` directly — no dependency on `system-design.md`.
+- Produces `software-architecture-design.md` with `ARCH-NNN` identifiers.
+- Synthesizes **IEEE 1016:2009** design entity description within **IEEE 42010** architecture viewpoints (see [Governing Standards](specs/007-software-architecture-design/spec.md#governing-standards) for the full mapping).
+  - **Logical View** ← IEEE 1016 Decomposition View (§5.1) + Dependency View (§5.2): design entities with purpose, function, subordinates, and dependencies columns.
+  - **Process View** ← IEEE 42010 / Kruchten 4+1: runtime interactions and concurrency model.
+  - **Interface View** ← IEEE 1016 Interface Identification (§5.3) + IEEE 42010 Interface View: entity-to-entity contracts with protocol bindings.
+  - **Data Flow View** ← IEEE 1016 Data Design (§5.4) + IEEE 42010 Data Flow View: transformation chains with intermediate formats.
+- Integrates ASPICE SWE.2 process guidance (only when `domain: iso_26262` in `v-model-config.yml`).
+- Replaces the need for a separate `system-design.md` in the architecture layer.
+
+**When to use Path B instead of Path A:**
+- When you want a single, consolidated architecture artifact.
+- When ISO 26262 / ASPICE SWE.2 process compliance is required.
+- When the system complexity does not warrant a separate `SYS-NNN` decomposition layer before `ARCH-NNN`.
+
+**Downstream compatibility:** `integration-test.md` accepts either `architecture-design.md` or `software-architecture-design.md` as its source. When both exist, it prefers `software-architecture-design.md`. `module-design.md` and `validate-module-coverage.sh` also accept both sources.
 
 ## Module Design ↔ Unit Testing Level
 
